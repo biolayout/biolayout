@@ -20,7 +20,7 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 *
 */
 
-public final class ClassComboBox extends JComboBox
+public final class ClassComboBox extends JComboBox<Object>
 {
     /**
     *  Serial version UID variable for the ClassComboBox class.
@@ -96,7 +96,7 @@ public final class ClassComboBox extends JComboBox
         return sortedVertexClasses;
     }
 
-    public static class ClassRenderer extends JLabel implements ListCellRenderer, TableCellRenderer
+    public static class ClassRenderer extends JLabel implements ListCellRenderer<Object>, TableCellRenderer
     {
         /**
         *  Serial version UID variable for the ClassRenderer class.

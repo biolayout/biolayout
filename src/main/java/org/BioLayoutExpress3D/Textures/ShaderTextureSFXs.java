@@ -951,7 +951,7 @@ public class ShaderTextureSFXs
     static Texture createTextureFromImage(GL2 gl, BufferedImage image, Texture texture, int textureUnit)
     {
         gl.glActiveTexture(GL_TEXTURE0 + textureUnit);
-        if (texture != null) texture.dispose(gl);
+        if (texture != null) texture = null;
         texture = TextureProducer.createTextureFromBufferedImageAndDeleteOrigContext(image);
         if (textureUnit != 0)
             gl.glActiveTexture(GL_TEXTURE0);
@@ -2051,12 +2051,12 @@ public class ShaderTextureSFXs
 
         if (USE_SPOT_CIRCLE_RANDOM_2D_TEXTURE)
         {
-            spotCircleTexture.dispose(gl);
-            spotCircleRandomTexture.dispose(gl);
+            spotCircleTexture = null;
+            spotCircleRandomTexture = null;
         }
         if (waterBufferImage != null) waterBufferImage.flush();
-        if (waterBufferTexture != null) waterBufferTexture.dispose(gl);
-        if (bumpEmbossTexture != null) bumpEmbossTexture.dispose(gl);
+        if (waterBufferTexture != null) waterBufferTexture = null;
+        if (bumpEmbossTexture != null) bumpEmbossTexture = null;
         if (isGLExtFramebufferObjectSupported && renderToBlurTexture != null) renderToBlurTexture.disposeAllRenderToTextureResources(gl);
         if (isGLExtFramebufferObjectSupported && renderToMotionBlurForBlob3DStarsTextures != null)
         {

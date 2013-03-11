@@ -113,7 +113,7 @@ public final class Layout
         String output = "";
 
         Set<String> keySet = properties.stringPropertyNames();
-        ArrayList keyList = new ArrayList(keySet);
+        ArrayList<String> keyList = new ArrayList<String>(keySet);
         Collections.sort(keyList);
         int longestKey = 0;
 

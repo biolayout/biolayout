@@ -196,11 +196,11 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JRadioButton parallelismUseExpressionCorrelationCalculationNCoreParallelism = null;
     private JRadioButton parallelismUseExpressionCorrelationCalculationOpenCLGPUComputing = null;
     private JLabel parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSizeLabel = null;
-    private JComboBox parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSize = null;
+    private JComboBox<Integer> parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSize = null;
     private JRadioButton parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputing = null;
     private JLabel parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSizeAndTypeLabel = null;
-    private JComboBox parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize = null;
-    private JComboBox parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType = null;
+    private JComboBox<Integer> parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize = null;
+    private JComboBox<GLSLTextureTypes> parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType = null;
     private JCheckBox parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPU = null;
     private JLabel parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethodsLabel = null;
     private JComboBox parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethods = null;
@@ -208,29 +208,29 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JRadioButton parallelismUseLayoutOpenCLGPUComputing = null;
     private JCheckBox parallelismUseIndices1DKernelWithIterationsForLayoutOpenCLGPUComputing = null;
     private JLabel parallelismUseLayoutOpenCLGPUComputingIterationSizeLabel = null;
-    private JComboBox parallelismUseLayoutOpenCLGPUComputingIterationSize = null;
+    private JComboBox<Integer> parallelismUseLayoutOpenCLGPUComputingIterationSize = null;
     private JCheckBox parallelismUseGPUComputingLayoutCompareGPUWithCPU = null;
     private JLabel parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethodsLabel = null;
-    private JComboBox parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods = null;
+    private JComboBox<String> parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods = null;
     private JCheckBox parallelismUseAtomicSynchronizationForLayoutNCoreParallelism = null;
     private JCheckBox parallelismUseMCLNCoreParallelism = null;
     private JCheckBox parallelismUseSPNNCoreParallelism = null;
 
-    private JComboBox searchURLComboBox = null;
+    private JComboBox<SearchURL> searchURLComboBox = null;
     private JTextField customURLTextField = null;
     private JRadioButton presetRadioButton = null;
     private JRadioButton customRadioButton = null;
     private JTextArea presetURLTextField = null;
 
     private JTextField nodeNameTextField = null;
-    private JComboBox node2DShape = null;
-    private JComboBox node3DShape = null;
+    private JComboBox<String> node2DShape = null;
+    private JComboBox<String> node3DShape = null;
     private JCheckBox  nodeTransparency = null;
     private SimpleSlider nodeTransparencyAlphaSlider = null;
     private JButton nodeRevertOverride = null;
     private ColorButton nodeColorButton = null;
     private ModelShapeEditorParentUIDialog modelShapeEditorParentUIDialog = null;
-    private JComboBox nodeSizeComboBox = null;
+    private JComboBox<Integer> nodeSizeComboBox = null;
     private ClassComboBox nodeClassComboBox = null;
     private FloatNumberField graphmlViewNodeDepthPositioningTextField = null;
     private JLabel graphmlViewNodeDepthZPositioningLabel = null;
@@ -240,14 +240,14 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JButton newClassInClassSetButton = null;
 
     private ColorButton edgesColor = null;
-    private JComboBox edgeThicknessComboBox = null;
+    private JComboBox<String> edgeThicknessComboBox = null;
     private JCheckBox proportionalEdgesSizeToWeight = null;
-    private JComboBox arrowHeadSizeComboBox = null;
+    private JComboBox<String> arrowHeadSizeComboBox = null;
     private JRadioButton edgesColorByColor = null;
     private JRadioButton edgesColorByWeight = null;
 
     private LayoutClassesTable layoutClassesTable = null;
-    private JComboBox classesChooser = null;
+    private JComboBox<String> classesChooser = null;
     private JButton newClassSetButton = null;
 
     private boolean generalChange = false;
@@ -1328,7 +1328,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         nodeSurfaceImageTextureCheckBox.setActionCommand(CHANGE_ACTION_COMMAND_NODES);
         nodeSurfaceImageTextureCheckBox.setToolTipText("Node Texture");
 
-        nodeSurfaceImageTextureComboBox = new JComboBox(DEFAULT_SURFACE_IMAGE_FILES);
+        nodeSurfaceImageTextureComboBox = new JComboBox<String>(DEFAULT_SURFACE_IMAGE_FILES);
         nodeSurfaceImageTextureComboBox.addActionListener(this);
         nodeSurfaceImageTextureComboBox.setEnabled(false);
         nodeSurfaceImageTextureComboBox.setActionCommand(CHANGE_ACTION_COMMAND_NODES);
@@ -1629,7 +1629,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         parallelismUseExpressionCorrelationCalculationOpenCLGPUComputing.addActionListener(this);
         parallelismUseExpressionCorrelationCalculationOpenCLGPUComputing.setToolTipText("Use Expression Correlation Calculation OpenCL GPU Computing. A high-end GPU is needed, recommended hardware is the NVidia Geforce GTX 285 or Tesla series & the ATI Radeon HD 5800 series and above with at least 1GB of VRAM.");
         parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSizeLabel = new JLabel("OpenCL Iteration Size:");
-        parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSize = new JComboBox();
+        parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSize = new JComboBox<Integer>();
         for (int i = OPENCL_GPU_COMPUTING_ITERATION_SIZES.length - 1; i >= 0; i--)
             parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSize.addItem(OPENCL_GPU_COMPUTING_ITERATION_SIZES[i]);
         parallelismUseExpressionCorrelationCalculationOpenCLGPUComputingIterationSize.setSelectedItem( Integer.toString(OPENCL_DEFAULT_EXPRESSION_CORRELATION_ITERATION_SIZE) );
@@ -1641,14 +1641,14 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputing.addActionListener(this);
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputing.setToolTipText("Use Expression Correlation Calculation GLSL GPGPU Computing. A high-end GPU is needed. Use this option at your own risk. Recommended hardware is the NVidia Geforce GTX 285 or Tesla series & the ATI Radeon HD 5800 series and above with at least 1GB of VRAM.");
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSizeAndTypeLabel = new JLabel("GLSL Texture Size & Type:");
-        parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize = new JComboBox();
+        parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize = new JComboBox<Integer>();
         for (int i = GLSL_MAX_TEXTURE_SIZE; i >= GLSL_TEXTURE_STEP; i -= GLSL_TEXTURE_STEP)
             parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize.addItem(i);
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize.setSelectedItem( Integer.toString(GLSL_DEFAULT_TEXTURE_SIZE) );
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize.addActionListener(this);
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize.setActionCommand(CHANGE_ACTION_COMMAND);
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureSize.setToolTipText("GLSL Texture Size");
-        parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType = new JComboBox( GLSLTextureTypes.values() );
+        parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType = new JComboBox<GLSLTextureTypes>( GLSLTextureTypes.values() );
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType.addActionListener(this);
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType.setActionCommand(CHANGE_ACTION_COMMAND);
         parallelismUseExpressionCorrelationCalculationGLSLGPGPUComputingTextureType.setToolTipText("GLSL Texture Type");
@@ -1657,7 +1657,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPU.addActionListener(this);
         parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPU.setToolTipText("Compare GPU Computing Expression Correlation Calculations with the CPU (the Correlation Calculations are run on both the GPU & the CPU and it shows GPU Calc & GPU Calc With Transfers vs CPU Time)");
         parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethodsLabel = new JLabel("CPU Comparison Method:");
-        parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethods = new JComboBox(SELECTED_CORRELATION_CALCULATION_GPU_COMPUTING_CPU_COMPARISON_METHODS);
+        parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethods = new JComboBox<String>(SELECTED_CORRELATION_CALCULATION_GPU_COMPUTING_CPU_COMPARISON_METHODS);
         parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethods.addActionListener(this);
         parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethods.setActionCommand(CHANGE_ACTION_COMMAND);
         parallelismUseGPUComputingExpressionCorrelationCalculationCompareGPUWithCPUComparisonMethods.setToolTipText("CPU Comparison Method");
@@ -1684,7 +1684,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         parallelismUseIndices1DKernelWithIterationsForLayoutOpenCLGPUComputing.addActionListener(this);
         parallelismUseIndices1DKernelWithIterationsForLayoutOpenCLGPUComputing.setToolTipText("Use Indices 1D Kernel With Iterations (Used as a safety measure for very large networks that may freeze the GPU if processed in one go)");
         parallelismUseLayoutOpenCLGPUComputingIterationSizeLabel = new JLabel("OpenCL Iteration Size:");
-        parallelismUseLayoutOpenCLGPUComputingIterationSize = new JComboBox();
+        parallelismUseLayoutOpenCLGPUComputingIterationSize = new JComboBox<Integer>();
         for (int i = OPENCL_GPU_COMPUTING_ITERATION_SIZES.length - 1; i >= 0; i--)
             parallelismUseLayoutOpenCLGPUComputingIterationSize.addItem(OPENCL_GPU_COMPUTING_ITERATION_SIZES[i]);
         parallelismUseLayoutOpenCLGPUComputingIterationSize.setSelectedItem( Integer.toString(OPENCL_DEFAULT_LAYOUT_ITERATION_SIZE) );
@@ -1696,7 +1696,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         parallelismUseGPUComputingLayoutCompareGPUWithCPU.addActionListener(this);
         parallelismUseGPUComputingLayoutCompareGPUWithCPU.setToolTipText("Compare GPU Computing Expression Correlation Calculations with the CPU (the Correlation Calculations are run on both the GPU & the CPU and it shows GPU Calc & GPU Calc With Transfers vs CPU time)");
         parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethodsLabel = new JLabel("CPU Comparison Method:");
-        parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods = new JComboBox(SELECTED_LAYOUT_GPU_COMPUTING_CPU_COMPARISON_METHODS);
+        parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods = new JComboBox<String>(SELECTED_LAYOUT_GPU_COMPUTING_CPU_COMPARISON_METHODS);
         parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods.addActionListener(this);
         parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods.setActionCommand(CHANGE_ACTION_COMMAND);
         parallelismUseGPUComputingLayoutCompareGPUWithCPUComparisonMethods.setToolTipText("CPU Comparison Method");
@@ -1800,7 +1800,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     {
         TitledBorder searchPropertiesPanelBorder = null;
 
-        searchURLComboBox = new JComboBox(PRESET_SEARCH_URL);
+        searchURLComboBox = new JComboBox<SearchURL>(PRESET_SEARCH_URL);
         searchURLComboBox.setSelectedItem(SEARCH_URL);
         searchURLComboBox.addActionListener(this);
         searchURLComboBox.setActionCommand(CHANGE_ACTION_COMMAND);
@@ -1898,7 +1898,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         nodeClassComboBox.addActionListener(this);
         nodeClassComboBox.setToolTipText("Containing Class");
 
-        node2DShape = new JComboBox();
+        node2DShape = new JComboBox<String>();
         String node2DShapeName = "";
         for ( Shapes2D shape2D : Shapes2D.values() )
         {
@@ -1910,7 +1910,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         node2DShape.addActionListener(this);
         node2DShape.setToolTipText("2D Shape");
 
-        node3DShape = new JComboBox();
+        node3DShape = new JComboBox<String>();
         String node3DShapeName = "";
         for ( Shapes3D shape3D : Shapes3D.values() )
         {
@@ -1945,7 +1945,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         nodeColorButton.addActionListener(this);
         nodeColorButton.setToolTipText("Color");
 
-        nodeSizeComboBox = new JComboBox();
+        nodeSizeComboBox = new JComboBox<Integer>();
         nodeSizeComboBox.setActionCommand(CHANGE_ACTION_COMMAND_NODES);
         nodeSizeComboBox.addActionListener(this);
         nodeSizeComboBox.setToolTipText("Node Size");
@@ -2034,11 +2034,11 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         edgesColor = new ColorButton("");
         edgesColor.addActionListener(this);
         edgesColor.setToolTipText("Edge Color");
-        edgeThicknessComboBox = new JComboBox();
+        edgeThicknessComboBox = new JComboBox<String>();
         edgeThicknessComboBox.setToolTipText("Edge Thickness");
         proportionalEdgesSizeToWeight = new JCheckBox("Proportional Edges Size To Weight");
         proportionalEdgesSizeToWeight.setToolTipText("Proportional Edges Size To Weight");
-        arrowHeadSizeComboBox = new JComboBox();
+        arrowHeadSizeComboBox = new JComboBox<String>();
         arrowHeadSizeComboBox.setToolTipText("Arrowhead Size");
         ButtonGroup edgeColorSource = new ButtonGroup();
         edgesColorByColor = new JRadioButton();
@@ -2103,7 +2103,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     {
         TitledBorder classesPropertiesPanelBorder = null;
 
-        classesChooser = new JComboBox();
+        classesChooser = new JComboBox<String>();
         for ( LayoutClasses classes : layoutClassSetsManager.getClassSetNames() )
         {
             if (DEBUG_BUILD) println("Adding: " + classes.getClassSetName() );

@@ -250,26 +250,11 @@ public class Materials
         return false;
     }
 
-    /*
-    *  Disposes all material textures.
-    */
-    private void disposeAllMaterialTextures(GL2 gl)
-    {
-        Texture materialTexture = null;
-        for ( Material material : materialsMap.values() )
-        {
-            materialTexture = material.getTexture();
-            if (materialTexture != null)
-                materialTexture.dispose(gl);
-        }
-    }
-
     /**
     *  Clears all materials.
     */
     public void clearAllMaterials(GL2 gl)
     {
-        disposeAllMaterialTextures(gl);
         materialsMap.clear();
     }
 

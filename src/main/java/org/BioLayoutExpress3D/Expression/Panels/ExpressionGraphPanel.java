@@ -66,7 +66,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JCheckBox selectionMeanCheckBox = null;
     private JCheckBox rescaleCheckBox = null;
     private JCheckBox axesLegendCheckBox = null;
-    private JComboBox transformComboBox = null;
+    private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
 
     private AbstractAction renderPlotImageToFileAction = null;
@@ -171,7 +171,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         rescaleCheckBox.setSelected( PLOT_RESCALE.get() );
         axesLegendCheckBox.setSelected( PLOT_AXES_LEGEND.get() );
 
-        transformComboBox = new JComboBox();
+        transformComboBox = new JComboBox<String>();
         for (ExpressionEnvironment.TransformType type : ExpressionEnvironment.TransformType.values())
         {
             String s = Utils.titleCaseOf(type.toString());

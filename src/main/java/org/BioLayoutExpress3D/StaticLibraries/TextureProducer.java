@@ -93,11 +93,7 @@ public final class TextureProducer
     */
     public static void disposeNullPointerTexture(GL2 gl)
     {
-        if (nullPointerTexture != null)
-        {
-            nullPointerTexture.dispose(gl);
-            nullPointerTexture = null;
-        }
+        nullPointerTexture = null;
     }
 
 

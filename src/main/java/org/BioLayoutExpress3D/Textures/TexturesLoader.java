@@ -443,7 +443,6 @@ public class TexturesLoader
             for (String stringKey : allStringKeys)
             {
                 texture = texturesMap.get(stringKey);
-                texture.dispose(gl);
                 texture = null;
 
                 if (DEBUG_BUILD) println("Texture " + stringKey + " disposed");

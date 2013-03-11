@@ -502,13 +502,13 @@ final class GraphRenderer2D implements GraphInterface // package access
     */
     private void prepareImageAndTextureSFXs(GL2 gl)
     {
-        if (backgroundImageTexture != null) backgroundImageTexture.dispose(gl);
+        if (backgroundImageTexture != null) backgroundImageTexture = null;
         backgroundImageTexture = TextureProducer.createTextureFromBufferedImage(BACKGROUND_IMAGE, qualityRendering);
 
-        if (biolayoutLogoImageTexture != null) biolayoutLogoImageTexture.dispose(gl);
+        if (biolayoutLogoImageTexture != null) biolayoutLogoImageTexture = null;
         biolayoutLogoImageTexture = TextureProducer.createTextureFromBufferedImage(BIOLAYOUT_EXDPRESS_3D_LOGO_IMAGE, qualityRendering);
 
-        if (biolayoutLogoImageTextureWithBorders != null) biolayoutLogoImageTextureWithBorders.dispose(gl);
+        if (biolayoutLogoImageTextureWithBorders != null) biolayoutLogoImageTextureWithBorders = null;
         biolayoutLogoImageTextureWithBorders = TextureProducer.createTextureFromBufferedImage(BIOLAYOUT_EXDPRESS_3D_LOGO_IMAGE_WITH_BORDERS, qualityRendering);
 
         if ( blobInitAnimIndex.isEmpty() )
@@ -857,19 +857,16 @@ final class GraphRenderer2D implements GraphInterface // package access
 
         if (backgroundImageTexture != null)
         {
-            backgroundImageTexture.dispose(gl);
             backgroundImageTexture = null;
         }
 
         if (biolayoutLogoImageTexture != null)
         {
-            biolayoutLogoImageTexture.dispose(gl);
             biolayoutLogoImageTexture = null;
         }
 
         if (biolayoutLogoImageTextureWithBorders != null)
         {
-            biolayoutLogoImageTextureWithBorders.dispose(gl);
             biolayoutLogoImageTextureWithBorders = null;
         }
 

@@ -580,7 +580,6 @@ public final class DrawTextureSFXs
         {
             Texture imageTexture = AWTTextureIO.newTexture(GLProfile.getDefault(), image, false);
             drawTexture(gl, imageTexture, x, y, width, height, alpha, color, true);
-            imageTexture.dispose(gl);
         }
     }
 
@@ -694,7 +693,6 @@ public final class DrawTextureSFXs
         {
             Texture imageTexture = AWTTextureIO.newTexture(GLProfile.getDefault(), image, false);
             drawTexture(gl, imageTexture, x, y, width, height, alpha, color, bindEnableAndDisableTexture);
-            imageTexture.dispose(gl);
         }
     }
 
@@ -1246,7 +1244,6 @@ public final class DrawTextureSFXs
         {
             Texture imageTexture = AWTTextureIO.newTexture(GLProfile.getDefault(), image, false);
             drawRotoZoomTexture(gl, imageTexture, x, y, theta, zoomFactorX, zoomFactorY, alpha, color, bindEnableAndDisableTexture);
-            imageTexture.dispose(gl);
         }
     }
 

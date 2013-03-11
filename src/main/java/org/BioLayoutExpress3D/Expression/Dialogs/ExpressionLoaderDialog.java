@@ -26,11 +26,11 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     public static final long serialVersionUID = 111222333444555706L;
 
     private FloatNumberField correlationField = null;
-    private JComboBox firstDataColumn = null;
-    private JComboBox firstDataRow = null;
-    private JComboBox correlationMetric = null;
+    private JComboBox<String> firstDataColumn = null;
+    private JComboBox<String> firstDataRow = null;
+    private JComboBox<String> correlationMetric = null;
     private JCheckBox transposeCheckBox = null;
-    private JComboBox scaleTransformComboBox = null;
+    private JComboBox<String> scaleTransformComboBox = null;
     private JEditorPane textArea = null;
     private JCheckBox saveCorrelationTextFileCheckBox = null;
     private JCheckBox filterCheckBox = null;
@@ -91,7 +91,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         tabLine1.add(correlationField);
 
         // Correlation metric
-        correlationMetric = new JComboBox();
+        correlationMetric = new JComboBox<String>();
         for (CorrelationTypes type : CorrelationTypes.values())
         {
             String s = Utils.titleCaseOf(type.toString());
@@ -108,12 +108,12 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         tabLine1.add(saveCorrelationTextFileCheckBox);
 
         // Data bounds
-        firstDataColumn = new JComboBox();
+        firstDataColumn = new JComboBox<String>();
         firstDataColumn.addActionListener(this);
         firstDataColumn.setToolTipText("First Data Column");
         tabLine2.add(new JLabel("First Data Column:"));
         tabLine2.add(firstDataColumn);
-        firstDataRow = new JComboBox();
+        firstDataRow = new JComboBox<String>();
         firstDataRow.addActionListener(this);
         firstDataRow.setToolTipText("First Data Row");
         tabLine2.add(new JLabel("First Data Row:"));
@@ -133,7 +133,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         JPanel tabLine2 = new JPanel();
 
         // Scale transform
-        scaleTransformComboBox = new JComboBox();
+        scaleTransformComboBox = new JComboBox<String>();
         for (ScaleTransformType type : ScaleTransformType.values())
         {
             String s = Utils.titleCaseOf(type.toString());

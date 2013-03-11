@@ -3205,7 +3205,6 @@ final class GraphRenderer3D implements GraphInterface // package access
     {
         if (nodeTexture != null)
         {
-            nodeTexture.dispose(gl);
             nodeTexture = null;
         }
 

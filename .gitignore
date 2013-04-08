@@ -2,3 +2,4 @@ target/*
 *.swp
 nbactions.xml
 nsis-installer/*.exe
+.DS_Store

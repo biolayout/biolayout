@@ -19,7 +19,7 @@
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
-        <jogampVersion>2.0-rc11</jogampVersion>
+        <jogampVersion>2.0.2-rc20130404</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
 
@@ -82,9 +82,16 @@
         </dependency>
     </dependencies>
 
-    <!-- This allows us to treat local jars (e.g. libsbgn) as
-         normal dependencies -->
     <repositories>
+        <!-- JogAmp local repository -->
+         <repository>
+           <id>jogamp-remote</id>
+           <name>jogamp test mirror</name>
+           <url>http://www.jogamp.org/deployment/maven/</url>
+           <layout>default</layout>
+         </repository>        
+        <!-- This allows us to treat local jars (e.g. libsbgn) as
+             normal dependencies -->
         <repository>
             <id>jars</id>
             <releases>

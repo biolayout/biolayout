@@ -37,8 +37,8 @@ class Rectangle
 
     public Rectangle() //constructor
     {
-        old_down_left_corner_position = new DPoint();
-        new_down_left_corner_position = new DPoint();
+        old_down_left_corner_position = new DPoint2();
+        new_down_left_corner_position = new DPoint2();
         width = 0;
         height = 0;
         component_index = -1;
@@ -55,14 +55,14 @@ class Rectangle
         tipped_over = false;
     }
 
-    public void set_old_dlc_position(DPoint dlc_pos)
+    public void set_old_dlc_position(DPoint2 dlc_pos)
     {
-        old_down_left_corner_position = new DPoint(dlc_pos);
+        old_down_left_corner_position = new DPoint2(dlc_pos);
     }
 
-    public void set_new_dlc_position(DPoint dlc_pos)
+    public void set_new_dlc_position(DPoint2 dlc_pos)
     {
-        new_down_left_corner_position = new DPoint(dlc_pos);
+        new_down_left_corner_position = new DPoint2(dlc_pos);
     }
 
     public void set_width(double w)
@@ -92,14 +92,14 @@ class Rectangle
         }
     }
 
-    public DPoint get_old_dlc_position()
+    public DPoint2 get_old_dlc_position()
     {
-        return new DPoint(old_down_left_corner_position);
+        return new DPoint2(old_down_left_corner_position);
     }
 
-    public DPoint get_new_dlc_position()
+    public DPoint2 get_new_dlc_position()
     {
-        return new DPoint(new_down_left_corner_position);
+        return new DPoint2(new_down_left_corner_position);
     }
 
     public double get_width()
@@ -121,8 +121,8 @@ class Rectangle
     {
         return tipped_over;
     }
-    private DPoint old_down_left_corner_position;//down left corner of the tight surround. rect.
-    private DPoint new_down_left_corner_position;//new calculated down left corner of ...
+    private DPoint2 old_down_left_corner_position;//down left corner of the tight surround. rect.
+    private DPoint2 new_down_left_corner_position;//new calculated down left corner of ...
     private double width;                     //width of the surround. rect.
     private double height;                    //height of the surround. rect.
     private int component_index;  //the index of the related connected component

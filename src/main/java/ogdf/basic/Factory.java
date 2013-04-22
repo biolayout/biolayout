@@ -40,9 +40,9 @@ public interface Factory<T>
 
     public class DPointFactory implements Factory
     {
-        public DPoint newInstance()
+        public DPoint2 newInstance()
         {
-            return new DPoint();
+            return new DPoint2();
         }
     }
 

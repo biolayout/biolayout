@@ -1,31 +1,31 @@
 package ogdf.basic;
 
-public class DPoint
+public class DPoint2
 {
     public double m_x; //!< The x-coordinate.
     public double m_y; //!< The y-coordinate.
 
     //! Creates a real point (0,0).
-    public DPoint()
+    public DPoint2()
     {
         this(0.0, 0.0);
     }
 
     //! Creates a real point (\a x,\a y).
-    public DPoint(double x, double y)
+    public DPoint2(double x, double y)
     {
         m_x = x;
         m_y = y;
     }
 
     //! Copy constructor.
-    public DPoint(DPoint dp)
+    public DPoint2(DPoint2 dp)
     {
         this(dp.m_x, dp.m_y);
     }
 
     //! Relaxed equality operator.
-    public boolean equals(DPoint dp)
+    public boolean equals(DPoint2 dp)
     {
         return DIsEqual(m_x, dp.m_x) && DIsEqual(m_y, dp.m_y);
     }
@@ -37,7 +37,7 @@ public class DPoint
     }
 
     // gives the euclidean distance between p and *this
-    public double distance(DPoint p)
+    public double distance(DPoint2 p)
     {
         double dx = p.m_x - m_x;
         double dy = p.m_y - m_y;
@@ -45,15 +45,15 @@ public class DPoint
     }
 
     // adds p to *this
-    public DPoint plus(DPoint p)
+    public DPoint2 plus(DPoint2 p)
     {
-        return new DPoint(m_x + p.m_x, m_y + p.m_y);
+        return new DPoint2(m_x + p.m_x, m_y + p.m_y);
     }
 
     // subtracts p from *this
-    public DPoint minus(DPoint p)
+    public DPoint2 minus(DPoint2 p)
     {
-        return new DPoint(m_x - p.m_x, m_y - p.m_y);
+        return new DPoint2(m_x - p.m_x, m_y - p.m_y);
     }
 
     final static double OGDF_GEOM_EPS = 1e-06;

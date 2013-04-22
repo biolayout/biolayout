@@ -918,7 +918,7 @@ public class FMMMLayout
     double average_ideal_edgelength; //!< Measured from center to center.
     double boxlength; //!< Holds the length of the quadratic comput. box.
     int number_of_components; //!< The number of components of the graph.
-    DPoint down_left_corner; //!< Holds down left corner of the comput. box.
+    DPoint2 down_left_corner; //!< Holds down left corner of the comput. box.
     NodeArray<Double> radius; //!< Holds the radius of the surrounding circle for each node.
     double time_total; //!< The runtime (=CPU-time) of the algorithm in seconds.
     FruchtermanReingold FR; //!< Class for repulsive force calculation (Fruchterman, Reingold).
@@ -1096,10 +1096,10 @@ public class FMMMLayout
                 max_mult_iter = ITERBOUND;
             }
 
-            NodeArray<DPoint> F_rep = new NodeArray<DPoint>(G, Factory.DPOINT); //stores rep. forces
-            NodeArray<DPoint> F_attr = new NodeArray<DPoint>(G, Factory.DPOINT); //stores attr. forces
-            NodeArray<DPoint> F = new NodeArray<DPoint>(G, Factory.DPOINT); //stores resulting forces
-            NodeArray<DPoint> last_node_movement = new NodeArray<DPoint>(G, Factory.DPOINT);//stores the force vectors F of the last
+            NodeArray<DPoint2> F_rep = new NodeArray<DPoint2>(G, Factory.DPOINT); //stores rep. forces
+            NodeArray<DPoint2> F_attr = new NodeArray<DPoint2>(G, Factory.DPOINT); //stores attr. forces
+            NodeArray<DPoint2> F = new NodeArray<DPoint2>(G, Factory.DPOINT); //stores resulting forces
+            NodeArray<DPoint2> last_node_movement = new NodeArray<DPoint2>(G, Factory.DPOINT);//stores the force vectors F of the last
             //iterations (needed to avoid oscillations)
 
             set_average_ideal_edgelength(G, E);//needed for easy scaling of the forces
@@ -1138,10 +1138,10 @@ public class FMMMLayout
             Graph G,
             NodeArray<NodeAttributes> A,
             EdgeArray<EdgeAttributes> E,
-            NodeArray<DPoint> F,
-            NodeArray<DPoint> F_attr,
-            NodeArray<DPoint> F_rep,
-            NodeArray<DPoint> last_node_movement,
+            NodeArray<DPoint2> F,
+            NodeArray<DPoint2> F_attr,
+            NodeArray<DPoint2> F_rep,
+            NodeArray<DPoint2> last_node_movement,
             int comp_index,
             int num_components)
     {
@@ -1298,7 +1298,7 @@ public class FMMMLayout
             GraphAttributes GA,
             NodeArray<NodeAttributes> A)
     {
-        DPoint position = new DPoint();
+        DPoint2 position = new DPoint2();
 
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
@@ -1602,13 +1602,13 @@ public class FMMMLayout
                     (A.get(v).get_x() < max_integer_position * (-1.0)) ||
                     (A.get(v).get_y() < max_integer_position * (-1.0)))
             {
-                DPoint cross_point = new DPoint();
-                DPoint nullpoint = new DPoint(0, 0);
-                DPoint old_pos = new DPoint(A.get(v).get_x(), A.get(v).get_y());
-                DPoint lt = new DPoint(max_integer_position * (-1.0), max_integer_position);
-                DPoint rt = new DPoint(max_integer_position, max_integer_position);
-                DPoint lb = new DPoint(max_integer_position * (-1.0), max_integer_position * (-1.0));
-                DPoint rb = new DPoint(max_integer_position, max_integer_position * (-1.0));
+                DPoint2 cross_point = new DPoint2();
+                DPoint2 nullpoint = new DPoint2(0, 0);
+                DPoint2 old_pos = new DPoint2(A.get(v).get_x(), A.get(v).get_y());
+                DPoint2 lt = new DPoint2(max_integer_position * (-1.0), max_integer_position);
+                DPoint2 rt = new DPoint2(max_integer_position, max_integer_position);
+                DPoint2 lb = new DPoint2(max_integer_position * (-1.0), max_integer_position * (-1.0));
+                DPoint2 rb = new DPoint2(max_integer_position, max_integer_position * (-1.0));
                 DLine s = new DLine(nullpoint, old_pos);
                 DLine left_bound = new DLine(lb, lt);
                 DLine right_bound = new DLine(rb, rt);
@@ -1941,11 +1941,11 @@ public class FMMMLayout
         double sin_j, cos_j;
         double angle, act_area, act_area_PI_half_rotated = 0.0, best_area;
         double ratio, new_width, new_height;
-        List<NodeArray<DPoint>> best_coords = new ArrayList<NodeArray<DPoint>>(number_of_components);
-        List<NodeArray<DPoint>> old_coords = new ArrayList<NodeArray<DPoint>>(number_of_components);
+        List<NodeArray<DPoint2>> best_coords = new ArrayList<NodeArray<DPoint2>>(number_of_components);
+        List<NodeArray<DPoint2>> old_coords = new ArrayList<NodeArray<DPoint2>>(number_of_components);
         node v_sub;
         Rectangle r_act, r_best;
-        DPoint new_pos = new DPoint(), new_dlc = new DPoint();
+        DPoint2 new_pos = new DPoint2(), new_dlc = new DPoint2();
 
         R.clear(); //make R empty
 
@@ -1956,15 +1956,15 @@ public class FMMMLayout
             r_best = calculate_bounding_rectangle(G_sub.get(i), A_sub.get(i), i);
             best_area = calculate_area(r_best.get_width(), r_best.get_height(),
                     number_of_components);
-            best_coords.add(i, new NodeArray<DPoint>(G_sub.get(i), Factory.DPOINT));
-            old_coords.add(i, new NodeArray<DPoint>(G_sub.get(i), Factory.DPOINT));
+            best_coords.add(i, new NodeArray<DPoint2>(G_sub.get(i), Factory.DPOINT));
+            old_coords.add(i, new NodeArray<DPoint2>(G_sub.get(i), Factory.DPOINT));
 
             for (Iterator<node> iter = G_sub.get(i).nodesIterator(); iter.hasNext();)
             {
                 v_sub = iter.next();
-                DPoint p = new DPoint(A_sub.get(i).get(v_sub).get_position());
-                old_coords.get(i).set(v_sub, new DPoint(p));
-                best_coords.get(i).set(v_sub, new DPoint(p));
+                DPoint2 p = new DPoint2(A_sub.get(i).get(v_sub).get_position());
+                old_coords.get(i).set(v_sub, new DPoint2(p));
+                best_coords.get(i).set(v_sub, new DPoint2(p));
             }
 
             //rotate the components
@@ -2004,7 +2004,7 @@ public class FMMMLayout
                     {
                         v_sub = iter.next();
 
-                        best_coords.get(i).set(v_sub, new DPoint(A_sub.get(i).get(v_sub).get_position()));
+                        best_coords.get(i).set(v_sub, new DPoint2(A_sub.get(i).get(v_sub).get_position()));
                     }
                 }
                 else if ((number_of_components == 1) && (act_area_PI_half_rotated < best_area))
@@ -2015,7 +2015,7 @@ public class FMMMLayout
                     {
                         v_sub = iter.next();
 
-                        best_coords.get(i).set(v_sub, new DPoint(A_sub.get(i).get(v_sub).get_position()));
+                        best_coords.get(i).set(v_sub, new DPoint2(A_sub.get(i).get(v_sub).get_position()));
                     }
                     //the needed rotation step follows in the next if statement
                 }
@@ -2032,7 +2032,7 @@ public class FMMMLayout
                     v_sub = iter.next();
                     new_pos.m_x = best_coords.get(i).get(v_sub).m_y * (-1);
                     new_pos.m_y = best_coords.get(i).get(v_sub).m_x;
-                    best_coords.get(i).set(v_sub, new DPoint(new_pos));
+                    best_coords.get(i).set(v_sub, new DPoint2(new_pos));
                 }
 
                 //calculate new rectangle
@@ -2086,7 +2086,7 @@ public class FMMMLayout
         ListIterator<Rectangle> RectIterator;
         int i;
         node v_sub;
-        DPoint newpos, tipped_pos = new DPoint(), tipped_dlc;
+        DPoint2 newpos, tipped_pos = new DPoint2(), tipped_dlc;
 
         for (Rectangle r : R)
         {//for
@@ -2169,10 +2169,10 @@ public class FMMMLayout
             Graph G,
             NodeArray<NodeAttributes> A,
             EdgeArray<EdgeAttributes> E,
-            NodeArray<DPoint> F,
-            NodeArray<DPoint> F_attr,
-            NodeArray<DPoint> F_rep,
-            NodeArray<DPoint> last_node_movement,
+            NodeArray<DPoint2> F,
+            NodeArray<DPoint2> F_attr,
+            NodeArray<DPoint2> F_rep,
+            NodeArray<DPoint2> last_node_movement,
             int iter,
             int fine_tuning_step)
     {
@@ -2208,7 +2208,7 @@ public class FMMMLayout
         boxlength = Math.ceil(Math.max(w, h) * BOX_SCALING_FACTOR);
 
         //down left corner of comp. box is the origin
-        down_left_corner = new DPoint(0.0, 0.0);
+        down_left_corner = new DPoint2(0.0, 0.0);
     }
 
     void create_initial_placement(Graph G, NodeArray<NodeAttributes> A)
@@ -2273,7 +2273,7 @@ public class FMMMLayout
             for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
             {
                 v = iter.next();
-                DPoint rndp = new DPoint();
+                DPoint2 rndp = new DPoint2();
                 rndp.m_x = random.nextDouble();//rand_x in [0,1]
                 rndp.m_y = random.nextDouble();//rand_y in [0,1]
                 A.get(v).set_x(rndp.m_x * (boxlength - 2) + 1);
@@ -2283,12 +2283,12 @@ public class FMMMLayout
         update_boxlength_and_cornercoordinate(G, A);
     }
 
-    void init_F(Graph G, NodeArray<DPoint> F)
+    void init_F(Graph G, NodeArray<DPoint2> F)
     {
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             node v = iter.next();
-            F.set(v, new DPoint());
+            F.set(v, new DPoint2());
         }
     }
 
@@ -2314,7 +2314,7 @@ public class FMMMLayout
     void calculate_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_rep)
     {
         if (repulsiveForcesCalculation() == RepulsiveForcesMethod.rfcExact)
         {
@@ -2334,13 +2334,13 @@ public class FMMMLayout
             Graph G,
             NodeArray<NodeAttributes> A,
             EdgeArray<EdgeAttributes> E,
-            NodeArray<DPoint> F_attr)
+            NodeArray<DPoint2> F_attr)
     {
         edge e;
         node u, v;
         double norm_v_minus_u, scalar;
-        DPoint vector_v_minus_u, f_u = new DPoint();
-        DPoint nullpoint = new DPoint(0, 0);
+        DPoint2 vector_v_minus_u, f_u = new DPoint2();
+        DPoint2 nullpoint = new DPoint2(0, 0);
 
         //initialisation
         init_F(G, F_attr);
@@ -2413,15 +2413,15 @@ public class FMMMLayout
 
     void add_attr_rep_forces(
             Graph G,
-            NodeArray<DPoint> F_attr,
-            NodeArray<DPoint> F_rep,
-            NodeArray<DPoint> F,
+            NodeArray<DPoint2> F_attr,
+            NodeArray<DPoint2> F_rep,
+            NodeArray<DPoint2> F,
             int iter,
             int fine_tuning_step)
     {
         node v;
-        DPoint f = new DPoint(), force = new DPoint();
-        DPoint nullpoint = new DPoint(0, 0);
+        DPoint2 f = new DPoint2(), force = new DPoint2();
+        DPoint2 nullpoint = new DPoint2(0, 0);
         double norm_f, scalar;
         double act_spring_strength, act_rep_force_strength;
 
@@ -2499,14 +2499,14 @@ public class FMMMLayout
                 force.m_x = scalar * f.m_x;
                 force.m_y = scalar * f.m_y;
             }
-            F.set(v, new DPoint(force));
+            F.set(v, new DPoint2(force));
         }
     }
 
     void move_nodes(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F)
+            NodeArray<DPoint2> F)
     {
         node v;
 
@@ -2523,7 +2523,7 @@ public class FMMMLayout
     {
         node v;
         double xmin, xmax, ymin, ymax;
-        DPoint midpoint;
+        DPoint2 midpoint;
 
         v = G.firstNode();
         midpoint = A.get(v).get_position();
@@ -2607,7 +2607,7 @@ public class FMMMLayout
         }
     }
 
-    double get_average_forcevector_length(Graph G, NodeArray<DPoint> F)
+    double get_average_forcevector_length(Graph G, NodeArray<DPoint2> F)
     {
         double lengthsum = 0;
         node v;
@@ -2622,8 +2622,8 @@ public class FMMMLayout
 
     void prevent_oscilations(
             Graph G,
-            NodeArray<DPoint> F,
-            NodeArray<DPoint> last_node_movement,
+            NodeArray<DPoint2> F,
+            NodeArray<DPoint2> last_node_movement,
             int iter)
     {
 
@@ -2638,7 +2638,7 @@ public class FMMMLayout
         double pi_times_10_over_6 = 10 * pi_times_1_over_6;
         double pi_times_11_over_6 = 11 * pi_times_1_over_6;
 
-        DPoint nullpoint = new DPoint(0, 0);
+        DPoint2 nullpoint = new DPoint2(0, 0);
         double fi; //angle in [0,2pi) measured counterclockwise
         double norm_old, norm_new, quot_old_new;
 
@@ -2648,8 +2648,8 @@ public class FMMMLayout
             for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
             {
                 v = i.next();
-                DPoint force_new = new DPoint(F.get(v));
-                DPoint force_old = new DPoint(last_node_movement.get(v));
+                DPoint2 force_new = new DPoint2(F.get(v));
+                DPoint2 force_old = new DPoint2(last_node_movement.get(v));
                 norm_new = F.get(v).norm();
                 norm_old = last_node_movement.get(v).norm();
                 if ((norm_new > 0) && (norm_old > 0))
@@ -2728,7 +2728,7 @@ public class FMMMLayout
         }
     }
 
-    double angle(DPoint P, DPoint Q, DPoint R)
+    double angle(DPoint2 P, DPoint2 Q, DPoint2 R)
     {
         double dx1 = Q.m_x - P.m_x;
         double dy1 = Q.m_y - P.m_y;
@@ -2772,14 +2772,14 @@ public class FMMMLayout
 
     void init_last_node_movement(
             Graph G,
-            NodeArray<DPoint> F,
-            NodeArray<DPoint> last_node_movement)
+            NodeArray<DPoint2> F,
+            NodeArray<DPoint2> last_node_movement)
     {
         node v;
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            last_node_movement.set(v, new DPoint(F.get(v)));
+            last_node_movement.set(v, new DPoint2(F.get(v)));
         }
     }
 
@@ -2793,7 +2793,7 @@ public class FMMMLayout
         double sum_real_edgelength = 0;
         double sum_ideal_edgelength = 0;
         double area_scaling_factor;
-        DPoint new_pos = new DPoint();
+        DPoint2 new_pos = new DPoint2();
 
         for (Iterator<edge> i = G.edgesIterator(); i.hasNext();)
         {
@@ -2820,7 +2820,7 @@ public class FMMMLayout
         }
     }
 
-    void restrict_force_to_comp_box(DPoint force)
+    void restrict_force_to_comp_box(DPoint2 force)
     {
         double x_min = down_left_corner.m_x;
         double x_max = down_left_corner.m_x + boxlength;

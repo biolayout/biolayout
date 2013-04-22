@@ -40,15 +40,15 @@ class FruchtermanReingold
 {
     //Import updated information of the drawing area.
 
-    public void update_boxlength_and_cornercoordinate(double b_l, DPoint d_l_c)
+    public void update_boxlength_and_cornercoordinate(double b_l, DPoint2 d_l_c)
     {
         boxlength = b_l;
-        down_left_corner = new DPoint(d_l_c);
+        down_left_corner = new DPoint2(d_l_c);
     }
     private int _grid_quotient;//for coarsening the FrRe-grid
     private int max_gridindex; //maximum index of a grid row/column
     private double boxlength;  //length of drawing box
-    private DPoint down_left_corner;//down left corner of drawing box
+    private DPoint2 down_left_corner;//down left corner of drawing box
 
     //The number k of rows and colums of the grid is sqrt(|V|) / frGridQuotient()
     //(Note that in [FrRe] frGridQuotient() is 2.)
@@ -70,14 +70,14 @@ class FruchtermanReingold
     public void calculate_exact_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_rep)
     {
         //naive algorithm by Fruchterman & Reingold
         numexcept N;
         node v, u;
-        DPoint f_rep_u_on_v = new DPoint();
-        DPoint vector_v_minus_u;
-        DPoint pos_u, pos_v;
+        DPoint2 f_rep_u_on_v = new DPoint2();
+        DPoint2 vector_v_minus_u;
+        DPoint2 pos_u, pos_v;
         double norm_v_minus_u;
         int node_number = G.numberOfNodes();
         List<node> array_of_the_nodes = new ArrayList<node>();
@@ -87,7 +87,7 @@ class FruchtermanReingold
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             v = iter.next();
-            F_rep.set(v, new DPoint());
+            F_rep.set(v, new DPoint2());
         }
 
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
@@ -116,8 +116,8 @@ class FruchtermanReingold
                     f_rep_u_on_v.m_x = scalar * vector_v_minus_u.m_x;
                     f_rep_u_on_v.m_y = scalar * vector_v_minus_u.m_y;
                 }
-                F_rep.set(v, new DPoint(F_rep.get(v).plus(f_rep_u_on_v)));
-                F_rep.set(u, new DPoint(F_rep.get(u).minus(f_rep_u_on_v)));
+                F_rep.set(v, new DPoint2(F_rep.get(v).plus(f_rep_u_on_v)));
+                F_rep.set(u, new DPoint2(F_rep.get(u).minus(f_rep_u_on_v)));
             }
         }
     }
@@ -125,17 +125,17 @@ class FruchtermanReingold
     public void calculate_approx_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_rep)
     {
         //GRID algorithm by Fruchterman & Reingold
         numexcept N;
-        List<DPoint> neighbour_boxes; // should be IPoint
+        List<IPoint2> neighbour_boxes;
         List<node> neighbour_box;
-        DPoint act_neighbour_box; // should be IPoint
-        DPoint neighbour; // should be IPoint
-        DPoint f_rep_u_on_v = new DPoint();
-        DPoint vector_v_minus_u;
-        DPoint pos_u, pos_v;
+        IPoint2 act_neighbour_box;
+        IPoint2 neighbour;
+        DPoint2 f_rep_u_on_v = new DPoint2();
+        DPoint2 vector_v_minus_u;
+        DPoint2 pos_u, pos_v;
         double norm_v_minus_u;
         double scalar;
 
@@ -148,7 +148,7 @@ class FruchtermanReingold
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             v = iter.next();
-            F_rep.set(v, new DPoint());
+            F_rep.set(v, new DPoint2());
         }
 
         //init max_gridindex and set contained_nodes;
@@ -213,8 +213,8 @@ class FruchtermanReingold
                             f_rep_u_on_v.m_y = scalar * vector_v_minus_u.m_y;
                         }
 
-                        F_rep.set(v, new DPoint(F_rep.get(v).plus(f_rep_u_on_v)));
-                        F_rep.set(u, new DPoint(F_rep.get(u).minus(f_rep_u_on_v)));
+                        F_rep.set(v, new DPoint2(F_rep.get(v).plus(f_rep_u_on_v)));
+                        F_rep.set(u, new DPoint2(F_rep.get(u).minus(f_rep_u_on_v)));
                     }
                 }
 
@@ -222,14 +222,14 @@ class FruchtermanReingold
 
                 //find_neighbour_boxes
 
-                neighbour_boxes = new ArrayList<DPoint>();
+                neighbour_boxes = new ArrayList<IPoint2>();
                 for (k = i - 1; k <= i + 1; k++)
                 {
                     for (l = j - 1; l <= j + 1; l++)
                     {
                         if ((k >= 0) && (l >= 0) && (k < max_gridindex) && (l < max_gridindex))
                         {
-                            neighbour = new DPoint(k, l);
+                            neighbour = new IPoint2(k, l);
                             if ((k != i) || (l != j))
                             {
                                 neighbour_boxes.add(neighbour);
@@ -240,7 +240,7 @@ class FruchtermanReingold
 
 
                 //forget neighbour_boxes that already had access to this box
-                for (DPoint act_neighbour_box_it : neighbour_boxes)
+                for (IPoint2 act_neighbour_box_it : neighbour_boxes)
                 {//forall
                     act_i = (int) act_neighbour_box_it.m_x;
                     act_j = (int) act_neighbour_box_it.m_y;
@@ -265,8 +265,8 @@ class FruchtermanReingold
                                     f_rep_u_on_v.m_x = scalar * vector_v_minus_u.m_x;
                                     f_rep_u_on_v.m_y = scalar * vector_v_minus_u.m_y;
                                 }
-                                F_rep.set(v_it, new DPoint(F_rep.get(v_it).plus(f_rep_u_on_v)));
-                                F_rep.set(u_it, new DPoint(F_rep.get(u_it).minus(f_rep_u_on_v)));
+                                F_rep.set(v_it, new DPoint2(F_rep.get(v_it).plus(f_rep_u_on_v)));
+                                F_rep.set(u_it, new DPoint2(F_rep.get(u_it).minus(f_rep_u_on_v)));
                             }//for
                         }
                     }//if1
@@ -275,10 +275,10 @@ class FruchtermanReingold
         }
     }
 
-    public void make_initialisations(double bl, DPoint d_l_c, int grid_quot)
+    public void make_initialisations(double bl, DPoint2 d_l_c, int grid_quot)
     {
         grid_quotient(grid_quot);
-        down_left_corner = new DPoint(d_l_c); //export this two values from FMMM
+        down_left_corner = new DPoint2(d_l_c); //export this two values from FMMM
         boxlength = bl;
     }
 

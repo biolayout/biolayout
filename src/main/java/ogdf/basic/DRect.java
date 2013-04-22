@@ -1,26 +1,26 @@
 package ogdf.basic;
 
-import ogdf.basic.DPoint;
+import ogdf.basic.DPoint2;
 
 /**
  * \brief Rectangles with real coordinates.
  */
 class DRect
 {
-    DPoint m_p1; //!< The lower left point of the rectangle.
-    DPoint m_p2; //!< The upper right point of the rectangle.
+    DPoint2 m_p1; //!< The lower left point of the rectangle.
+    DPoint2 m_p2; //!< The upper right point of the rectangle.
 
     //! Creates a rectangle with lower left and upper right point (0,0).
     public DRect()
     {
-        this(new DPoint(), new DPoint());
+        this(new DPoint2(), new DPoint2());
     }
 
     //! Creates a rectangle with lower left point \a p1 and upper right point \a p2.
-    public DRect(DPoint p1, DPoint p2)
+    public DRect(DPoint2 p1, DPoint2 p2)
     {
-        m_p1 = new DPoint(p1);
-        m_p2 = new DPoint(p2);
+        m_p1 = new DPoint2(p1);
+        m_p2 = new DPoint2(p2);
         normalize();
     }
 
@@ -82,12 +82,12 @@ class DRect
     }
 
     //! Returns the lower left point of the rectangle.
-    public DPoint p1()
+    public DPoint2 p1()
     {
         return m_p1;
     }
     //! Returns the upper right point of the rectangle.
-    public DPoint p2()
+    public DPoint2 p2()
     {
         return m_p2;
     }
@@ -95,25 +95,25 @@ class DRect
     //! Returns the top side of the rectangle.
     public DLine topLine()
     {
-        return new DLine(new DPoint(m_p1.m_x, m_p2.m_y), new DPoint(m_p2.m_x, m_p2.m_y));
+        return new DLine(new DPoint2(m_p1.m_x, m_p2.m_y), new DPoint2(m_p2.m_x, m_p2.m_y));
     }
 
     //! Returns the right side of the rectangle.
     public DLine rightLine()
     {
-        return new DLine(new DPoint(m_p2.m_x, m_p2.m_y), new DPoint(m_p2.m_x, m_p1.m_y));
+        return new DLine(new DPoint2(m_p2.m_x, m_p2.m_y), new DPoint2(m_p2.m_x, m_p1.m_y));
     }
 
     //! Returns the left side of the rectangle.
     public DLine leftLine()
     {
-        return new DLine(new DPoint(m_p1.m_x, m_p1.m_y), new DPoint(m_p1.m_x, m_p2.m_y));
+        return new DLine(new DPoint2(m_p1.m_x, m_p1.m_y), new DPoint2(m_p1.m_x, m_p2.m_y));
     }
 
     //! Returns the bottom side of the rectangle.
     public DLine bottomLine()
     {
-        return new DLine(new DPoint(m_p2.m_x, m_p1.m_y), new DPoint(m_p1.m_x, m_p1.m_y));
+        return new DLine(new DPoint2(m_p2.m_x, m_p1.m_y), new DPoint2(m_p1.m_x, m_p1.m_y));
     }
 
     //! Swaps the y-coordinates of the two points.
@@ -129,12 +129,12 @@ class DRect
     }
 
     //! Returns true iff \a p lies within this rectangle.
-    public boolean contains(DPoint p)
+    public boolean contains(DPoint2 p)
     {
-        if (DPoint.DIsLess(p.m_x, m_p1.m_x) ||
-                DPoint.DIsGreater(p.m_x, m_p2.m_x) ||
-                DPoint.DIsLess(p.m_y, m_p1.m_y) ||
-                DPoint.DIsGreater(p.m_y, m_p2.m_y))
+        if (DPoint2.DIsLess(p.m_x, m_p1.m_x) ||
+                DPoint2.DIsGreater(p.m_x, m_p2.m_x) ||
+                DPoint2.DIsLess(p.m_y, m_p1.m_y) ||
+                DPoint2.DIsGreater(p.m_y, m_p2.m_y))
         {
             return false;
         }

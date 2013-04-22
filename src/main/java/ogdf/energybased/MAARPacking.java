@@ -456,7 +456,7 @@ public class MAARPacking
         int i;
         Rectangle r;
         PackingRowInfo p, p_pred;
-        DPoint new_dlc_pos = new DPoint();
+        DPoint2 new_dlc_pos = new DPoint2();
         double new_x, new_y;
         List<Double> row_y_min = new ArrayList<Double>(); //stores the min. y-coordinates for each row in P
         List<Double> act_row_x_max = new ArrayList<Double>(); //stores the actual rightmost x-coordinate
@@ -608,7 +608,7 @@ public class MAARPacking
     {
         Rectangle r = rect_item;
         Rectangle r_tipped_over = r;
-        DPoint tipped_dlc = new DPoint();
+        DPoint2 tipped_dlc = new DPoint2();
 
         if (r.is_tipped_over() == false)
         {//tipp old_dlc over

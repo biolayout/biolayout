@@ -49,8 +49,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y + act_ptr.get_Sm_boxlength() / 2;
 
@@ -67,8 +67,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y + act_ptr.get_Sm_boxlength() / 2;
 
@@ -85,8 +85,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x + act_ptr.get_Sm_boxlength() / 2;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y + act_ptr.get_Sm_boxlength() / 2;
 
@@ -103,8 +103,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x + act_ptr.get_Sm_boxlength() / 2;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y + act_ptr.get_Sm_boxlength() / 2;
 
@@ -121,8 +121,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y;
 
@@ -139,8 +139,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y;
 
@@ -157,8 +157,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x + act_ptr.get_Sm_boxlength() / 2;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y;
 
@@ -175,8 +175,8 @@ public class QuadTreeNM
     {
         QuadTreeNodeNM new_ptr = new QuadTreeNodeNM();
 
-        DPoint old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
-        DPoint new_Sm_dlc = new DPoint();
+        DPoint2 old_Sm_dlc = act_ptr.get_Sm_downleftcorner();
+        DPoint2 new_Sm_dlc = new DPoint2();
         new_Sm_dlc.m_x = old_Sm_dlc.m_x + act_ptr.get_Sm_boxlength() / 2;
         new_Sm_dlc.m_y = old_Sm_dlc.m_y;
 

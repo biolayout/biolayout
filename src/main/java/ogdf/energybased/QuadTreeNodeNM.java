@@ -38,7 +38,7 @@ public class QuadTreeNodeNM
 {
 
     int Sm_level;                     //level of the small cell
-    DPoint Sm_downleftcorner;          //coords of the down left corner of the small cell
+    DPoint2 Sm_downleftcorner;          //coords of the down left corner of the small cell
     double Sm_boxlength;               //length of small cell
     List<ParticleInfo> L_x_ptr;       //points to the lists that contain each Particle
     //of G with its x(y)coordinate in increasing order
@@ -69,7 +69,7 @@ public class QuadTreeNodeNM
         L_y_ptr = null;
         subtreeparticlenumber = 0;
         Sm_level = 0;
-        Sm_downleftcorner = new DPoint();
+        Sm_downleftcorner = new DPoint2();
         Sm_boxlength = 0;
         Sm_center = new Complex();
         ME = null;
@@ -88,9 +88,9 @@ public class QuadTreeNodeNM
         Sm_level = l;
     }
 
-    public void set_Sm_downleftcorner(DPoint dlc)
+    public void set_Sm_downleftcorner(DPoint2 dlc)
     {
-        Sm_downleftcorner = new DPoint(dlc);
+        Sm_downleftcorner = new DPoint2(dlc);
     }
 
     public void set_Sm_boxlength(double l)
@@ -293,9 +293,9 @@ public class QuadTreeNodeNM
         return Sm_level;
     }
 
-    public DPoint get_Sm_downleftcorner()
+    public DPoint2 get_Sm_downleftcorner()
     {
-        return new DPoint(Sm_downleftcorner);
+        return new DPoint2(Sm_downleftcorner);
     }
 
     public double get_Sm_boxlength()

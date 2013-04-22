@@ -63,12 +63,12 @@ public class NMM
     int _particles_in_leaves;//max. number of particles for leaves of the quadtree
     int _precision;  //precision for p-term multipole expansion
     double boxlength;//length of drawing box
-    DPoint down_left_corner;//down left corner of drawing box
+    DPoint2 down_left_corner;//down left corner of drawing box
     int[] power_of_2; //holds the powers of 2 (for speed reasons to calculate the
     //maximal boxindex (index is from 0 to max_power_of_2_index)
     int max_power_of_2_index;//holds max. index for power_of_2 (= 30)
     double[][] BK; //holds the binomial coefficients
-    List<DPoint> rep_forces;	//stores the rep. forces of the last iteration
+    List<DPoint2> rep_forces;	//stores the rep. forces of the last iteration
     //(needed for error calculation)
     Random random;
 
@@ -93,7 +93,7 @@ public class NMM
     void calculate_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_rep)
     {
         if (using_NMM) //use NewMultipoleMethod
         {
@@ -108,13 +108,13 @@ public class NMM
     public void calculate_repulsive_forces_by_NMM(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_rep)
     {
         QuadTreeNM T = new QuadTreeNM();
         node v;
-        NodeArray<DPoint> F_direct = new NodeArray<DPoint>(G, Factory.DPOINT);
-        NodeArray<DPoint> F_local_exp = new NodeArray<DPoint>(G, Factory.DPOINT);
-        NodeArray<DPoint> F_multipole_exp = new NodeArray<DPoint>(G, Factory.DPOINT);
+        NodeArray<DPoint2> F_direct = new NodeArray<DPoint2>(G, Factory.DPOINT);
+        NodeArray<DPoint2> F_local_exp = new NodeArray<DPoint2>(G, Factory.DPOINT);
+        NodeArray<DPoint2> F_multipole_exp = new NodeArray<DPoint2>(G, Factory.DPOINT);
         List<QuadTreeNodeNM> quad_tree_leaves;
 
         //initializations
@@ -122,9 +122,9 @@ public class NMM
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            F_direct.set(v, new DPoint());
-            F_local_exp.set(v, new DPoint());
-            F_multipole_exp.set(v, new DPoint());
+            F_direct.set(v, new DPoint2());
+            F_local_exp.set(v, new DPoint2());
+            F_multipole_exp.set(v, new DPoint2());
         }
 
         quad_tree_leaves = new ArrayList<QuadTreeNodeNM>();
@@ -150,7 +150,7 @@ public class NMM
     void calculate_repulsive_forces_by_exact_method(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_rep)
     {
         ExactMethod.calculate_exact_repulsive_forces(G, A, F_rep);
     }
@@ -158,7 +158,7 @@ public class NMM
     void make_initialisations(
             Graph G,
             double bl,
-            DPoint d_l_c,
+            DPoint2 d_l_c,
             int p_i_l,
             int p,
             FMMMLayout.ReducedTreeConstruction t_c_w,
@@ -172,7 +172,7 @@ public class NMM
             precision(p);
             tree_construction_way(t_c_w);
             find_sm_cell(f_s_c);
-            down_left_corner = new DPoint(d_l_c); //Export this two values from FMMM
+            down_left_corner = new DPoint2(d_l_c); //Export this two values from FMMM
             boxlength = bl;
             init_binko(2 * precision());
             init_power_of_2_array();
@@ -184,12 +184,12 @@ public class NMM
         }
     }
 
-    void update_boxlength_and_cornercoordinate(double b_l, DPoint d_l_c)
+    void update_boxlength_and_cornercoordinate(double b_l, DPoint2 d_l_c)
     {
         if (using_NMM)
         {
             boxlength = b_l;
-            down_left_corner = new DPoint(d_l_c);
+            down_left_corner = new DPoint2(d_l_c);
         }
         else
         {
@@ -1807,7 +1807,7 @@ public class NMM
     {
         int new_level;
         double new_boxlength;
-        DPoint new_dlc = new DPoint();
+        DPoint2 new_dlc = new DPoint2();
         boolean Sm_cell_found = false;
 
         while (!Sm_cell_found && ((x_max - x_min >= MIN_BOX_LENGTH) ||
@@ -1866,11 +1866,11 @@ public class NMM
     {
         int level_offset = act_ptr.get_Sm_level();
         max_power_of_2_index = 30;//up to this level standard integer arithmetic is used
-        DPoint Sm_position = new DPoint(); // IPoint
+        IPoint2 Sm_position = new IPoint2();
         double Sm_dlc_x_coord, Sm_dlc_y_coord;
         double Sm_boxlength;
         int Sm_level;
-        DPoint Sm_downleftcorner = new DPoint();
+        DPoint2 Sm_downleftcorner = new DPoint2();
         int j_x = max_power_of_2_index + 1;
         int j_y = max_power_of_2_index + 1;
         boolean rectangle_is_horizontal_line = false;
@@ -2129,10 +2129,10 @@ public class NMM
 
     void set_center(QuadTreeNodeNM act_ptr)
     {
-        DPoint Sm_downleftcorner = act_ptr.get_Sm_downleftcorner();
+        DPoint2 Sm_downleftcorner = act_ptr.get_Sm_downleftcorner();
         double Sm_boxlength = act_ptr.get_Sm_boxlength();
         double boxcenter_x_coord, boxcenter_y_coord;
-        DPoint Sm_dlc;
+        DPoint2 Sm_dlc;
         double rand_y;
 
         boxcenter_x_coord = Sm_downleftcorner.m_x + Sm_boxlength * 0.5;
@@ -2706,13 +2706,13 @@ public class NMM
     void transform_local_exp_to_forces(
             NodeArray<NodeAttributes> A,
             List<QuadTreeNodeNM> quad_tree_leaves,
-            NodeArray<DPoint> F_local_exp)
+            NodeArray<DPoint2> F_local_exp)
     {
         List<node> contained_nodes;
         Complex sum;
         Complex z_0;
         Complex z_v_minus_z_0_over_k_minus_1;
-        DPoint force_vector = new DPoint();
+        DPoint2 force_vector = new DPoint2();
 
         //calculate derivative of the potential polynom (= local expansion at leaf nodes)
         //and evaluate it for each node in contained_nodes()
@@ -2744,14 +2744,14 @@ public class NMM
     void transform_multipole_exp_to_forces(
             NodeArray<NodeAttributes> A,
             List<QuadTreeNodeNM> quad_tree_leaves,
-            NodeArray<DPoint> F_multipole_exp)
+            NodeArray<DPoint2> F_multipole_exp)
     {
         List<QuadTreeNodeNM> M;
         List<node> act_contained_nodes;
         Complex sum;
         Complex z_0;
         Complex z_v_minus_z_0_over_minus_k_minus_1;
-        DPoint force_vector = new DPoint();
+        DPoint2 force_vector = new DPoint2();
 
         //for each leaf u in the M-List of an actual leaf v do:
         //calculate derivative of the multipole expansion function at u
@@ -2792,16 +2792,16 @@ public class NMM
     void calculate_neighbourcell_forces(
             NodeArray<NodeAttributes> A,
             List<QuadTreeNodeNM> quad_tree_leaves,
-            NodeArray<DPoint> F_direct)
+            NodeArray<DPoint2> F_direct)
     {
         List<node> act_contained_nodes, neighbour_contained_nodes, non_neighbour_contained_nodes;
         List<QuadTreeNodeNM> neighboured_leaves;
         List<QuadTreeNodeNM> non_neighboured_leaves;
         double act_leaf_boxlength, neighbour_leaf_boxlength;
-        DPoint act_leaf_dlc, neighbour_leaf_dlc;
-        DPoint f_rep_u_on_v = new DPoint();
-        DPoint vector_v_minus_u;
-        DPoint pos_u, pos_v;
+        DPoint2 act_leaf_dlc, neighbour_leaf_dlc;
+        DPoint2 f_rep_u_on_v = new DPoint2();
+        DPoint2 vector_v_minus_u;
+        DPoint2 pos_u, pos_v;
         double norm_v_minus_u, scalar;
         int length;
         node u, v;
@@ -2948,10 +2948,10 @@ public class NMM
 
     void add_rep_forces(
             Graph G,
-            NodeArray<DPoint> F_direct,
-            NodeArray<DPoint> F_multipole_exp,
-            NodeArray<DPoint> F_local_exp,
-            NodeArray<DPoint> F_rep)
+            NodeArray<DPoint2> F_direct,
+            NodeArray<DPoint2> F_multipole_exp,
+            NodeArray<DPoint2> F_local_exp,
+            NodeArray<DPoint2> F_rep)
     {
         node v;
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)

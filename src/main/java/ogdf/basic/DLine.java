@@ -1,6 +1,6 @@
 package ogdf.basic;
 
-import ogdf.basic.DPoint;
+import ogdf.basic.DPoint2;
 
 /**
  * \brief Lines with real coordinates.
@@ -8,20 +8,20 @@ import ogdf.basic.DPoint;
 public class DLine
 {
 
-    DPoint m_start; //!< The start point of the line.
-    DPoint m_end;   //!< The end point of the line.
+    DPoint2 m_start; //!< The start point of the line.
+    DPoint2 m_end;   //!< The end point of the line.
 
     //! Creates an empty line.
     public DLine()
     {
-        this(new DPoint(), new DPoint());
+        this(new DPoint2(), new DPoint2());
     }
 
     //! Creates a line with start point \a p1 and end point \a p2.
-    public DLine(DPoint p1, DPoint p2)
+    public DLine(DPoint2 p1, DPoint2 p2)
     {
-        m_start = new DPoint(p1);
-        m_end = new DPoint(p2);
+        m_start = new DPoint2(p1);
+        m_end = new DPoint2(p2);
     }
 
     //! Copy constructor.
@@ -46,15 +46,15 @@ public class DLine
     }
 
     //! Returns the start point of the line.
-    public DPoint start()
+    public DPoint2 start()
     {
-        return new DPoint(m_start);
+        return new DPoint2(m_start);
     }
 
     //! Returns the end point of the line.
-    public DPoint end()
+    public DPoint2 end()
     {
-        return new DPoint(m_end);
+        return new DPoint2(m_end);
     }
 
     //! Returns the x-coordinate of the difference (end point - start point).
@@ -84,13 +84,13 @@ public class DLine
     //! Returns true iff this line runs vertically.
     public boolean isVertical()
     {
-        return (DPoint.DIsEqual(dx(), 0.0));
+        return (DPoint2.DIsEqual(dx(), 0.0));
     }
 
     //! Returns true iff this line runs horizontally.
     public boolean isHorizontal()
     {
-        return (DPoint.DIsEqual(dy(), 0.0));
+        return (DPoint2.DIsEqual(dy(), 0.0));
     }
 
     /**
@@ -100,7 +100,7 @@ public class DLine
      * @param inter is assigned the intersection point if true is returned.
      * @param endpoints determines if common endpoints are treated as intersection.
      */
-    public boolean intersection(DLine line, DPoint inter)
+    public boolean intersection(DLine line, DPoint2 inter)
     {
         final boolean endpoints = true;
         double ix, iy;
@@ -171,7 +171,7 @@ public class DLine
             iy = slope() * ix + yAbs();
         }
 
-        inter = new DPoint(ix, iy); //the (infinite) lines cross point
+        inter = new DPoint2(ix, iy); //the (infinite) lines cross point
 
         DRect tRect = new DRect(line);
         DRect mRect = new DRect(this);
@@ -180,7 +180,7 @@ public class DLine
     }
 
     //! Returns true iff \a p lie on this line.
-    public boolean contains(DPoint p)
+    public boolean contains(DPoint2 p)
     {
         if (p == start() || p == end())
         {
@@ -196,9 +196,9 @@ public class DLine
 
         if (dx() == 0.0)
         { // first check, if line is vertical
-            if (DPoint.DIsEqual(p.m_x, start().m_x) &&
-                    DPoint.DIsLessEqual(p.m_y, (Math.max(start().m_y, end().m_y))) &&
-                    DPoint.DIsGreaterEqual(p.m_y, (Math.min(start().m_y, end().m_y))))
+            if (DPoint2.DIsEqual(p.m_x, start().m_x) &&
+                    DPoint2.DIsLessEqual(p.m_y, (Math.max(start().m_y, end().m_y))) &&
+                    DPoint2.DIsGreaterEqual(p.m_y, (Math.min(start().m_y, end().m_y))))
             {
                 return true;
             }
@@ -213,7 +213,7 @@ public class DLine
             return false;
         }
 
-        if (DPoint.DIsEqual(slope(), (dy2p / dx2p)))
+        if (DPoint2.DIsEqual(slope(), (dy2p / dx2p)))
         {
             return true;
         }

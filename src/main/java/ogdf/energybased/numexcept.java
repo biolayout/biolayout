@@ -37,7 +37,7 @@ package ogdf.energybased;
 // reasonable numeric and logic calculations are possible any more
 //---------------------------------------------------------------------------
 import java.util.Random;
-import ogdf.basic.DPoint;
+import ogdf.basic.DPoint2;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -53,8 +53,8 @@ public class numexcept
     //old_point that is contained in the box defined by xmin,...,ymax; The size of
     //D is shrunk by multiplying with epsilon = 0.1; Precondition:
     //old_point is contained in the box and the box is not equal to old_point.
-    public static DPoint choose_distinct_random_point_in_disque(
-            DPoint old_point,
+    public static DPoint2 choose_distinct_random_point_in_disque(
+            DPoint2 old_point,
             double xmin,
             double xmax,
             double ymin,
@@ -63,7 +63,7 @@ public class numexcept
         double mindist;//minimal distance from old_point to the boundaries of the disc
         double mindist_to_xmin, mindist_to_xmax, mindist_to_ymin, mindist_to_ymax;
         double rand_x, rand_y;
-        DPoint new_point = new DPoint();
+        DPoint2 new_point = new DPoint2();
 
         mindist_to_xmin = old_point.m_x - xmin;
         mindist_to_xmax = xmax - old_point.m_x;
@@ -133,7 +133,7 @@ public class numexcept
 
     //A random point (distinct from old_pos) on the disque around old_pos with
     //radius epsilon = 0.1 is computed.
-    public static DPoint choose_distinct_random_point_in_radius_epsilon(DPoint old_pos)
+    public static DPoint2 choose_distinct_random_point_in_radius_epsilon(DPoint2 old_pos)
     {
         double xmin = old_pos.m_x - 1 * epsilon;
         double xmax = old_pos.m_x + 1 * epsilon;
@@ -147,7 +147,7 @@ public class numexcept
     //is not possible (calculated values exceed the machine accuracy) in this cases
     //true is returned and force is set to a reasonable value that does
     //not cause problems; Else false is returned and force keeps unchanged.
-    public static boolean f_rep_near_machine_precision(double distance, DPoint force)
+    public static boolean f_rep_near_machine_precision(double distance, DPoint2 force)
     {
         double POS_BIG_LIMIT = POS_BIG_DOUBLE * 1e-190;
         double POS_SMALL_LIMIT = POS_SMALL_DOUBLE * 1e190;
@@ -186,7 +186,7 @@ public class numexcept
     //calculation is not possible (calculated values exceed the machine accuracy) in
     //this cases true is returned and force is set to a reasonable value that does
     //not cause problems; Else false is returned and force keeps unchanged.
-    public static boolean f_near_machine_precision(double distance, DPoint force)
+    public static boolean f_near_machine_precision(double distance, DPoint2 force)
     {
         double POS_BIG_LIMIT = POS_BIG_DOUBLE * 1e-190;
         double POS_SMALL_LIMIT = POS_SMALL_DOUBLE * 1e190;

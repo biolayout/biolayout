@@ -21,6 +21,11 @@ public enum PointFactory
         this.d = d;
     }
 
+    public Dimensions dimensions()
+    {
+        return d;
+    }
+
     public DPoint newDPoint()
     {
         switch (d)

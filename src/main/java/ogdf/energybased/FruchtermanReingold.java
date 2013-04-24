@@ -155,7 +155,7 @@ class FruchtermanReingold
         max_gridindex = ((max_gridindex > 0) ? max_gridindex : 1);
         int i_num_grid_cells = max_gridindex;
         int j_num_grid_cells = max_gridindex;
-        int k_num_grid_cells = max_gridindex; //FIMXE Z could be 1 in the 2D case
+        int k_num_grid_cells = PointFactory.INSTANCE.dimensions() == PointFactory.Dimensions._2 ? 1 : max_gridindex;
         List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
 
         for (i = 0; i < i_num_grid_cells; i++)

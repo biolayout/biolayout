@@ -37,7 +37,8 @@ package ogdf.energybased;
 // reasonable numeric and logic calculations are possible any more
 //---------------------------------------------------------------------------
 import java.util.Random;
-import ogdf.basic.DPoint2;
+import ogdf.basic.DPoint;
+import ogdf.basic.DPointFactory;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -53,24 +54,30 @@ public class numexcept
     //old_point that is contained in the box defined by xmin,...,ymax; The size of
     //D is shrunk by multiplying with epsilon = 0.1; Precondition:
     //old_point is contained in the box and the box is not equal to old_point.
-    public static DPoint2 choose_distinct_random_point_in_disque(
-            DPoint2 old_point,
+    public static DPoint choose_distinct_random_point_in_disque(
+            DPoint old_point,
             double xmin,
             double xmax,
             double ymin,
-            double ymax)
+            double ymax,
+            double zmin,
+            double zmax)
     {
         double mindist;//minimal distance from old_point to the boundaries of the disc
-        double mindist_to_xmin, mindist_to_xmax, mindist_to_ymin, mindist_to_ymax;
-        double rand_x, rand_y;
-        DPoint2 new_point = new DPoint2();
+        double mindist_to_xmin, mindist_to_xmax, mindist_to_ymin, mindist_to_ymax, mindist_to_zmin, mindist_to_zmax;
+        double rand_x, rand_y, rand_z;
+        DPoint new_point = DPointFactory.INSTANCE.newPoint();
 
-        mindist_to_xmin = old_point.m_x - xmin;
-        mindist_to_xmax = xmax - old_point.m_x;
-        mindist_to_ymin = old_point.m_y - ymin;
-        mindist_to_ymax = ymax - old_point.m_y;
+        mindist_to_xmin = old_point.getX() - xmin;
+        mindist_to_xmax = xmax - old_point.getX();
+        mindist_to_ymin = old_point.getY() - ymin;
+        mindist_to_ymax = ymax - old_point.getY();
+        mindist_to_zmin = old_point.getZ() - zmin;
+        mindist_to_zmax = zmax - old_point.getZ();
 
-        mindist = Math.min(Math.min(mindist_to_xmin, mindist_to_xmax), Math.min(mindist_to_ymin, mindist_to_ymax));
+        mindist = Math.min(
+                Math.min(Math.min(mindist_to_xmin, mindist_to_xmax), Math.min(mindist_to_ymin, mindist_to_ymax)),
+                Math.min(mindist_to_zmin, mindist_to_zmax));
 
         if (mindist > 0)
         {
@@ -79,8 +86,10 @@ public class numexcept
                 //assign random double values in range (-1,1)
                 rand_x = (random.nextDouble() - 0.5) * 2.0;
                 rand_y = (random.nextDouble() - 0.5) * 2.0;
-                new_point.m_x = old_point.m_x + mindist * rand_x * epsilon;
-                new_point.m_y = old_point.m_y + mindist * rand_y * epsilon;
+                rand_z = (random.nextDouble() - 0.5) * 2.0;
+                new_point.setX(old_point.getX() + mindist * rand_x * epsilon);
+                new_point.setY(old_point.getY() + mindist * rand_y * epsilon);
+                new_point.setZ(old_point.getZ() + mindist * rand_z * epsilon);
             } while (old_point.equals(new_point) ||
                     (old_point.minus(new_point).norm() >= mindist * epsilon));
         }
@@ -88,6 +97,7 @@ public class numexcept
         {//else1
             double mindist_x = 0;
             double mindist_y = 0;
+            double mindist_z = 0;
 
             if (mindist_to_xmin > 0)
             {
@@ -97,6 +107,7 @@ public class numexcept
             {
                 mindist_x = mindist_to_xmax;
             }
+
             if (mindist_to_ymin > 0)
             {
                 mindist_y = (-1) * mindist_to_ymin;
@@ -106,15 +117,26 @@ public class numexcept
                 mindist_y = mindist_to_ymax;
             }
 
-            if ((mindist_x != 0) || (mindist_y != 0))
+            if (mindist_to_zmin > 0)
+            {
+                mindist_z = (-1) * mindist_to_zmin;
+            }
+            else if (mindist_to_zmax > 0)
+            {
+                mindist_z = mindist_to_zmax;
+            }
+
+            if ((mindist_x != 0) || (mindist_y != 0) || (mindist_z != 0))
             {
                 do
                 {
                     //assign random double values in range (0,1)
                     rand_x = random.nextDouble();
                     rand_y = random.nextDouble();
-                    new_point.m_x = old_point.m_x + mindist_x * rand_x * epsilon;
-                    new_point.m_y = old_point.m_y + mindist_y * rand_y * epsilon;
+                    rand_z = random.nextDouble();
+                    new_point.setX(old_point.getX() + mindist_x * rand_x * epsilon);
+                    new_point.setY(old_point.getY() + mindist_y * rand_y * epsilon);
+                    new_point.setZ(old_point.getZ() + mindist_z * rand_z * epsilon);
                 } while (old_point == new_point);
             }
             else if (DEBUG_BUILD)
@@ -133,21 +155,23 @@ public class numexcept
 
     //A random point (distinct from old_pos) on the disque around old_pos with
     //radius epsilon = 0.1 is computed.
-    public static DPoint2 choose_distinct_random_point_in_radius_epsilon(DPoint2 old_pos)
+    public static DPoint choose_distinct_random_point_in_radius_epsilon(DPoint old_pos)
     {
-        double xmin = old_pos.m_x - 1 * epsilon;
-        double xmax = old_pos.m_x + 1 * epsilon;
-        double ymin = old_pos.m_y - 1 * epsilon;
-        double ymax = old_pos.m_y + 1 * epsilon;
+        double xmin = old_pos.getX() - 1 * epsilon;
+        double xmax = old_pos.getX() + 1 * epsilon;
+        double ymin = old_pos.getY() - 1 * epsilon;
+        double ymax = old_pos.getY() + 1 * epsilon;
+        double zmin = old_pos.getZ() - 1 * epsilon;
+        double zmax = old_pos.getZ() + 1 * epsilon;
 
-        return choose_distinct_random_point_in_disque(old_pos, xmin, xmax, ymin, ymax);
+        return choose_distinct_random_point_in_disque(old_pos, xmin, xmax, ymin, ymax, zmin, zmax);
     }
 
     //If distance has a value near the machine precision the repulsive force calculation
     //is not possible (calculated values exceed the machine accuracy) in this cases
     //true is returned and force is set to a reasonable value that does
     //not cause problems; Else false is returned and force keeps unchanged.
-    public static boolean f_rep_near_machine_precision(double distance, DPoint2 force)
+    public static boolean f_rep_near_machine_precision(double distance, DPoint force)
     {
         double POS_BIG_LIMIT = POS_BIG_DOUBLE * 1e-190;
         double POS_SMALL_LIMIT = POS_SMALL_DOUBLE * 1e190;
@@ -157,10 +181,13 @@ public class numexcept
             //create random number in range (0,1)
             double randx = random.nextDouble();
             double randy = random.nextDouble();
+            double randz = random.nextDouble();
             int rand_sign_x = random.nextInt(2);
             int rand_sign_y = random.nextInt(2);
-            force.m_x = POS_SMALL_LIMIT * (1 + randx) * Math.pow(-1.0, rand_sign_x);
-            force.m_y = POS_SMALL_LIMIT * (1 + randy) * Math.pow(-1.0, rand_sign_y);
+            int rand_sign_z = random.nextInt(2);
+            force.setX(POS_SMALL_LIMIT * (1 + randx) * Math.pow(-1.0, rand_sign_x));
+            force.setY(POS_SMALL_LIMIT * (1 + randy) * Math.pow(-1.0, rand_sign_y));
+            force.setZ(POS_SMALL_LIMIT * (1 + randz) * Math.pow(-1.0, rand_sign_z));
             return true;
 
         }
@@ -169,10 +196,13 @@ public class numexcept
             //create random number in range (0,1)
             double randx = random.nextDouble();
             double randy = random.nextDouble();
+            double randz = random.nextDouble();
             int rand_sign_x = random.nextInt(2);
             int rand_sign_y = random.nextInt(2);
-            force.m_x = POS_BIG_LIMIT * randx * Math.pow(-1.0, rand_sign_x);
-            force.m_y = POS_BIG_LIMIT * randy * Math.pow(-1.0, rand_sign_y);
+            int rand_sign_z = random.nextInt(2);
+            force.setX(POS_BIG_LIMIT * randx * Math.pow(-1.0, rand_sign_x));
+            force.setY(POS_BIG_LIMIT * randy * Math.pow(-1.0, rand_sign_y));
+            force.setZ(POS_BIG_LIMIT * randz * Math.pow(-1.0, rand_sign_z));
             return true;
 
         }
@@ -186,7 +216,7 @@ public class numexcept
     //calculation is not possible (calculated values exceed the machine accuracy) in
     //this cases true is returned and force is set to a reasonable value that does
     //not cause problems; Else false is returned and force keeps unchanged.
-    public static boolean f_near_machine_precision(double distance, DPoint2 force)
+    public static boolean f_near_machine_precision(double distance, DPoint force)
     {
         double POS_BIG_LIMIT = POS_BIG_DOUBLE * 1e-190;
         double POS_SMALL_LIMIT = POS_SMALL_DOUBLE * 1e190;
@@ -196,10 +226,13 @@ public class numexcept
             //create random number in range (0,1)
             double randx = random.nextDouble();
             double randy = random.nextDouble();
+            double randz = random.nextDouble();
             int rand_sign_x = random.nextInt(2);
             int rand_sign_y = random.nextInt(2);
-            force.m_x = POS_SMALL_LIMIT * (1 + randx) * Math.pow(-1.0, rand_sign_x);
-            force.m_y = POS_SMALL_LIMIT * (1 + randy) * Math.pow(-1.0, rand_sign_y);
+            int rand_sign_z = random.nextInt(2);
+            force.setX(POS_SMALL_LIMIT * (1 + randx) * Math.pow(-1.0, rand_sign_x));
+            force.setY(POS_SMALL_LIMIT * (1 + randy) * Math.pow(-1.0, rand_sign_y));
+            force.setZ(POS_SMALL_LIMIT * (1 + randz) * Math.pow(-1.0, rand_sign_z));
             return true;
 
         }
@@ -208,10 +241,13 @@ public class numexcept
             //create random number in range (0,1)
             double randx = random.nextDouble();
             double randy = random.nextDouble();
+            double randz = random.nextDouble();
             int rand_sign_x = random.nextInt(2);
             int rand_sign_y = random.nextInt(2);
-            force.m_x = POS_BIG_LIMIT * randx * Math.pow(-1.0, rand_sign_x);
-            force.m_x = POS_BIG_LIMIT * randy * Math.pow(-1.0, rand_sign_y);
+            int rand_sign_z = random.nextInt(2);
+            force.setX(POS_BIG_LIMIT * randx * Math.pow(-1.0, rand_sign_x));
+            force.setY(POS_BIG_LIMIT * randy * Math.pow(-1.0, rand_sign_y));
+            force.setZ(POS_BIG_LIMIT * randz * Math.pow(-1.0, rand_sign_z));
             return true;
 
         }

@@ -42,7 +42,7 @@ package ogdf.energybased;
  * \see  http://www.gnu.org/copyleft/gpl.html
  ***************************************************************/
 
-import java.util.*;
+/*import java.util.*;
 import ogdf.basic.*;
 import org.BioLayoutExpress3D.Utils.Complex;
 import org.BioLayoutExpress3D.Utils.ref;
@@ -3047,4 +3047,4 @@ public class NMM
     {
         return _precision;
     }
-}
+}*/

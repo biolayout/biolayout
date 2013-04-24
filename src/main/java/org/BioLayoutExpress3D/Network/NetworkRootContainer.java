@@ -3,6 +3,7 @@ package org.BioLayoutExpress3D.Network;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import ogdf.basic.DPointFactory;
 import ogdf.basic.GraphAttributes;
 import ogdf.energybased.FMMMLayout;
 import org.BioLayoutExpress3D.CoreUI.*;
@@ -181,7 +182,8 @@ public final class NetworkRootContainer extends NetworkContainer
         switch (gla)
         {
             case FMMM:
-                GraphAttributes GA = new GraphAttributes(this);
+                GraphAttributes GA = new GraphAttributes(this,
+                        RENDERER_MODE_3D ? DPointFactory.Dimensions._3 : DPointFactory.Dimensions._2);
                 FMMMLayout fmmm = new FMMMLayout();
 
                 fmmm.useHighLevelOptions(false);

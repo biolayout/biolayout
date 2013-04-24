@@ -570,7 +570,7 @@ public class Multilevel
             List<NodeArray<NodeAttributes>> A_mult_ptr)
     {
         node v_high, v_act;
-        DPoint2 new_pos;
+        DPoint new_pos;
         for (Iterator<node> i = G_mult_ptr.get(level + 1).nodesIterator(); i.hasNext();)
         {
             v_high = i.next();
@@ -592,8 +592,8 @@ public class Multilevel
         double lambda = 0.0, dedicated_sun_distance;
         int node_type;
         node v, v_adj, dedicated_sun;
-        DPoint2 new_pos, dedicated_sun_pos, adj_sun_pos;
-        List<DPoint2> L = new ArrayList();
+        DPoint new_pos, dedicated_sun_pos, adj_sun_pos;
+        List<DPoint> L = new ArrayList();
         ListIterator<Double> lambdaIterator;
 
         create_all_placement_sectors(G_mult_ptr, A_mult_ptr, E_mult_ptr, level);
@@ -609,7 +609,7 @@ public class Multilevel
             {//else
                 L.clear();
                 dedicated_sun = A_mult_ptr.get(level).get(v).get_dedicated_sun_node();
-                dedicated_sun_pos = new DPoint2(A_mult_ptr.get(level).get(dedicated_sun).get_position());
+                dedicated_sun_pos = DPointFactory.INSTANCE.newPoint(A_mult_ptr.get(level).get(dedicated_sun).get_position());
                 dedicated_sun_distance = A_mult_ptr.get(level).get(v).get_dedicated_sun_distance();
 
                 if (init_placement_way == FMMMLayout.InitialPlacementMult.ipmAdvanced)
@@ -640,9 +640,7 @@ public class Multilevel
                 {//special case
                     if (L.isEmpty())
                     {
-                        new_pos = create_random_pos(dedicated_sun_pos, A_mult_ptr.get(level).get(v).get_dedicated_sun_distance(),
-                                A_mult_ptr.get(level).get(v).get_angle_1(),
-                                A_mult_ptr.get(level).get(v).get_angle_2());
+                        new_pos = create_random_pos(dedicated_sun_pos, A_mult_ptr.get(level).get(v).get_dedicated_sun_distance());
                         L.add(new_pos);
                     }
                 }//special case
@@ -676,12 +674,12 @@ public class Multilevel
             int level)
     {
         node v_high, w_high, sun_node, v, ded_sun;
-        List<DPoint2> adj_pos = new ArrayList<DPoint2>();
+        List<DPoint> adj_pos = new ArrayList<DPoint>();
         double angle_1 = 0.0, angle_2 = 0.0, act_angle_1, act_angle_2, next_angle, min_next_angle = 0.0;
-        DPoint2 start_pos, end_pos;
+        DPoint start_pos, end_pos;
         int MAX = 10; //the biggest of at most MAX random selected sectors is choosen
         int steps;
-        ListIterator<DPoint2> it;
+        ListIterator<DPoint> it;
         boolean first_angle;
 
 
@@ -690,7 +688,7 @@ public class Multilevel
             v_high = i.next();
             //find pos of adjacent nodes
             adj_pos.clear();
-            DPoint2 v_high_pos = new DPoint2(A_mult_ptr.get(level + 1).get(v_high).get_position());
+            DPoint v_high_pos = DPointFactory.INSTANCE.newPoint(A_mult_ptr.get(level + 1).get(v_high).get_position());
 
             for (edge e_high : v_high.adjEdges())
             {
@@ -705,7 +703,7 @@ public class Multilevel
                         w_high = e_high.source();
                     }
 
-                    DPoint2 w_high_pos = new DPoint2(A_mult_ptr.get(level + 1).get(w_high).get_position());
+                    DPoint w_high_pos = DPointFactory.INSTANCE.newPoint(A_mult_ptr.get(level + 1).get(w_high).get_position());
                     adj_pos.add(w_high_pos);
                 }
             }
@@ -718,8 +716,9 @@ public class Multilevel
             {
                 //create angle_1
                 start_pos = adj_pos.get(0);
-                DPoint2 x_parallel_pos = new DPoint2(v_high_pos.m_x + 1, v_high_pos.m_y);
-                angle_1 = angle(v_high_pos, x_parallel_pos, start_pos);
+                DPoint x_parallel_pos = DPointFactory.INSTANCE.newPoint(v_high_pos);
+                x_parallel_pos.setX(v_high_pos.getX() + 1);
+                angle_1 = x_parallel_pos.minus(v_high_pos).angle(start_pos.minus(v_high_pos));
                 //create angle_2
                 angle_2 = angle_1 + Math.PI;
             }
@@ -732,14 +731,15 @@ public class Multilevel
                     int adj_pos_index = it.nextIndex();
                     //create act_angle_1
                     start_pos = it.next();
-                    DPoint2 x_parallel_pos = new DPoint2(v_high_pos.m_x + 1, v_high_pos.m_y);
-                    act_angle_1 = angle(v_high_pos, x_parallel_pos, start_pos);
+                    DPoint x_parallel_pos = DPointFactory.INSTANCE.newPoint(v_high_pos);
+                    x_parallel_pos.setX(v_high_pos.getX() + 1);
+                    act_angle_1 = x_parallel_pos.minus(v_high_pos).angle(start_pos.minus(v_high_pos));
                     //create act_angle_2
                     first_angle = true;
 
-                    for (DPoint2 next_pos_ptr : adj_pos)
+                    for (DPoint next_pos_ptr : adj_pos)
                     {
-                        next_angle = angle(v_high_pos, start_pos, next_pos_ptr);
+                        next_angle = start_pos.minus(v_high_pos).angle(next_pos_ptr.minus(v_high_pos));
 
                         if (!start_pos.equals(next_pos_ptr) && (first_angle || next_angle <
                                 min_next_angle))
@@ -788,8 +788,8 @@ public class Multilevel
     {
         double moon_dist, sun_dist, lambda = 0.0;
         node v_adj, sun_node;
-        DPoint2 sun_pos, moon_pos, new_pos, adj_sun_pos;
-        List<DPoint2> L = new ArrayList<DPoint2>();
+        DPoint sun_pos, moon_pos, new_pos, adj_sun_pos;
+        List<DPoint> L = new ArrayList<DPoint>();
         ListIterator<Double> lambdaIterator;
 
         for (node v_ptr : pm_nodes)
@@ -853,91 +853,50 @@ public class Multilevel
         }//forall
     }
 
-    DPoint2 create_random_pos(DPoint2 center, double radius, double angle_1,
-            double angle_2)
+    DPoint create_random_pos(DPoint center, double radius)
     {
-        DPoint2 new_point = new DPoint2();
-        double rnd = random.nextDouble();//rand number in (0,1)
-        double rnd_angle = angle_1 + (angle_2 - angle_1) * rnd;
-        double dx = Math.cos(rnd_angle) * radius;
-        double dy = Math.sin(rnd_angle) * radius;
-        new_point.m_x = center.m_x + dx;
-        new_point.m_y = center.m_y + dy;
+        DPoint new_point = DPointFactory.INSTANCE.newPoint();
+
+        double r;
+        r = ((random.nextDouble() * 2.0) - 1.0) * radius;
+        new_point.setX(center.getX() + r);
+        r = ((random.nextDouble() * 2.0) - 1.0) * radius;
+        new_point.setY(center.getY() + r);
+        r = ((random.nextDouble() * 2.0) - 1.0) * radius;
+        new_point.setZ(center.getZ() + r);
+
+        // The point is selected within an AABB rather than a
+        // sphere, but it doesn't seem to bother anything
+        // (A normalise and scale by radius would fix it)
         return new_point;
     }
 
-    DPoint2 get_waggled_inbetween_position(DPoint2 s, DPoint2 t, double lambda)
+    DPoint get_waggled_inbetween_position(DPoint s, DPoint t, double lambda)
     {
         double WAGGLEFACTOR = 0.05;
-        DPoint2 inbetween_point = new DPoint2();
-        inbetween_point.m_x = s.m_x + lambda * (t.m_x - s.m_x);
-        inbetween_point.m_y = s.m_y + lambda * (t.m_y - s.m_y);
+        DPoint inbetween_point = DPointFactory.INSTANCE.newPoint();
+        inbetween_point = s.plus(t.minus(s).scaled(lambda));
         double radius = WAGGLEFACTOR * (t.minus(s)).norm();
         double rnd = random.nextDouble();//rand number in (0,1)
         double rand_radius = radius * rnd;
-        return create_random_pos(inbetween_point, rand_radius, 0, 6.2831853);
+        return create_random_pos(inbetween_point, rand_radius);
     }
 
-    DPoint2 get_barycenter_position(List<DPoint2> L)
+    DPoint get_barycenter_position(List<DPoint> L)
     {
-        DPoint2 sum = new DPoint2(0, 0);
-        DPoint2 barycenter = new DPoint2();
+        DPoint sum = DPointFactory.INSTANCE.newPoint();
 
-        for (DPoint2 act_point_ptr : L)
+        for (DPoint act_point_ptr : L)
         {
             sum = sum.plus(act_point_ptr);
         }
-        barycenter.m_x = sum.m_x / L.size();
-        barycenter.m_y = sum.m_y / L.size();
-        return barycenter;
+        return sum.scaled(1.0 / L.size());
     }
 
-    DPoint2 calculate_position(DPoint2 P, DPoint2 Q, double dist_P, double dist_Q)
+    DPoint calculate_position(DPoint P, DPoint Q, double dist_P, double dist_Q)
     {
         double dist_PQ = (P.minus(Q)).norm();
         double lambda = (dist_P + (dist_PQ - dist_P - dist_Q) / 2) / dist_PQ;
         return get_waggled_inbetween_position(P, Q, lambda);
-    }
-
-    double angle(DPoint2 P, DPoint2 Q, DPoint2 R)
-    {
-        double dx1 = Q.m_x - P.m_x;
-        double dy1 = Q.m_y - P.m_y;
-        double dx2 = R.m_x - P.m_x;
-        double dy2 = R.m_y - P.m_y;
-        double fi;//the angle
-
-        if ((dx1 == 0 && dy1 == 0) || (dx2 == 0 && dy2 == 0))
-        {
-            if (DEBUG_BUILD)
-            {
-                println("angle()");
-            }
-        }
-
-        double norm = (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2);
-        double cosfi = (dx1 * dx2 + dy1 * dy2) / Math.sqrt(norm);
-
-        if (cosfi >= 1.0)
-        {
-            fi = 0;
-        }
-        if (cosfi <= -1.0)
-        {
-            fi = Math.PI;
-        }
-        else
-        {
-            fi = Math.acos(cosfi);
-            if (dx1 * dy2 < dy1 * dx2)
-            {
-                fi = -fi;
-            }
-            if (fi < 0)
-            {
-                fi += 2 * Math.PI;
-            }
-        }
-        return fi;
     }
 }

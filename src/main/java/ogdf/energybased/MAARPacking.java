@@ -456,7 +456,7 @@ public class MAARPacking
         int i;
         Rectangle r;
         PackingRowInfo p, p_pred;
-        DPoint2 new_dlc_pos = new DPoint2();
+        DPoint new_dlc_pos = DPointFactory.INSTANCE.newPoint();
         double new_x, new_y;
         List<Double> row_y_min = new ArrayList<Double>(); //stores the min. y-coordinates for each row in P
         List<Double> act_row_x_max = new ArrayList<Double>(); //stores the actual rightmost x-coordinate
@@ -503,8 +503,8 @@ public class MAARPacking
             act_row_x_max.set(p.get_row_index(), act_row_x_max.get(p.get_row_index()) + r.get_width());
             new_y = row_y_min.get(p.get_row_index()) + (p.get_max_height() - r.get_height()) / 2;
 
-            new_dlc_pos.m_x = new_x;
-            new_dlc_pos.m_y = new_y;
+            new_dlc_pos.setX(new_x);
+            new_dlc_pos.setY(new_y);
             r.set_new_dlc_position(new_dlc_pos);
 
             if (Rrow_item.hasNext())
@@ -608,17 +608,17 @@ public class MAARPacking
     {
         Rectangle r = rect_item;
         Rectangle r_tipped_over = r;
-        DPoint2 tipped_dlc = new DPoint2();
+        DPoint tipped_dlc = DPointFactory.INSTANCE.newPoint();
 
         if (r.is_tipped_over() == false)
         {//tipp old_dlc over
-            tipped_dlc.m_x = r.get_old_dlc_position().m_y * (-1) - r.get_height();
-            tipped_dlc.m_y = r.get_old_dlc_position().m_x;
+            tipped_dlc.setX(r.get_old_dlc_position().getY() * (-1) - r.get_height());
+            tipped_dlc.setY(r.get_old_dlc_position().getX());
         }
         else
         {//tipp old_dlc back;
-            tipped_dlc.m_x = r.get_old_dlc_position().m_y;
-            tipped_dlc.m_y = r.get_old_dlc_position().m_x * (-1) - r.get_width();
+            tipped_dlc.setX(r.get_old_dlc_position().getY());
+            tipped_dlc.setY(r.get_old_dlc_position().getX() * (-1) - r.get_width());
         }
         r_tipped_over.set_old_dlc_position(tipped_dlc);
         r_tipped_over.set_width(r.get_height());

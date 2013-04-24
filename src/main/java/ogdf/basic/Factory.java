@@ -8,6 +8,7 @@ public interface Factory<T>
 
     public class NodeAttributesFactory implements Factory
     {
+        @Override
         public NodeAttributes newInstance()
         {
             return new NodeAttributes();
@@ -16,6 +17,7 @@ public interface Factory<T>
 
     public class EdgeAttributesFactory implements Factory
     {
+        @Override
         public EdgeAttributes newInstance()
         {
             return new EdgeAttributes();
@@ -24,6 +26,7 @@ public interface Factory<T>
 
     public class IntegerFactory implements Factory
     {
+        @Override
         public Integer newInstance()
         {
             return new Integer(0);
@@ -32,6 +35,7 @@ public interface Factory<T>
 
     public class DoubleFactory implements Factory
     {
+        @Override
         public Double newInstance()
         {
             return new Double(0.0);
@@ -40,14 +44,17 @@ public interface Factory<T>
 
     public class DPointFactory implements Factory
     {
-        public DPoint2 newInstance()
+        @Override
+        public DPoint newInstance()
         {
-            return new DPoint2();
+            // Nested factory singletons. Hmmmmm.
+            return ogdf.basic.DPointFactory.INSTANCE.newPoint();
         }
     }
 
     public class nodeFactory implements Factory
     {
+        @Override
         public node newInstance()
         {
             return new node(null, -1);
@@ -56,6 +63,7 @@ public interface Factory<T>
 
     public class edgeFactory implements Factory
     {
+        @Override
         public edge newInstance()
         {
             return new edge(null, null, -1);

@@ -6,8 +6,7 @@ import org.BioLayoutExpress3D.Network.*;
 public class GraphAttributes
 {
     Graph graph;
-    NodeArray<Double> m_x;
-    NodeArray<Double> m_y;
+    NodeArray<DPoint> m_position;
     NodeArray<Double> m_width;
     NodeArray<Double> m_height;
     Map<Vertex,node> m;
@@ -15,24 +14,37 @@ public class GraphAttributes
     public GraphAttributes(Graph graph)
     {
         this.graph = graph;
-        m_x = new NodeArray<Double>(graph, Factory.DOUBLE);
-        m_y = new NodeArray<Double>(graph, Factory.DOUBLE);
+        m_position = new NodeArray<DPoint>(graph, Factory.DPOINT);
         m_width = new NodeArray<Double>(graph, Factory.DOUBLE);
         m_height = new NodeArray<Double>(graph, Factory.DOUBLE);
         m = null;
     }
 
-    public GraphAttributes(NetworkContainer nc)
+    public GraphAttributes(NetworkContainer nc, DPointFactory.Dimensions dimensions)
     {
         this(new Graph());
+        DPointFactory.INSTANCE.setDimensions(dimensions);
 
         m = new HashMap<Vertex,node>();
 
         for (Vertex vertex : nc.getVertices())
         {
             node n = graph.newNode();
-            setX(n, vertex.getX());
-            setY(n, vertex.getY());
+            DPoint p;
+
+            switch (dimensions)
+            {
+                default:
+                case _2:
+                    p = new DPoint2(vertex.getX(), vertex.getY());
+                    break;
+
+                case _3:
+                    p = new DPoint3(vertex.getX(), vertex.getY(), vertex.getZ());
+                    break;
+            }
+
+            setPosition(n, p);
             setWidth(n, vertex.getVertexSize());
             setHeight(n, vertex.getVertexSize());
             m.put(vertex, n);
@@ -57,22 +69,25 @@ public class GraphAttributes
         for (Iterator<node> i = graph.nodesIterator(); i.hasNext();)
         {
             node v = i.next();
+            DPoint p = position(v);
+            double x = p.getX();
+            double y = p.getY();
 
-            if (x(v) < xMin)
+            if (x < xMin)
             {
-                xMin = x(v);
+                xMin = x;
             }
-            else if (x(v) > xMax)
+            else if (x > xMax)
             {
-                xMax = x(v);
+                xMax = x;
             }
-            if (y(v) < yMin)
+            if (y < yMin)
             {
-                yMin = y(v);
+                yMin = y;
             }
-            else if (y(v) > yMax)
+            else if (y > yMax)
             {
-                yMax = y(v);
+                yMax = y;
             }
         }
 
@@ -85,10 +100,13 @@ public class GraphAttributes
         for (Vertex vertex : nc.getVertices())
         {
             node n = m.get(vertex);
+            DPoint p = position(n);
+
             vertex.setVertexLocation(
-                    (float)((x(n) + xOffset) * scale),
-                    (float)((y(n) + yOffset) * scale),
-                    NetworkContainer.CANVAS_Z_SIZE * 0.5f);
+                    (float)((p.getX() + xOffset) * scale),
+                    (float)((p.getY() + yOffset) * scale),
+                    (float)((p.getZ() + yOffset) * scale) +
+                        NetworkContainer.CANVAS_Z_SIZE * 0.5f);
 
             // Seems like a sensible default
             vertex.setVertexSize(3.0f);
@@ -100,24 +118,14 @@ public class GraphAttributes
         return graph;
     }
 
-    public double x(node v)
+    public DPoint position(node v)
     {
-        return m_x.get(v);
+        return m_position.get(v);
     }
 
-    public void setX(node v, double value)
+    public final void setPosition(node v, DPoint position)
     {
-        m_x.set(v, value);
-    }
-
-    public double y(node v)
-    {
-        return m_y.get(v);
-    }
-
-    public void setY(node v, double value)
-    {
-        m_y.set(v, value);
+        m_position.set(v, position);
     }
 
     public double width(node v)
@@ -125,7 +133,7 @@ public class GraphAttributes
         return m_width.get(v);
     }
 
-    public void setWidth(node v, double value)
+    public final void setWidth(node v, double value)
     {
         m_width.set(v, value);
     }
@@ -135,7 +143,7 @@ public class GraphAttributes
         return m_height.get(v);
     }
 
-    public void setHeight(node v, double value)
+    public final void setHeight(node v, double value)
     {
         m_height.set(v, value);
     }

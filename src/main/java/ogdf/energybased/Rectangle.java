@@ -37,8 +37,8 @@ class Rectangle
 
     public Rectangle() //constructor
     {
-        old_down_left_corner_position = new DPoint2();
-        new_down_left_corner_position = new DPoint2();
+        old_down_left_corner_position = DPointFactory.INSTANCE.newPoint();
+        new_down_left_corner_position = DPointFactory.INSTANCE.newPoint();
         width = 0;
         height = 0;
         component_index = -1;
@@ -49,20 +49,20 @@ class Rectangle
     {
         width = w;
         height = h;
-        old_down_left_corner_position.m_x = old_dlc_x_pos;
-        old_down_left_corner_position.m_y = old_dlc_y_pos;
+        old_down_left_corner_position.setX(old_dlc_x_pos);
+        old_down_left_corner_position.setY(old_dlc_y_pos);
         component_index = comp_index;
         tipped_over = false;
     }
 
-    public void set_old_dlc_position(DPoint2 dlc_pos)
+    public void set_old_dlc_position(DPoint dlc_pos)
     {
-        old_down_left_corner_position = new DPoint2(dlc_pos);
+        old_down_left_corner_position = DPointFactory.INSTANCE.newPoint(dlc_pos);
     }
 
-    public void set_new_dlc_position(DPoint2 dlc_pos)
+    public void set_new_dlc_position(DPoint dlc_pos)
     {
-        new_down_left_corner_position = new DPoint2(dlc_pos);
+        new_down_left_corner_position = DPointFactory.INSTANCE.newPoint(dlc_pos);
     }
 
     public void set_width(double w)
@@ -92,14 +92,14 @@ class Rectangle
         }
     }
 
-    public DPoint2 get_old_dlc_position()
+    public DPoint get_old_dlc_position()
     {
-        return new DPoint2(old_down_left_corner_position);
+        return DPointFactory.INSTANCE.newPoint(old_down_left_corner_position);
     }
 
-    public DPoint2 get_new_dlc_position()
+    public DPoint get_new_dlc_position()
     {
-        return new DPoint2(new_down_left_corner_position);
+        return DPointFactory.INSTANCE.newPoint(new_down_left_corner_position);
     }
 
     public double get_width()
@@ -121,8 +121,8 @@ class Rectangle
     {
         return tipped_over;
     }
-    private DPoint2 old_down_left_corner_position;//down left corner of the tight surround. rect.
-    private DPoint2 new_down_left_corner_position;//new calculated down left corner of ...
+    private DPoint old_down_left_corner_position;//down left corner of the tight surround. rect.
+    private DPoint new_down_left_corner_position;//new calculated down left corner of ...
     private double width;                     //width of the surround. rect.
     private double height;                    //height of the surround. rect.
     private int component_index;  //the index of the related connected component

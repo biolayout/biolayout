@@ -64,14 +64,6 @@ public class FMMMLayout
         elmBoundingCircle //!< Measure from border of circle s surrounding edge end points.
     };
 
-    //! Specifies which positions for a node are allowed.
-    enum AllowedPositions
-    {
-        apAll,
-        apInteger,
-        apExponent
-    };
-
     //! Specifies in which case it is allowed to tip over drawings of connected components.
     enum TipOver
     {
@@ -286,23 +278,6 @@ public class FMMMLayout
     void edgeLengthMeasurement(EdgeLengthMeasurement elm)
     {
         m_edgeLengthMeasurement = elm;
-    }
-
-    //! Returns the current setting of option allowedPositions.
-    /**
-     * This option defines which positions for a node are allowed. Possibly values: - \a apAll: every position is
-     * allowed - \a apInteger: only integer positions in the range depending on the number of nodes - \a apExponent:
-     * only integer positions in the range of -2^MaxIntPosExponent to 2^MaxIntPosExponent
-     */
-    AllowedPositions allowedPositions()
-    {
-        return m_allowedPositions;
-    }
-
-    //! Sets the option allowedPositions to \a ap.
-    void allowedPositions(AllowedPositions ap)
-    {
-        m_allowedPositions = ap;
     }
 
     //! Returns the current setting of option maxIntPosExponent.
@@ -867,7 +842,6 @@ public class FMMMLayout
     //general options
     int m_randSeed; //!< The random seed.
     EdgeLengthMeasurement m_edgeLengthMeasurement; //!< The option for edge length measurement.
-    AllowedPositions m_allowedPositions; //!< The option for allowed positions.
     int m_maxIntPosExponent; //!< The option for the used	exponent.
     //options for divide et impera step
     double m_pageRatio; //!< The desired page ratio.
@@ -918,11 +892,11 @@ public class FMMMLayout
     double average_ideal_edgelength; //!< Measured from center to center.
     double boxlength; //!< Holds the length of the quadratic comput. box.
     int number_of_components; //!< The number of components of the graph.
-    DPoint2 down_left_corner; //!< Holds down left corner of the comput. box.
+    DPoint down_left_corner; //!< Holds down left corner of the comput. box.
     NodeArray<Double> radius; //!< Holds the radius of the surrounding circle for each node.
     double time_total; //!< The runtime (=CPU-time) of the algorithm in seconds.
     FruchtermanReingold FR; //!< Class for repulsive force calculation (Fruchterman, Reingold).
-    NMM NM; //!< Class for repulsive force calculation.
+    //NMM NM; //!< Class for repulsive force calculation.
     Random random;
 
     public FMMMLayout()
@@ -945,7 +919,7 @@ public class FMMMLayout
         random = new Random(37112);
         numexcept.random = random;
         FR = new FruchtermanReingold();
-        NM = new NMM(random);
+        //NM = new NMM(random);
         this.progressDialog = progressDialog;
 
         progressDialog.prepareProgressBar(100, "FMMM layout");
@@ -975,10 +949,6 @@ public class FMMMLayout
             init_ind_ideal_edgelength(G, A, E);
             make_simple_loopfree(G, A, E, G_reduced, A_reduced, E_reduced);
             call_DIVIDE_ET_IMPERA_step(G_reduced, A_reduced, E_reduced);
-            if (allowedPositions() != AllowedPositions.apAll)
-            {
-                make_positions_integer(G_reduced, A_reduced);
-            }
             //time_total = usedTime(t_total);
 
             export_NodeAttributes(G_reduced, A_reduced, GA);
@@ -988,8 +958,7 @@ public class FMMMLayout
             if (G.numberOfNodes() == 1)
             {
                 node v = G.firstNode();
-                GA.setX(v, 0.0);
-                GA.setY(v, 0.0);
+                GA.setPosition(v, DPointFactory.INSTANCE.newPoint());
             }
         }
 
@@ -1096,10 +1065,10 @@ public class FMMMLayout
                 max_mult_iter = ITERBOUND;
             }
 
-            NodeArray<DPoint2> F_rep = new NodeArray<DPoint2>(G, Factory.DPOINT); //stores rep. forces
-            NodeArray<DPoint2> F_attr = new NodeArray<DPoint2>(G, Factory.DPOINT); //stores attr. forces
-            NodeArray<DPoint2> F = new NodeArray<DPoint2>(G, Factory.DPOINT); //stores resulting forces
-            NodeArray<DPoint2> last_node_movement = new NodeArray<DPoint2>(G, Factory.DPOINT);//stores the force vectors F of the last
+            NodeArray<DPoint> F_rep = new NodeArray<DPoint>(G, Factory.DPOINT); //stores rep. forces
+            NodeArray<DPoint> F_attr = new NodeArray<DPoint>(G, Factory.DPOINT); //stores attr. forces
+            NodeArray<DPoint> F = new NodeArray<DPoint>(G, Factory.DPOINT); //stores resulting forces
+            NodeArray<DPoint> last_node_movement = new NodeArray<DPoint>(G, Factory.DPOINT);//stores the force vectors F of the last
             //iterations (needed to avoid oscillations)
 
             set_average_ideal_edgelength(G, E);//needed for easy scaling of the forces
@@ -1138,20 +1107,21 @@ public class FMMMLayout
             Graph G,
             NodeArray<NodeAttributes> A,
             EdgeArray<EdgeAttributes> E,
-            NodeArray<DPoint2> F,
-            NodeArray<DPoint2> F_attr,
-            NodeArray<DPoint2> F_rep,
-            NodeArray<DPoint2> last_node_movement,
+            NodeArray<DPoint> F,
+            NodeArray<DPoint> F_attr,
+            NodeArray<DPoint> F_rep,
+            NodeArray<DPoint> last_node_movement,
             int comp_index,
             int num_components)
     {
-        progressDialog.prepareProgressBar(fineTuningIterations(),
-                    "FMMM layout" +
-                    ", component " + (comp_index + 1) + " of " + num_components +
-                    ", post-processing");
+        progressDialog.prepareProgressBar(10,
+                "FMMM layout" +
+                ", component " + (comp_index + 1) + " of " + num_components +
+                ", post-processing");
 
         for (int i = 1; i <= 10; i++)
         {
+            progressDialog.incrementProgress(i);
             calculate_forces(G, A, E, F, F_attr, F_rep, last_node_movement, i, 1);
         }
 
@@ -1160,6 +1130,11 @@ public class FMMMLayout
             adapt_drawing_to_ideal_average_edgelength(G, A, E);
             update_boxlength_and_cornercoordinate(G, A);
         }
+
+        progressDialog.prepareProgressBar(fineTuningIterations(),
+                "FMMM layout" +
+                ", component " + (comp_index + 1) + " of " + num_components +
+                ", fine-tuning");
 
         for (int i = 1; i <= fineTuningIterations(); i++)
         {
@@ -1187,7 +1162,6 @@ public class FMMMLayout
         //setting general options
         randSeed(100);
         edgeLengthMeasurement(EdgeLengthMeasurement.elmBoundingCircle);
-        allowedPositions(AllowedPositions.apInteger);
         maxIntPosExponent(40);
 
         //setting options for the divide et impera step
@@ -1298,13 +1272,10 @@ public class FMMMLayout
             GraphAttributes GA,
             NodeArray<NodeAttributes> A)
     {
-        DPoint2 position = new DPoint2();
-
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             node v = i.next();
-            position.m_x = GA.x(v);
-            position.m_y = GA.y(v);
+            DPoint position = GA.position(v);
             A.get(v).set_NodeAttributes(GA.width(v), GA.height(v), position, null, null);
         }
     }
@@ -1379,8 +1350,7 @@ public class FMMMLayout
         {
             node v_copy = i.next();
 
-            GA.setX(A_reduced.get(v_copy).get_original_node(), A_reduced.get(v_copy).get_position().m_x);
-            GA.setY(A_reduced.get(v_copy).get_original_node(), A_reduced.get(v_copy).get_position().m_y);
+            GA.setPosition(A_reduced.get(v_copy).get_original_node(), A_reduced.get(v_copy).get_position());
         }
     }
 
@@ -1580,198 +1550,6 @@ public class FMMMLayout
         return Math.min(0.2, 400.0 / (double) n);
     }
 
-    void make_positions_integer(Graph G, NodeArray<NodeAttributes> A)
-    {
-        node v;
-        double new_x, new_y;
-
-        if (allowedPositions() == AllowedPositions.apInteger)
-        {//if
-            //calculate value of max_integer_position
-            max_integer_position = 100 * average_ideal_edgelength * G.numberOfNodes() *
-                    G.numberOfNodes();
-        }//if
-
-        //restrict positions to lie in [-max_integer_position,max_integer_position]
-        //X [-max_integer_position,max_integer_position]
-        for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
-        {
-            v = i.next();
-            if ((A.get(v).get_x() > max_integer_position) ||
-                    (A.get(v).get_y() > max_integer_position) ||
-                    (A.get(v).get_x() < max_integer_position * (-1.0)) ||
-                    (A.get(v).get_y() < max_integer_position * (-1.0)))
-            {
-                DPoint2 cross_point = new DPoint2();
-                DPoint2 nullpoint = new DPoint2(0, 0);
-                DPoint2 old_pos = new DPoint2(A.get(v).get_x(), A.get(v).get_y());
-                DPoint2 lt = new DPoint2(max_integer_position * (-1.0), max_integer_position);
-                DPoint2 rt = new DPoint2(max_integer_position, max_integer_position);
-                DPoint2 lb = new DPoint2(max_integer_position * (-1.0), max_integer_position * (-1.0));
-                DPoint2 rb = new DPoint2(max_integer_position, max_integer_position * (-1.0));
-                DLine s = new DLine(nullpoint, old_pos);
-                DLine left_bound = new DLine(lb, lt);
-                DLine right_bound = new DLine(rb, rt);
-                DLine top_bound = new DLine(lt, rt);
-                DLine bottom_bound = new DLine(lb, rb);
-
-                if (s.intersection(left_bound, cross_point))
-                {
-                    A.get(v).set_x(cross_point.m_x);
-                    A.get(v).set_y(cross_point.m_y);
-                }
-                else if (s.intersection(right_bound, cross_point))
-                {
-                    A.get(v).set_x(cross_point.m_x);
-                    A.get(v).set_y(cross_point.m_y);
-                }
-                else if (s.intersection(top_bound, cross_point))
-                {
-                    A.get(v).set_x(cross_point.m_x);
-                    A.get(v).set_y(cross_point.m_y);
-                }
-                else if (s.intersection(bottom_bound, cross_point))
-                {
-                    A.get(v).set_x(cross_point.m_x);
-                    A.get(v).set_y(cross_point.m_y);
-                }
-                else if (DEBUG_BUILD)
-                {
-                    println("Error  make_positions_integer()");
-                }
-            }
-        }
-
-        //make positions integer
-        for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
-        {
-            v = i.next();
-            new_x = Math.floor(A.get(v).get_x());
-            new_y = Math.floor(A.get(v).get_y());
-            if (new_x < down_left_corner.m_x)
-            {
-                boxlength += 2;
-                down_left_corner.m_x = down_left_corner.m_x - 2;
-            }
-            if (new_y < down_left_corner.m_y)
-            {
-                boxlength += 2;
-                down_left_corner.m_y = down_left_corner.m_y - 2;
-            }
-            A.get(v).set_x(new_x);
-            A.get(v).set_y(new_y);
-        }
-    }
-
-    void create_postscript_drawing(GraphAttributes AG, String ps_file)
-    {
-        try
-        {
-            PrintWriter out_fmmm = new PrintWriter(new FileWriter(ps_file));
-
-            Graph G = AG.constGraph();
-            node v;
-            edge e;
-            double x_min = AG.x(G.firstNode());
-            double x_max = x_min;
-            double y_min = AG.y(G.firstNode());
-            double y_max = y_min;
-            double max_dist;
-            double scale_factor;
-
-            for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
-            {
-                v = i.next();
-
-                if (AG.x(v) < x_min)
-                {
-                    x_min = AG.x(v);
-                }
-                else if (AG.x(v) > x_max)
-                {
-                    x_max = AG.x(v);
-                }
-                if (AG.y(v) < y_min)
-                {
-                    y_min = AG.y(v);
-                }
-                else if (AG.y(v) > y_max)
-                {
-                    y_max = AG.y(v);
-                }
-            }
-            max_dist = Math.max(x_max - x_min, y_max - y_min);
-            scale_factor = 500.0 / max_dist;
-
-            out_fmmm.println("%!PS-Adobe-2.0 ");
-            out_fmmm.println("%%Pages:  1 ");
-            out_fmmm.println("% %BoundingBox: " + x_min + " " + x_max + " " + y_min + " " + y_max);
-            out_fmmm.println("%%EndComments ");
-            out_fmmm.println("%%");
-            out_fmmm.println("%% Circle");
-            out_fmmm.println("/ellipse_dict 4 dict def");
-            out_fmmm.println("/ellipse {");
-            out_fmmm.println("  ellipse_dict");
-            out_fmmm.println("  begin");
-            out_fmmm.println("   newpath");
-            out_fmmm.println("   /yrad exch def /xrad exch def /ypos exch def /xpos exch def");
-            out_fmmm.println("   matrix currentmatrix");
-            out_fmmm.println("   xpos ypos translate");
-            out_fmmm.println("   xrad yrad scale");
-            out_fmmm.println("  0 0 1 0 360 arc");
-            out_fmmm.println("  setmatrix");
-            out_fmmm.println("  closepath");
-            out_fmmm.println(" end");
-            out_fmmm.println("} def");
-            out_fmmm.println("%% Nodes");
-            out_fmmm.println("/v { ");
-            out_fmmm.println(" /y exch def");
-            out_fmmm.println(" /x exch def");
-            out_fmmm.println("1.000 1.000 0.894 setrgbcolor");
-            out_fmmm.println("x y 10.0 10.0 ellipse fill");
-            out_fmmm.println("0.000 0.000 0.000 setrgbcolor");
-            out_fmmm.println("x y 10.0 10.0 ellipse stroke");
-            out_fmmm.println("} def");
-            out_fmmm.println("%% Edges");
-            out_fmmm.println("/e { ");
-            out_fmmm.println(" /b exch def");
-            out_fmmm.println(" /a exch def");
-            out_fmmm.println(" /y exch def");
-            out_fmmm.println(" /x exch def");
-            out_fmmm.println("x y moveto a b lineto stroke");
-            out_fmmm.println("} def");
-            out_fmmm.println("%% ");
-            out_fmmm.println("%% INIT ");
-            out_fmmm.println("20  200 translate");
-            out_fmmm.println(scale_factor + "  " + scale_factor + "  scale ");
-            out_fmmm.println("1 setlinewidth ");
-            out_fmmm.println("%%BeginProgram ");
-
-            for (Iterator<edge> i = G.edgesIterator(); i.hasNext();)
-            {
-                e = i.next();
-                out_fmmm.println(AG.x(e.source()) + " " + AG.y(e.source()) + " " +
-                         AG.x(e.target()) + " " + AG.y(e.target()) + " e");
-            }
-
-            for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
-            {
-                v = i.next();
-                out_fmmm.println(AG.x(v) + " " + AG.y(v) + " v");
-            }
-
-            out_fmmm.println("%%EndProgram ");
-            out_fmmm.println("showpage ");
-            out_fmmm.println("%%EOF ");
-
-            out_fmmm.close();
-        }
-        catch (IOException ioe)
-        {
-        }
-    }
-
-
 //------------------------- functions for divide et impera step -----------------------
     void create_maximum_connected_subGraphs(
             Graph G,
@@ -1892,17 +1670,17 @@ public class FMMMLayout
             max_boundary = Math.max(A.get(v).get_width() / 2, A.get(v).get_height() / 2);
             if (v == G.firstNode())
             {
-                x_min = A.get(v).get_x() - max_boundary;
-                x_max = A.get(v).get_x() + max_boundary;
-                y_min = A.get(v).get_y() - max_boundary;
-                y_max = A.get(v).get_y() + max_boundary;
+                x_min = A.get(v).get_position().getX() - max_boundary;
+                x_max = A.get(v).get_position().getX() + max_boundary;
+                y_min = A.get(v).get_position().getY() - max_boundary;
+                y_max = A.get(v).get_position().getY() + max_boundary;
             }
             else
             {
-                act_x_min = A.get(v).get_x() - max_boundary;
-                act_x_max = A.get(v).get_x() + max_boundary;
-                act_y_min = A.get(v).get_y() - max_boundary;
-                act_y_max = A.get(v).get_y() + max_boundary;
+                act_x_min = A.get(v).get_position().getX() - max_boundary;
+                act_x_max = A.get(v).get_position().getX() + max_boundary;
+                act_y_min = A.get(v).get_position().getY() - max_boundary;
+                act_y_max = A.get(v).get_position().getY() + max_boundary;
                 if (act_x_min < x_min)
                 {
                     x_min = act_x_min;
@@ -1932,6 +1710,18 @@ public class FMMMLayout
         return r;
     }
 
+    DPoint get_barycenter_position_of_component(Graph G, NodeArray<NodeAttributes> A)
+    {
+        DPoint sum = DPointFactory.INSTANCE.newPoint();
+        for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
+        {
+            node v = iter.next();
+            sum = sum.plus(A.get(v).get_position());
+        }
+
+        return sum.scaled(1.0 / G.numberOfNodes());
+    }
+
     void rotate_components_and_calculate_bounding_rectangles(
             List<Rectangle> R,
             List<Graph> G_sub,
@@ -1941,11 +1731,11 @@ public class FMMMLayout
         double sin_j, cos_j;
         double angle, act_area, act_area_PI_half_rotated = 0.0, best_area;
         double ratio, new_width, new_height;
-        List<NodeArray<DPoint2>> best_coords = new ArrayList<NodeArray<DPoint2>>(number_of_components);
-        List<NodeArray<DPoint2>> old_coords = new ArrayList<NodeArray<DPoint2>>(number_of_components);
+        List<NodeArray<DPoint>> best_coords = new ArrayList<NodeArray<DPoint>>(number_of_components);
+        List<NodeArray<DPoint>> old_coords = new ArrayList<NodeArray<DPoint>>(number_of_components);
         node v_sub;
         Rectangle r_act, r_best;
-        DPoint2 new_pos = new DPoint2(), new_dlc = new DPoint2();
+        DPoint new_pos = DPointFactory.INSTANCE.newPoint(), new_dlc = DPointFactory.INSTANCE.newPoint();
 
         R.clear(); //make R empty
 
@@ -1956,15 +1746,15 @@ public class FMMMLayout
             r_best = calculate_bounding_rectangle(G_sub.get(i), A_sub.get(i), i);
             best_area = calculate_area(r_best.get_width(), r_best.get_height(),
                     number_of_components);
-            best_coords.add(i, new NodeArray<DPoint2>(G_sub.get(i), Factory.DPOINT));
-            old_coords.add(i, new NodeArray<DPoint2>(G_sub.get(i), Factory.DPOINT));
+            best_coords.add(i, new NodeArray<DPoint>(G_sub.get(i), Factory.DPOINT));
+            old_coords.add(i, new NodeArray<DPoint>(G_sub.get(i), Factory.DPOINT));
 
             for (Iterator<node> iter = G_sub.get(i).nodesIterator(); iter.hasNext();)
             {
                 v_sub = iter.next();
-                DPoint2 p = new DPoint2(A_sub.get(i).get(v_sub).get_position());
-                old_coords.get(i).set(v_sub, new DPoint2(p));
-                best_coords.get(i).set(v_sub, new DPoint2(p));
+                DPoint p = A_sub.get(i).get(v_sub).get_position();
+                old_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(p));
+                best_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(p));
             }
 
             //rotate the components
@@ -1977,10 +1767,11 @@ public class FMMMLayout
                 for (Iterator<node> iter = G_sub.get(i).nodesIterator(); iter.hasNext();)
                 {
                     v_sub = iter.next();
-                    new_pos.m_x = cos_j * old_coords.get(i).get(v_sub).m_x -
-                            sin_j * old_coords.get(i).get(v_sub).m_y;
-                    new_pos.m_y = sin_j * old_coords.get(i).get(v_sub).m_x +
-                            cos_j * old_coords.get(i).get(v_sub).m_y;
+                    new_pos.setX(cos_j * old_coords.get(i).get(v_sub).getX() -
+                            sin_j * old_coords.get(i).get(v_sub).getY());
+                    new_pos.setY(sin_j * old_coords.get(i).get(v_sub).getX() +
+                            cos_j * old_coords.get(i).get(v_sub).getY());
+                    new_pos.setZ(old_coords.get(i).get(v_sub).getZ());
                     A_sub.get(i).get(v_sub).set_position(new_pos);
                 }
 
@@ -2004,7 +1795,7 @@ public class FMMMLayout
                     {
                         v_sub = iter.next();
 
-                        best_coords.get(i).set(v_sub, new DPoint2(A_sub.get(i).get(v_sub).get_position()));
+                        best_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(A_sub.get(i).get(v_sub).get_position()));
                     }
                 }
                 else if ((number_of_components == 1) && (act_area_PI_half_rotated < best_area))
@@ -2015,7 +1806,7 @@ public class FMMMLayout
                     {
                         v_sub = iter.next();
 
-                        best_coords.get(i).set(v_sub, new DPoint2(A_sub.get(i).get(v_sub).get_position()));
+                        best_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(A_sub.get(i).get(v_sub).get_position()));
                     }
                     //the needed rotation step follows in the next if statement
                 }
@@ -2030,19 +1821,28 @@ public class FMMMLayout
                 for (Iterator<node> iter = G_sub.get(i).nodesIterator(); iter.hasNext();)
                 {
                     v_sub = iter.next();
-                    new_pos.m_x = best_coords.get(i).get(v_sub).m_y * (-1);
-                    new_pos.m_y = best_coords.get(i).get(v_sub).m_x;
-                    best_coords.get(i).set(v_sub, new DPoint2(new_pos));
+                    new_pos = best_coords.get(i).get(v_sub).rotate90InZPlane();
+                    best_coords.get(i).set(v_sub, new_pos);
                 }
 
                 //calculate new rectangle
-                new_dlc.m_x = r_best.get_old_dlc_position().m_y * (-1) - r_best.get_height();
-                new_dlc.m_y = r_best.get_old_dlc_position().m_x;
+                new_dlc.setX(r_best.get_old_dlc_position().getY() * (-1) - r_best.get_height());
+                new_dlc.setY(r_best.get_old_dlc_position().getX());
+                new_dlc.setZ(r_best.get_old_dlc_position().getZ());
                 new_width = r_best.get_height();
                 new_height = r_best.get_width();
                 r_best.set_width(new_width);
                 r_best.set_height(new_height);
                 r_best.set_old_dlc_position(new_dlc);
+            }
+
+            // Move the component back into the tiled layout plane (on average)
+            DPoint bary_center = get_barycenter_position_of_component(G_sub.get(i), A_sub.get(i));
+            for (Iterator<node> iter = G_sub.get(i).nodesIterator(); iter.hasNext();)
+            {
+                v_sub = iter.next();
+                DPoint p = best_coords.get(i).get(v_sub);
+                best_coords.get(i).get(v_sub).setZ(p.getZ() - bary_center.getZ());
             }
 
             //save the computed information in A_sub and R
@@ -2086,7 +1886,7 @@ public class FMMMLayout
         ListIterator<Rectangle> RectIterator;
         int i;
         node v_sub;
-        DPoint2 newpos, tipped_pos = new DPoint2(), tipped_dlc;
+        DPoint newpos, tipped_pos, tipped_dlc;
 
         for (Rectangle r : R)
         {//for
@@ -2097,8 +1897,7 @@ public class FMMMLayout
                 for (Iterator<node> iter = G_sub.get(i).nodesIterator(); iter.hasNext();)
                 {
                     v_sub = iter.next();
-                    tipped_pos.m_x = A_sub.get(i).get(v_sub).get_y() * (-1);
-                    tipped_pos.m_y = A_sub.get(i).get(v_sub).get_x();
+                    tipped_pos = A_sub.get(i).get(v_sub).get_position().rotate90InZPlane();
                     A_sub.get(i).get(v_sub).set_position(tipped_pos);
                 }
             }//if
@@ -2169,17 +1968,13 @@ public class FMMMLayout
             Graph G,
             NodeArray<NodeAttributes> A,
             EdgeArray<EdgeAttributes> E,
-            NodeArray<DPoint2> F,
-            NodeArray<DPoint2> F_attr,
-            NodeArray<DPoint2> F_rep,
-            NodeArray<DPoint2> last_node_movement,
+            NodeArray<DPoint> F,
+            NodeArray<DPoint> F_attr,
+            NodeArray<DPoint> F_rep,
+            NodeArray<DPoint> last_node_movement,
             int iter,
             int fine_tuning_step)
     {
-        if (allowedPositions() != AllowedPositions.apAll)
-        {
-            make_positions_integer(G, A);
-        }
         calculate_attractive_forces(G, A, E, F_attr);
         calculate_repulsive_forces(G, A, F_rep);
         add_attr_rep_forces(G, F_attr, F_rep, F, iter, fine_tuning_step);
@@ -2208,7 +2003,7 @@ public class FMMMLayout
         boxlength = Math.ceil(Math.max(w, h) * BOX_SCALING_FACTOR);
 
         //down left corner of comp. box is the origin
-        down_left_corner = new DPoint2(0.0, 0.0);
+        down_left_corner = DPointFactory.INSTANCE.newPoint();
     }
 
     void create_initial_placement(Graph G, NodeArray<NodeAttributes> A)
@@ -2242,8 +2037,8 @@ public class FMMMLayout
                 j = 0;
                 while ((!finished) && (j <= m))
                 {//while2
-                    A.get(v).set_x(boxlength * i / (m + 1) + blall / 2);
-                    A.get(v).set_y(boxlength * j / (m + 1) + blall / 2);
+                    A.get(v).get_position().setX(boxlength * i / (m + 1) + blall / 2);
+                    A.get(v).get_position().setY(boxlength * j / (m + 1) + blall / 2);
                     if (k == G.numberOfNodes() - 1)
                     {
                         finished = true;
@@ -2273,22 +2068,22 @@ public class FMMMLayout
             for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
             {
                 v = iter.next();
-                DPoint2 rndp = new DPoint2();
-                rndp.m_x = random.nextDouble();//rand_x in [0,1]
-                rndp.m_y = random.nextDouble();//rand_y in [0,1]
-                A.get(v).set_x(rndp.m_x * (boxlength - 2) + 1);
-                A.get(v).set_y(rndp.m_y * (boxlength - 2) + 1);
+                DPoint rndp = DPointFactory.INSTANCE.newPoint();
+                rndp.setX(random.nextDouble() * (boxlength - 2) + 1);
+                rndp.setY(random.nextDouble() * (boxlength - 2) + 1);
+                rndp.setZ(random.nextDouble() * (boxlength - 2) + 1);
+                A.get(v).set_position(rndp);
             }
         }//(random)
         update_boxlength_and_cornercoordinate(G, A);
     }
 
-    void init_F(Graph G, NodeArray<DPoint2> F)
+    void init_F(Graph G, NodeArray<DPoint> F)
     {
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             node v = iter.next();
-            F.set(v, new DPoint2());
+            F.set(v, DPointFactory.INSTANCE.newPoint());
         }
     }
 
@@ -2304,9 +2099,9 @@ public class FMMMLayout
         }
         else //(repulsiveForcesCalculation() == RepulsiveForcesCalculation.rfcNMM
         {
-            NM.make_initialisations(G, boxlength, down_left_corner,
+            /*NM.make_initialisations(G, boxlength, down_left_corner,
                     nmParticlesInLeaves(), nmPrecision(),
-                    nmTreeConstruction(), nmSmallCell());
+                    nmTreeConstruction(), nmSmallCell());*/
         }
     }
 
@@ -2314,7 +2109,7 @@ public class FMMMLayout
     void calculate_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint2> F_rep)
+            NodeArray<DPoint> F_rep)
     {
         if (repulsiveForcesCalculation() == RepulsiveForcesMethod.rfcExact)
         {
@@ -2326,7 +2121,7 @@ public class FMMMLayout
         }
         else //repulsiveForcesCalculation() == rfcNMM
         {
-            NM.calculate_repulsive_forces(G, A, F_rep);
+            //NM.calculate_repulsive_forces(G, A, F_rep);
         }
     }
 
@@ -2334,13 +2129,13 @@ public class FMMMLayout
             Graph G,
             NodeArray<NodeAttributes> A,
             EdgeArray<EdgeAttributes> E,
-            NodeArray<DPoint2> F_attr)
+            NodeArray<DPoint> F_attr)
     {
         edge e;
         node u, v;
         double norm_v_minus_u, scalar;
-        DPoint2 vector_v_minus_u, f_u = new DPoint2();
-        DPoint2 nullpoint = new DPoint2(0, 0);
+        DPoint vector_v_minus_u, f_u = DPointFactory.INSTANCE.newPoint();
+        DPoint nullpoint = DPointFactory.INSTANCE.newPoint();
 
         //initialisation
         init_F(G, F_attr);
@@ -2361,8 +2156,7 @@ public class FMMMLayout
             else if (!numexcept.f_near_machine_precision(norm_v_minus_u, f_u))
             {
                 scalar = f_attr_scalar(norm_v_minus_u, E.get(e).get_length()) / norm_v_minus_u;
-                f_u.m_x = scalar * vector_v_minus_u.m_x;
-                f_u.m_y = scalar * vector_v_minus_u.m_y;
+                f_u = vector_v_minus_u.scaled(scalar);
             }
 
             F_attr.set(v, F_attr.get(v).minus(f_u));
@@ -2413,15 +2207,15 @@ public class FMMMLayout
 
     void add_attr_rep_forces(
             Graph G,
-            NodeArray<DPoint2> F_attr,
-            NodeArray<DPoint2> F_rep,
-            NodeArray<DPoint2> F,
+            NodeArray<DPoint> F_attr,
+            NodeArray<DPoint> F_rep,
+            NodeArray<DPoint> F,
             int iter,
             int fine_tuning_step)
     {
         node v;
-        DPoint2 f = new DPoint2(), force = new DPoint2();
-        DPoint2 nullpoint = new DPoint2(0, 0);
+        DPoint f, force = DPointFactory.INSTANCE.newPoint();
+        DPoint nullpoint = DPointFactory.INSTANCE.newPoint();
         double norm_f, scalar;
         double act_spring_strength, act_rep_force_strength;
 
@@ -2478,10 +2272,8 @@ public class FMMMLayout
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            f.m_x = act_spring_strength * F_attr.get(v).m_x + act_rep_force_strength * F_rep.get(v).m_x;
-            f.m_y = act_spring_strength * F_attr.get(v).m_y + act_rep_force_strength * F_rep.get(v).m_y;
-            f.m_x = average_ideal_edgelength * average_ideal_edgelength * f.m_x;
-            f.m_y = average_ideal_edgelength * average_ideal_edgelength * f.m_y;
+            f = F_attr.get(v).scaled(act_spring_strength).plus(F_rep.get(v).scaled(act_rep_force_strength));
+            f = f.scaled(average_ideal_edgelength * average_ideal_edgelength);
 
             norm_f = f.norm();
             if (f == nullpoint)
@@ -2496,17 +2288,16 @@ public class FMMMLayout
             {
                 scalar = Math.min(norm_f * cool_factor * forceScalingFactor(),
                         max_radius(iter)) / norm_f;
-                force.m_x = scalar * f.m_x;
-                force.m_y = scalar * f.m_y;
+                force = f.scaled(scalar);
             }
-            F.set(v, new DPoint2(force));
+            F.set(v, DPointFactory.INSTANCE.newPoint(force));
         }
     }
 
     void move_nodes(
             Graph G,
             NodeArray<NodeAttributes> A,
-            NodeArray<DPoint2> F)
+            NodeArray<DPoint> F)
     {
         node v;
 
@@ -2522,48 +2313,59 @@ public class FMMMLayout
             NodeArray<NodeAttributes> A)
     {
         node v;
-        double xmin, xmax, ymin, ymax;
-        DPoint2 midpoint;
+        double xmin, xmax, ymin, ymax, zmin, zmax;
+        DPoint midpoint;
 
         v = G.firstNode();
         midpoint = A.get(v).get_position();
-        xmin = xmax = midpoint.m_x;
-        ymin = ymax = midpoint.m_y;
+        xmin = xmax = midpoint.getX();
+        ymin = ymax = midpoint.getY();
+        zmin = zmax = midpoint.getZ();
 
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
             midpoint = A.get(v).get_position();
-            if (midpoint.m_x < xmin)
+            if (midpoint.getX() < xmin)
             {
-                xmin = midpoint.m_x;
+                xmin = midpoint.getX();
             }
-            if (midpoint.m_x > xmax)
+            if (midpoint.getX() > xmax)
             {
-                xmax = midpoint.m_x;
+                xmax = midpoint.getX();
             }
-            if (midpoint.m_y < ymin)
+            if (midpoint.getY() < ymin)
             {
-                ymin = midpoint.m_y;
+                ymin = midpoint.getY();
             }
-            if (midpoint.m_y > ymax)
+            if (midpoint.getY() > ymax)
             {
-                ymax = midpoint.m_y;
+                ymax = midpoint.getY();
+            }
+            if (midpoint.getZ() < zmin)
+            {
+                zmin = midpoint.getZ();
+            }
+            if (midpoint.getZ() > zmax)
+            {
+                zmax = midpoint.getZ();
             }
         }
 
         //set down_left_corner and boxlength
 
-        down_left_corner.m_x = Math.floor(xmin - 1);
-        down_left_corner.m_y = Math.floor(ymin - 1);
-        boxlength = Math.ceil(Math.max(ymax - ymin, xmax - xmin) * 1.01 + 2);
+        down_left_corner.setX(Math.floor(xmin - 1));
+        down_left_corner.setY(Math.floor(ymin - 1));
+        down_left_corner.setZ(Math.floor(zmin - 1));
+        boxlength = Math.ceil(Math.max(Math.max(zmax - zmin, ymax - ymin), xmax - xmin) * 1.01 + 2);
 
         //exception handling: all nodes have same x and y coordinate
         if (boxlength <= 2)
         {
             boxlength = G.numberOfNodes() * 20;
-            down_left_corner.m_x = Math.floor(xmin) - (boxlength / 2);
-            down_left_corner.m_y = Math.floor(ymin) - (boxlength / 2);
+            down_left_corner.setX(Math.floor(xmin) - (boxlength / 2));
+            down_left_corner.setY(Math.floor(ymin) - (boxlength / 2));
+            down_left_corner.setZ(Math.floor(zmin) - (boxlength / 2));
         }
 
         //export the boxlength and down_left_corner values to the rep. calc. classes
@@ -2575,7 +2377,7 @@ public class FMMMLayout
         }
         else //repulsiveForcesCalculation() == rfcNMM
         {
-            NM.update_boxlength_and_cornercoordinate(boxlength, down_left_corner);
+            //NM.update_boxlength_and_cornercoordinate(boxlength, down_left_corner);
         }
     }
 
@@ -2607,7 +2409,7 @@ public class FMMMLayout
         }
     }
 
-    double get_average_forcevector_length(Graph G, NodeArray<DPoint2> F)
+    double get_average_forcevector_length(Graph G, NodeArray<DPoint> F)
     {
         double lengthsum = 0;
         node v;
@@ -2622,8 +2424,8 @@ public class FMMMLayout
 
     void prevent_oscilations(
             Graph G,
-            NodeArray<DPoint2> F,
-            NodeArray<DPoint2> last_node_movement,
+            NodeArray<DPoint> F,
+            NodeArray<DPoint> last_node_movement,
             int iter)
     {
 
@@ -2638,7 +2440,7 @@ public class FMMMLayout
         double pi_times_10_over_6 = 10 * pi_times_1_over_6;
         double pi_times_11_over_6 = 11 * pi_times_1_over_6;
 
-        DPoint2 nullpoint = new DPoint2(0, 0);
+        DPoint nullpoint = DPointFactory.INSTANCE.newPoint();
         double fi; //angle in [0,2pi) measured counterclockwise
         double norm_old, norm_new, quot_old_new;
 
@@ -2648,8 +2450,8 @@ public class FMMMLayout
             for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
             {
                 v = i.next();
-                DPoint2 force_new = new DPoint2(F.get(v));
-                DPoint2 force_old = new DPoint2(last_node_movement.get(v));
+                DPoint force_new = DPointFactory.INSTANCE.newPoint(F.get(v));
+                DPoint force_old = DPointFactory.INSTANCE.newPoint(last_node_movement.get(v));
                 norm_new = F.get(v).norm();
                 norm_old = last_node_movement.get(v).norm();
                 if ((norm_new > 0) && (norm_old > 0))
@@ -2657,66 +2459,56 @@ public class FMMMLayout
                     quot_old_new = norm_old / norm_new;
 
                     //prevent oszilations
-                    fi = angle(nullpoint, force_old, force_new);
+                    fi = force_old.angle(force_new);
                     if (((fi <= pi_times_1_over_6) || (fi >= pi_times_11_over_6)) &&
                             ((norm_new > (norm_old * 2.0))))
                     {
-                        F.get(v).m_x = quot_old_new * 2.0 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 2.0 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 2.0));
                     }
                     else if ((fi >= pi_times_1_over_6) && (fi <= pi_times_2_over_6) &&
                             (norm_new > (norm_old * 1.5)))
                     {
-                        F.get(v).m_x = quot_old_new * 1.5 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 1.5 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 1.5));
                     }
                     else if ((fi >= pi_times_2_over_6) && (fi <= pi_times_3_over_6) &&
                             (norm_new > (norm_old)))
                     {
-                        F.get(v).m_x = quot_old_new * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new));
                     }
                     else if ((fi >= pi_times_3_over_6) && (fi <= pi_times_4_over_6) &&
                             (norm_new > (norm_old * 0.66666666)))
                     {
-                        F.get(v).m_x = quot_old_new * 0.66666666 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 0.66666666 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 0.66666666));
                     }
                     else if ((fi >= pi_times_4_over_6) && (fi <= pi_times_5_over_6) &&
                             (norm_new > (norm_old * 0.5)))
                     {
-                        F.get(v).m_x = quot_old_new * 0.5 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 0.5 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 0.5));
                     }
                     else if ((fi >= pi_times_5_over_6) && (fi <= pi_times_7_over_6) &&
                             (norm_new > (norm_old * 0.33333333)))
                     {
-                        F.get(v).m_x = quot_old_new * 0.33333333 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 0.33333333 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 0.33333333));
                     }
                     else if ((fi >= pi_times_7_over_6) && (fi <= pi_times_8_over_6) &&
                             (norm_new > (norm_old * 0.5)))
                     {
-                        F.get(v).m_x = quot_old_new * 0.5 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 0.5 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 0.5));
                     }
                     else if ((fi >= pi_times_8_over_6) && (fi <= pi_times_9_over_6) &&
                             (norm_new > (norm_old * 0.66666666)))
                     {
-                        F.get(v).m_x = quot_old_new * 0.66666666 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 0.66666666 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 0.66666666));
                     }
                     else if ((fi >= pi_times_9_over_6) && (fi <= pi_times_10_over_6) &&
                             (norm_new > (norm_old)))
                     {
-                        F.get(v).m_x = quot_old_new * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new));
                     }
                     else if ((fi >= pi_times_10_over_6) && (fi <= pi_times_11_over_6) &&
                             (norm_new > (norm_old * 1.5)))
                     {
-                        F.get(v).m_x = quot_old_new * 1.5 * F.get(v).m_x;
-                        F.get(v).m_y = quot_old_new * 1.5 * F.get(v).m_y;
+                        F.set(v, F.get(v).scaled(quot_old_new * 1.5));
                     }
                 }//if2
                 last_node_movement.set(v, F.get(v));
@@ -2728,58 +2520,16 @@ public class FMMMLayout
         }
     }
 
-    double angle(DPoint2 P, DPoint2 Q, DPoint2 R)
-    {
-        double dx1 = Q.m_x - P.m_x;
-        double dy1 = Q.m_y - P.m_y;
-        double dx2 = R.m_x - P.m_x;
-        double dy2 = R.m_y - P.m_y;
-        double fi;//the angle
-
-        if ((dx1 == 0 && dy1 == 0) || (dx2 == 0 && dy2 == 0))
-        {
-            if (DEBUG_BUILD)
-            {
-                println("Multilevel::angle()");
-            }
-        }
-
-        double norm = (dx1 * dx1 + dy1 * dy1) * (dx2 * dx2 + dy2 * dy2);
-        double cosfi = (dx1 * dx2 + dy1 * dy2) / Math.sqrt(norm);
-
-        if (cosfi >= 1.0)
-        {
-            fi = 0;
-        }
-        if (cosfi <= -1.0)
-        {
-            fi = Math.PI;
-        }
-        else
-        {
-            fi = Math.acos(cosfi);
-            if (dx1 * dy2 < dy1 * dx2)
-            {
-                fi = -fi;
-            }
-            if (fi < 0)
-            {
-                fi += 2 * Math.PI;
-            }
-        }
-        return fi;
-    }
-
     void init_last_node_movement(
             Graph G,
-            NodeArray<DPoint2> F,
-            NodeArray<DPoint2> last_node_movement)
+            NodeArray<DPoint> F,
+            NodeArray<DPoint> last_node_movement)
     {
         node v;
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            last_node_movement.set(v, new DPoint2(F.get(v)));
+            last_node_movement.set(v, DPointFactory.INSTANCE.newPoint(F.get(v)));
         }
     }
 
@@ -2793,7 +2543,7 @@ public class FMMMLayout
         double sum_real_edgelength = 0;
         double sum_ideal_edgelength = 0;
         double area_scaling_factor;
-        DPoint2 new_pos = new DPoint2();
+        DPoint new_pos;
 
         for (Iterator<edge> i = G.edgesIterator(); i.hasNext();)
         {
@@ -2814,33 +2564,45 @@ public class FMMMLayout
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            new_pos.m_x = resizingScalar() * area_scaling_factor * A.get(v).get_position().m_x;
-            new_pos.m_y = resizingScalar() * area_scaling_factor * A.get(v).get_position().m_y;
+            new_pos = A.get(v).get_position().scaled(resizingScalar() * area_scaling_factor);
             A.get(v).set_position(new_pos);
         }
     }
 
-    void restrict_force_to_comp_box(DPoint2 force)
+    void restrict_force_to_comp_box(DPoint force)
     {
-        double x_min = down_left_corner.m_x;
-        double x_max = down_left_corner.m_x + boxlength;
-        double y_min = down_left_corner.m_y;
-        double y_max = down_left_corner.m_y + boxlength;
-        if (force.m_x < x_min)
+        double x_min = down_left_corner.getX();
+        double x_max = down_left_corner.getX() + boxlength;
+        double y_min = down_left_corner.getY();
+        double y_max = down_left_corner.getY() + boxlength;
+        double z_min = down_left_corner.getZ();
+        double z_max = down_left_corner.getZ() + boxlength;
+
+        if (force.getX() < x_min)
         {
-            force.m_x = x_min;
+            force.setX(x_min);
         }
-        else if (force.m_x > x_max)
+        else if (force.getX() > x_max)
         {
-            force.m_x = x_max;
+            force.setX(x_max);
         }
-        if (force.m_y < y_min)
+
+        if (force.getY() < y_min)
         {
-            force.m_y = y_min;
+            force.setY(y_min);
         }
-        else if (force.m_y > y_max)
+        else if (force.getY() > y_max)
         {
-            force.m_y = y_max;
+            force.setY(y_max);
+        }
+
+        if (force.getZ() < z_min)
+        {
+            force.setZ(z_min);
+        }
+        else if (force.getZ() > z_max)
+        {
+            force.setZ(z_max);
         }
     }
 }

@@ -32,7 +32,8 @@ package ogdf.energybased;
  */
 
 import java.util.*;
-import ogdf.basic.DPoint2;
+import ogdf.basic.DPoint;
+import ogdf.basic.DPointFactory;
 import ogdf.basic.node;
 
 public class NodeAttributes
@@ -42,7 +43,7 @@ public class NodeAttributes
 
     public NodeAttributes()
     {
-        position = new DPoint2();
+        position = DPointFactory.INSTANCE.newPoint();
         width = 0;
         height = 0;
         v_lower_level = null;
@@ -65,18 +66,18 @@ public class NodeAttributes
         angle_2 = 6.2831853;
     }
 
-    public void set_NodeAttributes(double w, double h, DPoint2 pos, node v_low, node v_high)
+    public void set_NodeAttributes(double w, double h, DPoint pos, node v_low, node v_high)
     {
         width = w;
         height = h;
-        position = new DPoint2(pos);
+        position = DPointFactory.INSTANCE.newPoint(pos);
         v_lower_level = v_low;
         v_higher_level = v_high;
     }
 
-    public void set_position(DPoint2 pos)
+    public void set_position(DPoint pos)
     {
-        position = new DPoint2(pos);
+        position = DPointFactory.INSTANCE.newPoint(pos);
     }
 
     public void set_width(double w)
@@ -89,29 +90,9 @@ public class NodeAttributes
         height = h;
     }
 
-    public void set_x(double x)
+    public DPoint get_position()
     {
-        position.m_x = x;
-    }
-
-    public void set_y(double y)
-    {
-        position.m_y = y;
-    }
-
-    public DPoint2 get_position()
-    {
-        return new DPoint2(position);
-    }
-
-    public double get_x()
-    {
-        return position.m_x;
-    }
-
-    public double get_y()
-    {
-        return position.m_y;
+        return DPointFactory.INSTANCE.newPoint(position);
     }
 
     public double get_width()
@@ -291,7 +272,7 @@ public class NodeAttributes
 
     }
 
-    private DPoint2 position;
+    private DPoint position;
     private double width;
     private double height;
     //for the multilevel and divide et impera and preprocessing step

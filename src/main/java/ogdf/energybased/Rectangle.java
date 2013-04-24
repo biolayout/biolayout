@@ -37,8 +37,8 @@ class Rectangle
 
     public Rectangle() //constructor
     {
-        old_down_left_corner_position = DPointFactory.INSTANCE.newPoint();
-        new_down_left_corner_position = DPointFactory.INSTANCE.newPoint();
+        old_down_left_corner_position = PointFactory.INSTANCE.newDPoint();
+        new_down_left_corner_position = PointFactory.INSTANCE.newDPoint();
         width = 0;
         height = 0;
         component_index = -1;
@@ -57,12 +57,12 @@ class Rectangle
 
     public void set_old_dlc_position(DPoint dlc_pos)
     {
-        old_down_left_corner_position = DPointFactory.INSTANCE.newPoint(dlc_pos);
+        old_down_left_corner_position = PointFactory.INSTANCE.newDPoint(dlc_pos);
     }
 
     public void set_new_dlc_position(DPoint dlc_pos)
     {
-        new_down_left_corner_position = DPointFactory.INSTANCE.newPoint(dlc_pos);
+        new_down_left_corner_position = PointFactory.INSTANCE.newDPoint(dlc_pos);
     }
 
     public void set_width(double w)
@@ -94,12 +94,12 @@ class Rectangle
 
     public DPoint get_old_dlc_position()
     {
-        return DPointFactory.INSTANCE.newPoint(old_down_left_corner_position);
+        return PointFactory.INSTANCE.newDPoint(old_down_left_corner_position);
     }
 
     public DPoint get_new_dlc_position()
     {
-        return DPointFactory.INSTANCE.newPoint(new_down_left_corner_position);
+        return PointFactory.INSTANCE.newDPoint(new_down_left_corner_position);
     }
 
     public double get_width()

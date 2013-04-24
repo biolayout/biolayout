@@ -20,10 +20,10 @@ public class GraphAttributes
         m = null;
     }
 
-    public GraphAttributes(NetworkContainer nc, DPointFactory.Dimensions dimensions)
+    public GraphAttributes(NetworkContainer nc, PointFactory.Dimensions dimensions)
     {
         this(new Graph());
-        DPointFactory.INSTANCE.setDimensions(dimensions);
+        PointFactory.INSTANCE.setDimensions(dimensions);
 
         m = new HashMap<Vertex,node>();
 

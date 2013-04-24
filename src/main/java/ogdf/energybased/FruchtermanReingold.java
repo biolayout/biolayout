@@ -43,7 +43,7 @@ class FruchtermanReingold
     public void update_boxlength_and_cornercoordinate(double b_l, DPoint d_l_c)
     {
         boxlength = b_l;
-        down_left_corner = DPointFactory.INSTANCE.newPoint(d_l_c);
+        down_left_corner = PointFactory.INSTANCE.newDPoint(d_l_c);
     }
     private int _grid_quotient;//for coarsening the FrRe-grid
     private int max_gridindex; //maximum index of a grid row/column
@@ -75,7 +75,7 @@ class FruchtermanReingold
         //naive algorithm by Fruchterman & Reingold
         numexcept N;
         node v, u;
-        DPoint f_rep_u_on_v = DPointFactory.INSTANCE.newPoint();
+        DPoint f_rep_u_on_v = PointFactory.INSTANCE.newDPoint();
         DPoint vector_v_minus_u;
         DPoint pos_u, pos_v;
         double norm_v_minus_u;
@@ -87,7 +87,7 @@ class FruchtermanReingold
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             v = iter.next();
-            F_rep.set(v, DPointFactory.INSTANCE.newPoint());
+            F_rep.set(v, PointFactory.INSTANCE.newDPoint());
         }
 
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
@@ -127,40 +127,45 @@ class FruchtermanReingold
             NodeArray<DPoint> F_rep)
     {
         //GRID algorithm by Fruchterman & Reingold
-        /*numexcept N;
-        List<IPoint2> neighbour_boxes;
+        numexcept N;
+        List<IPoint> neighbour_boxes;
         List<node> neighbour_box;
-        IPoint2 act_neighbour_box;
-        IPoint2 neighbour;
-        DPoint f_rep_u_on_v = DPointFactory.INSTANCE.newPoint();
+        IPoint act_neighbour_box;
+        IPoint neighbour;
+        DPoint f_rep_u_on_v = PointFactory.INSTANCE.newDPoint();
         DPoint vector_v_minus_u;
         DPoint pos_u, pos_v;
         double norm_v_minus_u;
         double scalar;
 
-        int i, j, act_i, act_j, k, l, length;
+        int i, j, k, act_i, act_j, act_k, uIndex, vIndex, length;
         node u, v;
         double x, y, gridboxlength;//length of a box in the GRID
-        int x_index, y_index;
 
         //init F_rep
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             v = iter.next();
-            F_rep.set(v, DPointFactory.INSTANCE.newPoint());
+            F_rep.set(v, PointFactory.INSTANCE.newDPoint());
         }
 
         //init max_gridindex and set contained_nodes;
 
         max_gridindex = (int) (Math.sqrt((double) (G.numberOfNodes())) / grid_quotient());
         max_gridindex = ((max_gridindex > 0) ? max_gridindex : 1);
-        List<node>[][] contained_nodes = new ArrayList[max_gridindex][max_gridindex];
+        int i_num_grid_cells = max_gridindex;
+        int j_num_grid_cells = max_gridindex;
+        int k_num_grid_cells = max_gridindex; //FIMXE Z could be 1 in the 2D case
+        List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
 
-        for (i = 0; i < max_gridindex; i++)
+        for (i = 0; i < i_num_grid_cells; i++)
         {
-            for (j = 0; j < max_gridindex; j++)
+            for (j = 0; j < j_num_grid_cells; j++)
             {
-                contained_nodes[i][j] = new ArrayList();
+                for (k = 0; k < k_num_grid_cells; k++)
+                {
+                    contained_nodes[i][j][k] = new ArrayList();
+                }
             }
         }
 
@@ -168,114 +173,126 @@ class FruchtermanReingold
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             v = iter.next();
-            x = A.get(v).get_x() - down_left_corner.m_x;//shift comput. box to nullpoint
-            y = A.get(v).get_y() - down_left_corner.m_y;
-            x_index = (int) (x / gridboxlength);
-            y_index = (int) (y / gridboxlength);
-            contained_nodes[x_index][y_index].add(v);
+            DPoint offset = A.get(v).get_position().minus(down_left_corner);
+            int x_index = (int) (offset.getX() / gridboxlength);
+            int y_index = (int) (offset.getY() / gridboxlength);
+            int z_index = (int) (offset.getZ() / gridboxlength);
+            contained_nodes[x_index][y_index][z_index].add(v);
         }
 
         //force calculation
 
-        for (i = 0; i < max_gridindex; i++)
+        for (i = 0; i < i_num_grid_cells; i++)
         {
-            for (j = 0; j < max_gridindex; j++)
+            for (j = 0; j < j_num_grid_cells; j++)
             {
-                //step1: calculate forces inside contained_nodes(i,j)
-
-                length = contained_nodes[i][j].size();
-                List<node> nodearray_i_j = new ArrayList<node>();
-                for (node n : contained_nodes[i][j])
+                for (k = 0; j < k_num_grid_cells; j++)
                 {
-                    nodearray_i_j.add(n);
-                }
+                    //step1: calculate forces inside contained_nodes(i,j)
 
-                for (k = 0; k < length; k++)
-                {
-                    for (l = k + 1; l < length; l++)
+                    length = contained_nodes[i][j][k].size();
+                    List<node> nodearray_i_j = new ArrayList<node>();
+                    for (node n : contained_nodes[i][j][k])
                     {
-                        u = nodearray_i_j.get(k);
-                        v = nodearray_i_j.get(l);
-                        pos_u = A.get(u).get_position();
-                        pos_v = A.get(v).get_position();
-                        if (pos_u == pos_v)
-                        {//if2  (Exception handling if two nodes have the same position)
-                            pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
-                        }//if2
-                        vector_v_minus_u = pos_v.minus(pos_u);
-                        norm_v_minus_u = vector_v_minus_u.norm();
-
-                        if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
-                        {
-                            scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
-                            f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
-                        }
-
-                        F_rep.set(v, F_rep.get(v).plus(f_rep_u_on_v));
-                        F_rep.set(u, F_rep.get(u).minus(f_rep_u_on_v));
+                        nodearray_i_j.add(n);
                     }
-                }
 
-                //step 2: calculated forces to nodes in neighbour boxes
-
-                //find_neighbour_boxes
-
-                neighbour_boxes = new ArrayList<IPoint2>();
-                for (k = i - 1; k <= i + 1; k++)
-                {
-                    for (l = j - 1; l <= j + 1; l++)
+                    for (uIndex = 0; uIndex < length; uIndex++)
                     {
-                        if ((k >= 0) && (l >= 0) && (k < max_gridindex) && (l < max_gridindex))
+                        for (vIndex = uIndex + 1; vIndex < length; vIndex++)
                         {
-                            neighbour = new IPoint2(k, l);
-                            if ((k != i) || (l != j))
+                            u = nodearray_i_j.get(uIndex);
+                            v = nodearray_i_j.get(vIndex);
+                            pos_u = A.get(u).get_position();
+                            pos_v = A.get(v).get_position();
+                            if (pos_u == pos_v)
+                            {//if2  (Exception handling if two nodes have the same position)
+                                pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
+                            }//if2
+                            vector_v_minus_u = pos_v.minus(pos_u);
+                            norm_v_minus_u = vector_v_minus_u.norm();
+
+                            if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
                             {
-                                neighbour_boxes.add(neighbour);
+                                scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
+                                f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
+                            }
+
+                            F_rep.set(v, F_rep.get(v).plus(f_rep_u_on_v));
+                            F_rep.set(u, F_rep.get(u).minus(f_rep_u_on_v));
+                        }
+                    }
+
+                    //step 2: calculated forces to nodes in neighbour boxes
+
+                    //find_neighbour_boxes
+
+                    neighbour_boxes = new ArrayList<IPoint>();
+                    for (int i_n = i - 1; i_n <= i + 1; i_n++)
+                    {
+                        for (int j_n = j - 1; j_n <= j + 1; j_n++)
+                        {
+                            for (int k_n = k - 1; k_n <= k + 1; k_n++)
+                            {
+                                if ((i_n >= 0) && (j_n >= 0) && (k_n >= 0) &&
+                                        (i_n < i_num_grid_cells) && (j_n < j_num_grid_cells) && (k_n < k_num_grid_cells))
+                                {
+                                    neighbour = PointFactory.INSTANCE.newIPoint();
+                                    neighbour.setX(i_n);
+                                    neighbour.setY(j_n);
+                                    neighbour.setZ(k_n);
+
+                                    if ((i_n != i) || (j_n != j) || (k_n != k))
+                                    {
+                                        neighbour_boxes.add(neighbour);
+                                    }
+                                }
                             }
                         }
                     }
+
+
+                    //forget neighbour_boxes that already had access to this box
+                    for (IPoint act_neighbour_box_it : neighbour_boxes)
+                    {//forall
+                        act_i = act_neighbour_box_it.getX();
+                        act_j = act_neighbour_box_it.getY();
+                        act_k = act_neighbour_box_it.getZ();
+                        if ((act_j == j + 1) || ((act_j == j) && (act_i == i + 1)))
+                        {//if1
+                            for (node v_it : contained_nodes[i][j][k])
+                            {
+                                for (node u_it : contained_nodes[act_i][act_j][act_k])
+                                {//for
+                                    pos_u = A.get(u_it).get_position();
+                                    pos_v = A.get(v_it).get_position();
+                                    if (pos_u == pos_v)
+                                    {//if2  (Exception handling if two nodes have the same position)
+                                        pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
+                                    }//if2
+                                    vector_v_minus_u = pos_v.minus(pos_u);
+                                    norm_v_minus_u = vector_v_minus_u.norm();
+
+                                    if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
+                                    {
+                                        scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
+                                        f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
+                                    }
+                                    F_rep.set(v_it, F_rep.get(v_it).plus(f_rep_u_on_v));
+                                    F_rep.set(u_it, F_rep.get(u_it).minus(f_rep_u_on_v));
+                                }//for
+                            }
+                        }//if1
+                    }//forall
                 }
-
-
-                //forget neighbour_boxes that already had access to this box
-                for (IPoint2 act_neighbour_box_it : neighbour_boxes)
-                {//forall
-                    act_i = (int) act_neighbour_box_it.m_x;
-                    act_j = (int) act_neighbour_box_it.m_y;
-                    if ((act_j == j + 1) || ((act_j == j) && (act_i == i + 1)))
-                    {//if1
-                        for (node v_it : contained_nodes[i][j])
-                        {
-                            for (node u_it : contained_nodes[act_i][act_j])
-                            {//for
-                                pos_u = A.get(u_it).get_position();
-                                pos_v = A.get(v_it).get_position();
-                                if (pos_u == pos_v)
-                                {//if2  (Exception handling if two nodes have the same position)
-                                    pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
-                                }//if2
-                                vector_v_minus_u = pos_v.minus(pos_u);
-                                norm_v_minus_u = vector_v_minus_u.norm();
-
-                                if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
-                                {
-                                    scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
-                                    f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
-                                }
-                                F_rep.set(v_it, F_rep.get(v_it).plus(f_rep_u_on_v));
-                                F_rep.set(u_it, F_rep.get(u_it).minus(f_rep_u_on_v));
-                            }//for
-                        }
-                    }//if1
-                }//forall
             }
-        }*/
+        }
     }
 
     public void make_initialisations(double bl, DPoint d_l_c, int grid_quot)
     {
         grid_quotient(grid_quot);
-        down_left_corner = DPointFactory.INSTANCE.newPoint(d_l_c); //export this two values from FMMM
+        down_left_corner = PointFactory.INSTANCE.newDPoint(d_l_c); //export this two values from FMMM
         boxlength = bl;
     }
 

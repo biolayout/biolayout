@@ -609,7 +609,7 @@ public class Multilevel
             {//else
                 L.clear();
                 dedicated_sun = A_mult_ptr.get(level).get(v).get_dedicated_sun_node();
-                dedicated_sun_pos = DPointFactory.INSTANCE.newPoint(A_mult_ptr.get(level).get(dedicated_sun).get_position());
+                dedicated_sun_pos = PointFactory.INSTANCE.newDPoint(A_mult_ptr.get(level).get(dedicated_sun).get_position());
                 dedicated_sun_distance = A_mult_ptr.get(level).get(v).get_dedicated_sun_distance();
 
                 if (init_placement_way == FMMMLayout.InitialPlacementMult.ipmAdvanced)
@@ -688,7 +688,7 @@ public class Multilevel
             v_high = i.next();
             //find pos of adjacent nodes
             adj_pos.clear();
-            DPoint v_high_pos = DPointFactory.INSTANCE.newPoint(A_mult_ptr.get(level + 1).get(v_high).get_position());
+            DPoint v_high_pos = PointFactory.INSTANCE.newDPoint(A_mult_ptr.get(level + 1).get(v_high).get_position());
 
             for (edge e_high : v_high.adjEdges())
             {
@@ -703,7 +703,7 @@ public class Multilevel
                         w_high = e_high.source();
                     }
 
-                    DPoint w_high_pos = DPointFactory.INSTANCE.newPoint(A_mult_ptr.get(level + 1).get(w_high).get_position());
+                    DPoint w_high_pos = PointFactory.INSTANCE.newDPoint(A_mult_ptr.get(level + 1).get(w_high).get_position());
                     adj_pos.add(w_high_pos);
                 }
             }
@@ -716,7 +716,7 @@ public class Multilevel
             {
                 //create angle_1
                 start_pos = adj_pos.get(0);
-                DPoint x_parallel_pos = DPointFactory.INSTANCE.newPoint(v_high_pos);
+                DPoint x_parallel_pos = PointFactory.INSTANCE.newDPoint(v_high_pos);
                 x_parallel_pos.setX(v_high_pos.getX() + 1);
                 angle_1 = x_parallel_pos.minus(v_high_pos).angle(start_pos.minus(v_high_pos));
                 //create angle_2
@@ -731,7 +731,7 @@ public class Multilevel
                     int adj_pos_index = it.nextIndex();
                     //create act_angle_1
                     start_pos = it.next();
-                    DPoint x_parallel_pos = DPointFactory.INSTANCE.newPoint(v_high_pos);
+                    DPoint x_parallel_pos = PointFactory.INSTANCE.newDPoint(v_high_pos);
                     x_parallel_pos.setX(v_high_pos.getX() + 1);
                     act_angle_1 = x_parallel_pos.minus(v_high_pos).angle(start_pos.minus(v_high_pos));
                     //create act_angle_2
@@ -855,7 +855,7 @@ public class Multilevel
 
     DPoint create_random_pos(DPoint center, double radius)
     {
-        DPoint new_point = DPointFactory.INSTANCE.newPoint();
+        DPoint new_point = PointFactory.INSTANCE.newDPoint();
 
         double r;
         r = ((random.nextDouble() * 2.0) - 1.0) * radius;
@@ -874,7 +874,7 @@ public class Multilevel
     DPoint get_waggled_inbetween_position(DPoint s, DPoint t, double lambda)
     {
         double WAGGLEFACTOR = 0.05;
-        DPoint inbetween_point = DPointFactory.INSTANCE.newPoint();
+        DPoint inbetween_point = PointFactory.INSTANCE.newDPoint();
         inbetween_point = s.plus(t.minus(s).scaled(lambda));
         double radius = WAGGLEFACTOR * (t.minus(s)).norm();
         double rnd = random.nextDouble();//rand number in (0,1)
@@ -884,7 +884,7 @@ public class Multilevel
 
     DPoint get_barycenter_position(List<DPoint> L)
     {
-        DPoint sum = DPointFactory.INSTANCE.newPoint();
+        DPoint sum = PointFactory.INSTANCE.newDPoint();
 
         for (DPoint act_point_ptr : L)
         {

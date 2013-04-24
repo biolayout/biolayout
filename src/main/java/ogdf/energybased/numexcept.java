@@ -38,7 +38,7 @@ package ogdf.energybased;
 //---------------------------------------------------------------------------
 import java.util.Random;
 import ogdf.basic.DPoint;
-import ogdf.basic.DPointFactory;
+import ogdf.basic.PointFactory;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -66,7 +66,7 @@ public class numexcept
         double mindist;//minimal distance from old_point to the boundaries of the disc
         double mindist_to_xmin, mindist_to_xmax, mindist_to_ymin, mindist_to_ymax, mindist_to_zmin, mindist_to_zmax;
         double rand_x, rand_y, rand_z;
-        DPoint new_point = DPointFactory.INSTANCE.newPoint();
+        DPoint new_point = PointFactory.INSTANCE.newDPoint();
 
         mindist_to_xmin = old_point.getX() - xmin;
         mindist_to_xmax = xmax - old_point.getX();

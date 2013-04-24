@@ -48,7 +48,7 @@ public interface Factory<T>
         public DPoint newInstance()
         {
             // Nested factory singletons. Hmmmmm.
-            return ogdf.basic.DPointFactory.INSTANCE.newPoint();
+            return ogdf.basic.PointFactory.INSTANCE.newDPoint();
         }
     }
 

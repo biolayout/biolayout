@@ -4,7 +4,7 @@ package ogdf.basic;
  *
  * @author Tim Angus <tim.angus@roslin.ed.ac.uk>
  */
-public enum DPointFactory
+public enum PointFactory
 {
     INSTANCE;
 
@@ -21,7 +21,7 @@ public enum DPointFactory
         this.d = d;
     }
 
-    public DPoint newPoint()
+    public DPoint newDPoint()
     {
         switch (d)
         {
@@ -34,7 +34,7 @@ public enum DPointFactory
         }
     }
 
-    public DPoint newPoint(DPoint p)
+    public DPoint newDPoint(DPoint p)
     {
         switch (d)
         {
@@ -44,6 +44,32 @@ public enum DPointFactory
 
             case _3:
                 return new DPoint3((DPoint3)p);
+        }
+    }
+
+    public IPoint newIPoint()
+    {
+        switch (d)
+        {
+            default:
+            case _2:
+                return new IPoint2();
+
+            case _3:
+                return new IPoint3();
+        }
+    }
+
+    public IPoint newIPoint(IPoint p)
+    {
+        switch (d)
+        {
+            default:
+            case _2:
+                return new IPoint2((IPoint2)p);
+
+            case _3:
+                return new IPoint3((IPoint3)p);
         }
     }
 }

@@ -33,7 +33,7 @@ package ogdf.energybased;
 
 import java.util.*;
 import ogdf.basic.DPoint;
-import ogdf.basic.DPointFactory;
+import ogdf.basic.PointFactory;
 import ogdf.basic.node;
 
 public class NodeAttributes
@@ -43,7 +43,7 @@ public class NodeAttributes
 
     public NodeAttributes()
     {
-        position = DPointFactory.INSTANCE.newPoint();
+        position = PointFactory.INSTANCE.newDPoint();
         width = 0;
         height = 0;
         v_lower_level = null;
@@ -70,14 +70,14 @@ public class NodeAttributes
     {
         width = w;
         height = h;
-        position = DPointFactory.INSTANCE.newPoint(pos);
+        position = PointFactory.INSTANCE.newDPoint(pos);
         v_lower_level = v_low;
         v_higher_level = v_high;
     }
 
     public void set_position(DPoint pos)
     {
-        position = DPointFactory.INSTANCE.newPoint(pos);
+        position = PointFactory.INSTANCE.newDPoint(pos);
     }
 
     public void set_width(double w)
@@ -92,7 +92,7 @@ public class NodeAttributes
 
     public DPoint get_position()
     {
-        return DPointFactory.INSTANCE.newPoint(position);
+        return PointFactory.INSTANCE.newDPoint(position);
     }
 
     public double get_width()

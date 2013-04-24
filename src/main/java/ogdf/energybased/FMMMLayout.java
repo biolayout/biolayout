@@ -958,7 +958,7 @@ public class FMMMLayout
             if (G.numberOfNodes() == 1)
             {
                 node v = G.firstNode();
-                GA.setPosition(v, DPointFactory.INSTANCE.newPoint());
+                GA.setPosition(v, PointFactory.INSTANCE.newDPoint());
             }
         }
 
@@ -1020,6 +1020,11 @@ public class FMMMLayout
             A_mult_ptr.add(new NodeArray<NodeAttributes>());
             E_mult_ptr.add(new EdgeArray<EdgeAttributes>());
         }
+
+        progressDialog.incrementProgress(0);
+        progressDialog.setText("FMMM layout" +
+                    ", component " + (comp_index + 1) + " of " + num_components +
+                    ", creating multilevel representations");
 
         max_level = Mult.create_multilevel_representations(G, A, E, randSeed(),
                 galaxyChoice(), minGraphSize(),
@@ -1712,7 +1717,7 @@ public class FMMMLayout
 
     DPoint get_barycenter_position_of_component(Graph G, NodeArray<NodeAttributes> A)
     {
-        DPoint sum = DPointFactory.INSTANCE.newPoint();
+        DPoint sum = PointFactory.INSTANCE.newDPoint();
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             node v = iter.next();
@@ -1735,7 +1740,7 @@ public class FMMMLayout
         List<NodeArray<DPoint>> old_coords = new ArrayList<NodeArray<DPoint>>(number_of_components);
         node v_sub;
         Rectangle r_act, r_best;
-        DPoint new_pos = DPointFactory.INSTANCE.newPoint(), new_dlc = DPointFactory.INSTANCE.newPoint();
+        DPoint new_pos = PointFactory.INSTANCE.newDPoint(), new_dlc = PointFactory.INSTANCE.newDPoint();
 
         R.clear(); //make R empty
 
@@ -1753,8 +1758,8 @@ public class FMMMLayout
             {
                 v_sub = iter.next();
                 DPoint p = A_sub.get(i).get(v_sub).get_position();
-                old_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(p));
-                best_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(p));
+                old_coords.get(i).set(v_sub, PointFactory.INSTANCE.newDPoint(p));
+                best_coords.get(i).set(v_sub, PointFactory.INSTANCE.newDPoint(p));
             }
 
             //rotate the components
@@ -1795,7 +1800,7 @@ public class FMMMLayout
                     {
                         v_sub = iter.next();
 
-                        best_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(A_sub.get(i).get(v_sub).get_position()));
+                        best_coords.get(i).set(v_sub, PointFactory.INSTANCE.newDPoint(A_sub.get(i).get(v_sub).get_position()));
                     }
                 }
                 else if ((number_of_components == 1) && (act_area_PI_half_rotated < best_area))
@@ -1806,7 +1811,7 @@ public class FMMMLayout
                     {
                         v_sub = iter.next();
 
-                        best_coords.get(i).set(v_sub, DPointFactory.INSTANCE.newPoint(A_sub.get(i).get(v_sub).get_position()));
+                        best_coords.get(i).set(v_sub, PointFactory.INSTANCE.newDPoint(A_sub.get(i).get(v_sub).get_position()));
                     }
                     //the needed rotation step follows in the next if statement
                 }
@@ -2003,7 +2008,7 @@ public class FMMMLayout
         boxlength = Math.ceil(Math.max(w, h) * BOX_SCALING_FACTOR);
 
         //down left corner of comp. box is the origin
-        down_left_corner = DPointFactory.INSTANCE.newPoint();
+        down_left_corner = PointFactory.INSTANCE.newDPoint();
     }
 
     void create_initial_placement(Graph G, NodeArray<NodeAttributes> A)
@@ -2068,7 +2073,7 @@ public class FMMMLayout
             for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
             {
                 v = iter.next();
-                DPoint rndp = DPointFactory.INSTANCE.newPoint();
+                DPoint rndp = PointFactory.INSTANCE.newDPoint();
                 rndp.setX(random.nextDouble() * (boxlength - 2) + 1);
                 rndp.setY(random.nextDouble() * (boxlength - 2) + 1);
                 rndp.setZ(random.nextDouble() * (boxlength - 2) + 1);
@@ -2083,7 +2088,7 @@ public class FMMMLayout
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             node v = iter.next();
-            F.set(v, DPointFactory.INSTANCE.newPoint());
+            F.set(v, PointFactory.INSTANCE.newDPoint());
         }
     }
 
@@ -2134,8 +2139,8 @@ public class FMMMLayout
         edge e;
         node u, v;
         double norm_v_minus_u, scalar;
-        DPoint vector_v_minus_u, f_u = DPointFactory.INSTANCE.newPoint();
-        DPoint nullpoint = DPointFactory.INSTANCE.newPoint();
+        DPoint vector_v_minus_u, f_u = PointFactory.INSTANCE.newDPoint();
+        DPoint nullpoint = PointFactory.INSTANCE.newDPoint();
 
         //initialisation
         init_F(G, F_attr);
@@ -2214,8 +2219,8 @@ public class FMMMLayout
             int fine_tuning_step)
     {
         node v;
-        DPoint f, force = DPointFactory.INSTANCE.newPoint();
-        DPoint nullpoint = DPointFactory.INSTANCE.newPoint();
+        DPoint f, force = PointFactory.INSTANCE.newDPoint();
+        DPoint nullpoint = PointFactory.INSTANCE.newDPoint();
         double norm_f, scalar;
         double act_spring_strength, act_rep_force_strength;
 
@@ -2290,7 +2295,7 @@ public class FMMMLayout
                         max_radius(iter)) / norm_f;
                 force = f.scaled(scalar);
             }
-            F.set(v, DPointFactory.INSTANCE.newPoint(force));
+            F.set(v, PointFactory.INSTANCE.newDPoint(force));
         }
     }
 
@@ -2440,7 +2445,7 @@ public class FMMMLayout
         double pi_times_10_over_6 = 10 * pi_times_1_over_6;
         double pi_times_11_over_6 = 11 * pi_times_1_over_6;
 
-        DPoint nullpoint = DPointFactory.INSTANCE.newPoint();
+        DPoint nullpoint = PointFactory.INSTANCE.newDPoint();
         double fi; //angle in [0,2pi) measured counterclockwise
         double norm_old, norm_new, quot_old_new;
 
@@ -2450,8 +2455,8 @@ public class FMMMLayout
             for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
             {
                 v = i.next();
-                DPoint force_new = DPointFactory.INSTANCE.newPoint(F.get(v));
-                DPoint force_old = DPointFactory.INSTANCE.newPoint(last_node_movement.get(v));
+                DPoint force_new = PointFactory.INSTANCE.newDPoint(F.get(v));
+                DPoint force_old = PointFactory.INSTANCE.newDPoint(last_node_movement.get(v));
                 norm_new = F.get(v).norm();
                 norm_old = last_node_movement.get(v).norm();
                 if ((norm_new > 0) && (norm_old > 0))
@@ -2529,7 +2534,7 @@ public class FMMMLayout
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            last_node_movement.set(v, DPointFactory.INSTANCE.newPoint(F.get(v)));
+            last_node_movement.set(v, PointFactory.INSTANCE.newDPoint(F.get(v)));
         }
     }
 

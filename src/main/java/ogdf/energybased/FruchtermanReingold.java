@@ -188,21 +188,21 @@ class FruchtermanReingold
             {
                 for (k = 0; j < k_num_grid_cells; j++)
                 {
-                    //step1: calculate forces inside contained_nodes(i,j)
+                    //step1: calculate forces inside contained_nodes(i,j,k)
 
                     length = contained_nodes[i][j][k].size();
-                    List<node> nodearray_i_j = new ArrayList<node>();
+                    List<node> nodearray_i_j_k = new ArrayList<node>();
                     for (node n : contained_nodes[i][j][k])
                     {
-                        nodearray_i_j.add(n);
+                        nodearray_i_j_k.add(n);
                     }
 
                     for (uIndex = 0; uIndex < length; uIndex++)
                     {
                         for (vIndex = uIndex + 1; vIndex < length; vIndex++)
                         {
-                            u = nodearray_i_j.get(uIndex);
-                            v = nodearray_i_j.get(vIndex);
+                            u = nodearray_i_j_k.get(uIndex);
+                            v = nodearray_i_j_k.get(vIndex);
                             pos_u = A.get(u).get_position();
                             pos_v = A.get(v).get_position();
                             if (pos_u == pos_v)
@@ -258,7 +258,12 @@ class FruchtermanReingold
                         act_i = act_neighbour_box_it.getX();
                         act_j = act_neighbour_box_it.getY();
                         act_k = act_neighbour_box_it.getZ();
-                        if ((act_j == j + 1) || ((act_j == j) && (act_i == i + 1)))
+
+                        boolean top = (act_k == k - 1 && !(act_i == i - 1 && act_j == j - 1));
+                        boolean middle = (act_k == k && (act_j == j + 1 || (act_j == j && act_i == i + 1)));
+                        boolean bottom = (act_k == k + 1 && (act_i == i + 1 && act_j == j + 1));
+
+                        if (top || middle || bottom)
                         {//if1
                             for (node v_it : contained_nodes[i][j][k])
                             {

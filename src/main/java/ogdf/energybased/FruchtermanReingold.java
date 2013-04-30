@@ -67,57 +67,58 @@ class FruchtermanReingold
         grid_quotient(2);
     }
 
+    private void calcluate_repulsive_force_on_node(node n, List<node> others,
+            NodeArray<NodeAttributes> A, NodeArray<DPoint> F_rep)
+    {
+        DPoint f_rep_u_on_v = PointFactory.INSTANCE.newDPoint();
+
+        for (node v : others)
+        {
+            DPoint pos_u = A.get(n).get_position();
+            DPoint pos_v = A.get(v).get_position();
+            if (pos_u.equals(pos_v))
+            {//if2  (Exception handling if two nodes have the same position)
+                pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
+            }//if2
+            DPoint vector_v_minus_u = pos_v.minus(pos_u);
+            double norm_v_minus_u = vector_v_minus_u.norm();
+            if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
+            {
+                double scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
+                f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
+            }
+            F_rep.set(v, F_rep.get(v).plus(f_rep_u_on_v));
+            F_rep.set(n, F_rep.get(n).minus(f_rep_u_on_v));
+        }
+    }
+
     public void calculate_exact_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
             NodeArray<DPoint> F_rep)
     {
         //naive algorithm by Fruchterman & Reingold
-        numexcept N;
-        node v, u;
-        DPoint f_rep_u_on_v = PointFactory.INSTANCE.newDPoint();
-        DPoint vector_v_minus_u;
-        DPoint pos_u, pos_v;
-        double norm_v_minus_u;
         int node_number = G.numberOfNodes();
         List<node> array_of_the_nodes = new ArrayList<node>();
-        int i, j;
-        double scalar;
 
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
-            v = iter.next();
+            node v = iter.next();
             F_rep.set(v, PointFactory.INSTANCE.newDPoint());
         }
 
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
-            v = iter.next();
+            node v = iter.next();
             array_of_the_nodes.add(v);
         }
 
-        for (i = 0; i < node_number; i++)
+        for (int i = 0; i < node_number; i++)
         {
-            for (j = i + 1; j < node_number; j++)
-            {
-                u = array_of_the_nodes.get(i);
-                v = array_of_the_nodes.get(j);
-                pos_u = A.get(u).get_position();
-                pos_v = A.get(v).get_position();
-                if (pos_u == pos_v)
-                {//if2  (Exception handling if two nodes have the same position)
-                    pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
-                }//if2
-                vector_v_minus_u = pos_v.minus(pos_u);
-                norm_v_minus_u = vector_v_minus_u.norm();
-                if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
-                {
-                    scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
-                    f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
-                }
-                F_rep.set(v, F_rep.get(v).plus(f_rep_u_on_v));
-                F_rep.set(u, F_rep.get(u).minus(f_rep_u_on_v));
-            }
+            calcluate_repulsive_force_on_node(
+                        array_of_the_nodes.get(i),
+                        array_of_the_nodes.subList(i + 1, node_number),
+                        A, F_rep);
         }
     }
 
@@ -199,28 +200,10 @@ class FruchtermanReingold
 
                     for (uIndex = 0; uIndex < length; uIndex++)
                     {
-                        for (vIndex = uIndex + 1; vIndex < length; vIndex++)
-                        {
-                            u = nodearray_i_j_k.get(uIndex);
-                            v = nodearray_i_j_k.get(vIndex);
-                            pos_u = A.get(u).get_position();
-                            pos_v = A.get(v).get_position();
-                            if (pos_u == pos_v)
-                            {//if2  (Exception handling if two nodes have the same position)
-                                pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
-                            }//if2
-                            vector_v_minus_u = pos_v.minus(pos_u);
-                            norm_v_minus_u = vector_v_minus_u.norm();
-
-                            if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
-                            {
-                                scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
-                                f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
-                            }
-
-                            F_rep.set(v, F_rep.get(v).plus(f_rep_u_on_v));
-                            F_rep.set(u, F_rep.get(u).minus(f_rep_u_on_v));
-                        }
+                        calcluate_repulsive_force_on_node(
+                                nodearray_i_j_k.get(uIndex),
+                                nodearray_i_j_k.subList(uIndex + 1, length),
+                                A, F_rep);
                     }
 
                     //step 2: calculated forces to nodes in neighbour boxes
@@ -267,25 +250,10 @@ class FruchtermanReingold
                         {//if1
                             for (node v_it : contained_nodes[i][j][k])
                             {
-                                for (node u_it : contained_nodes[act_i][act_j][act_k])
-                                {//for
-                                    pos_u = A.get(u_it).get_position();
-                                    pos_v = A.get(v_it).get_position();
-                                    if (pos_u == pos_v)
-                                    {//if2  (Exception handling if two nodes have the same position)
-                                        pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
-                                    }//if2
-                                    vector_v_minus_u = pos_v.minus(pos_u);
-                                    norm_v_minus_u = vector_v_minus_u.norm();
-
-                                    if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
-                                    {
-                                        scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;
-                                        f_rep_u_on_v = vector_v_minus_u.scaled(scalar);
-                                    }
-                                    F_rep.set(v_it, F_rep.get(v_it).plus(f_rep_u_on_v));
-                                    F_rep.set(u_it, F_rep.get(u_it).minus(f_rep_u_on_v));
-                                }//for
+                                calcluate_repulsive_force_on_node(
+                                        v_it,
+                                        contained_nodes[act_i][act_j][act_k],
+                                        A, F_rep);
                             }
                         }//if1
                     }//forall

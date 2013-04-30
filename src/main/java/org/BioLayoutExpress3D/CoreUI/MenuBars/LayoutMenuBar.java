@@ -114,7 +114,7 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
 
         fileImportSubMenu = new JMenu("Import");
         fileImportSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-        fileImportSubMenu.setEnabled(false);
+        fileImportSubMenu.setEnabled(true);
 
         fileExportSubMenu = new JMenu("Export");
         fileExportSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);

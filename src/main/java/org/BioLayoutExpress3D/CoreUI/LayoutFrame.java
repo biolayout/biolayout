@@ -117,6 +117,8 @@ public final class LayoutFrame extends JFrame implements GraphListener
     private String fileNameLoaded = "";
 
     private ImportClassSetsParser importClassSetsParser = null;
+    private ImportWebService importWebService = null;
+    
     private ExportClassSets exportClassSets = null;
     private ExportCorrelationNodesEdgesTable exportCorrelationNodesEdgesTable = null;
     private ExportSbgn exportSbgn = null;
@@ -295,7 +297,10 @@ public final class LayoutFrame extends JFrame implements GraphListener
         filterEdgesByWeightDialog = new FilterEdgesByWeightDialog(this);
 
         saver = new CoreSaver(nc, this);
+        
         importClassSetsParser = new ImportClassSetsParser(nc, this);
+        importWebService = new ImportWebService(this);
+        
         exportClassSets = new ExportClassSets(this);
         exportCorrelationNodesEdgesTable = new ExportCorrelationNodesEdgesTable(this, expressionData);
         exportSbgn = new ExportSbgn(this);
@@ -630,7 +635,10 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setFileMenuSaveGraphAsAction( saver.getSaveAction() );
         layoutMenuBar.setFileMenuSaveGraphSelectionAsAction( saver.getSaveSelectedAction() );
         layoutMenuBar.setFileMenuSaveVisibleGraphAsAction( saver.getSaveVisibleAction() );
+        
         layoutMenuBar.setFileMenuImportAction( importClassSetsParser.getImportClassSetsAction() );
+        layoutMenuBar.setFileMenuImportAction(importWebService.getImportWebServiceAction());
+        
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromGraphAction() );
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromGraphSelectionAction() );
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromVisibleGraphAction() );

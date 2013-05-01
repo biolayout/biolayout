@@ -600,7 +600,7 @@ public class CoreParser
     protected String getNext()
     {
         String word = "";
-        String separatorString = "\r\n\t";
+        String separatorString = "\r\n\t ";
         char tempChar = ' ';
 
         while (currentPos < length)

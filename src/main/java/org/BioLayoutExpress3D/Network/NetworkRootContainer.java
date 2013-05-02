@@ -192,14 +192,21 @@ public final class NetworkRootContainer extends NetworkContainer
 
                 switch (FMMM_QUALITY_VS_SPEED.get())
                 {
+                    case VERY_HIGH_QUALITY_VERY_LOW_SPEED:
+                        fmmm.fixedIterations(200);
+                        fmmm.fineTuningIterations(100);
+                        break;
                     case HIGH_QUALITY_LOW_SPEED:
-                        fmmm.qualityVersusSpeed(FMMMLayout.QualityVsSpeed.qvsBeautifulAndFast);
+                        fmmm.fixedIterations(100);
+                        fmmm.fineTuningIterations(50);
                         break;
                     case MEDIUM_QUALITY_MEDIUM_SPEED:
-                        fmmm.qualityVersusSpeed(FMMMLayout.QualityVsSpeed.qvsGorgeousAndEfficient);
+                        fmmm.fixedIterations(60);
+                        fmmm.fineTuningIterations(30);
                         break;
                     case LOW_QUALITY_HIGH_SPEED:
-                        fmmm.qualityVersusSpeed(FMMMLayout.QualityVsSpeed.qvsNiceAndIncredibleSpeed);
+                        fmmm.fixedIterations(15);
+                        fmmm.fineTuningIterations(10);
                         break;
                 }
 
@@ -215,6 +222,21 @@ public final class NetworkRootContainer extends NetworkContainer
                         fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcNMM);
                         break;
                 }
+
+                switch (FMMM_STOP_CRITERION.get())
+                {
+                    case FORCE_THRESHOLD_AND_FIXED_ITERATIONS:
+                        fmmm.stopCriterion(FMMMLayout.StopCriterion.scFixedIterationsOrThreshold);
+                        break;
+                    case FIXED_ITERATIONS:
+                        fmmm.stopCriterion(FMMMLayout.StopCriterion.scFixedIterations);
+                        break;
+                    case FORCE_THRESHOLD:
+                        fmmm.stopCriterion(FMMMLayout.StopCriterion.scThreshold);
+                        break;
+                }
+
+                fmmm.maxIterFactor(FMMM_ITERATION_LEVEL_FACTOR.get());
 
                 fmmm.initialPlacementForces(FMMMLayout.InitialPlacementForces.ipfUniformGrid);
                 fmmm.call(GA, layoutProgressBarDialog);

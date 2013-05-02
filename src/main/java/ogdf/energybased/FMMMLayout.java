@@ -120,7 +120,7 @@ public class FMMMLayout
     };
 
     //! Specifies the stop criterion.
-    enum StopCriterion
+    public enum StopCriterion
     {
         scFixedIterations, //!< Stop if fixedIterations() is reached.
         scThreshold, //!< Stop if threshold() is reached.
@@ -455,13 +455,13 @@ public class FMMMLayout
      * This option defines the factor used for decrasing MaxIterations (in case of maxIterChange() ==
      * micLinearlyDecreasing or maxIterChange() == micRapidlyDecreasing).
      */
-    int maxIterFactor()
+    public int maxIterFactor()
     {
         return m_maxIterFactor;
     }
 
     //! Sets the option maxIterFactor to \a f.
-    void maxIterFactor(int f)
+    public void maxIterFactor(int f)
     {
         m_maxIterFactor = ((f >= 1) ? f : 1);
     }
@@ -550,13 +550,13 @@ public class FMMMLayout
      * Possible values: - \a rscFixedIterations: stop if fixedIterations() is reached - \a rscThreshold: stop if
      * threshold() is reached - \a rscFixedIterationsOrThreshold: stop if fixedIterations() or threshold() is reached
      */
-    StopCriterion stopCriterion()
+    public StopCriterion stopCriterion()
     {
         return m_stopCriterion;
     }
 
     //! Sets the stop criterion to \a rsc.
-    void stopCriterion(StopCriterion rsc)
+    public void stopCriterion(StopCriterion rsc)
     {
         m_stopCriterion = rsc;
     }

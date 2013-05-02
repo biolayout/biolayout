@@ -143,6 +143,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private FloatNumberField fmmmDesiredEdgeLength = null;
     private JComboBox fmmmForceModel = null;
     private JComboBox fmmmQualityVsSpeed = null;
+    private JComboBox fmmmStopCriterion = null;
+    private FloatNumberField fmmmIterationLevelFactor = null;
 
     private SimpleSlider _3DNodeTesselationSlider = null;
     private JCheckBox showNodes = null;
@@ -1190,8 +1192,30 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         fmmmQualityVsSpeed.addActionListener(this);
         fmmmQualityVsSpeed.setActionCommand(CHANGE_ACTION_COMMAND);
         fmmmQualityVsSpeed.setToolTipText("Quality vs. Speed");
-        layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Quality Vs Speed");
+        layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Quality vs. Speed");
         addTitledButtonBorder(layoutPropertiesPanelBorder, fmmmQualityVsSpeed, "",
+                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fmmmPanel);
+
+        // FMMM stop criterion
+        fmmmStopCriterion = new JComboBox();
+        for (FmmmStopCriterion sc : FmmmStopCriterion.values())
+        {
+            String s = Utils.titleCaseOf(sc.toString());
+            fmmmStopCriterion.addItem(s);
+        }
+        fmmmStopCriterion.addActionListener(this);
+        fmmmStopCriterion.setActionCommand(CHANGE_ACTION_COMMAND);
+        fmmmStopCriterion.setToolTipText("Stop Criterion");
+        layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Stop Criterion");
+        addTitledButtonBorder(layoutPropertiesPanelBorder, fmmmStopCriterion, "",
+                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fmmmPanel);
+
+        fmmmIterationLevelFactor = new FloatNumberField(10.0f, 10);
+        fmmmIterationLevelFactor.addCaretListener(this);
+        fmmmIterationLevelFactor.setToolTipText("Iteration Level Factor");
+        fmmmIterationLevelFactor.setDocument( new TextFieldFilter(TextFieldFilter.NUMERIC) );
+        layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Iteration Level Factor");
+        addTitledButtonBorder(layoutPropertiesPanelBorder, fmmmIterationLevelFactor, "",
                 TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fmmmPanel);
 
         // Layout algorithm option panels
@@ -3018,6 +3042,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         fmmmDesiredEdgeLength.setValue(FMMM_DESIRED_EDGE_LENGTH.get());
         fmmmForceModel.setSelectedIndex(FMMM_FORCE_MODEL.getIndex());
         fmmmQualityVsSpeed.setSelectedIndex(FMMM_QUALITY_VS_SPEED.getIndex());
+        fmmmStopCriterion.setSelectedIndex(FMMM_STOP_CRITERION.getIndex());
+        fmmmIterationLevelFactor.setValue(FMMM_ITERATION_LEVEL_FACTOR.get());
 
         layoutResizeNodesAndArrowheadsToKvalue.setSelected( RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get() );
         layoutUseEdgeWeightsForLayout.setSelected( USE_EDGE_WEIGHTS_FOR_LAYOUT.get() );
@@ -3352,6 +3378,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         FMMM_DESIRED_EDGE_LENGTH.set(fmmmDesiredEdgeLength.getValue());
         FMMM_FORCE_MODEL.set(FmmmForceModel.values()[fmmmForceModel.getSelectedIndex()]);
         FMMM_QUALITY_VS_SPEED.set(FmmmQualityVsSpeed.values()[fmmmQualityVsSpeed.getSelectedIndex()]);
+        FMMM_STOP_CRITERION.set(FmmmStopCriterion.values()[fmmmStopCriterion.getSelectedIndex()]);
+        FMMM_ITERATION_LEVEL_FACTOR.set((int)fmmmIterationLevelFactor.getValue());
 
         MCL_INFLATION_VALUE.set( MCL_inflationField.getValue() );
         MCL_PRE_INFLATION_VALUE.set( MCL_preInflationField.getValue() );

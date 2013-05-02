@@ -1933,8 +1933,8 @@ public class FMMMLayout
             }
             else
             {
-                iter = fixedIterations() + (int) ((double) act_level / (double) max_level) *
-                        (((maxIterFactor() - 1)) * fixedIterations());
+                iter = fixedIterations() + (int) ((double) act_level / (double) max_level *
+                        (((maxIterFactor() - 1)) * fixedIterations()));
             }
         }
         else //maxIterChange == micRapidlyDecreasing (rapidly decreasing values)

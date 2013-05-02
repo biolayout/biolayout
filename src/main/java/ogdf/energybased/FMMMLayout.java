@@ -2116,7 +2116,9 @@ public class FMMMLayout
             NodeArray<NodeAttributes> A,
             NodeArray<DPoint> F_rep)
     {
-        if (repulsiveForcesCalculation() == RepulsiveForcesMethod.rfcExact)
+        final int EXACT_FORCES_THRESHOLD = 50;
+
+        if (G.numberOfNodes() < EXACT_FORCES_THRESHOLD || repulsiveForcesCalculation() == RepulsiveForcesMethod.rfcExact)
         {
             FR.calculate_exact_repulsive_forces(G, A, F_rep);
         }

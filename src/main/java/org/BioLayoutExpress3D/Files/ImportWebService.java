@@ -5,12 +5,9 @@
 package org.BioLayoutExpress3D.Files;
 
 import java.awt.event.ActionEvent;
-import java.net.URI;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
  
 /**
  *
@@ -22,7 +19,12 @@ public class ImportWebService {
     private LayoutFrame layoutFrame = null;
     private AbstractAction importWebServiceAction = null;
         
-
+    public static final String PATHWAY_COMMONS_ENDPOINT = "http://www.pathwaycommons.org/pc/webservice.do";
+    public static final String CPATH2_ENDPOINT = "http://www.pathwaycommons.org/pc2/{command}.{format}";
+    //"http://purl.org/pc2/current/search.xml?q=Q06609" 
+    //http://www.pathwaycommons.org/pc2/search.xml?q=Q06609
+    
+    
     public ImportWebService(LayoutFrame layoutFrame)
     {
         this.layoutFrame = layoutFrame;
@@ -35,15 +37,26 @@ public class ImportWebService {
  
     private void initComponents()
     {
-        importWebServiceAction = new AbstractAction("Network from Public Database...")
+        importWebServiceAction = new AbstractAction("Network from Public Database...") //submenu item text
         {
             @Override
             public void actionPerformed(ActionEvent action)
             {
-                logger.info("action performed");
+                try
+                {
+                    logger.info("action performed");
+                    ImportWebServiceDialog importWebServiceDialog = new ImportWebServiceDialog(layoutFrame, "Import Network", true);
+
+
+                    
+                }
+                catch(Exception e)
+                {
+                    logger.warning(e.getMessage());
+                }
             }
-        };
-                
+        
+        };     
     }
     
 }

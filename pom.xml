@@ -19,7 +19,7 @@
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
-        <jogampVersion>2.0.2-rc20130404</jogampVersion>
+        <jogampVersion>2.0.2-rc-20130425</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
 
@@ -545,6 +545,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skip>false</skip>
                     <archive>${project.build.directory}/${outFilename}.jar</archive>
                     <keystore>keystore.jks</keystore>
                     <alias>selfsigned</alias>
@@ -552,7 +553,7 @@
                     <keypass>password</keypass>
                 </configuration>
             </plugin>
-
+            
         </plugins>
     </build>
 </project>

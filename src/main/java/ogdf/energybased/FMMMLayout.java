@@ -962,6 +962,8 @@ public class FMMMLayout
             }
         }
 
+        FR.shutdown();
+
         progressDialog.endProgressBar();
         progressDialog.stopProgressBar();
     }

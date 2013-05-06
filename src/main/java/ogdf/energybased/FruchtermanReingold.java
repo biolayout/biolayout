@@ -32,12 +32,17 @@ package ogdf.energybased;
  */
 
 import java.util.*;
+import java.util.concurrent.*;
 import ogdf.basic.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
 class FruchtermanReingold
 {
+    final int MULTITHREAD_NODE_COUNT_THRESHOLD = 256;
+    final int NUMBER_OF_THREADS = RUNTIME.availableProcessors();
+    ExecutorService executor;
+
     //Import updated information of the drawing area.
 
     public void update_boxlength_and_cornercoordinate(double b_l, DPoint d_l_c)
@@ -65,6 +70,12 @@ class FruchtermanReingold
     public FruchtermanReingold()
     {
         grid_quotient(2);
+        executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+    }
+
+    public void shutdown()
+    {
+        executor.shutdown();
     }
 
     private void calcluate_repulsive_force_on_node(node n, List<node> others,
@@ -92,20 +103,91 @@ class FruchtermanReingold
         }
     }
 
+    public void calculate_exact_repulsive_forces_multithreaded(
+            final Graph G,
+            final List<node> nodes,
+            final List<node> others,
+            final NodeArray<NodeAttributes> A,
+            NodeArray<DPoint> F_rep)
+    {
+        FutureTask<NodeArray<DPoint>> futures[] = new FutureTask[NUMBER_OF_THREADS];
+
+        int nodes_per_thread = (int)Math.ceil((double)nodes.size() / NUMBER_OF_THREADS);
+
+        for (int thread = 0; thread < NUMBER_OF_THREADS; thread++)
+        {
+            final int first_node_index = thread * nodes_per_thread;
+            final int last_node_index;
+
+            if (first_node_index + nodes_per_thread > nodes.size())
+            {
+                last_node_index = nodes.size();
+            }
+            else
+            {
+                last_node_index = first_node_index + nodes_per_thread;
+            }
+
+            futures[thread] = new FutureTask<NodeArray<DPoint>>(
+                    new Callable<NodeArray<DPoint>>()
+                    {
+                        @Override
+                        public NodeArray<DPoint> call()
+                        {
+                            NodeArray<DPoint> F_rep = new NodeArray<DPoint>(G, Factory.DPOINT);
+
+                            for (int i = first_node_index; i < last_node_index; i++)
+                            {
+                                calcluate_repulsive_force_on_node(
+                                        nodes.get(i),
+                                        others != null ? others : nodes.subList(i + 1, nodes.size()),
+                                        A, F_rep);
+                            }
+
+                            return F_rep;
+                        }
+                    });
+            executor.submit(futures[thread]);
+        }
+
+        // Recombine results from threads
+        for (node v : nodes)
+        {
+            F_rep.set(v, PointFactory.INSTANCE.newDPoint());
+        }
+
+        try
+        {
+            for (node v : nodes)
+            {
+                for (FutureTask<NodeArray<DPoint>> future : futures)
+                {
+                    F_rep.set(v, F_rep.get(v).plus(future.get().get(v)));
+                }
+            }
+        }
+        catch (InterruptedException e)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("calculate_exact_repulsive_forces_multithreaded, InterruptedException " + e.getMessage());
+            }
+        }
+        catch (ExecutionException e)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("calculate_exact_repulsive_forces_multithreaded, ExecutionException " + e.getMessage());
+            }
+        }
+    }
+
     public void calculate_exact_repulsive_forces(
             Graph G,
             NodeArray<NodeAttributes> A,
             NodeArray<DPoint> F_rep)
     {
-        //naive algorithm by Fruchterman & Reingold
-        int node_number = G.numberOfNodes();
         List<node> array_of_the_nodes = new ArrayList<node>();
-
-        for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
-        {
-            node v = iter.next();
-            F_rep.set(v, PointFactory.INSTANCE.newDPoint());
-        }
 
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
@@ -113,12 +195,21 @@ class FruchtermanReingold
             array_of_the_nodes.add(v);
         }
 
-        for (int i = 0; i < node_number; i++)
+        int number_of_nodes = array_of_the_nodes.size();
+
+        if (number_of_nodes < MULTITHREAD_NODE_COUNT_THRESHOLD || NUMBER_OF_THREADS == 1)
         {
-            calcluate_repulsive_force_on_node(
+            for (int i = 0; i < number_of_nodes; i++)
+            {
+                calcluate_repulsive_force_on_node(
                         array_of_the_nodes.get(i),
-                        array_of_the_nodes.subList(i + 1, node_number),
+                        array_of_the_nodes.subList(i + 1, number_of_nodes),
                         A, F_rep);
+            }
+        }
+        else
+        {
+            calculate_exact_repulsive_forces_multithreaded(G, array_of_the_nodes, null, A, F_rep);
         }
     }
 

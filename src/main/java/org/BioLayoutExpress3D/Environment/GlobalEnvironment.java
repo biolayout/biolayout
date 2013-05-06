@@ -207,7 +207,7 @@ public final class GlobalEnvironment
 
     public static enum GraphLayoutAlgorithm { FRUCHTERMAN_RHEINGOLD, FMMM, ALWAYS_ASK }
     public static final PrefEnum<GraphLayoutAlgorithm> GRAPH_LAYOUT_ALGORITHM = new PrefEnum<GraphLayoutAlgorithm>(
-            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.ALWAYS_ASK, "graph_layout_algorithm", true);
+            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD, "graph_layout_algorithm", true);
 
     public static final boolean RANDOM_INITIAL_LAYOUT_COORDS = true;
     public static final double REFERENCE_K_VALUE = 30.0;
@@ -232,7 +232,7 @@ public final class GlobalEnvironment
             FmmmQualityVsSpeed.class, FmmmQualityVsSpeed.MEDIUM_QUALITY_MEDIUM_SPEED, "fmmm_quality_vs_speed", true);
     public static enum FmmmForceModel { EADES, FRUCHTERMAN_RHEINGOLD, NMM }
     public static final PrefEnum<FmmmForceModel> FMMM_FORCE_MODEL = new PrefEnum<FmmmForceModel>(
-            FmmmForceModel.class, FmmmForceModel.NMM, "fmmm_force_model", true);
+            FmmmForceModel.class, FmmmForceModel.FRUCHTERMAN_RHEINGOLD, "fmmm_force_model", true);
     public static enum FmmmStopCriterion { FORCE_THRESHOLD_AND_FIXED_ITERATIONS, FIXED_ITERATIONS, FORCE_THRESHOLD }
     public static final PrefEnum<FmmmStopCriterion> FMMM_STOP_CRITERION = new PrefEnum<FmmmStopCriterion>(
             FmmmStopCriterion.class, FmmmStopCriterion.FORCE_THRESHOLD_AND_FIXED_ITERATIONS, "fmmm_stop_criterion", true);

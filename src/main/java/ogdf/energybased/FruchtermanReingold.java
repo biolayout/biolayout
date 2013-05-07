@@ -34,6 +34,7 @@ package ogdf.energybased;
 import java.util.*;
 import java.util.concurrent.*;
 import ogdf.basic.*;
+import org.BioLayoutExpress3D.DataStructures.Tuple3;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -44,7 +45,6 @@ class FruchtermanReingold
     ExecutorService executor;
 
     //Import updated information of the drawing area.
-
     public void update_boxlength_and_cornercoordinate(double b_l, DPoint d_l_c)
     {
         boxlength = b_l;
@@ -112,7 +112,7 @@ class FruchtermanReingold
     {
         FutureTask<NodeArray<DPoint>> futures[] = new FutureTask[NUMBER_OF_THREADS];
 
-        int nodes_per_thread = (int)Math.ceil((double)nodes.size() / NUMBER_OF_THREADS);
+        int nodes_per_thread = (int) Math.ceil((double) nodes.size() / NUMBER_OF_THREADS);
 
         for (int thread = 0; thread < NUMBER_OF_THREADS; thread++)
         {
@@ -213,31 +213,98 @@ class FruchtermanReingold
         }
     }
 
-    public void calculate_approx_repulsive_forces(
-            Graph G,
+    public void calculate_approx_repulsive_forces_for_cell(
             NodeArray<NodeAttributes> A,
+            NodeArray<DPoint> F_rep,
+            List<node>[][][] contained_nodes, int i, int j, int k)
+    {
+        int i_num_grid_cells = contained_nodes.length;
+        int j_num_grid_cells = contained_nodes[0].length;
+        int k_num_grid_cells = contained_nodes[0][0].length;
+
+        //step1: calculate forces inside contained_nodes(i,j,k)
+
+        int length = contained_nodes[i][j][k].size();
+        List<node> nodearray_i_j_k = new ArrayList<node>();
+        for (node n : contained_nodes[i][j][k])
+        {
+            nodearray_i_j_k.add(n);
+        }
+
+        for (int uIndex = 0; uIndex < length; uIndex++)
+        {
+            calcluate_repulsive_force_on_node(
+                    nodearray_i_j_k.get(uIndex),
+                    nodearray_i_j_k.subList(uIndex + 1, length),
+                    A, F_rep);
+        }
+
+        //step 2: calculated forces to nodes in neighbour boxes
+
+        //find_neighbour_boxes
+
+        List<IPoint> neighbour_boxes = new ArrayList<IPoint>();
+        for (int i_n = i - 1; i_n <= i + 1; i_n++)
+        {
+            for (int j_n = j - 1; j_n <= j + 1; j_n++)
+            {
+                for (int k_n = k - 1; k_n <= k + 1; k_n++)
+                {
+                    if ((i_n >= 0) && (j_n >= 0) && (k_n >= 0) &&
+                            (i_n < i_num_grid_cells) && (j_n < j_num_grid_cells) && (k_n < k_num_grid_cells))
+                    {
+                        IPoint neighbour = PointFactory.INSTANCE.newIPoint();
+                        neighbour.setX(i_n);
+                        neighbour.setY(j_n);
+                        neighbour.setZ(k_n);
+
+                        if ((i_n != i) || (j_n != j) || (k_n != k))
+                        {
+                            neighbour_boxes.add(neighbour);
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //forget neighbour_boxes that already had access to this box
+        for (IPoint act_neighbour_box_it : neighbour_boxes)
+        {//forall
+            int act_i = act_neighbour_box_it.getX();
+            int act_j = act_neighbour_box_it.getY();
+            int act_k = act_neighbour_box_it.getZ();
+
+            boolean top = (act_k == k - 1 && !(act_i == i - 1 && act_j == j - 1));
+            boolean middle = (act_k == k && (act_j == j + 1 || (act_j == j && act_i == i + 1)));
+            boolean bottom = (act_k == k + 1 && (act_i == i + 1 && act_j == j + 1));
+
+            if (top || middle || bottom)
+            {//if1
+                for (node v_it : contained_nodes[i][j][k])
+                {
+                    calcluate_repulsive_force_on_node(
+                            v_it,
+                            contained_nodes[act_i][act_j][act_k],
+                            A, F_rep);
+                }
+            }//if1
+        }//forall
+    }
+
+    public void calculate_approx_repulsive_forces(
+            final Graph G,
+            final NodeArray<NodeAttributes> A,
             NodeArray<DPoint> F_rep)
     {
         //GRID algorithm by Fruchterman & Reingold
-        numexcept N;
-        List<IPoint> neighbour_boxes;
-        List<node> neighbour_box;
-        IPoint act_neighbour_box;
-        IPoint neighbour;
-        DPoint f_rep_u_on_v = PointFactory.INSTANCE.newDPoint();
-        DPoint vector_v_minus_u;
-        DPoint pos_u, pos_v;
-        double norm_v_minus_u;
-        double scalar;
 
-        int i, j, k, act_i, act_j, act_k, uIndex, vIndex, length;
-        node u, v;
-        double x, y, gridboxlength;//length of a box in the GRID
+        int i, j, k;
 
         //init F_rep
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
-            v = iter.next();
+            node v = iter.next();
             F_rep.set(v, PointFactory.INSTANCE.newDPoint());
         }
 
@@ -248,7 +315,12 @@ class FruchtermanReingold
         int i_num_grid_cells = max_gridindex;
         int j_num_grid_cells = max_gridindex;
         int k_num_grid_cells = PointFactory.INSTANCE.dimensions() == PointFactory.Dimensions._2 ? 1 : max_gridindex;
-        List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
+
+        final List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
+        final List<Tuple3<Integer, Integer, Integer>>[] per_thread_cell_list = new ArrayList[NUMBER_OF_THREADS];
+        int total_grid_cells = i_num_grid_cells * j_num_grid_cells * k_num_grid_cells;
+        int cells_per_thread = (int) Math.ceil((double) total_grid_cells / NUMBER_OF_THREADS);
+        int thread = 0;
 
         for (i = 0; i < i_num_grid_cells; i++)
         {
@@ -257,14 +329,26 @@ class FruchtermanReingold
                 for (k = 0; k < k_num_grid_cells; k++)
                 {
                     contained_nodes[i][j][k] = new ArrayList();
+
+                    if (per_thread_cell_list[thread] == null)
+                    {
+                        per_thread_cell_list[thread] = new ArrayList();
+                    }
+
+                    per_thread_cell_list[thread].add(new Tuple3(i, j, k));
+
+                    if (per_thread_cell_list[thread].size() >= cells_per_thread)
+                    {
+                        thread++;
+                    }
                 }
             }
         }
 
-        gridboxlength = boxlength / max_gridindex;
+        double gridboxlength = boxlength / max_gridindex;
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
-            v = iter.next();
+            node v = iter.next();
             DPoint offset = A.get(v).get_position().minus(down_left_corner);
             int x_index = (int) (offset.getX() / gridboxlength);
             int y_index = (int) (offset.getY() / gridboxlength);
@@ -272,83 +356,63 @@ class FruchtermanReingold
             contained_nodes[x_index][y_index][z_index].add(v);
         }
 
+        FutureTask<NodeArray<DPoint>> futures[] = new FutureTask[NUMBER_OF_THREADS];
+
         //force calculation
-
-        for (i = 0; i < i_num_grid_cells; i++)
+        for (thread = 0; thread < NUMBER_OF_THREADS; thread++)
         {
-            for (j = 0; j < j_num_grid_cells; j++)
-            {
-                for (k = 0; j < k_num_grid_cells; j++)
-                {
-                    //step1: calculate forces inside contained_nodes(i,j,k)
+            final List<Tuple3<Integer, Integer, Integer>> cell_list = per_thread_cell_list[thread];
 
-                    length = contained_nodes[i][j][k].size();
-                    List<node> nodearray_i_j_k = new ArrayList<node>();
-                    for (node n : contained_nodes[i][j][k])
+            futures[thread] = new FutureTask<NodeArray<DPoint>>(
+                    new Callable<NodeArray<DPoint>>()
                     {
-                        nodearray_i_j_k.add(n);
-                    }
-
-                    for (uIndex = 0; uIndex < length; uIndex++)
-                    {
-                        calcluate_repulsive_force_on_node(
-                                nodearray_i_j_k.get(uIndex),
-                                nodearray_i_j_k.subList(uIndex + 1, length),
-                                A, F_rep);
-                    }
-
-                    //step 2: calculated forces to nodes in neighbour boxes
-
-                    //find_neighbour_boxes
-
-                    neighbour_boxes = new ArrayList<IPoint>();
-                    for (int i_n = i - 1; i_n <= i + 1; i_n++)
-                    {
-                        for (int j_n = j - 1; j_n <= j + 1; j_n++)
+                        @Override
+                        public NodeArray<DPoint> call()
                         {
-                            for (int k_n = k - 1; k_n <= k + 1; k_n++)
-                            {
-                                if ((i_n >= 0) && (j_n >= 0) && (k_n >= 0) &&
-                                        (i_n < i_num_grid_cells) && (j_n < j_num_grid_cells) && (k_n < k_num_grid_cells))
-                                {
-                                    neighbour = PointFactory.INSTANCE.newIPoint();
-                                    neighbour.setX(i_n);
-                                    neighbour.setY(j_n);
-                                    neighbour.setZ(k_n);
+                            NodeArray<DPoint> F_rep = new NodeArray<DPoint>(G, Factory.DPOINT);
 
-                                    if ((i_n != i) || (j_n != j) || (k_n != k))
-                                    {
-                                        neighbour_boxes.add(neighbour);
-                                    }
-                                }
+                            for (Tuple3<Integer, Integer, Integer> cell : cell_list)
+                            {
+                                calculate_approx_repulsive_forces_for_cell(A, F_rep,
+                                        contained_nodes, cell.first, cell.second, cell.third);
                             }
+
+                            return F_rep;
                         }
-                    }
+                    });
+            executor.submit(futures[thread]);
+        }
 
+        // Recombine results from threads
+        for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
+        {
+            node v = iter.next();
+            F_rep.set(v, PointFactory.INSTANCE.newDPoint());
+        }
 
-                    //forget neighbour_boxes that already had access to this box
-                    for (IPoint act_neighbour_box_it : neighbour_boxes)
-                    {//forall
-                        act_i = act_neighbour_box_it.getX();
-                        act_j = act_neighbour_box_it.getY();
-                        act_k = act_neighbour_box_it.getZ();
-
-                        boolean top = (act_k == k - 1 && !(act_i == i - 1 && act_j == j - 1));
-                        boolean middle = (act_k == k && (act_j == j + 1 || (act_j == j && act_i == i + 1)));
-                        boolean bottom = (act_k == k + 1 && (act_i == i + 1 && act_j == j + 1));
-
-                        if (top || middle || bottom)
-                        {//if1
-                            for (node v_it : contained_nodes[i][j][k])
-                            {
-                                calcluate_repulsive_force_on_node(
-                                        v_it,
-                                        contained_nodes[act_i][act_j][act_k],
-                                        A, F_rep);
-                            }
-                        }//if1
-                    }//forall
+        try
+        {
+            for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
+            {
+                node v = iter.next();
+                for (FutureTask<NodeArray<DPoint>> future : futures)
+                {
+                    F_rep.set(v, F_rep.get(v).plus(future.get().get(v)));
                 }
+            }
+        }
+        catch (InterruptedException e)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("calculate_approx_repulsive_forces, InterruptedException " + e.getMessage());
+            }
+        }
+        catch (ExecutionException e)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("calculate_approx_repulsive_forces, ExecutionException " + e.getMessage());
             }
         }
     }

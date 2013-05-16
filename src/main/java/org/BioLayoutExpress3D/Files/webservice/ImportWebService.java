@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.BioLayoutExpress3D.Files;
+package org.BioLayoutExpress3D.Files.webservice;
 
 import java.awt.event.ActionEvent;
 import java.util.logging.Logger;
@@ -44,11 +44,8 @@ public class ImportWebService {
             {
                 try
                 {
-                    logger.info("action performed");
+                    logger.info("action performed: " + importWebServiceAction.toString());
                     ImportWebServiceDialog importWebServiceDialog = new ImportWebServiceDialog(layoutFrame, "Import Network", true);
-
-
-                    
                 }
                 catch(Exception e)
                 {

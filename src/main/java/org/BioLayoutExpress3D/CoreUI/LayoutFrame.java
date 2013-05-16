@@ -1,5 +1,6 @@
 package org.BioLayoutExpress3D.CoreUI;
 
+import org.BioLayoutExpress3D.Files.webservice.ImportWebService;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;

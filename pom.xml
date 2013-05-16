@@ -88,6 +88,12 @@
         </dependency>
 
         <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-jaxb-provider</artifactId>
+                <version>2.3.6.Final</version>
+        </dependency>
+            
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.1.2</version>
@@ -545,7 +551,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skip>false</skip>
+                    <skip>true</skip>
                     <archive>${project.build.directory}/${outFilename}.jar</archive>
                     <keystore>keystore.jks</keystore>
                     <alias>selfsigned</alias>

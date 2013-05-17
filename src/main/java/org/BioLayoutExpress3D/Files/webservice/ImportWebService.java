@@ -5,6 +5,7 @@
 package org.BioLayoutExpress3D.Files.webservice;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
@@ -20,7 +21,8 @@ public class ImportWebService {
     private AbstractAction importWebServiceAction = null;
         
     public static final String PATHWAY_COMMONS_ENDPOINT = "http://www.pathwaycommons.org/pc/webservice.do";
-    public static final String CPATH2_ENDPOINT = "http://www.pathwaycommons.org/pc2/{command}.{format}";
+    public static final String CPATH2_ENDPOINT = "http://www.pathwaycommons.org/pc2/{command}"; //general command endpoint
+    public static final String CPATH2_ENDPOINT_SEARCH = "http://www.pathwaycommons.org/pc2/{command}.{format}"; //endpoint to specify search results format (xml/json)
     //"http://purl.org/pc2/current/search.xml?q=Q06609" 
     //http://www.pathwaycommons.org/pc2/search.xml?q=Q06609
     

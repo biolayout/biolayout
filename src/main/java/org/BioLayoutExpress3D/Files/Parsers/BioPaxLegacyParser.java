@@ -8,83 +8,28 @@ import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.Network.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
-import org.biopax.paxtools.io.BioPAXIOHandler;
-import org.biopax.paxtools.io.SimpleIOHandler;
-import org.biopax.paxtools.model.Model;
 
 /**
-* Parser for BioPAX Level 3 OWL encoded as RDF/XML. 
-* Uses PaxTools library.
-* @author Derek Wright
-* @author Leon Goldovsky, Thanos Theo
+*
+* @author Leon Goldovsky, full refactoring by Thanos Theo, 2008-2009-2010-2011
+* @version 3.0.0.0
 *
 */
 
-public final class BioPAXParser extends CoreParser
+public final class BioPaxLegacyParser extends CoreParser
 {
     private int counter = 0;
-    private BioPAXIOHandler handler;
 
-    public BioPAXParser(NetworkContainer nc, LayoutFrame layoutFrame)
+    public BioPaxLegacyParser(NetworkContainer nc, LayoutFrame layoutFrame)
     {
         super(nc, layoutFrame);
 
         counter = 0;
     }
 
-    /**
-     * Initialize the parser.
-     * @param file - the file to be parsed
-     * @param fileExtension - the extension of the file ("owl")
-     * @return true if parsing successful, false if unsuccessful
-     */
-    @Override
-    public boolean init(File file, String fileExtension)
-    {
-        this.file = file;
-        
-        //use JAXP reader rather than Jena reader as only XML files expected + handles large files with high performance        
-        handler = new SimpleIOHandler(); //auto-detects BioPAX level, default level 3
-/*
-        try
-        {
-
-        
-            //fileReaderCounter  = new BufferedReader( new FileReader(file) );
-            //fileReaderBuffered = new BufferedReader( new FileReader(file) );
-
-            isSif = false;
-            simpleFileName = file.getName();
-
-            return true;
-        }
-        catch (Exception exc)
-        {
-            try
-            {
-                fileReaderCounter.close();
-                fileReaderBuffered.close();
-            }
-            catch (IOException ioe)
-            {
-                if (DEBUG_BUILD) println("IOException while closing streamers in CoreParser.init():\n" + ioe.getMessage());
-            }
-            finally
-            {
-
-            }
-
-            return false;
-        }
-      */
-        return true;
-    }
-    
-    
     @Override
     public boolean parse()
     {
-
         String currReaction = "";
         String currComplex = "";
         String currCat = "";
@@ -93,7 +38,7 @@ public final class BioPAXParser extends CoreParser
         String controlled = "";
         HashMap<String, ArrayList<String>> links = new HashMap<String, ArrayList<String>>();
         HashMap<String, ArrayList<String>> cats = new HashMap<String, ArrayList<String>>();
-        HashMap<String, String> participants = new HashMap<String, String>();    
+        HashMap<String, String> participants = new HashMap<String, String>();
         Matcher matcher = null;
 
         int totalLines = 0;
@@ -105,15 +50,10 @@ public final class BioPAXParser extends CoreParser
 
         try
         {
-            Model model = handler.convertFromOWL(new FileInputStream(file)); //construct object model from OWL file
-
-            
-            /*
             while ( ( line = fileReaderCounter.readLine() ) != null )
                 totalLines++;
-                */
-               
-            layoutProgressBarDialog.prepareProgressBar(1, "Parsing...");
+
+            layoutProgressBarDialog.prepareProgressBar(totalLines, "Parsing...");
             layoutProgressBarDialog.startProgressBar();
 
             while ( ( line = fileReaderBuffered.readLine() ) != null )
@@ -326,11 +266,10 @@ public final class BioPAXParser extends CoreParser
         }
         finally
         {
-            /*
             try
             {
-                //fileReaderCounter.close();
-                //fileReaderBuffered.close();
+                fileReaderCounter.close();
+                fileReaderBuffered.close();
             }
             catch (IOException ioe)
             {
@@ -340,8 +279,6 @@ public final class BioPAXParser extends CoreParser
             {
                 layoutProgressBarDialog.endProgressBar();
             }
-            */
-            layoutProgressBarDialog.endProgressBar();
         }
 
         return isSuccessful;

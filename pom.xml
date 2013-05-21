@@ -104,7 +104,13 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
-                    
+
+        <dependency>
+            <groupId>org.biopax.paxtools</groupId>
+            <artifactId>paxtools-core</artifactId>
+            <version>4.2.0</version>
+        </dependency>        
+
     </dependencies>
 
     <repositories>
@@ -114,7 +120,16 @@
            <name>jogamp test mirror</name>
            <url>http://www.jogamp.org/deployment/maven/</url>
            <layout>default</layout>
-         </repository>        
+         </repository>
+        <!-- BioPAX release repository -->
+        <repository>
+            <id>biopax.releases</id>
+            <name>BioPAX Repository at Sourceforge</name>
+            <url>http://biopax.sourceforge.net/m2repo/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>                 
         <!-- This allows us to treat local jars (e.g. libsbgn) as
              normal dependencies -->
         <repository>

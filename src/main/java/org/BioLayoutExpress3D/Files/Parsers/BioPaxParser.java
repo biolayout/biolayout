@@ -79,21 +79,69 @@ public final class BioPAXParser extends CoreParser
             layoutProgressBarDialog.prepareProgressBar(3, "Parsing " + file.getName());
             layoutProgressBarDialog.startProgressBar();
             layoutProgressBarDialog.incrementProgress(++progressCounter);
-
+            
+            int edgeCounter = 1;
             Model model = handler.convertFromOWL(new FileInputStream(file)); //construct object model from OWL file
             Set<Interaction> interactions = model.getObjects(Interaction.class);
             
             for (Interaction interaction : interactions) 
             {    
-                logger.info(interaction.getDisplayName());
+                logger.info("Interaction RDFId: " + interaction.getRDFId());
+                logger.info("Interaction displayName: " + interaction.getDisplayName());
+                logger.info("Interaction Xrefs: " + Arrays.toString(interaction.getXref().toArray()));
+                                
                 Set<Entity> participants = interaction.getParticipant();
+                //contstruct array of node names
+                
+                //connect all the entities in the interaction
+                Entity[] entityArray = participants.toArray(new Entity[0]);               
+                Entity from, to;
+                String nameFrom, nameTo;
+                
+                String edgeName = interaction.getRDFId();
+                
+                for(int outer = 0; outer < entityArray.length - 1; outer++)
+                {
+                    from = entityArray[outer];
+                    nameFrom = from.getRDFId();
+                    for(int inner = outer + 1; inner < entityArray.length; inner++)
+                    {
+                        to = entityArray[inner];
+                        nameTo = to.getRDFId();
+                        nc.addNetworkConnection(nameFrom, nameTo, edgeName, false, false, false);
+                    }
+                    
+                }
+                
+                /*
+                
+                
+                    nc.addNetworkConnection(vertex1, edgeType + lines, 0.0f);
+                    nc.addNetworkConnection(edgeType + lines, vertex2, 0.0f);
+
+                    Vertex vertex = nc.getVerticesMap().get(edgeType + lines);
+                    vertex.setVertexSize(vertex.getVertexSize() / 2);
+                    vertex.setPseudoVertex();
+
+                    LayoutClasses lc = nc.getLayoutClassSetsManager().getClassSet(0);
+                    VertexClass vc = lc.createClass(edgeType);
+                    lc.setClass(nc.getVerticesMap().get(edgeType + lines), vc);
+
                 for(Entity participant: participants)
                 {
+                    logger.info("Participant RDFId: " + participant.getRDFId());
+                    logger.info("Participant displayName: " + participant.getDisplayName());
+                    logger.info("Participant Xrefs: " + Arrays.toString(participant.getXref().toArray()));
                     
-                    
-                    //nc.addNetworkConnection("test", participant.getDisplayName(), interaction.getDisplayName(), false, false, false);
-                    logger.info(participant.getDisplayName());
-                }                
+                    String nodeName = "";                    
+                    if(str != null && !str.isEmpty())
+                    {
+                        
+                    }
+
+                    nc.addNetworkConnection("test", participant.getDisplayName(), interaction.getDisplayName(), false, false, false);
+               }                
+               */
             }
                
             layoutProgressBarDialog.incrementProgress(++progressCounter);

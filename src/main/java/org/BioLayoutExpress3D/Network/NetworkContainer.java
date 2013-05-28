@@ -306,8 +306,8 @@ public abstract class NetworkContainer
             }
             else
             {
-                edge.setScaledWeight( edge.getWeight() );
-                edge.setNormalisedWeight( edge.getWeight() );
+                edge.setScaledWeight( 1.0f );
+                edge.setNormalisedWeight( 1.0f );
             }
         }
     }

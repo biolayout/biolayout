@@ -110,7 +110,7 @@ class FruchtermanReingold
             final NodeArray<NodeAttributes> A,
             NodeArray<DPoint> F_rep)
     {
-        FutureTask<NodeArray<DPoint>> futures[] = new FutureTask[NUMBER_OF_THREADS];
+        ArrayList<FutureTask<NodeArray<DPoint>>> futures = new ArrayList<FutureTask<NodeArray<DPoint>>>();
 
         int nodes_per_thread = (int) Math.ceil((double) nodes.size() / NUMBER_OF_THREADS);
 
@@ -128,7 +128,7 @@ class FruchtermanReingold
                 last_node_index = first_node_index + nodes_per_thread;
             }
 
-            futures[thread] = new FutureTask<NodeArray<DPoint>>(
+            futures.add(thread, new FutureTask<NodeArray<DPoint>>(
                     new Callable<NodeArray<DPoint>>()
                     {
                         @Override
@@ -146,8 +146,8 @@ class FruchtermanReingold
 
                             return F_rep;
                         }
-                    });
-            executor.submit(futures[thread]);
+                    }));
+            executor.submit(futures.get(thread));
         }
 
         // Recombine results from threads
@@ -316,7 +316,9 @@ class FruchtermanReingold
         int j_num_grid_cells = max_gridindex;
         int k_num_grid_cells = PointFactory.INSTANCE.dimensions() == PointFactory.Dimensions._2 ? 1 : max_gridindex;
 
+        @SuppressWarnings("unchecked")
         final List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
+        @SuppressWarnings("unchecked")
         final List<Tuple3<Integer, Integer, Integer>>[] per_thread_cell_list = new ArrayList[NUMBER_OF_THREADS];
         int total_grid_cells = i_num_grid_cells * j_num_grid_cells * k_num_grid_cells;
         int cells_per_thread = (int) Math.ceil((double) total_grid_cells / NUMBER_OF_THREADS);
@@ -328,14 +330,14 @@ class FruchtermanReingold
             {
                 for (k = 0; k < k_num_grid_cells; k++)
                 {
-                    contained_nodes[i][j][k] = new ArrayList();
+                    contained_nodes[i][j][k] = new ArrayList<node>();
 
                     if (per_thread_cell_list[thread] == null)
                     {
-                        per_thread_cell_list[thread] = new ArrayList();
+                        per_thread_cell_list[thread] = new ArrayList<Tuple3<Integer, Integer, Integer>>();
                     }
 
-                    per_thread_cell_list[thread].add(new Tuple3(i, j, k));
+                    per_thread_cell_list[thread].add(new Tuple3<Integer, Integer, Integer>(i, j, k));
 
                     if (per_thread_cell_list[thread].size() >= cells_per_thread)
                     {
@@ -356,14 +358,14 @@ class FruchtermanReingold
             contained_nodes[x_index][y_index][z_index].add(v);
         }
 
-        FutureTask<NodeArray<DPoint>> futures[] = new FutureTask[NUMBER_OF_THREADS];
+        ArrayList<FutureTask<NodeArray<DPoint>>> futures = new ArrayList<FutureTask<NodeArray<DPoint>>>();
 
         //force calculation
         for (thread = 0; thread < NUMBER_OF_THREADS; thread++)
         {
             final List<Tuple3<Integer, Integer, Integer>> cell_list = per_thread_cell_list[thread];
 
-            futures[thread] = new FutureTask<NodeArray<DPoint>>(
+            futures.add(thread, new FutureTask<NodeArray<DPoint>>(
                     new Callable<NodeArray<DPoint>>()
                     {
                         @Override
@@ -379,8 +381,8 @@ class FruchtermanReingold
 
                             return F_rep;
                         }
-                    });
-            executor.submit(futures[thread]);
+                    }));
+            executor.submit(futures.get(thread));
         }
 
         // Recombine results from threads

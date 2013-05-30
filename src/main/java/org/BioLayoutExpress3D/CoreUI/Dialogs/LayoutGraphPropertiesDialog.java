@@ -141,9 +141,9 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JTextField layoutMinimumComponentSizeField = null;
 
     private FloatNumberField fmmmDesiredEdgeLength = null;
-    private JComboBox fmmmForceModel = null;
-    private JComboBox fmmmQualityVsSpeed = null;
-    private JComboBox fmmmStopCriterion = null;
+    private JComboBox<String> fmmmForceModel = null;
+    private JComboBox<String> fmmmQualityVsSpeed = null;
+    private JComboBox<String> fmmmStopCriterion = null;
     private FloatNumberField fmmmIterationLevelFactor = null;
 
     private SimpleSlider _3DNodeTesselationSlider = null;
@@ -1169,7 +1169,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                 TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fmmmPanel);
 
         // FMMM force model
-        fmmmForceModel = new JComboBox();
+        fmmmForceModel = new JComboBox<String>();
         for (FmmmForceModel fm : FmmmForceModel.values())
         {
             String s = Utils.titleCaseOf(fm.toString());
@@ -1183,7 +1183,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                 TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fmmmPanel);
 
         // FMMM quality
-        fmmmQualityVsSpeed = new JComboBox();
+        fmmmQualityVsSpeed = new JComboBox<String>();
         for (FmmmQualityVsSpeed qvs : FmmmQualityVsSpeed.values())
         {
             String s = Utils.titleCaseOf(qvs.toString());
@@ -1197,7 +1197,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                 TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fmmmPanel);
 
         // FMMM stop criterion
-        fmmmStopCriterion = new JComboBox();
+        fmmmStopCriterion = new JComboBox<String>();
         for (FmmmStopCriterion sc : FmmmStopCriterion.values())
         {
             String s = Utils.titleCaseOf(sc.toString());

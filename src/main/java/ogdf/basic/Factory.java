@@ -6,7 +6,7 @@ public interface Factory<T>
 {
     public T newInstance();
 
-    public class NodeAttributesFactory implements Factory
+    public class NodeAttributesFactory implements Factory<NodeAttributes>
     {
         @Override
         public NodeAttributes newInstance()
@@ -15,7 +15,7 @@ public interface Factory<T>
         }
     }
 
-    public class EdgeAttributesFactory implements Factory
+    public class EdgeAttributesFactory implements Factory<EdgeAttributes>
     {
         @Override
         public EdgeAttributes newInstance()
@@ -24,7 +24,7 @@ public interface Factory<T>
         }
     }
 
-    public class IntegerFactory implements Factory
+    public class IntegerFactory implements Factory<Integer>
     {
         @Override
         public Integer newInstance()
@@ -33,7 +33,7 @@ public interface Factory<T>
         }
     }
 
-    public class DoubleFactory implements Factory
+    public class DoubleFactory implements Factory<Double>
     {
         @Override
         public Double newInstance()
@@ -42,7 +42,7 @@ public interface Factory<T>
         }
     }
 
-    public class DPointFactory implements Factory
+    public class DPointFactory implements Factory<DPoint>
     {
         @Override
         public DPoint newInstance()
@@ -52,7 +52,7 @@ public interface Factory<T>
         }
     }
 
-    public class nodeFactory implements Factory
+    public class nodeFactory implements Factory<node>
     {
         @Override
         public node newInstance()
@@ -61,7 +61,7 @@ public interface Factory<T>
         }
     }
 
-    public class edgeFactory implements Factory
+    public class edgeFactory implements Factory<edge>
     {
         @Override
         public edge newInstance()

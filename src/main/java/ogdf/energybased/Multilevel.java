@@ -556,7 +556,7 @@ public class Multilevel
             List<NodeArray<NodeAttributes>> A_mult_ptr,
             List<EdgeArray<EdgeAttributes>> E_mult_ptr)
     {
-        List<node> pm_nodes = new ArrayList();
+        List<node> pm_nodes = new ArrayList<node>();
         set_initial_positions_of_sun_nodes(level, G_mult_ptr, A_mult_ptr);
         set_initial_positions_of_planet_and_moon_nodes(level, init_placement_way, G_mult_ptr,
                 A_mult_ptr, E_mult_ptr, pm_nodes);
@@ -593,7 +593,7 @@ public class Multilevel
         int node_type;
         node v, v_adj, dedicated_sun;
         DPoint new_pos, dedicated_sun_pos, adj_sun_pos;
-        List<DPoint> L = new ArrayList();
+        List<DPoint> L = new ArrayList<DPoint>();
         ListIterator<Double> lambdaIterator;
 
         create_all_placement_sectors(G_mult_ptr, A_mult_ptr, E_mult_ptr, level);

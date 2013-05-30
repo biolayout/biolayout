@@ -230,7 +230,7 @@ public final class GlobalEnvironment
     }
     public static final PrefEnum<FmmmQualityVsSpeed> FMMM_QUALITY_VS_SPEED = new PrefEnum<FmmmQualityVsSpeed>(
             FmmmQualityVsSpeed.class, FmmmQualityVsSpeed.MEDIUM_QUALITY_MEDIUM_SPEED, "fmmm_quality_vs_speed", true);
-    public static enum FmmmForceModel { EADES, FRUCHTERMAN_RHEINGOLD, NMM }
+    public static enum FmmmForceModel { EADES, FRUCHTERMAN_RHEINGOLD/*, NMM*/ }
     public static final PrefEnum<FmmmForceModel> FMMM_FORCE_MODEL = new PrefEnum<FmmmForceModel>(
             FmmmForceModel.class, FmmmForceModel.FRUCHTERMAN_RHEINGOLD, "fmmm_force_model", true);
     public static enum FmmmStopCriterion { FORCE_THRESHOLD_AND_FIXED_ITERATIONS, FIXED_ITERATIONS, FORCE_THRESHOLD }

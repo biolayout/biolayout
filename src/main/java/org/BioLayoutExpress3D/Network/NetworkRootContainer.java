@@ -218,9 +218,9 @@ public final class NetworkRootContainer extends NetworkContainer
                     case FRUCHTERMAN_RHEINGOLD:
                         fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcGridApproximation);
                         break;
-                    case NMM:
+                    /*case NMM:
                         fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcNMM);
-                        break;
+                        break;*/
                 }
 
                 switch (FMMM_STOP_CRITERION.get())

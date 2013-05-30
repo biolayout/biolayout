@@ -23,8 +23,8 @@ public class ModelShapeOBJModelLoaderSettingsPanel extends JPanel implements Act
 {
 
     private JDialog parentDialog = null;
-    private JComboBox objModelLoaderPresetsComboBox = null;
-    private JComboBox objModelLoaderSizesComboBox = null;
+    private JComboBox<String> objModelLoaderPresetsComboBox = null;
+    private JComboBox<Float> objModelLoaderSizesComboBox = null;
     private JCheckBox objModelLoaderUseExternalOBJModelCheckBox = null;
     private JButton objModelLoaderLoadButton = null;
     private JFileChooser objModelFileChooser = null;
@@ -65,14 +65,14 @@ public class ModelShapeOBJModelLoaderSettingsPanel extends JPanel implements Act
     */
     private void initComponents()
     {
-        objModelLoaderPresetsComboBox = new JComboBox();
+        objModelLoaderPresetsComboBox = new JComboBox<String>();
         for ( OBJModelShapes objModelLoaderShape : OBJModelShapes.values() )
             objModelLoaderPresetsComboBox.addItem( capitalizeFirstCharacter(objModelLoaderShape) );
         objModelLoaderPresetsComboBox.setSelectedIndex( getEnumIndexForName( OBJModelShapes.class, OBJ_MODEL_LOADER_CHOSEN_PRESET_SHAPE.get() ) );
         objModelLoaderPresetsComboBox.addActionListener(this);
         objModelLoaderPresetsComboBox.setToolTipText("OBJ Model Loader Preset");
 
-        objModelLoaderSizesComboBox = new JComboBox();
+        objModelLoaderSizesComboBox = new JComboBox<Float>();
         for (int i = 1; i <= 100; i++)
             objModelLoaderSizesComboBox.addItem(i / 10.0f);
         objModelLoaderSizesComboBox.setSelectedItem( OBJ_MODEL_LOADER_SHAPE_SIZE.get() );

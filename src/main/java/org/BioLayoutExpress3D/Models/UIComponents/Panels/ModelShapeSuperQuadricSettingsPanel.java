@@ -41,8 +41,8 @@ public class ModelShapeSuperQuadricSettingsPanel extends JPanel implements Actio
     private static final int TOROID_RADIUS_STEPS_RATIO = 10;
     private static final int TOROID_RADIUS_FAIL_SAFE_MIN_BOUND_RANGE = 3;
 
-    private JComboBox superQuadricPresetsComboBox = null;
-    private JComboBox superQuadricShapeTypesComboBox = null;
+    private JComboBox<String> superQuadricPresetsComboBox = null;
+    private JComboBox<String> superQuadricShapeTypesComboBox = null;
     private JSlider scaleExponentESlider = null;
     private JSlider scaleExponentNSlider = null;
     private JSlider scaleValueVSlider = null;
@@ -70,14 +70,14 @@ public class ModelShapeSuperQuadricSettingsPanel extends JPanel implements Actio
     */
     private void initComponents()
     {
-        superQuadricPresetsComboBox = new JComboBox();
+        superQuadricPresetsComboBox = new JComboBox<String>();
         for ( SuperQuadricShapes superQuadricShape : SuperQuadricShapes.values() )
             superQuadricPresetsComboBox.addItem( splitCapitalizeFirstCharactersAndAddWhiteSpaceBetweenNames(superQuadricShape) );
         superQuadricPresetsComboBox.setSelectedIndex( getEnumIndexForName( SuperQuadricShapes.class, SUPER_QUADRIC_CHOSEN_PRESET_SHAPE.get() ) );
         superQuadricPresetsComboBox.addActionListener(this);
         superQuadricPresetsComboBox.setToolTipText("SuperQuadric Preset");
 
-        superQuadricShapeTypesComboBox = new JComboBox();
+        superQuadricShapeTypesComboBox = new JComboBox<String>();
         for ( SuperQuadricShapeTypes superQuadricShapeType : SuperQuadricShapeTypes.values() )
             superQuadricShapeTypesComboBox.addItem( splitCapitalizeFirstCharactersAndAddWhiteSpaceBetweenNames(superQuadricShapeType) );
         superQuadricShapeTypesComboBox.setSelectedIndex( SUPER_QUADRIC_SETTINGS.superQuadricShapeType.ordinal() );

@@ -28,8 +28,8 @@ public class ModelShapeLathe3DSettingsPanel extends JPanel implements ActionList
     private static final String MODEL_SHAPE_EDITOR_FILE_NAME = "ModelShapeEditorLathe3DData.txt";
     private static final float MODEL_SHAPE_EDITOR_ICON_RESIZE_RATIO = 0.18f;
 
-    private JComboBox lathe3DPresetsComboBox = null;
-    private JComboBox lathe3DShapeTypesComboBox = null;
+    private JComboBox<String> lathe3DPresetsComboBox = null;
+    private JComboBox<String> lathe3DShapeTypesComboBox = null;
     private JRadioButton lathe3DStraightLine = null;
     private JRadioButton lathe3DCurvedLine = null;
     private JButton lathe3DDeleteLastPoint = null;
@@ -60,14 +60,14 @@ public class ModelShapeLathe3DSettingsPanel extends JPanel implements ActionList
     {
         TexturesLoader texturesLoaderIcons = new TexturesLoader(MODEL_SHAPE_EDITOR_DIR_NAME, MODEL_SHAPE_EDITOR_FILE_NAME, false, false, true, (UIManager.getLookAndFeel().getName().equals("Nimbus") ? 0.667f : 1.0f) * MODEL_SHAPE_EDITOR_ICON_RESIZE_RATIO, false);
 
-        lathe3DPresetsComboBox = new JComboBox();
+        lathe3DPresetsComboBox = new JComboBox<String>();
         for ( Lathe3DShapes lathe3DShape : Lathe3DShapes.values() )
             lathe3DPresetsComboBox.addItem( splitCapitalizeFirstCharactersAndAddWhiteSpaceBetweenNames(lathe3DShape) );
         lathe3DPresetsComboBox.setSelectedIndex( getEnumIndexForName( Lathe3DShapes.class, LATHE3D_CHOSEN_PRESET_SHAPE.get() ) );
         lathe3DPresetsComboBox.addActionListener(this);
         lathe3DPresetsComboBox.setToolTipText("Lathe3D Preset");
 
-        lathe3DShapeTypesComboBox = new JComboBox();
+        lathe3DShapeTypesComboBox = new JComboBox<String>();
         for ( Lathe3DShapeTypes lathe3DShapeType : Lathe3DShapeTypes.values() )
             lathe3DShapeTypesComboBox.addItem( splitCapitalizeFirstCharactersAndAddWhiteSpaceBetweenNames(lathe3DShapeType) );
         lathe3DShapeTypesComboBox.setSelectedIndex( LATHE3D_SETTINGS.lathe3DShapeType.ordinal() );

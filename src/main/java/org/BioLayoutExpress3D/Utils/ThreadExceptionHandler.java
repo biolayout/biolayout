@@ -27,9 +27,12 @@ public class ThreadExceptionHandler implements
         {
             handlingThreadException = true;
 
+            String build = "Build: " + BuildConfig.VERSION +
+                    (!BuildConfig.BUILD_TAG.isEmpty() ? " " + BuildConfig.BUILD_TAG : "") +
+                    "(" + BuildConfig.BUILD_TIME + ")";
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
-            String logText = BuildConfig.BUILD_TIME + "\n" + timeStamp +
+            String logText = build + "\n" + timeStamp +
                     ": Exception \"" + e.toString() + "\" occurred in thread ID " +
                     thread.getId() + "(" + thread.getName() + ")\n" + stackTraceForThrowable(e);
 

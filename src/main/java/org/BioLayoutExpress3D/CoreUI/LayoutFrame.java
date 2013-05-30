@@ -1779,8 +1779,16 @@ public final class LayoutFrame extends JFrame implements GraphListener
         graph.clear();
     }
 
+    /**
+     * Handler for when user quits the application.
+     * Presents dialog to confirm or save preferences if changed.
+     * Removes graph and shuts down the application.
+     */
     private void closeApplication()
     {
+        //Workaround to ignore Exception thrown by JOGL on OS X - TODO remove when JOGL bug fixed
+        Thread.setDefaultUncaughtExceptionHandler(null);
+        
         boolean savePreferences = true;
 
         if ( layoutGraphPropertiesDialog.getHasNewPreferencesBeenApplied() && CONFIRM_PREFERENCES_SAVE.get())

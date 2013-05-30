@@ -21,8 +21,8 @@ public class GraphAnaglyphGlasses3DOptionsDialog extends JDialog implements Acti
 
     private static final String GRAPH_ANAGLYPH_GLASSES_3D_OPTIONS_NAME = "Stereoscopic 3D View Options";
 
-    private JComboBox anaglyphGlassesTypesComboBox = null;
-    private JComboBox intraOcularDistanceTypesComboBox = null;
+    private JComboBox<String> anaglyphGlassesTypesComboBox = null;
+    private JComboBox<Double> intraOcularDistanceTypesComboBox = null;
 
     private AbstractAction graphAnaglyphGlasses3DOptionsOpenDialogAction = null;
 
@@ -74,14 +74,14 @@ public class GraphAnaglyphGlasses3DOptionsDialog extends JDialog implements Acti
     */
     private void initComponents()
     {
-        anaglyphGlassesTypesComboBox = new JComboBox();
+        anaglyphGlassesTypesComboBox = new JComboBox<String>();
         for ( GraphAnaglyphGlassesTypes localGraphAnaglyphGlassesType : GraphAnaglyphGlassesTypes.values() )
             anaglyphGlassesTypesComboBox.addItem( splitCapitalizeFirstCharactersAndAddWhiteSpaceBetweenNames(localGraphAnaglyphGlassesType) );
         anaglyphGlassesTypesComboBox.setSelectedIndex( getEnumIndexForName( GraphAnaglyphGlassesTypes.class, ANAGLYPH_GLASSES_TYPE.get() ) );
         anaglyphGlassesTypesComboBox.addActionListener(this);
         anaglyphGlassesTypesComboBox.setToolTipText("Anaglyph Glasses Type");
 
-        intraOcularDistanceTypesComboBox = new JComboBox();
+        intraOcularDistanceTypesComboBox = new JComboBox<Double>();
         for ( GraphIntraOcularDistanceTypes localGraphIntraOcularDistanceType : GraphIntraOcularDistanceTypes.values() )
             intraOcularDistanceTypesComboBox.addItem( extractDouble(localGraphIntraOcularDistanceType) );
         intraOcularDistanceTypesComboBox.setSelectedIndex( getEnumIndexForName( GraphIntraOcularDistanceTypes.class, INTRA_OCULAR_DISTANCE_TYPE.get() ) );

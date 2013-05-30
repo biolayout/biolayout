@@ -761,11 +761,7 @@ public class Graph extends GLCanvas implements GraphInterface
     */
     private void disposeTexture(GL2 gl, Texture texture)
     {
-        if (texture != null)
-        {
-            texture.dispose(gl);
-            texture = null;
-        }
+        texture = null;
     }
 
     /**

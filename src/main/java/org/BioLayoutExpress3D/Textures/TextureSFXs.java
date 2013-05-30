@@ -442,7 +442,7 @@ public class TextureSFXs
     private void initBlobStarDisplayList(GL2 gl, boolean useAutoMipmapGeneration)
     {
         // dispose previous blob star texture
-        if (blobStarTexture != null) blobStarTexture.dispose(gl);
+        if (blobStarTexture != null) blobStarTexture = null;
         blobStarTexture = DrawTextureSFXs.blobStarTextureGenerate(blobStars3DScrollerEffectInitializer.blobWidth, blobStars3DScrollerEffectInitializer.blobHeight, useAutoMipmapGeneration);
 
         // if ( gl.glIsList(nodeList) ) // always delete display list, an attempt to delete a list that has never been created is ignored
@@ -580,7 +580,7 @@ public class TextureSFXs
         // if ( gl.glIsList(nodeList) ) // always delete display list, an attempt to delete a list that has never been created is ignored
         gl.glDeleteLists(blobStarDisplayList, 1);
 
-        if (blobStarTexture != null) blobStarTexture.dispose(gl);
+        if (blobStarTexture != null) blobStarTexture = null;
     }
 
 

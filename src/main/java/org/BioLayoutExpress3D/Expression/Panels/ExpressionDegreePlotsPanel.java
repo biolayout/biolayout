@@ -129,6 +129,11 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         for (int i = 0; i < logScale.size(); i++)
         {
             scaleX = log( logScale.get(i) ) / maxX;
+            if (scaleX < 0.0)
+            {
+                continue;
+            }
+
             pointX = (int)( x + rint(width * scaleX) );
 
             g2.setPaint(color);
@@ -144,6 +149,11 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         for (int i = 0; i < logScale.size(); i++)
         {
             scaleY = 1.0 - log( logScale.get(i) ) / maxY;
+            if (scaleY < 0.0)
+            {
+                continue;
+            }
+
             pointY = (int)( y + rint(height * scaleY) );
 
             g2.setPaint(color);
@@ -178,6 +188,8 @@ public final class ExpressionDegreePlotsPanel extends JPanel
 
         b = ( (n * sumXY) - (sumX * sumY) ) / ( (n * sumXX) - (sumX * sumX) );
         a = (sumY - b * sumX) / n;
+        double startY = rint(a) + rint(b * x);
+        double endY = rint(a) + rint(b * (x + width) );
         g2.setPaint(Color.BLACK);
         drawXCenteredText(g2, x + (width / 2), 20, axisFont, "Graph Degree Distribution at: " + thresholdString);
 
@@ -189,7 +201,7 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         g2.rotate( PI / 2, x - padX, y + (height / 2));
 
         g2.setPaint( (threshold >= 85) ? Color.RED : Color.GREEN );
-        g2.drawLine( x, (int)( y + rint(a) + rint(b * x) ), x + width, (int)( y + rint(a) + rint(b * (x + width) ) ) );
+        g2.drawLine( x, (int)( y + startY ), x + width, (int)( y + endY ) );
         g2.setPaint(Color.BLACK);
         g2.setFont(legendFont);
         drawPanelXCenteredText(g2, this.getHeight() - 6, legendFont, "Nodes: " + allNodes[threshold - minThreshold] + ", \t Edges: " + allEdges[threshold - minThreshold] + ", \t Correlation (R) = " + thresholdString);

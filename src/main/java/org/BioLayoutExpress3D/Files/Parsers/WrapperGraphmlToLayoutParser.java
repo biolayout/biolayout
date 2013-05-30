@@ -162,7 +162,7 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
 
     private Color parseColor(String s)
     {
-        if (s == null)
+        if (s == null || s.length() == 0)
         {
             return DEFAULT_NODE_COLOR;
         }

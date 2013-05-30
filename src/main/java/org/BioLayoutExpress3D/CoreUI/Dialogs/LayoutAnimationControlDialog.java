@@ -53,11 +53,11 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
     private JCheckBox useColorPaletteSpectrumTransitionCheckBox = null;
     private JCheckBox useRealMaxValueForColorTransitionCheckBox = null;
     private JCheckBox useImageAsSpectrumCheckBox = null;
-    private JComboBox entitiesOrTimeBlocksPerSecondComboBox = null;
-    private JComboBox setMaxNodeSizeComboBox = null;
+    private JComboBox<String> entitiesOrTimeBlocksPerSecondComboBox = null;
+    private JComboBox<String> setMaxNodeSizeComboBox = null;
     private JTextField startFromEntityOrTimeBlockTextField = null;
     private FloatNumberField maxValueFoundTextField = null;
-    private JComboBox imageSpectrumFileNamesComboBox = null;
+    private JComboBox<String> imageSpectrumFileNamesComboBox = null;
     private ColorButton minSpectrumColorButton = null;
     private ColorButton maxSpectrumColorButton = null;
     private JButton loadImageFileButton = null;
@@ -175,7 +175,7 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
             entitiesOrTimeBlocksPerSecondLabel.setToolTipText("Entities Per Second");
         else
             entitiesOrTimeBlocksPerSecondLabel.setToolTipText("Time Blocks Per Second");
-        entitiesOrTimeBlocksPerSecondComboBox = new JComboBox();
+        entitiesOrTimeBlocksPerSecondComboBox = new JComboBox<String>();
         if (isExpressionProfileAnimationMode)
             entitiesOrTimeBlocksPerSecondComboBox.setToolTipText("Entity/Sec");
         else
@@ -195,7 +195,7 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
         JPanel transitionPanel = new JPanel(true);
         setMaxNodeSizeLabel = new JLabel("          Set Max Node Size:");
         setMaxNodeSizeLabel.setToolTipText("Set Max Node Size");
-        setMaxNodeSizeComboBox = new JComboBox();
+        setMaxNodeSizeComboBox = new JComboBox<String>();
         setMaxNodeSizeComboBox.setToolTipText("Max Node Size");
         if (isExpressionProfileAnimationMode)
         {
@@ -256,7 +256,7 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
         useImageAsSpectrumCheckBox.setToolTipText( "Use Image As Spectrum");
         useImageAsSpectrumCheckBox.setSelected(true);
         useImageAsSpectrumCheckBox.addActionListener(this);
-        imageSpectrumFileNamesComboBox = new JComboBox(ANIMATION_DEFAULT_SPECTRUM_IMAGE_FILES);
+        imageSpectrumFileNamesComboBox = new JComboBox<String>(ANIMATION_DEFAULT_SPECTRUM_IMAGE_FILES);
         imageSpectrumFileNamesComboBox.setSelectedIndex(ANIMATION_DEFAULT_SPECTRUM_IMAGE.get() - 1);
         imageSpectrumFileNamesComboBox.setToolTipText("All Default Internal Spectrum Images");
         imageSpectrumFileNamesComboBox.setEditable(false);
@@ -331,7 +331,6 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
 
         timingPanel.setBorder( BorderFactory.createTitledBorder( "Timing" + ( (USE_MULTICORE_PROCESS) ? "  (MultiCore" : "  (SingleCore" ) + " Animation & Rendering)" ) );
 
-        entitiesOrTimeBlocksPerSecondComboBox.setModel( new DefaultComboBoxModel() );
         int index = (isExpressionProfileAnimationMode) ? 0 : 1;
         for (int i = 1; i < 10; i++)
             entitiesOrTimeBlocksPerSecondComboBox.addItem( TICKS_PER_SEC_STRING[index] + Utils.numberFormatting(i / 10.0, 2) );
@@ -371,7 +370,6 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
 
         transitionPanel.setBorder( BorderFactory.createTitledBorder( "Size Transition" + ( (USE_SHADERS_PROCESS) ? "  (GPGPU Computing)" : "  (CPU Computing)" ) ) );
 
-        setMaxNodeSizeComboBox.setModel( new DefaultComboBoxModel() );
         for (int i = MIN_NODE_SIZE; i <= MAX_NODE_SIZE; i++)
             setMaxNodeSizeComboBox.addItem(NODE_SIZE_STRING + i);
         setMaxNodeSizeComboBox.setSelectedIndex(ANIMATION_DEFAULT_MAX_NODE_SIZE.get() - 1);

@@ -187,7 +187,6 @@ public final class ParticlesGenerator
     */
     public void destructor(GL2 gl)
     {
-        particleImageTexture.dispose(gl);
         particleImageTexture = null;
 
         particleGeneratorEffect = null;

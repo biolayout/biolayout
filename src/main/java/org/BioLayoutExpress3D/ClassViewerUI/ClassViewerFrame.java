@@ -53,7 +53,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private TableRowSorter<ClassViewerTableModelGeneral> generalTableSorter = null;
     private AbstractAction classViewerDialogAction = null;
     private AbstractAction okAction = null;
-    private JComboBox classSetsBox = null;
+    private JComboBox<String> classSetsBox = null;
     private JCheckBox viewAllClassSets = null;
     private AbstractAction refreshSelectionInTableAction = null;
     private JButton selectDeselectAllButton = null;
@@ -490,7 +490,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // topPanel, north
         JPanel generalTopPanel = new JPanel(true);
 
-        classSetsBox = new JComboBox();
+        classSetsBox = new JComboBox<String>();
         classSetsBox.addItemListener(this);
         classSetsBox.setToolTipText("Select Current Class Set");
 
@@ -956,7 +956,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 generalTableSorter.setComparator( i, new ClassViewerTable.VertexClassSorting() );
     }
 
-    private void addClassSets(JComboBox comboBox)
+    private void addClassSets(JComboBox<String> comboBox)
     {
         comboBox.removeAllItems();
 

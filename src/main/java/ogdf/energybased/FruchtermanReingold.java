@@ -78,7 +78,7 @@ class FruchtermanReingold
         executor.shutdown();
     }
 
-    private void calcluate_repulsive_force_on_node(node n, List<node> others,
+    private void calculate_repulsive_force_on_node(node n, List<node> others,
             NodeArray<NodeAttributes> A, NodeArray<DPoint> F_rep)
     {
         DPoint f_rep_u_on_v = PointFactory.INSTANCE.newDPoint();
@@ -138,7 +138,7 @@ class FruchtermanReingold
 
                             for (int i = first_node_index; i < last_node_index; i++)
                             {
-                                calcluate_repulsive_force_on_node(
+                                calculate_repulsive_force_on_node(
                                         nodes.get(i),
                                         others != null ? others : nodes.subList(i + 1, nodes.size()),
                                         A, F_rep);
@@ -201,7 +201,7 @@ class FruchtermanReingold
         {
             for (int i = 0; i < number_of_nodes; i++)
             {
-                calcluate_repulsive_force_on_node(
+                calculate_repulsive_force_on_node(
                         array_of_the_nodes.get(i),
                         array_of_the_nodes.subList(i + 1, number_of_nodes),
                         A, F_rep);
@@ -233,7 +233,7 @@ class FruchtermanReingold
 
         for (int uIndex = 0; uIndex < length; uIndex++)
         {
-            calcluate_repulsive_force_on_node(
+            calculate_repulsive_force_on_node(
                     nodearray_i_j_k.get(uIndex),
                     nodearray_i_j_k.subList(uIndex + 1, length),
                     A, F_rep);
@@ -283,7 +283,7 @@ class FruchtermanReingold
             {//if1
                 for (node v_it : contained_nodes[i][j][k])
                 {
-                    calcluate_repulsive_force_on_node(
+                    calculate_repulsive_force_on_node(
                             v_it,
                             contained_nodes[act_i][act_j][act_k],
                             A, F_rep);

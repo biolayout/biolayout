@@ -197,6 +197,7 @@ class FruchtermanReingold
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
         {
             node v = iter.next();
+            F_rep.set(v, PointFactory.INSTANCE.newDPoint());
             array_of_the_nodes.add(v);
         }
 

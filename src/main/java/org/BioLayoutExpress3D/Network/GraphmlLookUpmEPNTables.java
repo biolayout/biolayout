@@ -3,6 +3,9 @@ package org.BioLayoutExpress3D.Network;
 import org.BioLayoutExpress3D.DataStructures.*;
 import org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static java.awt.Color.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import static org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup1.*;
 import static org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup2.*;
 import static org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup3.*;
@@ -14,6 +17,7 @@ import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.Shapes3D.*;
 *
 *
 * @author Thanos Theo, 2009-2010-2011
+* @author Derek Wright
 * @version 3.0.0.0
 *
 */
@@ -240,20 +244,43 @@ public final class GraphmlLookUpmEPNTables
     */
     public static final Tuple6[] GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3 = {
                                                                           // Components
-                                                                          Tuples.tuple("roundrectangle", PROTEIN_COMPLEX,           decode("#FFFF99"), 10.0f, ROUND_RECTANGLE, ROUND_CUBE_LARGE),
-                                                                          Tuples.tuple("roundrectangle", PROTEIN_PEPTIDE,           decode("#CCFFFF"),  7.0f, ROUND_RECTANGLE, ROUND_CUBE_THIN), // distinguish by using ':' in name
-                                                                          Tuples.tuple("rectangle",      GENE,                      decode("#CCCC00"), 25.0f, RECTANGLE,       GENE_MODEL),
-                                                                          Tuples.tuple("parallelogram",  DNA_SEQUENCE,              decode("#CCCC00"),  6.0f, PARALLELOGRAM,   CONE_RIGHT),
-                                                                          Tuples.tuple("hexagon",        SIMPLE_BIOCHEMICAL,        decode("#FFA200"), 10.0f, HEXAGON,         PINEAPPLE_SLICE_TOROID),
-                                                                          Tuples.tuple("ellipse",        GENERIC_ENTITY,            decode("#CC99FF"), 15.5f, CIRCLE,          PINEAPPLE_SLICE_ELLIPSOID),
-                                                                          Tuples.tuple("trapezoid",      DRUG,                      decode("#FFFF00"),  5.0f, TRAPEZOID1,      DOUBLE_PYRAMID_THIN),
-                                                                          Tuples.tuple("diamond",        ION_SIMPLE_MOLECULE,       decode("#C0C0C0"),  5.0f, DIAMOND,         DOUBLE_PYRAMID_LARGE),
+                                                                          Tuples.tuple("roundrectangle", PROTEIN_COMPLEX,           decode("#FFFF99"), 10.0f, ROUND_RECTANGLE, ROUND_CUBE_LARGE), //index 0
+                                                                          Tuples.tuple("roundrectangle", PROTEIN_PEPTIDE,           decode("#CCFFFF"),  7.0f, ROUND_RECTANGLE, ROUND_CUBE_THIN), // distinguish by using ':' in name //index 1
+                                                                          Tuples.tuple("rectangle",      GENE,                      decode("#CCCC00"), 25.0f, RECTANGLE,       GENE_MODEL), //index 2
+                                                                          Tuples.tuple("parallelogram",  DNA_SEQUENCE,              decode("#CCCC00"),  6.0f, PARALLELOGRAM,   CONE_RIGHT), //index 3
+                                                                          Tuples.tuple("hexagon",        SIMPLE_BIOCHEMICAL,        decode("#FFA200"), 10.0f, HEXAGON,         PINEAPPLE_SLICE_TOROID), //index 4
+                                                                          Tuples.tuple("ellipse",        GENERIC_ENTITY,            decode("#CC99FF"), 15.5f, CIRCLE,          PINEAPPLE_SLICE_ELLIPSOID), //index 5
+                                                                          Tuples.tuple("trapezoid",      DRUG,                      decode("#FFFF00"),  5.0f, TRAPEZOID1,      DOUBLE_PYRAMID_THIN), //index 6
+                                                                          Tuples.tuple("diamond",        ION_SIMPLE_MOLECULE,       decode("#C0C0C0"),  5.0f, DIAMOND,         DOUBLE_PYRAMID_LARGE), //index 7
 
                                                                           // Other
-                                                                          Tuples.tuple("trapezoid2",     ENERGY_MOLECULAR_TRANSFER, decode("#FFFFFF"), 10.0f, TRAPEZOID2,      TRAPEZOID_DOWN),
-                                                                          Tuples.tuple("octagon",        CONDITIONAL_SWITCH,        decode("#FF0000"), 20.0f, OCTAGON,         ICOSAHEDRON)
+                                                                          Tuples.tuple("trapezoid2",     ENERGY_MOLECULAR_TRANSFER, decode("#FFFFFF"), 10.0f, TRAPEZOID2,      TRAPEZOID_DOWN), //index 8
+                                                                          Tuples.tuple("octagon",        CONDITIONAL_SWITCH,        decode("#FF0000"), 20.0f, OCTAGON,         ICOSAHEDRON) //index 9
                                                                        };
+    
+    /**
+     * Map of BioPAX physical entity names to mEPN shapes.
+     * Keys: Complex, Dna, DnaRegion, NucleicAcid, Protein, Rna, RnaRegion, SimplePhysicalEntity, SmallMolecule
+     * @return a Map with key BioPAX type and value an entry from GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3
+     */
+    public static final Map<String, Tuple6> BIOPAX_MEPN_PHYSICAL_ENTITY_MAP;
 
+    //Create BIOPAX_MEPN_PHYSICAL_ENTITY_MAP
+    static {
+        Map<String, Tuple6> result = new HashMap<String, Tuple6>();
+        result.put("Complex", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[0]); //PROTEIN_COMPLEX
+        result.put("Dna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        result.put("DnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        result.put("NucleicAcid", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        result.put("Protein", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[1]); //PROTEIN_PEPTIDE
+        result.put("Rna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        result.put("RnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        result.put("SimplePhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY
+        result.put("SmallMolecule", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[4]); //SIMPLE_BIOCHEMICAL
+        
+        BIOPAX_MEPN_PHYSICAL_ENTITY_MAP = Collections.unmodifiableMap(result);
+    }
+    
     /**
     *  Graphml Petri Net inhibitor arrowhead look-up table.
     */

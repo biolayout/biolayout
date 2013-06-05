@@ -34,7 +34,6 @@ package ogdf.energybased;
 import java.util.*;
 import java.util.concurrent.*;
 import ogdf.basic.*;
-import org.BioLayoutExpress3D.DataStructures.Tuple3;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -337,7 +336,7 @@ class FruchtermanReingold
         @SuppressWarnings("unchecked")
         final List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
         @SuppressWarnings("unchecked")
-        final List<Tuple3<Integer, Integer, Integer>>[] per_thread_cell_list = new ArrayList[NUMBER_OF_THREADS];
+        final List<Integer[]>[] per_thread_cell_list = new ArrayList[NUMBER_OF_THREADS];
         int total_grid_cells = i_num_grid_cells * j_num_grid_cells * k_num_grid_cells;
         int cells_per_thread = (int) Math.ceil((double) total_grid_cells / NUMBER_OF_THREADS);
         int thread = 0;
@@ -352,10 +351,10 @@ class FruchtermanReingold
 
                     if (per_thread_cell_list[thread] == null)
                     {
-                        per_thread_cell_list[thread] = new ArrayList<Tuple3<Integer, Integer, Integer>>();
+                        per_thread_cell_list[thread] = new ArrayList<Integer[]>();
                     }
 
-                    per_thread_cell_list[thread].add(new Tuple3<Integer, Integer, Integer>(i, j, k));
+                    per_thread_cell_list[thread].add(new Integer[] {i, j, k});
 
                     if (per_thread_cell_list[thread].size() >= cells_per_thread)
                     {
@@ -383,7 +382,7 @@ class FruchtermanReingold
         //force calculation
         for (thread = 0; thread < NUMBER_OF_THREADS; thread++)
         {
-            final List<Tuple3<Integer, Integer, Integer>> cell_list = per_thread_cell_list[thread];
+            final List<Integer[]> cell_list = per_thread_cell_list[thread];
 
             futures.add(thread, new FutureTask<NodeArray<DPoint>>(
                     new Callable<NodeArray<DPoint>>()
@@ -393,10 +392,10 @@ class FruchtermanReingold
                         {
                             NodeArray<DPoint> F_rep_thread = new NodeArray<DPoint>(G, Factory.DPOINT);
 
-                            for (Tuple3<Integer, Integer, Integer> cell : cell_list)
+                            for (Integer[] cell : cell_list)
                             {
                                 calculate_approx_repulsive_forces_for_cell(A, F_rep_thread,
-                                        contained_nodes, cell.first, cell.second, cell.third);
+                                        contained_nodes, cell[0], cell[1], cell[2]);
                             }
 
                             return F_rep_thread;
@@ -405,13 +404,7 @@ class FruchtermanReingold
             executor.submit(futures.get(thread));
         }
 
-
         // Recombine results from threads
-        for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
-        {
-            node v = iter.next();
-        }
-
         try
         {
             for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)

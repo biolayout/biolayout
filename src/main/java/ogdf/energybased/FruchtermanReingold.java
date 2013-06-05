@@ -41,7 +41,7 @@ class FruchtermanReingold
 {
     final int MULTITHREAD_NODE_COUNT_THRESHOLD = 256;
     final int NUMBER_OF_THREADS = RUNTIME.availableProcessors();
-    final boolean PERFORMANCE_METRICS = true;
+    final boolean PERFORMANCE_METRICS = false;
     ExecutorService executor;
 
     //Import updated information of the drawing area.
@@ -231,10 +231,10 @@ class FruchtermanReingold
             NodeArray<DPoint> F_rep,
             List<node>[][][] contained_nodes, int i, int j, int k)
     {
-
         int length = contained_nodes[i][j][k].size();
-        if (length == 0)
+        if (contained_nodes[i][j][k] == null || length == 0)
         {
+            // Should never happen
             return;
         }
 
@@ -297,7 +297,9 @@ class FruchtermanReingold
             boolean middle = (act_k == k && (act_j == j + 1 || (act_j == j && act_i == i + 1)));
             boolean bottom = (act_k == k + 1 && (act_i == i + 1 && act_j == j + 1));
 
-            if (top || middle || bottom)
+            if ((top || middle || bottom) &&
+                    (contained_nodes[act_i][act_j][act_k] != null &&
+                    contained_nodes[act_i][act_j][act_k].size() > 0))
             {//if1
                 for (node v_it : contained_nodes[i][j][k])
                 {
@@ -336,34 +338,7 @@ class FruchtermanReingold
 
         @SuppressWarnings("unchecked")
         final List<node>[][][] contained_nodes = new ArrayList[i_num_grid_cells][j_num_grid_cells][k_num_grid_cells];
-        @SuppressWarnings("unchecked")
-        final List<Integer[]>[] per_thread_cell_list = new ArrayList[NUMBER_OF_THREADS];
-        int total_grid_cells = i_num_grid_cells * j_num_grid_cells * k_num_grid_cells;
-        int cells_per_thread = (int) Math.ceil((double) total_grid_cells / NUMBER_OF_THREADS);
-        int thread = 0;
-
-        for (i = 0; i < i_num_grid_cells; i++)
-        {
-            for (j = 0; j < j_num_grid_cells; j++)
-            {
-                for (k = 0; k < k_num_grid_cells; k++)
-                {
-                    contained_nodes[i][j][k] = new ArrayList<node>();
-
-                    if (per_thread_cell_list[thread] == null)
-                    {
-                        per_thread_cell_list[thread] = new ArrayList<Integer[]>();
-                    }
-
-                    per_thread_cell_list[thread].add(new Integer[] {i, j, k});
-
-                    if (per_thread_cell_list[thread].size() >= cells_per_thread)
-                    {
-                        thread++;
-                    }
-                }
-            }
-        }
+        List<Integer[]> non_empty_cell_list = new ArrayList<Integer[]>();
 
         double gridboxlength = boxlength / max_gridindex;
         for (Iterator<node> iter = G.nodesIterator(); iter.hasNext();)
@@ -373,7 +348,37 @@ class FruchtermanReingold
             int x_index = (int) (offset.getX() / gridboxlength);
             int y_index = (int) (offset.getY() / gridboxlength);
             int z_index = (int) (offset.getZ() / gridboxlength);
+
+            if (contained_nodes[x_index][y_index][z_index] == null)
+            {
+                contained_nodes[x_index][y_index][z_index] = new ArrayList<node>();
+                non_empty_cell_list.add(new Integer[] {x_index, y_index, z_index});
+            }
             contained_nodes[x_index][y_index][z_index].add(v);
+        }
+
+        @SuppressWarnings("unchecked")
+        final List<Integer[]>[] per_thread_cell_list = new ArrayList[NUMBER_OF_THREADS];
+        int cells_per_thread = (int) Math.ceil((double) non_empty_cell_list.size() / NUMBER_OF_THREADS);
+        int thread = 0;
+
+        // Distribute cells over threads
+        for (Integer[] cell : non_empty_cell_list)
+        {
+            if (per_thread_cell_list[thread] == null)
+            {
+                per_thread_cell_list[thread] = new ArrayList<Integer[]>();
+            }
+
+            per_thread_cell_list[thread].add(new Integer[]
+                    {
+                        cell[0], cell[1], cell[2]
+                    });
+
+            if (per_thread_cell_list[thread].size() >= cells_per_thread)
+            {
+                thread++;
+            }
         }
 
         long startTime = System.nanoTime();
@@ -384,6 +389,11 @@ class FruchtermanReingold
         for (thread = 0; thread < NUMBER_OF_THREADS; thread++)
         {
             final List<Integer[]> cell_list = per_thread_cell_list[thread];
+
+            if (cell_list == null)
+            {
+                continue;
+            }
 
             futures.add(thread, new FutureTask<NodeArray<DPoint>>(
                     new Callable<NodeArray<DPoint>>()
@@ -419,7 +429,7 @@ class FruchtermanReingold
 
             if (DEBUG_BUILD && PERFORMANCE_METRICS)
             {
-                println("calculate_approx_repulsive_forces " + total_grid_cells + " cells, " +
+                println("calculate_approx_repulsive_forces " + non_empty_cell_list.size() + " cells, " +
                         ((double)(System.nanoTime() - startTime) / 1000000000.0) + " seconds");
             }
         }

@@ -27,7 +27,7 @@ public class ThreadExceptionHandler implements
         {
             handlingThreadException = true;
 
-            String build = "Build: " + BuildConfig.VERSION +
+            String build = BuildConfig.VERSION +
                     (!BuildConfig.BUILD_TAG.isEmpty() ? " " + BuildConfig.BUILD_TAG : "") +
                     "(" + BuildConfig.BUILD_TIME + ")";
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());

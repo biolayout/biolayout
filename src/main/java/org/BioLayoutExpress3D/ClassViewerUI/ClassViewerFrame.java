@@ -453,7 +453,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if ( !updateEntropyTableRunnable.getAbortThread() )
             {
                 updateEntropyTableRunnable.setAbortThread(true);
-                LayoutFrame.sleep(TIME_TO_SLEEP_TO_ABORT_THREADS);
+
+                if (updateEntropyTableRunnable.getThreadStarted())
+                {
+                    while (!updateEntropyTableRunnable.getThreadFinished());
+                }
             }
         }
     }
@@ -466,7 +470,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if ( !updateDetailedEntropyTableRunnable.getAbortThread() )
             {
                 updateDetailedEntropyTableRunnable.setAbortThread(true);
-                LayoutFrame.sleep(TIME_TO_SLEEP_TO_ABORT_THREADS);
+
+                if (updateDetailedEntropyTableRunnable.getThreadStarted())
+                {
+                    while (!updateDetailedEntropyTableRunnable.getThreadFinished());
+                }
             }
         }
     }

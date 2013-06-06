@@ -51,7 +51,16 @@ public final class ClassViewerTable extends JTable
         Point p = e.getPoint();
         int rowIndex = rowAtPoint(p);
         int colIndex = columnAtPoint(p);
-        Object cellData = getValueAt(rowIndex, colIndex);
+        Object cellData = null;
+
+        if (rowIndex >= 0 && colIndex >= 0)
+        {
+            cellData = getValueAt(rowIndex, colIndex);
+        }
+        else
+        {
+            System.out.println("Calling ClassViewerTable.getValueAt(" + rowIndex + ", " + colIndex + ")");
+        }
 
         if (cellData == null)
         {

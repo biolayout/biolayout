@@ -51,6 +51,8 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
     @Override
     public void run()
     {
+        setThreadStarted();
+
         if ( (annotationClass != null) && !annotationClass.equals("") )
         {
             layoutProgressBarDialog.prepareProgressBar(NUMBER_OF_STEPS, " Calculating analysis values for one term...");
@@ -63,6 +65,7 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
             layoutProgressBarDialog.incrementProgress();
@@ -83,6 +86,7 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
             layoutProgressBarDialog.incrementProgress();
@@ -93,6 +97,7 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
             layoutProgressBarDialog.incrementProgress();
@@ -103,6 +108,7 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
             layoutProgressBarDialog.incrementProgress();
@@ -113,11 +119,10 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
             layoutProgressBarDialog.incrementProgress();
-
-            tabbedPane.setSelectedIndex( ENTROPY_DETAILS_TAB.ordinal() );
 
             layoutProgressBarDialog.endProgressBar();
             layoutProgressBarDialog.stopProgressBar();
@@ -125,6 +130,8 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
             if ( classViewerFrame.isVisible() )
                 classViewerFrame.processAndSetWindowState();
         }
+
+        setThreadFinished();
     }
 
     public void setAbortThread(boolean abortThread)
@@ -139,5 +146,25 @@ public final class ClassViewerUpdateEntropyTable implements Runnable
         return abortThread;
     }
 
+    boolean threadStarted = false;
+    void setThreadStarted()
+    {
+        threadStarted = true;
+    }
 
+    public boolean getThreadStarted()
+    {
+        return threadStarted;
+    }
+
+    boolean threadFinished = false;
+    void setThreadFinished()
+    {
+        threadFinished = true;
+    }
+
+    public boolean getThreadFinished()
+    {
+        return threadFinished;
+    }
 }

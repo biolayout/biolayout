@@ -119,6 +119,11 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         y += padY;
         x += padX;
 
+        if (threshold < minThreshold)
+        {
+            System.out.println("drawDegreePlot: threshold " + threshold + " < minThreshold" + minThreshold);
+        }
+
         double maxX = log(maxDegree[threshold - minThreshold]);
         double maxY = log(maxCount[threshold - minThreshold]);
 
@@ -341,6 +346,11 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     public void updatePlots(int threshold, String thresholdString)
     {
         this.threshold = threshold;
+        if (threshold < minThreshold)
+        {
+            System.out.println("updatePlots: threshold " + threshold + " < minThreshold" + minThreshold);
+        }
+
         this.thresholdString = thresholdString;
 
         this.repaint();

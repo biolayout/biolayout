@@ -136,52 +136,52 @@ public final class GraphmlLookUpmEPNTables
     */
     public static final Tuple7[] GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1 = {
                                                                           // Boolean Logic Operators
-                                                                          Tuples.tuple("&",   "ellipse", AND,                          decode("#FF9900"), 5.0f, CIRCLE, TORUS_8_PETALS),
-                                                                          Tuples.tuple("OR",  "ellipse", OR,                           decode("#CC99FF"), 5.0f, CIRCLE, SAUCER_4_PETALS),
+                                                                          Tuples.tuple("&",   "ellipse", AND,                          decode("#FF9900"), 5.0f, CIRCLE, TORUS_8_PETALS), //index 0
+                                                                          Tuples.tuple("OR",  "ellipse", OR,                           decode("#CC99FF"), 5.0f, CIRCLE, SAUCER_4_PETALS), //index 1
 
                                                                           // Process Nodes
-                                                                          Tuples.tuple("B",   "ellipse", BINDING,                      decode("#FFFF99"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("O",   "ellipse", OLIGERMISATION,               decode("#FFFF99"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("X",   "ellipse", CLEAVAGE,                     decode("#BFBFBF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("AX",  "ellipse", AUTO_CLEAVAGE,                decode("#BFBFBF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("D",   "ellipse", DISSOCIATION,                 decode("#FFCC99"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("RLC", "ellipse", RATE_LIMITING_CATALYSIS,      decode("#9999FF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("C",   "ellipse", CATALYSIS,                    decode("#9999FF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("AC",  "ellipse", AUTO_CATALYSIS,               decode("#9999FF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("T",   "ellipse", TRANSLOCATION,                decode("#00CCFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("TL",  "ellipse", TRANSCRIPTION_TRANSLATION,    decode("#99CCFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("A",   "ellipse", ACTIVATION,                   decode("#00CC33"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("I",   "ellipse", INHIBITION,                   decode("#FF0000"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("P",   "ellipse", PHOSPHORYLATION,              decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("-P",  "ellipse", DEPHOSPHORYLATION,            decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("AP",  "ellipse", AUTO_PHOSPHORYLATION,         decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("PT",  "ellipse", PHOSPHO_TRANSFER,             decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Ub",  "ellipse", UBIQUITISATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Su",  "ellipse", SUMOYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Se",  "ellipse", SELENYLATION,                 decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Gy",  "ellipse", GLYCOSYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Pr",  "ellipse", PRENYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Me",  "ellipse", METHYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Ac",  "ellipse", ACETYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Pa",  "ellipse", PALMITOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("H+",  "ellipse", PROTONATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Sp",  "ellipse", SULPHATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("Pe",  "ellipse", PEGYLATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("My",  "ellipse", MYRISTOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("OH",  "ellipse", HYDROXYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("S",   "ellipse", SECRETION,                    decode("#CCFFCC"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("/",   "ellipse", SINK_PROTEASOMAL_DEGRADATION, decode("#FFFFFF"), 5.0f, CIRCLE, TORUS),
-                                                                          Tuples.tuple("Ox",  "ellipse", OXIDATION,                    decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("M",   "ellipse", MUTATION,                     decode("#FF99CC"), 5.0f, CIRCLE, SPHERE),
-                                                                          Tuples.tuple("?",   "ellipse", UNKNOWN_TRANSITION,           decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE),
+                                                                          Tuples.tuple("B",   "ellipse", BINDING,                      decode("#FFFF99"), 5.0f, CIRCLE, SPHERE), //index 2
+                                                                          Tuples.tuple("O",   "ellipse", OLIGERMISATION,               decode("#FFFF99"), 5.0f, CIRCLE, SPHERE), //index 3
+                                                                          Tuples.tuple("X",   "ellipse", CLEAVAGE,                     decode("#BFBFBF"), 5.0f, CIRCLE, SPHERE), //index 4
+                                                                          Tuples.tuple("AX",  "ellipse", AUTO_CLEAVAGE,                decode("#BFBFBF"), 5.0f, CIRCLE, SPHERE), //index 5
+                                                                          Tuples.tuple("D",   "ellipse", DISSOCIATION,                 decode("#FFCC99"), 5.0f, CIRCLE, SPHERE), //index 6
+                                                                          Tuples.tuple("RLC", "ellipse", RATE_LIMITING_CATALYSIS,      decode("#9999FF"), 5.0f, CIRCLE, SPHERE), //index 7
+                                                                          Tuples.tuple("C",   "ellipse", CATALYSIS,                    decode("#9999FF"), 5.0f, CIRCLE, SPHERE), //index 8
+                                                                          Tuples.tuple("AC",  "ellipse", AUTO_CATALYSIS,               decode("#9999FF"), 5.0f, CIRCLE, SPHERE), //index 9
+                                                                          Tuples.tuple("T",   "ellipse", TRANSLOCATION,                decode("#00CCFF"), 5.0f, CIRCLE, SPHERE), //index 10
+                                                                          Tuples.tuple("TL",  "ellipse", TRANSCRIPTION_TRANSLATION,    decode("#99CCFF"), 5.0f, CIRCLE, SPHERE), //index 11
+                                                                          Tuples.tuple("A",   "ellipse", ACTIVATION,                   decode("#00CC33"), 5.0f, CIRCLE, SPHERE), //index 12
+                                                                          Tuples.tuple("I",   "ellipse", INHIBITION,                   decode("#FF0000"), 5.0f, CIRCLE, SPHERE), //index 13
+                                                                          Tuples.tuple("P",   "ellipse", PHOSPHORYLATION,              decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 14
+                                                                          Tuples.tuple("-P",  "ellipse", DEPHOSPHORYLATION,            decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 15
+                                                                          Tuples.tuple("AP",  "ellipse", AUTO_PHOSPHORYLATION,         decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 16
+                                                                          Tuples.tuple("PT",  "ellipse", PHOSPHO_TRANSFER,             decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 17
+                                                                          Tuples.tuple("Ub",  "ellipse", UBIQUITISATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 18
+                                                                          Tuples.tuple("Su",  "ellipse", SUMOYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 19
+                                                                          Tuples.tuple("Se",  "ellipse", SELENYLATION,                 decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 20
+                                                                          Tuples.tuple("Gy",  "ellipse", GLYCOSYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 21
+                                                                          Tuples.tuple("Pr",  "ellipse", PRENYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 22
+                                                                          Tuples.tuple("Me",  "ellipse", METHYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 23
+                                                                          Tuples.tuple("Ac",  "ellipse", ACETYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 24
+                                                                          Tuples.tuple("Pa",  "ellipse", PALMITOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 25
+                                                                          Tuples.tuple("H+",  "ellipse", PROTONATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 26
+                                                                          Tuples.tuple("Sp",  "ellipse", SULPHATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 27
+                                                                          Tuples.tuple("Pe",  "ellipse", PEGYLATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 28
+                                                                          Tuples.tuple("My",  "ellipse", MYRISTOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 29
+                                                                          Tuples.tuple("OH",  "ellipse", HYDROXYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 30
+                                                                          Tuples.tuple("S",   "ellipse", SECRETION,                    decode("#CCFFCC"), 5.0f, CIRCLE, SPHERE), //index 31
+                                                                          Tuples.tuple("/",   "ellipse", SINK_PROTEASOMAL_DEGRADATION, decode("#FFFFFF"), 5.0f, CIRCLE, TORUS), //index 32
+                                                                          Tuples.tuple("Ox",  "ellipse", OXIDATION,                    decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 33
+                                                                          Tuples.tuple("M",   "ellipse", MUTATION,                     decode("#FF99CC"), 5.0f, CIRCLE, SPHERE), //index 34
+                                                                          Tuples.tuple("?",   "ellipse", UNKNOWN_TRANSITION,           decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 35
 
                                                                           // Edge Annotations
-                                                                          Tuples.tuple("A",   "diamond", EDGE_ACTIVATES,               decode("#00CC33"), 5.0f, DIAMOND, OCTAHEDRON),
-                                                                          Tuples.tuple("I",   "diamond", EDGE_INHIBITS,                decode("#FF0000"), 5.0f, DIAMOND, OCTAHEDRON),
-                                                                          Tuples.tuple("C",   "diamond", EDGE_CATALYSIS,               decode("#CC99FF"), 5.0f, DIAMOND, OCTAHEDRON),
+                                                                          Tuples.tuple("A",   "diamond", EDGE_ACTIVATES,               decode("#00CC33"), 5.0f, DIAMOND, OCTAHEDRON), //index 36
+                                                                          Tuples.tuple("I",   "diamond", EDGE_INHIBITS,                decode("#FF0000"), 5.0f, DIAMOND, OCTAHEDRON), //index 37
+                                                                          Tuples.tuple("C",   "diamond", EDGE_CATALYSIS,               decode("#CC99FF"), 5.0f, DIAMOND, OCTAHEDRON), //index 38
 
                                                                           // Dummy Component
-                                                                          Tuples.tuple("",    "ellipse", DUMMY_COMPONENT,              decode("#FFFFFF"), 3.0f, CIRCLE, SPHERE)
+                                                                          Tuples.tuple("",    "ellipse", DUMMY_COMPONENT,              decode("#FFFFFF"), 3.0f, CIRCLE, SPHERE) //index 39
                                                                         };
 
     /**
@@ -207,13 +207,13 @@ public final class GraphmlLookUpmEPNTables
     */
     public static final Tuple6[] GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2 = {
                                                                           // Other
-                                                                          Tuples.tuple("octagon",   PATHWAY_MODULE,        decode("#00FF00"), 5.0f, HEXAGON,                       DODECAHEDRON),
-                                                                          Tuples.tuple("octagon",   PATHWAY_OUTPUT,        decode("#F0FFFF"), 5.0f, HEXAGON,                       DODECAHEDRON),
+                                                                          Tuples.tuple("octagon",   PATHWAY_MODULE,        decode("#00FF00"), 5.0f, HEXAGON,                       DODECAHEDRON), //index 0
+                                                                          Tuples.tuple("octagon",   PATHWAY_OUTPUT,        decode("#F0FFFF"), 5.0f, HEXAGON,                       DODECAHEDRON), //index 1
 
                                                                           // Petri Net Transition Nodes
-                                                                          Tuples.tuple("rectangle", TRANSITION_VERTICAL,   decode("#000000"), 5.0f, Shapes2D.RECTANGLE_VERTICAL,   Shapes3D.RECTANGLE_VERTICAL),
-                                                                          Tuples.tuple("rectangle", TRANSITION_HORIZONTAL, decode("#000000"), 5.0f, Shapes2D.RECTANGLE_HORIZONTAL, Shapes3D.RECTANGLE_HORIZONTAL), // distinguish by width/height sizes
-                                                                          Tuples.tuple("diamond",   TRANSITION_DIAMOND,    decode("#000000"), 4.0f, DIAMOND,                       OCTAHEDRON),
+                                                                          Tuples.tuple("rectangle", TRANSITION_VERTICAL,   decode("#000000"), 5.0f, Shapes2D.RECTANGLE_VERTICAL,   Shapes3D.RECTANGLE_VERTICAL), //index 2
+                                                                          Tuples.tuple("rectangle", TRANSITION_HORIZONTAL, decode("#000000"), 5.0f, Shapes2D.RECTANGLE_HORIZONTAL, Shapes3D.RECTANGLE_HORIZONTAL), // distinguish by width/height sizes //index 3
+                                                                          Tuples.tuple("diamond",   TRANSITION_DIAMOND,    decode("#000000"), 4.0f, DIAMOND,                       OCTAHEDRON), //index 4
                                                                        };
 
     /**
@@ -259,26 +259,73 @@ public final class GraphmlLookUpmEPNTables
                                                                        };
     
     /**
-     * Map of BioPAX physical entity names to mEPN shapes.
-     * Keys: Complex, Dna, DnaRegion, NucleicAcid, Protein, Rna, RnaRegion, SimplePhysicalEntity, SmallMolecule
-     * @return a Map with key BioPAX type and value an entry from GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3
+     * Map of BioPAX PhysicalEntity, Gene and Pathway class names to mEPN shapes. 
+     * Includes new shapes for BioPAX entities that do not map readily to mEPN.
+     * @return a Map with key BioPAX type and value a tuple describing node shape, color and size
      */
-    public static final Map<String, Tuple6> BIOPAX_MEPN_PHYSICAL_ENTITY_MAP;
-
-    //Create BIOPAX_MEPN_PHYSICAL_ENTITY_MAP
-    static {
-        Map<String, Tuple6> result = new HashMap<String, Tuple6>();
-        result.put("Complex", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[0]); //PROTEIN_COMPLEX
-        result.put("Dna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        result.put("DnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        result.put("NucleicAcid", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        result.put("Protein", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[1]); //PROTEIN_PEPTIDE
-        result.put("Rna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        result.put("RnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        result.put("SimplePhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY
-        result.put("SmallMolecule", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[4]); //SIMPLE_BIOCHEMICAL
+    public static final Map<String, Tuple6> BIOPAX_MEPN_MAP;
+    
+    
+    /**
+     * Map of BioPAX Interaction class names to mEPN shapes. 
+     * Includes new shapes for BioPAX entities that do not map readily to mEPN.
+     * @return a Map with key BioPAX type and value a tuple describing node shape, color and size
+     */
+    public static final Map<String, Tuple7> BIOPAX_MEPN_INTERACTION_MAP;
+    
+    //Create BIOPAX_MEPN_MAP
+    static 
+    {
+        Map<String, Tuple6> entityNameMap = new HashMap<String, Tuple6>();
         
-        BIOPAX_MEPN_PHYSICAL_ENTITY_MAP = Collections.unmodifiableMap(result);
+        //TODO replace array index with method to search lookup table?
+        //physical entities
+        entityNameMap.put("Complex", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[0]); //PROTEIN_COMPLEX
+        entityNameMap.put("Dna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("DnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("NucleicAcid", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("Protein", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[1]); //PROTEIN_PEPTIDE
+        entityNameMap.put("Rna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("RnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("SimplePhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY
+        entityNameMap.put("SmallMolecule", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[4]); //SIMPLE_BIOCHEMICAL
+        
+        entityNameMap.put("PhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY (default)
+        
+        entityNameMap.put("Pathway", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[0]); //PATHWAY_MODULE
+                
+        entityNameMap.put("Gene", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        
+        BIOPAX_MEPN_MAP = Collections.unmodifiableMap(entityNameMap);
+
+        
+        //interactions
+        //BioPAX: BiochemicalReaction, Catalysis, ComplexAssembly, Control,     Conversion, Degradation, GeneticInteraction, Modulation MOD, MolecularInteraction, TemplateReaction TRE, TemplateReactionRegulation TRR, Transport T, TransportWithBiochemicalReaction  TWB      
+        //mEPN: catalysis,          catalysis,   binding        ,( new CTL)   new CON     sink        new(GI)               
+        Map<String, Tuple7> interactionNameMap = new HashMap<String, Tuple7>();
+
+        interactionNameMap.put("BiochemicalReaction", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[8]); //CATALYSIS
+        interactionNameMap.put("Catalysis", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[8]); //CATALYSIS
+        interactionNameMap.put("ComplexAssembly", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[2]); //BINDING
+        
+        interactionNameMap.put("Control",                   Tuples.tuple("CTL",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //CTL (new)
+        interactionNameMap.put("Conversion",                Tuples.tuple("CON",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE));  //CON (new)
+        
+        interactionNameMap.put("Degradation", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[2]); //SINK_PROTEASOMAL_DEGRADATION
+        
+        interactionNameMap.put("GeneticInteraction",         Tuples.tuple("GI",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //GI (new)
+        interactionNameMap.put("Modulation",                 Tuples.tuple("MOD",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //MOD (new)
+        interactionNameMap.put("MolecularInteraction",       Tuples.tuple("MI",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //MI (new)
+        interactionNameMap.put("TemplateReaction",           Tuples.tuple("TRR",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //TRE (new)
+        interactionNameMap.put("TemplateReactionRegulation", Tuples.tuple("TRR",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE));  //TRR (new)
+        
+        interactionNameMap.put("Transport", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[10]); //TRANSLOCATION
+        
+        interactionNameMap.put("TransportWithBiochemicalReaction", Tuples.tuple("TWB",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //TWB (new)
+
+        interactionNameMap.put("Interaction",  GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[35]);  //UNKNOWN_TRANSITION (default)
+       
+        BIOPAX_MEPN_INTERACTION_MAP = Collections.unmodifiableMap(interactionNameMap);
     }
     
     /**

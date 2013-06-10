@@ -34,7 +34,7 @@ public final class NetworkComponentContainer extends NetworkContainer
         maxY = 0.0;
     }
 
-    private void calcBoundaries()
+    public void calcBoundaries()
     {
         double tempWidth = 0.0, tempHeight = 0.0;
         for ( Vertex vertex : verticesMap.values() )

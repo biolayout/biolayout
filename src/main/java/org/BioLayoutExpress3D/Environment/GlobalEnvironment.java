@@ -205,7 +205,7 @@ public final class GlobalEnvironment
     public static final PrefBool COLLAPSE_NODES_BY_VOLUME = new PrefBool(false, "collapse_nodes_by_volume", true);
     public static final PrefBool CONFIRM_PREFERENCES_SAVE  = new PrefBool(true, "confirm_preferences_save", true);
 
-    public static enum GraphLayoutAlgorithm { FRUCHTERMAN_RHEINGOLD, FMMM, ALWAYS_ASK }
+    public static enum GraphLayoutAlgorithm { FRUCHTERMAN_RHEINGOLD, FMMM, CIRCLE, ALWAYS_ASK }
     public static final PrefEnum<GraphLayoutAlgorithm> GRAPH_LAYOUT_ALGORITHM = new PrefEnum<GraphLayoutAlgorithm>(
             GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD, "graph_layout_algorithm", true);
 

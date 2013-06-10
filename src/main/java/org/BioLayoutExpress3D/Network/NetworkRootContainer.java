@@ -243,6 +243,30 @@ public final class NetworkRootContainer extends NetworkContainer
                 GA.applyTo(this);
                 break;
 
+            case CIRCLE:
+                CircleLayout ca = new CircleLayout();
+                for (NetworkComponentContainer ncc : componentCollection)
+                {
+                    ca.layout(ncc);
+                    ncc.calcBoundaries();
+                }
+
+                Collections.sort(componentCollection, new NetworkComponentSorter());
+
+                layoutProgressBarDialog.prepareProgressBar(componentCollection.size(), "Tiling Graph Components");
+                layoutProgressBarDialog.startProgressBar();
+
+                for (NetworkComponentContainer ncc : componentCollection)
+                {
+                    layoutProgressBarDialog.incrementProgress();
+                    tilingLevelsContainer.addNetworkComponentContainer(ncc);
+                }
+
+                tilingLevelsContainer.optimize();
+
+                layoutProgressBarDialog.endProgressBar();
+                break;
+
             default:
             case FRUCHTERMAN_RHEINGOLD:
                 if (WEIGHTED_EDGES)

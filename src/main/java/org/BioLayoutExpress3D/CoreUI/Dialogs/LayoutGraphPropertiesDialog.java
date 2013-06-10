@@ -129,6 +129,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
 
     private JRadioButton frRadioButton = null;
     private JRadioButton fmmmRadioButton = null;
+    private JRadioButton circleRadioButton = null;
     private JRadioButton askRadioButton = null;
 
     private JCheckBox layoutResizeNodesAndArrowheadsToKvalue = null;
@@ -1121,6 +1122,11 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         fmmmRadioButton.setToolTipText("FMMM");
         layoutAlgorithmGroup.add(fmmmRadioButton);
         algorithmPanel.add(fmmmRadioButton);
+
+        circleRadioButton = new JRadioButton("Circle");
+        circleRadioButton.setToolTipText("Circle");
+        layoutAlgorithmGroup.add(circleRadioButton);
+        algorithmPanel.add(circleRadioButton);
 
         askRadioButton = new JRadioButton("Always Ask");
         askRadioButton.setToolTipText("Always Ask");
@@ -3038,6 +3044,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         GraphLayoutAlgorithm gla = GRAPH_LAYOUT_ALGORITHM.get();
         frRadioButton.setSelected(gla == GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD);
         fmmmRadioButton.setSelected(gla == GraphLayoutAlgorithm.FMMM);
+        circleRadioButton.setSelected(gla == GraphLayoutAlgorithm.CIRCLE);
         askRadioButton.setSelected(gla == GraphLayoutAlgorithm.ALWAYS_ASK);
         fmmmDesiredEdgeLength.setValue(FMMM_DESIRED_EDGE_LENGTH.get());
         fmmmForceModel.setSelectedIndex(FMMM_FORCE_MODEL.getIndex());
@@ -3360,6 +3367,10 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         else if (fmmmRadioButton.isSelected())
         {
             GRAPH_LAYOUT_ALGORITHM.set(GraphLayoutAlgorithm.FMMM);
+        }
+        else if (circleRadioButton.isSelected())
+        {
+            GRAPH_LAYOUT_ALGORITHM.set(GraphLayoutAlgorithm.CIRCLE);
         }
         else if (askRadioButton.isSelected())
         {

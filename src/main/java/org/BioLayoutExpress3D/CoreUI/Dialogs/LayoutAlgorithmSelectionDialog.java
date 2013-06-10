@@ -19,6 +19,7 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
 {
     JRadioButton frRadioButton;
     JRadioButton fmmmRadioButton;
+    JRadioButton circleRadioButton;
 
     public LayoutAlgorithmSelectionDialog(JFrame frame)
     {
@@ -50,6 +51,11 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
         layoutAlgorithmGroup.add(fmmmRadioButton);
         algorithmPanel.add(fmmmRadioButton);
 
+        circleRadioButton = new JRadioButton("Circle");
+        circleRadioButton.setToolTipText("Circle");
+        layoutAlgorithmGroup.add(circleRadioButton);
+        algorithmPanel.add(circleRadioButton);
+
         frRadioButton.setSelected(true);
 
         this.setLayout(new BorderLayout());
@@ -77,7 +83,11 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
 
     public GraphLayoutAlgorithm getGraphLayoutAlgorithm()
     {
-        if (fmmmRadioButton.isSelected())
+        if (circleRadioButton.isSelected())
+        {
+            return GraphLayoutAlgorithm.CIRCLE;
+        }
+        else if (fmmmRadioButton.isSelected())
         {
             return GraphLayoutAlgorithm.FMMM;
         }

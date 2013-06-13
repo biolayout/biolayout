@@ -7,9 +7,12 @@ import java.util.logging.Logger;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.DataStructures.Tuple6;
+import org.BioLayoutExpress3D.DataStructures.Tuple7;
 import org.BioLayoutExpress3D.Environment.GlobalEnvironment.Shapes2D;
 import org.BioLayoutExpress3D.Environment.GlobalEnvironment.Shapes3D;
 import org.BioLayoutExpress3D.Network.*;
+import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup1;
+import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup2;
 import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup3;
 import org.biopax.paxtools.io.BioPAXIOHandler;
 import org.biopax.paxtools.io.SimpleIOHandler;
@@ -27,6 +30,7 @@ import org.biopax.paxtools.model.level3.Interaction;
 import org.biopax.paxtools.model.level3.MolecularInteraction;
 import org.biopax.paxtools.model.level3.NucleicAcid;
 import org.biopax.paxtools.model.level3.Pathway;
+import org.biopax.paxtools.model.level3.Process;
 import org.biopax.paxtools.model.level3.PhysicalEntity;
 import org.biopax.paxtools.model.level3.Protein;
 import org.biopax.paxtools.model.level3.Rna;
@@ -82,105 +86,114 @@ public final class BioPAXParser extends CoreParser
 
         try
         {
+            //nc.addNetworkConnection("testfrom", "testto", "testedge", false, false, false);
+
             int progressCounter = 0;
-            layoutProgressBarDialog.prepareProgressBar(3, "Parsing " + file.getName());
+            layoutProgressBarDialog.prepareProgressBar(2, "Parsing " + file.getName());
             layoutProgressBarDialog.startProgressBar();
             layoutProgressBarDialog.incrementProgress(++progressCounter);
             
-            int edgeCounter = 1;
+            //int edgeCounter = 1;
             Model model = handler.convertFromOWL(new FileInputStream(file)); //construct object model from OWL file
             
             //TODO query BioPAX level
-            //convert to level 3 or deal with level 2 entities separately?
+            //convert to level 3 or deal with level 2 modelEntitySet separately?
             
             //level 3
-            Set<Entity> entities = model.getObjects(Entity.class);
-            
+            Set<Entity> modelEntitySet = model.getObjects(Entity.class);
+           
             //create a graph node for each entity
-            int entityCount = 0;
-            for(Entity entity: entities)
+            
+            logger.info(modelEntitySet.size() + " Entities parsed from " + file.getName());
+            /*
+            Vertex testVertex = new Vertex("TESTVERTEX", nc);
+            nc.getVerticesMap().put("TESTVERTEX", testVertex);
+            
+            Vertex testVertex2 = new Vertex("TESTVERTEX2", nc);
+            nc.getVerticesMap().put("TESTVERTEX2", testVertex2);
+            
+            Edge testEdge = new Edge(testVertex, testVertex2, 0.0f);
+            nc.getEdges().add(testEdge);
+            */
+//        Map<String, Tuple7> interactionNameMap = new HashMap<String, Tuple7>();
+
+            HashMap<Entity, Vertex> entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
+            for(Entity entity: modelEntitySet)
             {
-                ++entityCount;
                 logger.info("Entity RDFId: " + entity.getRDFId());
                 logger.info("Entity displayName: " + entity.getDisplayName());
-                logger.info("Entity Xrefs: " + Arrays.toString(entity.getXref().toArray()));
                 
+                
+                String xrefs = Arrays.toString(entity.getXref().toArray());
+                logger.info("Entity Xrefs: " + xrefs);
+                
+                Vertex vertex;
+                String vertexName = entity.getRDFId() + ":" + entity.getDisplayName();
+                //vertexName = (entity.getDisplayName() != null ? entity.getDisplayName() : xrefs);
+                //messageColor = (color != null ? color : messageColor);
+                vertex = new Vertex(vertexName, nc);
+                if(entity instanceof Interaction)
+                {
+                    Interaction interaction = (Interaction)entity;
+                    Tuple7 interactionShape;
+                    interactionShape = BioPAXParser.lookupInteractionShape(interaction);
+                    
+                    BioPAXParser.setVertexPropertiesInteraction(vertex, interactionShape);
+               }
+                else
+                {
+                    Tuple6 entityShape = BioPAXParser.lookupEntityShape(entity);
+                    if(entityShape.second instanceof GraphmlShapesGroup2) //Pathway
+                    {
+                        logger.info("Pathway vertex");
+                        BioPAXParser.setVertexPropertiesPathway(vertex, entityShape);
+                    }
+                    else //PhysicalEntity, Gene
+                    {
+                        BioPAXParser.setVertexPropertiesEntity(vertex, entityShape);
+                    }
+               }
+                nc.getVerticesMap().put(vertex.getVertexName(), vertex);
+                
+                entityVertexMap.put(entity, vertex);
+                
+               
                 
             }
+            
             /*
-                //get interactions participant of
-                Set<Interaction> participantInteractions = entity.getParticipantOf();
-
-                //connect entity and participants
-                Interaction[] interactionArray = participantInteractions.toArray(new Interaction[0]);
-                for(int i = 0; i < interactionArray.length; i++)
+             * Connect all entity and participant vertices
+             * 
+             * Algorithm:
+             * For each Entity
+             *  get Vertex
+             *  get participant Interactions
+             *  for each participant Interaction
+             *      get participant's Vertex
+             *      connect to entity Vertex
+             */
+            
+            Set<Entity> graphEntitySet = entityVertexMap.keySet();
+            for(Entity entity: graphEntitySet)
+            {
+                Vertex vertex = entityVertexMap.get(entity);
+                Set<Interaction> interactionSet = entity.getParticipantOf();
+                for(Interaction interaction: interactionSet)
                 {
-                    Interaction interaction = interactionArray[i];
+                    Vertex interactionVertex = entityVertexMap.get(interaction);
                     
+                    Edge edge = new Edge(vertex, interactionVertex, 0.0f);
+                    vertex.addConnection(interactionVertex, edge);
+                    interactionVertex.addConnection(vertex, edge);
+                    nc.getEdges().add(edge);
                 }
-*/
+            }
             
-            logger.info(entityCount + " entities found");
+           
+            /*
             
-            
-            Set<Interaction> interactions = model.getObjects(Interaction.class); //get all interactions
-            for (Interaction interaction : interactions) 
-            {    
-                logger.info("Interaction RDFId: " + interaction.getRDFId());
-                logger.info("Interaction displayName: " + interaction.getDisplayName());
-                logger.info("Interaction Xrefs: " + Arrays.toString(interaction.getXref().toArray()));
-                                
-                Set<Entity> participants = interaction.getParticipant();
-                //construct array of node names
-                
-                //connect all the entities in the interaction
-                Entity[] entityArray = participants.toArray(new Entity[0]);     
-                
-                //shapes corresponding to each member of entityArray, to be looked up from GraphmlLookUpmEPNTables
-                Tuple6[] nodeShapeArray = new Tuple6[entityArray.length]; 
                                
-                //look up shape for each entity in entityArray and assign to corresponding index in nodeShapeArray
-                for(int i = 0; i < entityArray.length ; i++ )
-                {
-                    Entity entity = entityArray[i];
-                    if(entity instanceof Complex){
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Complex");
-                    }
-                    else if(entity instanceof Dna)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Dna");
-                    }
-                    else if(entity instanceof DnaRegion)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("DnaRegion");                        
-                    }
-                    else if(entity instanceof NucleicAcid)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("NucleicAcid");                                                
-                    }
-                    else if(entity instanceof Protein)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Protein");                        
-                    }
-                    else if(entity instanceof Rna)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Rna");                        
-                    }
-                    else if(entity instanceof RnaRegion)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("RnaRegion");                        
-                    }
-                    else if(entity instanceof SimplePhysicalEntity)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("SimplePhysicalEntity");                        
-                    }
-                    else if(entity instanceof SmallMolecule)
-                    {
-                        nodeShapeArray[i] = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("SmallMolecule");                        
-                    }
-                }
-                                
-                Entity from, to; //BioPAX entities to be connected in graph
+                Entity from, to; //BioPAX modelEntitySet to be connected in graph
                 String nameFrom, nameTo; //node names for graph
                 boolean foundFrom, foundTo; //flags for nodes already present in graph
                 
@@ -223,12 +236,14 @@ public final class BioPAXParser extends CoreParser
                     } //end for
                     
                     //first node is new, set shape
+           
                     if(!foundFrom)
                     {
                         Vertex vertexFrom = nc.getVerticesMap().get(nameFrom);
                         setVertexProperties(vertexFrom, nodeShapeArray[outer]);
                     }
-                }
+              
+               } //end try
                 
                 /*
                 
@@ -244,7 +259,9 @@ public final class BioPAXParser extends CoreParser
                     VertexClass vc = lc.createClass(edgeType);
                     lc.setClass(nc.getVerticesMap().get(edgeType + lines), vc);
                */
-            }
+            
+    
+        
                
             layoutProgressBarDialog.incrementProgress(++progressCounter);
            
@@ -263,12 +280,72 @@ public final class BioPAXParser extends CoreParser
 
         return isSuccessful;
     }
-
-    //TODO ENUM MAP OF ENTITIES?
-    //TODO use Class.getSimpleName to lookup
-    private static Tuple6 lookupShape(Entity entity)
+    
+    /**
+     * Looks up graph node shape according to Interaction type.
+     * @param interaction
+     * @return a graph node shape. If no mapping found, returns shape for Interaction.
+     */
+    private static Tuple7 lookupInteractionShape(Interaction interaction)
     {
-        Tuple6 shape; //node shape to be assigned according to entity type
+        //String className = interaction.getClass().getSimpleName();
+        Tuple7 shape;// = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get(className); //node shape assigned according to interaction type
+        /*
+        if(shape == null)
+        {
+            shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Interaction");  //generic Interaction                                      
+        }
+*/
+        if(interaction instanceof TemplateReaction)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TemplateReaction");                                        
+         }
+         else if(interaction instanceof Control)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Control");                                        
+
+         }
+         else if(interaction instanceof Conversion)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Conversion");                                        
+
+         }
+         else if(interaction instanceof MolecularInteraction)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("MolecularInteraction");                                        
+
+         }
+         else if(interaction instanceof GeneticInteraction)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("GeneticInteraction");                                        
+
+         }
+         else
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Interaction");                                        
+
+         }
+            
+        return shape;
+    }
+
+    /**
+     * Looks up graph node shape according to Entity type. 
+     * To be used for PhysicalEntity, Pathway and Gene.
+     * @param entity
+     * @return a graph node shape. If no mapping found, returns shape for SimplePhysicalEntity.
+     */
+    private static Tuple6 lookupEntityShape(Entity entity)
+    {
+        //String className = entity.getClass().getSimpleName();
+        //Tuple6 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get(className); //node shape assigned according to entity type
+        /*
+        if(shape == null)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("SimplePhysicalEntity"); //default generic entity                      
+         }
+*/
+        Tuple6 shape;
         if(entity instanceof PhysicalEntity)
         {
             if(entity instanceof Complex){
@@ -311,43 +388,9 @@ public final class BioPAXParser extends CoreParser
                 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("SimplePhysicalEntity"); //default generic entity                      
             }
         }
-        else if(entity instanceof Interaction)
+        else if(entity instanceof Pathway || entity instanceof Process) //superinterface of Pathway
         {
-            if(entity instanceof TemplateReaction)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TemplateReaction");                                        
-            }
-            else if(entity instanceof Control)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Control");                                        
-                
-            }
-            else if(entity instanceof Conversion)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Conversion");                                        
-                
-            }
-            else if(entity instanceof MolecularInteraction)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("MolecularInteraction");                                        
-                
-            }
-            else if(entity instanceof GeneticInteraction)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("GeneticInteraction");                                        
-                
-            }
-            else
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Interaction");                                        
-                
-            }
-            
-        }
-        else if(entity instanceof Pathway)
-        {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Pathway");                     
-            
+                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Pathway");                                 
         }
         else if (entity instanceof Gene)
         {
@@ -356,7 +399,7 @@ public final class BioPAXParser extends CoreParser
         else
         {
                 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("PhysicalEntity");                                                    
-        }
+        }        
         return shape;
    }
     
@@ -365,11 +408,31 @@ public final class BioPAXParser extends CoreParser
      * Expects a tuple in the format found in GraphmlLookUpmEPNTables.GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3
      * @param shapeLookup - a tuple of size, shape and color
      */
-    private static void setVertexProperties(Vertex vertex, Tuple6<String, GraphmlShapesGroup3, Color, Float, Shapes2D, Shapes3D> shapeLookup)
+    private static void setVertexPropertiesEntity(Vertex vertex, Tuple6<String, GraphmlShapesGroup3, Color, Float, Shapes2D, Shapes3D> shapeLookup)
     {
         vertex.setVertex2DShape(shapeLookup.fifth);
         vertex.setVertex3DShape(shapeLookup.sixth);
         vertex.setVertexSize(shapeLookup.fourth);
         vertex.setVertexColor(shapeLookup.third);
-    }   
+    }
+    
+    //special case for pathway - uses different enumeration
+    private static void setVertexPropertiesPathway(Vertex vertex, Tuple6<String, GraphmlShapesGroup2, Color, Float, Shapes2D, Shapes3D> shapeLookup)
+    {
+        vertex.setVertex2DShape(shapeLookup.fifth);
+        vertex.setVertex3DShape(shapeLookup.sixth);
+        vertex.setVertexSize(shapeLookup.fourth);
+        vertex.setVertexColor(shapeLookup.third);
+    }
+
+    //interaction
+   private static void setVertexPropertiesInteraction(Vertex vertex, Tuple7<String, String, GraphmlShapesGroup1, Color, Float, Shapes2D, Shapes3D> shapeLookup)
+   {
+        vertex.setVertex2DShape(shapeLookup.sixth);
+        vertex.setVertex3DShape(shapeLookup.seventh);
+        vertex.setVertexSize(shapeLookup.fifth);
+        vertex.setVertexColor(shapeLookup.fourth);
+       
+   }
+    
 }

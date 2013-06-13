@@ -324,6 +324,9 @@ public final class GraphmlLookUpmEPNTables
         interactionNameMap.put("TransportWithBiochemicalReaction", Tuples.tuple("TWB",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //TWB (new)
 
         interactionNameMap.put("Interaction",  GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[35]);  //UNKNOWN_TRANSITION (default)
+        
+        //        return Tuples.tuple(GraphmlShapesGroup1.NONE, Color.BLACK, 0.0f, CIRCLE, SPHERE, false);
+
        
         BIOPAX_MEPN_INTERACTION_MAP = Collections.unmodifiableMap(interactionNameMap);
     }

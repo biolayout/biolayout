@@ -23,7 +23,7 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
     */
     public static final long serialVersionUID = 111222333444555790L;
 
-    public static final String[] ORIGINAL_COLUMN_NAMES = { "Selected", "Name", "Incoming", "Outgoing" };
+    public static final String[] ORIGINAL_COLUMN_NAMES = { "Selected", "Name", "Connections" };
 
     private int originalNumberOfColumns = ORIGINAL_COLUMN_NAMES.length;
     private String[] columnNames = ORIGINAL_COLUMN_NAMES;
@@ -248,20 +248,28 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
         for (GraphNode node : selectedNodes)
         {
             columnsPruned = 0;
+            // Selected
             data[rowIndex][0] = Boolean.TRUE;
+
+            // Node name
             data[rowIndex][1] = layoutFrame.getNetworkRootContainer().getNodeName( node.getNodeName() );
 
-            if ( (howManyColumnsToHide == 0) || !allHiddenColumnIndices.contains(0) )  // index columnIndex - 2 = 2 - 2
-                    data[rowIndex][2 - columnsPruned] = Integer.valueOf( node.getNodeChildren().size() );
-            else
-                 columnsPruned++;
+            int incomingEdges = Integer.valueOf(node.getNodeChildren().size());
+            int outgoingEdges = Integer.valueOf(node.getNodeParents().size());
+            int nodeDegree = incomingEdges + outgoingEdges;
 
-            if ( (howManyColumnsToHide == 0) || !allHiddenColumnIndices.contains(1) ) // index columnIndex - 2 = 3 - 2
-                    data[rowIndex][3 - columnsPruned] = Integer.valueOf( node.getNodeParents().size() );
+            // Edge degree
+            if ((howManyColumnsToHide == 0) || !allHiddenColumnIndices.contains(0))  // index columnIndex - 2 = 2 - 2
+            {
+                data[rowIndex][2 - columnsPruned] = nodeDegree;
+            }
             else
+            {
                 columnsPruned++;
+            }
 
-            columnIndex = 4;
+            // Class
+            columnIndex = 3;
             if (allClasses)
             {
                 ArrayList<LayoutClasses> classSets = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().getClassSetNames();

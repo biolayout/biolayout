@@ -50,6 +50,7 @@ public final class BioPAXParser extends CoreParser
     private static final Logger logger = Logger.getLogger(BioPAXParser.class.getName());
     
     private BioPAXIOHandler handler;
+    private HashMap<Entity, Vertex> entityVertexMap = null; //created during parsing
 
     public BioPAXParser(NetworkContainer nc, LayoutFrame layoutFrame)
     {
@@ -117,7 +118,7 @@ public final class BioPAXParser extends CoreParser
             */
 //        Map<String, Tuple7> interactionNameMap = new HashMap<String, Tuple7>();
 
-            HashMap<Entity, Vertex> entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
+            entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
             for(Entity entity: modelEntitySet)
             {
                 logger.info("Entity RDFId: " + entity.getRDFId());
@@ -161,6 +162,8 @@ public final class BioPAXParser extends CoreParser
                 
             }
             
+            
+            
             /*
              * Connect all entity and participant vertices
              * 
@@ -174,80 +177,54 @@ public final class BioPAXParser extends CoreParser
              */
             
             Set<Entity> graphEntitySet = entityVertexMap.keySet();
+            logger.info("Entity Set has " + graphEntitySet.size() + " Entities");
+            
+            int hasInteractionCount = 0; //TEST
+            
             for(Entity entity: graphEntitySet)
             {
-                Vertex vertex = entityVertexMap.get(entity);
+                //if physical entity is component of complex, create edge
+                if(entity instanceof Complex)
+                {
+                    Complex complex = (Complex) entity;
+                    Set<PhysicalEntity> components = complex.getComponent();
+                    logger.info("Complex contains " + components.size() + " components");
+                    for(PhysicalEntity component: components)
+                    {
+                        this.connectEntityVertices(complex, component, 0.0f); //TODO stoichiometry as edge weight?
+                    }
+                }
+                
+                if(entity instanceof Pathway)
+                {
+                    Pathway pathway = (Pathway) entity;
+                    Set<Process> processes = pathway.getPathwayComponent();
+                    logger.info("Pathway contains " + processes.size() + " processes");
+                    for(Process process: processes)
+                    {
+                        this.connectEntityVertices(pathway, process, 0.0f);
+                    }
+                    //TODO pathway steps: label edges?
+                }
+                
                 Set<Interaction> interactionSet = entity.getParticipantOf();
+                
+                logger.info("Entity " + entity.getRDFId() + " participates in " + interactionSet.size() + " Interactions");
+                if(interactionSet.size() > 0)
+                {
+                    hasInteractionCount++;
+                }
+                
                 for(Interaction interaction: interactionSet)
                 {
-                    Vertex interactionVertex = entityVertexMap.get(interaction);
+                    this.connectEntityVertices(entity, interaction, 0.0f);
                     
-                    Edge edge = new Edge(vertex, interactionVertex, 0.0f);
-                    vertex.addConnection(interactionVertex, edge);
-                    interactionVertex.addConnection(vertex, edge);
-                    nc.getEdges().add(edge);
                 }
             }
             
+            logger.info(hasInteractionCount + " Entities have Interactions");
            
-            /*
-            
-                               
-                Entity from, to; //BioPAX modelEntitySet to be connected in graph
-                String nameFrom, nameTo; //node names for graph
-                boolean foundFrom, foundTo; //flags for nodes already present in graph
-                
-                String edgeName = interaction.getRDFId();
-                
-                for(int outer = 0; outer < entityArray.length - 1; outer++)
-                {
-                    from = entityArray[outer];
-                    nameFrom = from.getRDFId();
-                    
-                    foundFrom = false; 
-                    if(nc.getVerticesMap().containsKey(nameFrom))
-                    {
-                        foundFrom = true;
-                    }
-                                        
-                    for(int inner = outer + 1; inner < entityArray.length; inner++)
-                    {
-                        foundTo = false;
-                        
-                        to = entityArray[inner];
-                        nameTo = to.getRDFId();
-                        
-                        //set flag if node already present in vertices map - so don't need to set shapes again
-                        
-                        if(nc.getVerticesMap().containsKey(nameTo))
-                        {
-                            foundTo = true;
-                        }
-                        
-                        nc.addNetworkConnection(nameFrom, nameTo, edgeName, false, false, false);
-                        
-                        //second node is new, set shape
-                        if(!foundTo)
-                        {
-                            Vertex vertexTo = nc.getVerticesMap().get(nameTo);  
-                            setVertexProperties(vertexTo, nodeShapeArray[inner]);
-                        }
-                        
-                    } //end for
-                    
-                    //first node is new, set shape
-           
-                    if(!foundFrom)
-                    {
-                        Vertex vertexFrom = nc.getVerticesMap().get(nameFrom);
-                        setVertexProperties(vertexFrom, nodeShapeArray[outer]);
-                    }
-              
-               } //end try
-                
                 /*
-                
-                
                     nc.addNetworkConnection(vertex1, edgeType + lines, 0.0f);
                     nc.addNetworkConnection(edgeType + lines, vertex2, 0.0f);
 
@@ -260,9 +237,6 @@ public final class BioPAXParser extends CoreParser
                     lc.setClass(nc.getVerticesMap().get(edgeType + lines), vc);
                */
             
-    
-        
-               
             layoutProgressBarDialog.incrementProgress(++progressCounter);
            
             isSuccessful = true;
@@ -279,6 +253,25 @@ public final class BioPAXParser extends CoreParser
         }
 
         return isSuccessful;
+    }
+
+    /**
+     * Create a graph Edge between the Nodes mapped to a pair of Entities.
+     * @param entityFrom
+     * @param entityTo
+     * @param edgeWeight
+     * @return the created Edge
+     */
+    private Edge connectEntityVertices(Entity entityFrom, Entity entityTo, float edgeWeight)
+    {
+        Vertex vertexFrom = entityVertexMap.get(entityFrom);
+        Vertex vertexTo = entityVertexMap.get(entityTo);
+        Edge edge = new Edge(vertexFrom, vertexTo, edgeWeight);
+
+        vertexFrom.addConnection(vertexTo, edge);
+        vertexTo.addConnection(vertexFrom, edge);
+        nc.getEdges().add(edge);
+        return edge;
     }
     
     /**

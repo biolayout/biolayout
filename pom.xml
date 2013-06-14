@@ -4,7 +4,7 @@
 
     <groupId>org.BioLayoutExpress3D</groupId>
     <artifactId>Layout</artifactId>
-    <version>3.0</version>
+    <version>3.1</version>
     <packaging>jar</packaging>
 
     <name>BioLayout Express 3D</name>
@@ -89,7 +89,7 @@
            <name>jogamp test mirror</name>
            <url>http://www.jogamp.org/deployment/maven/</url>
            <layout>default</layout>
-         </repository>        
+         </repository>
         <!-- This allows us to treat local jars (e.g. libsbgn) as
              normal dependencies -->
         <repository>

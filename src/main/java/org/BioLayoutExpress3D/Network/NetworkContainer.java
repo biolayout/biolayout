@@ -199,7 +199,8 @@ public abstract class NetworkContainer
         else
         {
             numberOfIterations = frLayout.getNumberOfIterations();
-            layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations" + progressBarParallelismTitle + "...");
+            layoutProgressBarDialog.prepareProgressBar(numberOfIterations,
+                    "Now Processing Layout Iterations" + progressBarParallelismTitle + "...", true);
         }
 
         layoutProgressBarDialog.startProgressBar();

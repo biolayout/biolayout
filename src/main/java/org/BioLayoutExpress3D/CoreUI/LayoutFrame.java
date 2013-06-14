@@ -1146,7 +1146,15 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         expressionData.buildCorrelationNetwork(layoutProgressBarDialog,
                                 correlationFile, metricName, STORED_CORRELATION_THRESHOLD,
                                 generateTextFile);
-                        file = correlationFile;
+
+                        if (!layoutProgressBarDialog.userHasCancelled())
+                        {
+                            file = correlationFile;
+                        }
+                        else
+                        {
+                            isNotSkipped = false;
+                        }
                     }
                     else
                     {
@@ -1176,19 +1184,24 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         }
                     }
 
-                    ExpressionParser scanner = new ExpressionParser(nc, this, expressionData);
-                    scanner.init(file, fileExtension);
-                    scanner.scan();
-
-                    ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog = new ExpressionLoaderSummaryDialog( this, expressionData.getCounts(), expressionData.getTotalRows() );
-                    expressionLoaderSummaryDialog.setVisible(true);
-
-                    if ( isNotSkipped = expressionLoaderSummaryDialog.proceed() )
+                    if (isNotSkipped)
                     {
-                        parser = new ExpressionParser(nc, this, expressionData);
+                        ExpressionParser scanner = new ExpressionParser(nc, this, expressionData);
+                        scanner.init(file, fileExtension);
+                        scanner.scan();
 
-                        if ( !exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().isEnabled() )
-                            exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().setEnabled(true);
+                        ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog = new ExpressionLoaderSummaryDialog(this, expressionData.getCounts(), expressionData.getTotalRows());
+                        expressionLoaderSummaryDialog.setVisible(true);
+
+                        if (isNotSkipped = expressionLoaderSummaryDialog.proceed())
+                        {
+                            parser = new ExpressionParser(nc, this, expressionData);
+
+                            if (!exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().isEnabled())
+                            {
+                                exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().setEnabled(true);
+                            }
+                        }
                     }
                 }
 
@@ -1358,11 +1371,18 @@ public final class LayoutFrame extends JFrame implements GraphListener
                 }
             }
 
-            nc.clearRoot();
-            nc.normaliseWeights();
-            graph.rebuildGraph();
-            graph.resetAllValues();
-            reachedRebuildNetwork = true;
+            if (!layoutProgressBarDialog.userHasCancelled())
+            {
+                nc.clearRoot();
+                nc.normaliseWeights();
+                graph.rebuildGraph();
+                graph.resetAllValues();
+                reachedRebuildNetwork = true;
+            }
+            else
+            {
+                isNotSkipped = false;
+            }
         }
 
         if (isSuccessful && isNotSkipped)
@@ -1788,7 +1808,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
     {
         //Workaround to ignore Exception thrown by JOGL on OS X - TODO remove when JOGL bug fixed
         Thread.setDefaultUncaughtExceptionHandler(null);
-        
+
         boolean savePreferences = true;
 
         if ( layoutGraphPropertiesDialog.getHasNewPreferencesBeenApplied() && CONFIRM_PREFERENCES_SAVE.get())

@@ -82,7 +82,9 @@ public final class NetworkComponentContainer extends NetworkContainer
         else
         {
             numberOfIterations = frLayout.getNumberOfIterations();
-            layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations " + progressBarParallelismTitle + " for Graph Component: " + componentID);
+            layoutProgressBarDialog.prepareProgressBar(numberOfIterations,
+                    "Now Processing Layout Iterations " + progressBarParallelismTitle +
+                    " for Graph Component: " + componentID, true);
         }
 
         layoutProgressBarDialog.startProgressBar();

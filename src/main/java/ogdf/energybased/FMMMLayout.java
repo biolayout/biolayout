@@ -922,7 +922,7 @@ public class FMMMLayout
         //NM = new NMM(random);
         this.progressDialog = progressDialog;
 
-        progressDialog.prepareProgressBar(100, "FMMM layout");
+        progressDialog.prepareProgressBar(100, "FMMM layout", true);
         progressDialog.startProgressBar();
 
         Graph G = GA.constGraph();
@@ -990,6 +990,11 @@ public class FMMMLayout
 
         for (int i = 0; i < number_of_components; i++)
         {
+            if (progressDialog.userHasCancelled())
+            {
+                return;
+            }
+
             call_MULTILEVEL_step_for_subGraph(G_sub.get(i), A_sub.get(i), E_sub.get(i), i, number_of_components);
         }
 
@@ -1035,6 +1040,11 @@ public class FMMMLayout
 
         for (int i = max_level; i >= 0; i--)
         {
+            if (progressDialog.userHasCancelled())
+            {
+                return;
+            }
+
             if (i == max_level)
             {
                 create_initial_placement(G_mult_ptr.get(i), A_mult_ptr.get(i));
@@ -1084,7 +1094,7 @@ public class FMMMLayout
             progressDialog.prepareProgressBar(max_mult_iter,
                     "FMMM layout" +
                     ", component " + (comp_index + 1) + " of " + num_components +
-                    ", level " + ((max_level - act_level) + 1) + " of " + (max_level + 1));
+                    ", level " + ((max_level - act_level) + 1) + " of " + (max_level + 1), true);
 
             while (((stopCriterion() == StopCriterion.scFixedIterations) && (iter <= max_mult_iter)) ||
                     ((stopCriterion() == StopCriterion.scThreshold) && (actforcevectorlength >= threshold()) &&
@@ -1097,11 +1107,17 @@ public class FMMMLayout
                 {
                     actforcevectorlength = get_average_forcevector_length(G, F);
                 }
+
+                if (progressDialog.userHasCancelled())
+                {
+                    return;
+                }
+
                 progressDialog.incrementProgress(iter);
                 iter++;
             }//while
 
-            if (act_level == 0)
+            if (!progressDialog.userHasCancelled() && act_level == 0)
             {
                 call_POSTPROCESSING_step(G, A, E, F, F_attr, F_rep, last_node_movement, comp_index, num_components);
             }
@@ -1124,10 +1140,15 @@ public class FMMMLayout
         progressDialog.prepareProgressBar(10,
                 "FMMM layout" +
                 ", component " + (comp_index + 1) + " of " + num_components +
-                ", post-processing");
+                ", post-processing", true);
 
         for (int i = 1; i <= 10; i++)
         {
+            if (progressDialog.userHasCancelled())
+            {
+                return;
+            }
+
             progressDialog.incrementProgress(i);
             calculate_forces(G, A, E, F, F_attr, F_rep, last_node_movement, i, 1);
         }
@@ -1141,10 +1162,15 @@ public class FMMMLayout
         progressDialog.prepareProgressBar(fineTuningIterations(),
                 "FMMM layout" +
                 ", component " + (comp_index + 1) + " of " + num_components +
-                ", fine-tuning");
+                ", fine-tuning", true);
 
         for (int i = 1; i <= fineTuningIterations(); i++)
         {
+            if (progressDialog.userHasCancelled())
+            {
+                return;
+            }
+
             progressDialog.incrementProgress(i);
             calculate_forces(G, A, E, F, F_attr, F_rep, last_node_movement, i, 2);
         }

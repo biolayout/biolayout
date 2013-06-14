@@ -421,6 +421,11 @@ public final class FRLayout
                     set2DForceToVertex(vertexIndicesMatrixArray[vertexID]);
                 temperatureHandling();
                 updateGUI();
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    return;
+                }
             }
         }
         else
@@ -428,7 +433,10 @@ public final class FRLayout
             if ( performOpenCLGPUFRLayoutCalculationGetErrorOccured && (layoutProgressBarDialog != null) )
             {
                 String progressBarParallelismTitle = (USE_MULTICORE_PROCESS) ? "(Utilizing " + NUMBER_OF_AVAILABLE_PROCESSORS + "-Core Parallelism)" : "";
-                layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations " + progressBarParallelismTitle + ( (componentID != 0) ? " for Graph Component: " + componentID : "" ) + "   (no utilization of OpenCL GPU Computing)");
+                layoutProgressBarDialog.prepareProgressBar(numberOfIterations,
+                        "Now Processing Layout Iterations " + progressBarParallelismTitle +
+                        ( (componentID != 0) ? " for Graph Component: " + componentID : "" ) +
+                        "   (no utilization of OpenCL GPU Computing)");
             }
 
             boolean isPowerOfTwo = org.BioLayoutExpress3D.StaticLibraries.Math.isPowerOfTwo(NUMBER_OF_AVAILABLE_PROCESSORS);
@@ -465,6 +473,11 @@ public final class FRLayout
                 setForceToVertex(true);
                 temperatureHandling();
                 updateGUI();
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    return;
+                }
             }
         }
     }
@@ -957,6 +970,11 @@ public final class FRLayout
                     set3DForceToVertex(vertexIndicesMatrixArray[vertexID]);
                 temperatureHandling();
                 updateGUI();
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    return;
+                }
             }
         }
         else
@@ -964,7 +982,9 @@ public final class FRLayout
             if ( performOpenCLGPUFRLayoutCalculationGetErrorOccured && (layoutProgressBarDialog != null) )
             {
                 String progressBarParallelismTitle = (USE_MULTICORE_PROCESS) ? "(Utilizing " + NUMBER_OF_AVAILABLE_PROCESSORS + "-Core Parallelism)" : "";
-                layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations " + progressBarParallelismTitle + ( (componentID != 0) ? " for Graph Component: " + componentID : "" ) + "   (no utilization of OpenCL GPU Computing)");
+                layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations " +
+                        progressBarParallelismTitle + ( (componentID != 0) ? " for Graph Component: " +
+                        componentID : "" ) + "   (no utilization of OpenCL GPU Computing)");
             }
 
             boolean isPowerOfTwo = org.BioLayoutExpress3D.StaticLibraries.Math.isPowerOfTwo(NUMBER_OF_AVAILABLE_PROCESSORS);
@@ -1001,6 +1021,11 @@ public final class FRLayout
                 setForceToVertex(false);
                 temperatureHandling();
                 updateGUI();
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    return;
+                }
             }
         }
     }

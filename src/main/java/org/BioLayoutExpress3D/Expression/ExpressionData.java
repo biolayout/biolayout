@@ -215,7 +215,7 @@ public final class ExpressionData
             }
 
             WEIGHTED_EDGES = true;
-            layoutProgressBarDialog.prepareProgressBar(100, "Calculating " + metricName + " Graph:");
+            layoutProgressBarDialog.prepareProgressBar(100, "Calculating " + metricName + " Graph:", true);
             layoutProgressBarDialog.startProgressBar();
             layoutProgressBarDialog.setText("Caching...");
 
@@ -288,10 +288,21 @@ public final class ExpressionData
             }
 
             // good, we are done
-            correlationFileTmp.renameTo(correlationFile);
-            if ( writeCorrelationTextFile )
+            if (!layoutProgressBarDialog.userHasCancelled())
             {
-                correlationFileTextTmp.renameTo( new File(correlationFile.getAbsolutePath() + ".txt") );
+                correlationFileTmp.renameTo(correlationFile);
+                if (writeCorrelationTextFile)
+                {
+                    correlationFileTextTmp.renameTo(new File(correlationFile.getAbsolutePath() + ".txt"));
+                }
+            }
+            else
+            {
+                correlationFileTmp.delete();
+                if (writeCorrelationTextFile)
+                {
+                    correlationFileTextTmp.delete();
+                }
             }
 
             clearAllCachedDataStructures();
@@ -387,6 +398,12 @@ public final class ExpressionData
 
             if (DEBUG_BUILD) println("Now starting the N-Core parallelization process with the variables below:\nstartRow: " + (startRow + 1) + " endRow: " + (endRow + 1) + " arraySize: " + arraySize + " rowsSearchProcessedStopped: " + rowsSearchProcessedStopped);
             performMultiCoreCorrelationCalculation(isPowerOfTwo, startRow, endRow, stepResults, cachedRowsResultsIndicesToSkip);
+
+            if (layoutProgressBarDialog.userHasCancelled())
+            {
+                break;
+            }
+
             writeAllStepResultsToFile(threshold, startRow, endRow, stepNumber, stepResults,
                     outOstream, outPrintWriter, writeCorrelationTextFile);
 
@@ -457,6 +474,11 @@ public final class ExpressionData
                 {
                     rowResultIndex += cachedRowsResultsIndicesToSkip[i];
                 }
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    break;
+                }
             }
         }
         else
@@ -473,6 +495,11 @@ public final class ExpressionData
                 else
                 {
                     rowResultIndex += cachedRowsResultsIndicesToSkip[i];
+                }
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    break;
                 }
             }
         }

@@ -285,7 +285,16 @@ public final class NetworkRootContainer extends NetworkContainer
                     int componentNumber = 0;
                     for (NetworkComponentContainer ncc : componentCollection)
                     {
+                        if (layoutProgressBarDialog.userHasCancelled())
+                        {
+                            break;
+                        }
                         ncc.optimize(++componentNumber);
+                    }
+
+                    if (layoutProgressBarDialog.userHasCancelled())
+                    {
+                        break;
                     }
 
                     frLayout.clean();

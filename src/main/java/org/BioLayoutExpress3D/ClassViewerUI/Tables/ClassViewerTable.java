@@ -6,6 +6,7 @@ import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.table.*;
+import javax.swing.event.ListSelectionEvent;
 import org.BioLayoutExpress3D.ClassViewerUI.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.Network.*;
@@ -114,6 +115,86 @@ public final class ClassViewerTable extends JTable
                 return columnNames[realIndex];
             }
         };
+    }
+
+    private void synchroniseHighlightWithSelection()
+    {
+        ArrayList<Integer> selectedRows = new ArrayList<Integer>();
+
+        for (int row = 0; row < getRowCount(); row++)
+        {
+            boolean selected = (Boolean)getValueAt(row, 0);
+
+            if (selected)
+            {
+                selectedRows.add(row);
+            }
+        }
+
+        this.clearSelection();
+        for (Integer selectedRow : selectedRows)
+        {
+            this.addRowSelectionInterval(selectedRow, selectedRow);
+        }
+    }
+
+    private boolean updateResetSelectDeselectAllButton;
+
+    public void setUpdateResetSelectDeselectAllButton(boolean updateResetSelectDeselectAllButton)
+    {
+        this.updateResetSelectDeselectAllButton = updateResetSelectDeselectAllButton;
+    }
+
+    private boolean highlightIsSelection;
+
+    public void setHighlightIsSelection(boolean highlightIsSelection)
+    {
+        if (highlightIsSelection)
+        {
+            // When we're turning highlight selection on, maintain the existing selection
+            synchroniseHighlightWithSelection();
+        }
+
+        this.highlightIsSelection = highlightIsSelection;
+    }
+
+    /**
+    *  Override so that we can disable the selection column.
+    */
+    @Override
+    public boolean isCellEditable(int row, int column)
+    {
+        if (column == 0 && highlightIsSelection)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void valueChanged(ListSelectionEvent e)
+    {
+        super.valueChanged(e);
+
+        if (highlightIsSelection && updateResetSelectDeselectAllButton)
+        {
+            ArrayList<Integer> rows = new ArrayList<Integer>();
+
+            for (int row = e.getFirstIndex(); row <= e.getLastIndex(); row++)
+            {
+                boolean newState = isRowSelected(row);
+
+                if ((Boolean)getValueAt(row, 0) != isRowSelected(row))
+                {
+                    // FIXME Doing this per row is definitely not the most
+                    // efficient way, but the selection system is so convoluted
+                    // that batching it all up is probably more effort than its
+                    // worth at the moment.
+                    setValueAt(newState, row, 0);
+                }
+            }
+        }
     }
 
     /**

@@ -59,6 +59,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JButton selectDeselectAllButton = null;
     private boolean selectDeselectAllButtonModeState = false;
     private boolean updateResetSelectDeselectAllButton = true;
+    private JCheckBox highlightIsSelectionCheckbox = null;
 
     private ExpressionGraphPanel expressionGraphPanel = null;
     private FindNameDialog findNameDialog = null;
@@ -436,6 +437,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         generalTable.setDefaultEditor( VertexClass.class, new DefaultCellEditor(classComboBox) );
         generalTable.setDefaultRenderer( VertexClass.class, classComboBox.getClassRenderer() );
+        generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
 
         if (DEBUG_BUILD) println("Reinit Due to Initial Init.");
 
@@ -526,9 +528,15 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         selectDeselectAllButton = createSelectDeselectAllButton();
         selectDeselectAllButton.setToolTipText("Deselect All");
+
+        highlightIsSelectionCheckbox = createHighlightIsSelectionButton();
+        highlightIsSelectionCheckbox.setToolTipText("Highlight Is Selection");
+
         JPanel generalTableButtonPanel = new JPanel(true);
         generalTableButtonPanel.setLayout( new BoxLayout(generalTableButtonPanel, BoxLayout.X_AXIS) );
+        generalTableButtonPanel.add(highlightIsSelectionCheckbox);
         generalTableButtonPanel.add(selectDeselectAllButton);
+
         // generalTableButtonPanel.add( Box.createRigidArea( new Dimension(10, 10) ) );
         // generalTableButtonPanel.add( new JButton("Dummy Button 2") );
 
@@ -718,6 +726,19 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 selectDeselectAllButton.setText(buttonText);
                 selectDeselectAllButton.setToolTipText(buttonText);
                 tableModelGeneral.setSelectedAllColumns(!selectDeselectAllButtonModeState);
+                generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
+            }
+        } );
+    }
+
+    private JCheckBox createHighlightIsSelectionButton()
+    {
+        return new JCheckBox( new AbstractAction("Highlight Is Selection")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
             }
         } );
     }
@@ -831,6 +852,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             {
                 expressionGraphPanel.setVisible(true);
                 expressionGraphPanel.repaint();
+                generalTable.repaint();
             }
             else
             {
@@ -1151,6 +1173,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     public void setUpdateResetSelectDeselectAllButton(boolean updateResetSelectDeselectAllButton)
     {
         this.updateResetSelectDeselectAllButton = updateResetSelectDeselectAllButton;
+        generalTable.setUpdateResetSelectDeselectAllButton(updateResetSelectDeselectAllButton);
     }
 
     @Override

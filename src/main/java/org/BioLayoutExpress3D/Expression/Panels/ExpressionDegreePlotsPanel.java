@@ -214,7 +214,7 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         g2.setFont(legendFont);
         drawPanelXCenteredText(g2, this.getHeight() - 6, legendFont,
                 "Rows: " + totalRows +
-                (filteredRows > 0 ? " (" + filteredRows + " filtered) " : "") +
+                (filteredRows > 0 ? " (" + filteredRows + " filtered)" : "") +
                 ", Nodes: " + allNodes[threshold - minThreshold] +
                 ", Edges: " + allEdges[threshold - minThreshold] +
                 ", Correlation (R) = " + thresholdString);

@@ -38,28 +38,29 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
     private FloatNumberField thresholdValueTextField = null;
     private ExpressionDegreePlotsPanel expressionDegreePlotsPanel = null;
 
-    public ExpressionLoaderSummaryDialog(JFrame jframe, int[][] counts, int totalRows)
+    public ExpressionLoaderSummaryDialog(JFrame jframe, int[][] counts, int totalRows, int filteredRows)
     {
         super(jframe, "Expression Graph Settings", true);
 
         this.jframe = jframe;
 
         initActions();
-        initComponents(counts, totalRows);
+        initComponents(counts, totalRows, filteredRows);
 
         this.setSize(750, 500);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
     }
 
-    private void initComponents(int[][] counts, int totalRows)
+    private void initComponents(int[][] counts, int totalRows, int filteredRows)
     {
         minThreshold = (int)rint(100.0f * STORED_CORRELATION_THRESHOLD);
         currentThreshold = (int)rint(100.0f * CURRENT_CORRELATION_THRESHOLD);
         currentThresholdFloat = CURRENT_CORRELATION_THRESHOLD;
 
         JPanel topPanel = new JPanel(true);
-        expressionDegreePlotsPanel = new ExpressionDegreePlotsPanel( counts, totalRows, minThreshold, currentThreshold, createCorrelationTextValue(currentThreshold) );
+        expressionDegreePlotsPanel = new ExpressionDegreePlotsPanel( counts, totalRows, filteredRows,
+                minThreshold, currentThreshold, createCorrelationTextValue(currentThreshold) );
         JPanel downPanel = new JPanel(true);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, expressionDegreePlotsPanel, null);

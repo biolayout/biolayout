@@ -71,6 +71,7 @@ public final class ExpressionData
     private HashMap<String, Integer> identityMap = null;
     private int[][] countsArray = null;
     private boolean[] rowsToFilter = null;
+    private int numFilteredRows = 0;
 
     // variables needed for N-CP
     private final CyclicBarrierTimer cyclicBarrierTimer = (USE_MULTICORE_PROCESS) ? new CyclicBarrierTimer() : null;
@@ -1088,19 +1089,23 @@ public final class ExpressionData
             rowsToFilter[row] = filter;
         }
 
+        for (int row = 0; row < totalRows; row++)
+        {
+            if (rowsToFilter[row])
+            {
+                numFilteredRows++;
+            }
+        }
+
         if (DEBUG_BUILD)
         {
-            int numFilteredRows = 0;
-            for (int row = 0; row < totalRows; row++)
-            {
-                if (rowsToFilter[row])
-                {
-                    numFilteredRows++;
-                }
-            }
-
             println("Filtering " + numFilteredRows + " rows");
         }
+    }
+
+    public int getFilteredRows()
+    {
+        return numFilteredRows;
     }
 
     public void preprocess(LayoutProgressBarDialog layoutProgressBarDialog,

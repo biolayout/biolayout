@@ -22,6 +22,7 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     private static final int POINT_SIZE = 4;
 
     private int totalRows = 0;
+    private int filteredRows = 0;
     private int minThreshold = 0;
     private int threshold = 0;
     private String thresholdString = "";
@@ -34,11 +35,13 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     private Font axisFont = null;
     private Font legendFont = null;
 
-    public ExpressionDegreePlotsPanel(int[][] counts, int totalRows, int minThreshold, int threshold, String thresholdString)
+    public ExpressionDegreePlotsPanel(int[][] counts, int totalRows, int filteredRows,
+            int minThreshold, int threshold, String thresholdString)
     {
         super(true);
 
         this.totalRows = totalRows;
+        this.filteredRows = filteredRows;
         this.minThreshold = minThreshold;
         this.threshold = threshold;
         this.thresholdString = thresholdString;
@@ -209,7 +212,12 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         g2.drawLine( x, (int)( y + startY ), x + width, (int)( y + endY ) );
         g2.setPaint(Color.BLACK);
         g2.setFont(legendFont);
-        drawPanelXCenteredText(g2, this.getHeight() - 6, legendFont, "Nodes: " + allNodes[threshold - minThreshold] + ", \t Edges: " + allEdges[threshold - minThreshold] + ", \t Correlation (R) = " + thresholdString);
+        drawPanelXCenteredText(g2, this.getHeight() - 6, legendFont,
+                "Rows: " + totalRows +
+                (filteredRows > 0 ? " (" + filteredRows + " filtered) " : "") +
+                ", Nodes: " + allNodes[threshold - minThreshold] +
+                ", Edges: " + allEdges[threshold - minThreshold] +
+                ", Correlation (R) = " + thresholdString);
     }
 
     private void drawEdgesPlot(Graphics2D g2,int x, int y, int width, int height)

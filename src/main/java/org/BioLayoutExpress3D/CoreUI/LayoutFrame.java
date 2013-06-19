@@ -1190,7 +1190,9 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         scanner.init(file, fileExtension);
                         scanner.scan();
 
-                        ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog = new ExpressionLoaderSummaryDialog(this, expressionData.getCounts(), expressionData.getTotalRows());
+                        ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog =
+                                new ExpressionLoaderSummaryDialog(this, expressionData.getCounts(),
+                                expressionData.getTotalRows(), expressionData.getFilteredRows());
                         expressionLoaderSummaryDialog.setVisible(true);
 
                         if (isNotSkipped = expressionLoaderSummaryDialog.proceed())

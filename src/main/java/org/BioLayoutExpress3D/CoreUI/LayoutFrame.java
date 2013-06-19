@@ -1138,6 +1138,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         correlationFilename += "_filter-" + filterValue;
                     }
 
+                    if (filterIQR >= 0.0f)
+                    {
+                        correlationFilename += "_iqr-" + filterIQR;
+                    }
+
                     correlationFilename += "_" + metricName;
                     correlationFilename += ".correlationcache";
 

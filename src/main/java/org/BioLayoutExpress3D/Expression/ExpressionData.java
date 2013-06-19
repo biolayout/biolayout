@@ -1116,6 +1116,7 @@ public final class ExpressionData
 
     private void filter(float filterValue, float filterIQR)
     {
+        numFilteredRows = 0;
         for (int row = 0; row < totalRows; row++)
         {
             rowsToFilter[row] = false;
@@ -1141,11 +1142,7 @@ public final class ExpressionData
                 float iqr = getIQRForRow(row);
                 rowsToFilter[row] = (iqr < filterIQR);
             }
-        }
 
-        numFilteredRows = 0;
-        for (int row = 0; row < totalRows; row++)
-        {
             if (rowsToFilter[row])
             {
                 numFilteredRows++;

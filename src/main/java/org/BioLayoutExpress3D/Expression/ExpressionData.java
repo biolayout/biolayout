@@ -964,9 +964,25 @@ public final class ExpressionData
         this.transformType = transformType;
     }
 
-    public float[] getTransformedRow(int row)
+    public float getIQRForRow(int row)
     {
-        float[] out = new float[totalColumns];
+        float[] values = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            values[column] = getExpressionDataValue(row, column);
+        }
+
+        Arrays.sort(values);
+
+        int _25Column = (int)java.lang.Math.round(totalColumns * 0.25);
+        int _75Column = (int)java.lang.Math.round(totalColumns * 0.75);
+        float iqr = values[_75Column] - values[_25Column];
+
+        return iqr;
+    }
+
+    public float getMeanForRow(int row)
+    {
         float rowSum = 0.0f;
 
         for (int column = 0; column < totalColumns; column++)
@@ -974,15 +990,42 @@ public final class ExpressionData
             rowSum += getExpressionDataValue(row, column);
         }
 
-        float mean = rowSum / totalColumns;
+        return rowSum / totalColumns;
+    }
 
+    public float getVarianceForRow(int row, float mean)
+    {
         float variance = 0.0f;
         for (int column = 0; column < totalColumns; column++)
         {
             float x = getExpressionDataValue(row, column);
             variance += ((x - mean) * (x - mean));
         }
-        variance = variance / totalColumns;
+
+        return variance / totalColumns;
+    }
+
+    public float getVarianceForRow(int row)
+    {
+        return getVarianceForRow(row, getMeanForRow(row));
+    }
+
+    public float getStddevForRow(int row)
+    {
+        return (float)sqrt(getVarianceForRow(row));
+    }
+
+    public float getParetoForRow(int row)
+    {
+        return (float)sqrt(getStddevForRow(row));
+    }
+
+    public float[] getTransformedRow(int row)
+    {
+        float[] out = new float[totalColumns];
+
+        float mean = getMeanForRow(row);
+        float variance = getVarianceForRow(row, mean);
 
         float stddev = (float)sqrt(variance);
         float pareto = (float)sqrt(stddev);
@@ -1071,22 +1114,34 @@ public final class ExpressionData
         }
     }
 
-    private void filter(float filterValue)
+    private void filter(float filterValue, float filterIQR)
     {
-        for (int row = 0; row < totalRows; row++)
+        if (filterValue >= 0.0f)
         {
-            boolean filter = true;
-
-            for (int column = 0; column < totalColumns; column++)
+            for (int row = 0; row < totalRows; row++)
             {
-                float value = getExpressionDataValue(row, column);
-                if (value >= filterValue)
-                {
-                    filter = false;
-                }
-            }
+                boolean filter = true;
 
-            rowsToFilter[row] = filter;
+                for (int column = 0; column < totalColumns; column++)
+                {
+                    float value = getExpressionDataValue(row, column);
+                    if (value >= filterValue)
+                    {
+                        filter = false;
+                    }
+                }
+
+                rowsToFilter[row] = filter;
+            }
+        }
+
+        if (filterIQR >= 0.0f)
+        {
+            for (int row = 0; row < totalRows; row++)
+            {
+                float iqr = getIQRForRow(row);
+                rowsToFilter[row] = (iqr < filterIQR);
+            }
         }
 
         for (int row = 0; row < totalRows; row++)
@@ -1109,7 +1164,7 @@ public final class ExpressionData
     }
 
     public void preprocess(LayoutProgressBarDialog layoutProgressBarDialog,
-            ScaleTransformType scaleTransformType, float filterValue)
+            ScaleTransformType scaleTransformType, float filterValue, float filterIQR)
     {
         layoutProgressBarDialog.prepareProgressBar(100, "Preprocessing");
         layoutProgressBarDialog.startProgressBar();
@@ -1142,9 +1197,6 @@ public final class ExpressionData
 
         layoutProgressBarDialog.endProgressBar();
 
-        if (filterValue >= 0.0f)
-        {
-            filter(filterValue);
-        }
+        filter(filterValue, filterIQR);
     }
 }

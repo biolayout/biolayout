@@ -1113,8 +1113,9 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
                     boolean generateTextFile = expressionLoaderDialog.saveCorrelationTextFile();
                     float filterValue = expressionLoaderDialog.filterValue();
+                    float filterIQR = expressionLoaderDialog.filterIQR();
 
-                    expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM, filterValue);
+                    expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM, filterValue, filterIQR);
 
                     if (DEBUG_BUILD) println("Expression File is: " + EXPRESSION_FILE_PATH + EXPRESSION_FILE);
                     String metricName = CURRENT_METRIC.toString().toLowerCase();

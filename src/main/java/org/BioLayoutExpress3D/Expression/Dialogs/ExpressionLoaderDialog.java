@@ -33,8 +33,10 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     private JComboBox<String> scaleTransformComboBox = null;
     private JEditorPane textArea = null;
     private JCheckBox saveCorrelationTextFileCheckBox = null;
-    private JCheckBox filterCheckBox = null;
-    private FloatNumberField filterField = null;
+    private JCheckBox filterValueCheckBox = null;
+    private FloatNumberField filterValueField = null;
+    private JCheckBox filterIQRCheckBox = null;
+    private FloatNumberField filterIQRField = null;
     private static final float DEFAULT_FILTER_VALUE = 0.0f;
     private File expressionFile = null;
 
@@ -43,7 +45,8 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     private AbstractAction okAction = null;
     private AbstractAction cancelAction = null;
     private AbstractAction transposeChangedAction = null;
-    private AbstractAction filterChangedAction = null;
+    private AbstractAction filterValueChangedAction = null;
+    private AbstractAction filterIQRChangedAction = null;
 
     private boolean creatingDialogElements = false;
 
@@ -150,15 +153,25 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         tabLine1.add(transposeCheckBox);
 
         // Filter
-        filterCheckBox = new JCheckBox(filterChangedAction);
-        filterCheckBox.setText("Filter Rows With All Values Less Than");
-        filterCheckBox.setSelected(false);
-        filterField = new FloatNumberField(0, 5);
-        filterField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
-        filterField.setEnabled(false);
-        filterField.setValue(DEFAULT_FILTER_VALUE);
-        tabLine2.add(filterCheckBox);
-        tabLine2.add(filterField);
+        filterValueCheckBox = new JCheckBox(filterValueChangedAction);
+        filterValueCheckBox.setText("Filter Rows With All Values Less Than");
+        filterValueCheckBox.setSelected(false);
+        filterValueField = new FloatNumberField(0, 5);
+        filterValueField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
+        filterValueField.setEnabled(false);
+        filterValueField.setValue(DEFAULT_FILTER_VALUE);
+        tabLine2.add(filterValueCheckBox);
+        tabLine2.add(filterValueField);
+
+        filterIQRCheckBox = new JCheckBox(filterIQRChangedAction);
+        filterIQRCheckBox.setText("Filter Rows With An IQR Less Than");
+        filterIQRCheckBox.setSelected(false);
+        filterIQRField = new FloatNumberField(0, 5);
+        filterIQRField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
+        filterIQRField.setEnabled(false);
+        filterIQRField.setValue(DEFAULT_FILTER_VALUE);
+        tabLine2.add(filterIQRCheckBox);
+        tabLine2.add(filterIQRField);
 
         tab.setLayout(new BoxLayout(tab, BoxLayout.PAGE_AXIS));
         tab.add(tabLine1);
@@ -229,12 +242,22 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
                     return;
                 }
 
-                if (filterCheckBox.isSelected())
+                if (filterValueCheckBox.isSelected())
                 {
-                    if (filterField.isEmpty() || filterField.getValue() < 0.0f)
+                    if (filterValueField.isEmpty() || filterValueField.getValue() < 0.0f)
                     {
                         JOptionPane.showMessageDialog(frame, "A positive filter value must be given.", "Invalid filter value", JOptionPane.INFORMATION_MESSAGE);
-                        filterField.setValue(DEFAULT_FILTER_VALUE);
+                        filterValueField.setValue(DEFAULT_FILTER_VALUE);
+                        return;
+                    }
+                }
+
+                if (filterIQRCheckBox.isSelected())
+                {
+                    if (filterIQRField.isEmpty() || filterIQRField.getValue() < 0.0f)
+                    {
+                        JOptionPane.showMessageDialog(frame, "A positive filter value must be given.", "Invalid filter value", JOptionPane.INFORMATION_MESSAGE);
+                        filterIQRField.setValue(DEFAULT_FILTER_VALUE);
                         return;
                     }
                 }
@@ -270,12 +293,21 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
             }
         };
 
-        filterChangedAction = new AbstractAction("FilterToggle")
+        filterValueChangedAction = new AbstractAction("FilterValueToggle")
         {
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                filterField.setEnabled(filterCheckBox.isSelected());
+                filterValueField.setEnabled(filterValueCheckBox.isSelected());
+            }
+        };
+
+        filterIQRChangedAction = new AbstractAction("FilterIQRToggle")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                filterIQRField.setEnabled(filterIQRCheckBox.isSelected());
             }
         };
     }
@@ -605,11 +637,21 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
 
     public float filterValue()
     {
-        if (!filterCheckBox.isSelected())
+        if (!filterValueCheckBox.isSelected())
         {
             return -1.0f;
         }
 
-        return filterField.getValue();
+        return filterValueField.getValue();
+    }
+
+    public float filterIQR()
+    {
+        if (!filterIQRCheckBox.isSelected())
+        {
+            return -1.0f;
+        }
+
+        return filterIQRField.getValue();
     }
 }

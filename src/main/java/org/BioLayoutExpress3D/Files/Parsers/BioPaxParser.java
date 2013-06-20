@@ -14,9 +14,11 @@ import org.BioLayoutExpress3D.Network.*;
 import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup1;
 import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup2;
 import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup3;
+import org.biopax.paxtools.converter.LevelUpgrader;
 import org.biopax.paxtools.io.BioPAXIOHandler;
 import org.biopax.paxtools.io.SimpleIOHandler;
 import org.biopax.paxtools.model.BioPAXElement;
+import org.biopax.paxtools.model.BioPAXLevel;
 import org.biopax.paxtools.model.Model;
 import org.biopax.paxtools.model.level3.Complex;
 import org.biopax.paxtools.model.level3.Control;
@@ -49,12 +51,18 @@ public final class BioPAXParser extends CoreParser
 {
     private static final Logger logger = Logger.getLogger(BioPAXParser.class.getName());
     
+    /**
+     * Multiplier to resize nodes to accommodate mEPN glyphs in a network graph.
+     */
+    public static final double NODE_RESIZE_FACTOR = 0.5d;
+    
     private BioPAXIOHandler handler;
     private HashMap<Entity, Vertex> entityVertexMap = null; //created during parsing
 
     public BioPAXParser(NetworkContainer nc, LayoutFrame layoutFrame)
     {
         super(nc, layoutFrame);
+        layoutFrame.setNodeResizeFactor(NODE_RESIZE_FACTOR); //mEPN glyphs are too big for network graph, resize proportionally
     }
 
     /**
@@ -87,8 +95,6 @@ public final class BioPAXParser extends CoreParser
 
         try
         {
-            //nc.addNetworkConnection("testfrom", "testto", "testedge", false, false, false);
-
             int progressCounter = 0;
             layoutProgressBarDialog.prepareProgressBar(2, "Parsing " + file.getName());
             layoutProgressBarDialog.startProgressBar();
@@ -97,26 +103,22 @@ public final class BioPAXParser extends CoreParser
             //int edgeCounter = 1;
             Model model = handler.convertFromOWL(new FileInputStream(file)); //construct object model from OWL file
             
-            //TODO query BioPAX level
-            //convert to level 3 or deal with level 2 modelEntitySet separately?
+            //Query BioPAX level and upgrade if lbelow level 3
+            BioPAXLevel level = model.getLevel();
+            switch(level)
+            {
+                case L2:
+                case L1:
+                    LevelUpgrader upgrader = new LevelUpgrader();
+                    model = upgrader.filter(model); //replace Level 1 or 2 model with Level 3 model
+                    break;
+            }
             
-            //level 3
-            Set<Entity> modelEntitySet = model.getObjects(Entity.class);
+            Set<Entity> modelEntitySet = model.getObjects(Entity.class); //get all Entities in the model
            
             //create a graph node for each entity
             
             logger.info(modelEntitySet.size() + " Entities parsed from " + file.getName());
-            /*
-            Vertex testVertex = new Vertex("TESTVERTEX", nc);
-            nc.getVerticesMap().put("TESTVERTEX", testVertex);
-            
-            Vertex testVertex2 = new Vertex("TESTVERTEX2", nc);
-            nc.getVerticesMap().put("TESTVERTEX2", testVertex2);
-            
-            Edge testEdge = new Edge(testVertex, testVertex2, 0.0f);
-            nc.getEdges().add(testEdge);
-            */
-//        Map<String, Tuple7> interactionNameMap = new HashMap<String, Tuple7>();
 
             entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
             for(Entity entity: modelEntitySet)
@@ -129,7 +131,7 @@ public final class BioPAXParser extends CoreParser
                 logger.info("Entity Xrefs: " + xrefs);
                 
                 Vertex vertex;
-                String vertexName = entity.getRDFId() + ":" + entity.getDisplayName();
+                String vertexName = entity.getRDFId() + ";" + entity.getDisplayName();
                 //vertexName = (entity.getDisplayName() != null ? entity.getDisplayName() : xrefs);
                 //messageColor = (color != null ? color : messageColor);
                 vertex = new Vertex(vertexName, nc);
@@ -157,12 +159,7 @@ public final class BioPAXParser extends CoreParser
                 nc.getVerticesMap().put(vertex.getVertexName(), vertex);
                 
                 entityVertexMap.put(entity, vertex);
-                
-               
-                
             }
-            
-            
             
             /*
              * Connect all entity and participant vertices
@@ -175,6 +172,8 @@ public final class BioPAXParser extends CoreParser
              *      get participant's Vertex
              *      connect to entity Vertex
              */
+            
+            //TODO Edge directionality
             
             Set<Entity> graphEntitySet = entityVertexMap.keySet();
             logger.info("Entity Set has " + graphEntitySet.size() + " Entities");
@@ -207,8 +206,23 @@ public final class BioPAXParser extends CoreParser
                     //TODO pathway steps: label edges?
                 }
                 
+                //memberPhysicalEntity - defines generic groups of PhysicalEntity - legacy but used by Reactome
+                if(entity instanceof PhysicalEntity)
+                {
+                    PhysicalEntity physicalEntity = (PhysicalEntity)entity;
+                    Set<PhysicalEntity> members = physicalEntity.getMemberPhysicalEntity();
+                    logger.info("Physical entity has " + members.size() + " members");
+                    for(PhysicalEntity member: members)
+                    {
+                        this.connectEntityVertices(physicalEntity, member, 0.0f);
+                    }
+                }
+                
+                //TODO EntityReference
+                
                 Set<Interaction> interactionSet = entity.getParticipantOf();
                 
+                //TEST
                 logger.info("Entity " + entity.getRDFId() + " participates in " + interactionSet.size() + " Interactions");
                 if(interactionSet.size() > 0)
                 {
@@ -218,7 +232,6 @@ public final class BioPAXParser extends CoreParser
                 for(Interaction interaction: interactionSet)
                 {
                     this.connectEntityVertices(entity, interaction, 0.0f);
-                    
                 }
             }
             
@@ -281,14 +294,7 @@ public final class BioPAXParser extends CoreParser
      */
     private static Tuple7 lookupInteractionShape(Interaction interaction)
     {
-        //String className = interaction.getClass().getSimpleName();
-        Tuple7 shape;// = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get(className); //node shape assigned according to interaction type
-        /*
-        if(shape == null)
-        {
-            shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Interaction");  //generic Interaction                                      
-        }
-*/
+        Tuple7 shape;
         if(interaction instanceof TemplateReaction)
          {
              shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TemplateReaction");                                        
@@ -330,14 +336,6 @@ public final class BioPAXParser extends CoreParser
      */
     private static Tuple6 lookupEntityShape(Entity entity)
     {
-        //String className = entity.getClass().getSimpleName();
-        //Tuple6 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get(className); //node shape assigned according to entity type
-        /*
-        if(shape == null)
-         {
-             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("SimplePhysicalEntity"); //default generic entity                      
-         }
-*/
         Tuple6 shape;
         if(entity instanceof PhysicalEntity)
         {
@@ -367,10 +365,6 @@ public final class BioPAXParser extends CoreParser
             else if(entity instanceof RnaRegion)
             {
                 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("RnaRegion");                        
-            }
-            else if(entity instanceof SimplePhysicalEntity)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("SimplePhysicalEntity");                        
             }
             else if(entity instanceof SmallMolecule)
             {

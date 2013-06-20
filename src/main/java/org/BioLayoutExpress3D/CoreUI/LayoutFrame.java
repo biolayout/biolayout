@@ -126,6 +126,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
     private ArrayList<Integer> allExitMessageIndices = null;
     private boolean navigationWizardShownOnce = false;
+    
+    /**
+     * Multiplier to adjust resizing of nodes in resizeNodesAndArrowHeadsToKvalue()
+     */
+    private double nodeResizeFactor = 0;
 
     /**
     *  The constructor of LayoutFrame.
@@ -1777,18 +1782,38 @@ public final class LayoutFrame extends JFrame implements GraphListener
     {
         double nodesToKValueRatio = nc.getKValue() / REFERENCE_K_VALUE;
         double arrowheadsToKValueRatio = nc.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
-
+        
         int newNodeSize = 0;
         for ( Vertex vertex : nc.getVertices() )
         {
-            newNodeSize = (int)( nodesToKValueRatio * vertex.getVertexSize() );
+            newNodeSize = (int)( nodesToKValueRatio * vertex.getVertexSize() * this.nodeResizeFactor);
             if (newNodeSize < MIN_NODE_SIZE) newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
             vertex.setVertexSize(newNodeSize);
         }
-
+        
         arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ( (arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio );
         ARROW_HEAD_SIZE.set( (int)arrowheadsToKValueRatio );
     }
+    
+    /**
+     * Adjusts size of all vertices proportionally using a multiplier.
+     * @param nodeResizeFactor - multiplier value
+     */
+    /*
+    public void resizeNodes(double nodeResizeFactor)
+    {
+        int newNodeSize = 0;
+        for ( Vertex vertex : nc.getVertices() )
+        {
+            newNodeSize = (int)(nodeResizeFactor * vertex.getVertexSize() );
+            if (newNodeSize < MIN_NODE_SIZE)
+            {
+                newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
+            }
+            vertex.setVertexSize(newNodeSize);
+        }
+    }
+    * */
 
     /**
     *  Clears any previously loaded network.
@@ -2149,5 +2174,22 @@ public final class LayoutFrame extends JFrame implements GraphListener
         setEnabledAllToolBars(true);
     }
 
+    /**
+     * Gets multiplier by which to resize nodes.
+     * @return multiplier by which to resize nodes
+     */
+    public double getNodeResizeFactor() 
+    {
+        return nodeResizeFactor;
+    }
+
+    /**
+     * Sets multiplier by which to resize nodes.
+     * @param nodeResizeFactor - multiplier by which to resize nodes
+     */
+    public void setNodeResizeFactor(double nodeResizeFactor) 
+    {
+        this.nodeResizeFactor = nodeResizeFactor;
+    }
 
 }

@@ -12,6 +12,11 @@ import static org.BioLayoutExpress3D.Expression.Panels.ExpressionGraphPanel.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.jfree.chart.*;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.data.category.*;
+import org.jfree.chart.axis.*;
+import org.jfree.chart.plot.*;
 
 /**
 *
@@ -48,7 +53,6 @@ public final class GraphPopupComponent implements Runnable
 
     private JPopupMenu popupMenu = null;
     private JMenuItem popupMenuItem = null;
-    private ExpressionGraphSimplePlotPanel expressionGraphSimplePlotPanel = null;
     private SimulationResultsSimplePlotPanel simulationResultsSimplePlotPanel = null;
 
     public GraphPopupComponent()
@@ -98,6 +102,44 @@ public final class GraphPopupComponent implements Runnable
         transformType = ExpressionEnvironment.TransformType.values()[PLOT_TRANSFORM.get()];
     }
 
+    private JPanel createExpressionPlot()
+    {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+        int totalColumns = expressionData.getTotalColumns();
+        Integer index = expressionData.getIdentityMap(graphNode.getNodeName());
+
+        if ((totalColumns == 0) || (index == null))
+        {
+            return null;
+        }
+
+        expressionData.setTransformType(transformType);
+        float[] transformedData = expressionData.getTransformedRow(index);
+
+        for (int column = 0; column < totalColumns; column++)
+        {
+            String columnName = expressionData.getColumnName(column);
+            dataset.addValue(transformedData[column], "Value", columnName);
+        }
+
+        JFreeChart expressionGraphJFreeChart = ChartFactory.createLineChart(
+                null, null, null, dataset,
+                PlotOrientation.VERTICAL, false, false, false);
+
+        CategoryPlot plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+        plot.getRenderer().setSeriesPaint(0, graphNode.getColor());
+
+        CategoryAxis axis = plot.getDomainAxis();
+        axis.setLowerMargin(0.0);
+        axis.setUpperMargin(0.0);
+        axis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_90);
+
+        ChartPanel chartPanel = new ChartPanel(expressionGraphJFreeChart);
+
+        return chartPanel;
+    }
+
     @Override
     /**
     *  Overrides the run() method.
@@ -111,15 +153,20 @@ public final class GraphPopupComponent implements Runnable
                 if ( SHOW_POPUP_OVERLAY_PLOT.get() && DATA_TYPE.equals(DataTypes.EXPRESSION) &&
                         !expressionData.isTransposed() )
                 {
-                    initPopupMenuItem("Node Name & Expression Profile:   " + popupNodeName);
-                    expressionGraphSimplePlotPanel = new ExpressionGraphSimplePlotPanel(true);
-                    expressionGraphSimplePlotPanel.setPreferredSize( new Dimension(APPLICATION_SCREEN_DIMENSION.width / 3, APPLICATION_SCREEN_DIMENSION.height / 3) );
+                    initPopupMenuItem("Node Name & Expression Profile: " + popupNodeName);
                     popupMenu.add(popupMenuItem, BorderLayout.NORTH);
-                    popupMenu.add(expressionGraphSimplePlotPanel, BorderLayout.CENTER);
+                    JPanel plot = createExpressionPlot();
+
+                    if (plot != null)
+                    {
+                        plot.setPreferredSize(new Dimension(APPLICATION_SCREEN_DIMENSION.width / 3,
+                            APPLICATION_SCREEN_DIMENSION.height / 3));
+                        popupMenu.add(plot, BorderLayout.CENTER);
+                    }
                 }
                 else if ( SHOW_POPUP_OVERLAY_PLOT.get() && isPetriNet && !graphNode.ismEPNTransition() && (ANIMATION_SIMULATION_RESULTS != null) )
                 {
-                    initPopupMenuItem("Node Name & Simulation Profile:   " + popupNodeName);
+                    initPopupMenuItem("Node Name & Simulation Profile: " + popupNodeName);
                     simulationResultsSimplePlotPanel = new SimulationResultsSimplePlotPanel(true);
                     simulationResultsSimplePlotPanel.setPreferredSize( new Dimension(APPLICATION_SCREEN_DIMENSION.width / 3, APPLICATION_SCREEN_DIMENSION.height / 3) );
                     popupMenu.add(popupMenuItem, BorderLayout.NORTH);
@@ -154,230 +201,6 @@ public final class GraphPopupComponent implements Runnable
     public boolean isPopupMenuVisible()
     {
         return popupMenu.isVisible();
-    }
-
-    /**
-    *  The ExpressionGraphSimplePlotPanel inner class.
-    */
-    private class ExpressionGraphSimplePlotPanel extends JPanel
-    {
-
-        /**
-        *  Serial version UID variable for the ExpressionGraphSimplePlotPanel class.
-        */
-        public static final long serialVersionUID = 111222333444525799L;
-
-        /**
-        *  The constructor of the ExpressionGraphSimplePlotPanel inner class.
-        */
-        public ExpressionGraphSimplePlotPanel(boolean isDoubleBuffered)
-        {
-            super(isDoubleBuffered);
-        }
-
-        /**
-        *  Overrides the paintComponent() method.
-        */
-        @Override
-        public void paintComponent(Graphics g)
-        {
-            // render the parentComponent background
-            super.paintComponent(g);
-
-            int totalColumns = expressionData.getTotalColumns();
-            Integer index = expressionData.getIdentityMap( graphNode.getNodeName() );
-
-            // don't render anything if no expression or index number, besides the parentComponent background (above)
-            if ( (totalColumns == 0) || (index == null) ) return;
-
-            Graphics2D g2d = (Graphics2D)g;
-            AffineTransform origTransform = g2d.getTransform(); // save original affine transform
-            RenderingHints currentRenderingHints = g2d.getRenderingHints();  // save original rendering hints
-            org.BioLayoutExpress3D.StaticLibraries.ImageProducer.qualityRendering(g2d);
-            // trick to force bigger distances between the Y axis legends
-            Font prevFont = g2d.getFont();
-            g2d.setFont( prevFont.deriveFont(AXIS_FONT_STYLE, VALUES_FONT_SIZE) );
-            g2d.setStroke(AXES_BASIC_STROKE);
-            g2d.setColor(DESCRIPTIONS_COLOR);
-
-            double maxStringWidth = Double.MIN_VALUE;
-            double maxStringHeight = Double.MIN_VALUE;
-            Rectangle2D rectangle2D = null;
-            String columnName = "";
-            for (int j = 0; j < totalColumns; j++)
-            {
-                columnName = expressionData.getColumnName(j);
-
-                if (columnName.length() > EXPRESSION_PLOT_X_AXIS_NAMES_LENGTH_THRESHOLD)
-                    columnName = columnName.substring(0, EXPRESSION_PLOT_X_AXIS_NAMES_LENGTH_THRESHOLD) + NAME_TAIL;
-
-                rectangle2D = g2d.getFontMetrics( g2d.getFont() ).getStringBounds(columnName, g2d);
-
-                if (rectangle2D.getWidth() > maxStringWidth)
-                    maxStringWidth = rectangle2D.getWidth();
-
-                if (rectangle2D.getHeight() > maxStringHeight)
-                    maxStringHeight = rectangle2D.getHeight();
-            }
-
-            g2d.setStroke(THIN_BASIC_STROKE);
-            g2d.setFont(prevFont);
-
-            int padY = (int)maxStringWidth + popupMenuItem.getHeight();
-            double width = this.getSize().getWidth() - PAD_X;
-            double height = this.getSize().getHeight();
-            double columnWidth = width / totalColumns;
-
-            int plotRectangleWidth = (int)( ( width / totalColumns ) * (totalColumns - 1) ) + 2;
-            g2d.setStroke(THIN_BASIC_STROKE);
-            g2d.setColor( PLOT_BACKGROUND_COLOR.get() );
-            g2d.fill3DRect(PAD_X, 0, plotRectangleWidth, (int)(height - padY), true);
-            g2d.setColor(DESCRIPTIONS_COLOR);
-            g2d.drawRect( PAD_X, 0, plotRectangleWidth, (int)(height - padY) );
-
-            expressionData.setTransformType(transformType);
-            float[] transformedData = expressionData.getTransformedRow(index);
-
-            double value = transformedData[0];
-            double max = value;
-            double min = value;
-            for (int j = 1; j < totalColumns; j++)
-            {
-                value = transformedData[j];
-
-                if (value > max)
-                    max = value;
-
-                if (value < min)
-                    min = value;
-            }
-
-            double yScale = (height - padY) / (max - min);
-
-            index = expressionData.getIdentityMap( graphNode.getNodeName() );
-            Color nodeColor = graphNode.getColor();
-            g2d.setColor(nodeColor);
-
-            double currentX = 0.0;
-            double nextX = 0.0;
-            double thisY = 0.0;
-            double nextY = 0.0;
-            g2d.setStroke(THICK_BASIC_STROKE);
-            for (int j = 0; j < totalColumns - 1; j++)
-            {
-                currentX = (j * columnWidth) + PAD_X;
-                nextX = ( (j + 1) * columnWidth ) + PAD_X;
-                thisY = transformedData[j] - min;
-                nextY = transformedData[j + 1] - min;
-
-                thisY *= yScale;
-                nextY *= yScale;
-
-                g2d.drawLine( (int)currentX, (int)(height - padY - thisY), (int)nextX, (int)(height - padY - nextY) );
-            }
-
-            if (drawAxesLegend)
-            {
-                g2d.setFont( prevFont.deriveFont(AXIS_FONT_STYLE, AXIS_FONT_SIZE) );
-
-                double maxAxesLegendStringWidth = 0.0;
-                double maxAxesLegendStringHeight = 0.0;
-                rectangle2D = g2d.getFontMetrics( g2d.getFont() ).getStringBounds(EXPRESSION_X_AXIS_LABEL, g2d);
-                if (rectangle2D.getWidth() > maxAxesLegendStringWidth)
-                    maxAxesLegendStringWidth = rectangle2D.getWidth();
-                if (rectangle2D.getHeight() > maxAxesLegendStringHeight)
-                    maxAxesLegendStringHeight = rectangle2D.getHeight();
-
-                rectangle2D = g2d.getFontMetrics( g2d.getFont() ).getStringBounds(EXPRESSION_Y_AXIS_LABEL, g2d);
-                if (rectangle2D.getWidth() > maxAxesLegendStringWidth)
-                    maxAxesLegendStringWidth = rectangle2D.getWidth();
-                if (rectangle2D.getHeight() > maxAxesLegendStringHeight)
-                    maxAxesLegendStringHeight = rectangle2D.getHeight();
-
-                g2d.setStroke(AXES_BASIC_STROKE);
-                g2d.setColor(DESCRIPTIONS_COLOR);
-
-                // draw rectangle
-                int[] lineCoords = { PAD_X + plotRectangleWidth - (int)maxAxesLegendStringWidth - 2 * PAD_BORDER, PAD_BORDER, PAD_X + plotRectangleWidth - PAD_BORDER, (int)(2 * maxAxesLegendStringHeight + 2.5 * PAD_BORDER) };
-                g2d.drawLine(lineCoords[0], lineCoords[1], lineCoords[2], lineCoords[1]);
-                g2d.drawLine(lineCoords[0], lineCoords[1], lineCoords[0], lineCoords[3]);
-                g2d.drawLine(lineCoords[0], lineCoords[3], lineCoords[2], lineCoords[3]);
-                g2d.drawLine(lineCoords[2], lineCoords[3], lineCoords[2], lineCoords[1]);
-
-                // draw axes legend
-                g2d.drawString(EXPRESSION_X_AXIS_LABEL, PAD_X + plotRectangleWidth - (int)(maxAxesLegendStringWidth + 1.5 * PAD_BORDER) - 1, (int)(maxAxesLegendStringHeight + 1.5 * PAD_BORDER) - 2);
-                g2d.drawString(EXPRESSION_Y_AXIS_LABEL, PAD_X + plotRectangleWidth - (int)(maxAxesLegendStringWidth + 1.5 * PAD_BORDER) - 1, (int)(2 * maxAxesLegendStringHeight + 2.0 * PAD_BORDER) - 2);
-
-                g2d.setStroke(THIN_BASIC_STROKE);
-                g2d.setFont(prevFont);
-            }
-
-            g2d.setStroke(THIN_BASIC_STROKE);
-            g2d.setColor(DESCRIPTIONS_COLOR);
-            int tickY = 0;
-            double tickHeight = ( (max - min) / Y_TICKS ) * yScale;
-            Double result = 0.0;
-            String label = "";
-            for (int ticks = 0; ticks < Y_TICKS; ticks++)
-            {
-                tickY = (int)(ticks * tickHeight);
-                if (transformType == ExpressionEnvironment.TransformType.LOG_SCALE)
-                {
-                    result = pow(E, (double) ticks * tickHeight / yScale);
-                }
-                else
-                {
-                    result = ((double) ticks * tickHeight / yScale) + min;
-                }
-                label = " " + ( ( !result.equals(Double.NaN) ) ? Utils.numberFormatting(result, 1) : "" );
-
-                g2d.drawLine( PAD_X, (int)(height - padY - tickY), PAD_X + PAD_BORDER, (int)(height - padY - tickY) );
-                g2d.drawString( label, 0, (int)(height - padY - tickY) );
-            }
-
-            if ( drawGridLines && (min < 0.0) )
-            {
-                g2d.setColor(GRID_LINES_COLOR);
-                g2d.drawLine( PAD_X, (int)(max * yScale), (int)width, (int)(max * yScale) );
-            }
-
-            // add rotation to original transform to preserve any previous transformations
-            AffineTransform addedRotation = new AffineTransform(origTransform);
-            addedRotation.rotate(PI / 2.0);
-            g2d.setTransform(addedRotation);
-
-            // for using a smaller font when samples too many
-            /*
-            if ( (totalColumns * maxStringHeight) > width )
-            {
-                Font currentFont = g2d.getFont();
-                int newFontSize = (int)floor( currentFont.getSize() / ( (totalColumns * maxStringHeight) / width ) );
-                g2d.setFont( currentFont.deriveFont(currentFont.getStyle(), newFontSize) );
-            }
-            */
-
-            int xTicks = totalColumns;
-            double tickWidth = width / (double)xTicks;
-            for (int ticks = 0; ticks < xTicks; ticks++)
-            {
-                g2d.setColor(DESCRIPTIONS_COLOR);
-                columnName = expressionData.getColumnName(ticks);
-                if (columnName.length() > EXPRESSION_PLOT_X_AXIS_NAMES_LENGTH_THRESHOLD)
-                    columnName = columnName.substring(0, EXPRESSION_PLOT_X_AXIS_NAMES_LENGTH_THRESHOLD) + NAME_TAIL;
-                g2d.drawString( columnName, (int)(height - padY + PAD_BORDER), -(int)( PAD_X + (ticks * tickWidth) ) );
-
-                if (drawGridLines)
-                {
-                    g2d.setColor(GRID_LINES_COLOR);
-                    g2d.drawLine( (int)(height - padY), -(int)( PAD_X + (ticks * tickWidth) ), 0, -(int)( PAD_X + (ticks * tickWidth) ) );
-                }
-            }
-
-            g2d.setTransform(origTransform); // restore original affine transform
-            g2d.setRenderingHints(currentRenderingHints); // restore original rendering hints
-        }
-
-
     }
 
      /**

@@ -123,9 +123,9 @@ public final class ClassViewerTable extends JTable
 
         for (int row = 0; row < getRowCount(); row++)
         {
-            boolean selected = (Boolean)getValueAt(row, 0);
+            Boolean selected = (Boolean)getValueAt(row, 0);
 
-            if (selected)
+            if (selected != null && selected.booleanValue())
             {
                 selectedRows.add(row);
             }

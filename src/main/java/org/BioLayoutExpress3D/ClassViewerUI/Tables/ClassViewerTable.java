@@ -123,9 +123,9 @@ public final class ClassViewerTable extends JTable
 
         for (int row = 0; row < getRowCount(); row++)
         {
-            boolean selected = (Boolean)getValueAt(row, 0);
+            Boolean selected = (Boolean)getValueAt(row, 0);
 
-            if (selected)
+            if (selected != null && selected.booleanValue())
             {
                 selectedRows.add(row);
             }
@@ -138,7 +138,7 @@ public final class ClassViewerTable extends JTable
         }
     }
 
-    private boolean updateResetSelectDeselectAllButton;
+    private boolean updateResetSelectDeselectAllButton = true;
 
     public void setUpdateResetSelectDeselectAllButton(boolean updateResetSelectDeselectAllButton)
     {
@@ -185,7 +185,7 @@ public final class ClassViewerTable extends JTable
             {
                 boolean newState = isRowSelected(row);
 
-                if ((Boolean)getValueAt(row, 0) != isRowSelected(row))
+                if (row < getRowCount() && (Boolean)getValueAt(row, 0) != isRowSelected(row))
                 {
                     // FIXME Doing this per row is definitely not the most
                     // efficient way, but the selection system is so convoluted

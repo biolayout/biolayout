@@ -851,6 +851,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if (!layoutFrame.getExpressionData().isTransposed())
             {
                 expressionGraphPanel.setVisible(true);
+                expressionGraphPanel.refreshPlot();
                 expressionGraphPanel.repaint();
                 generalTable.repaint();
             }

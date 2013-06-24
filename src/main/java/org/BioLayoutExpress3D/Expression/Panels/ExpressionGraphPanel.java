@@ -29,7 +29,12 @@ import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
+import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
+import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
+import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
+import org.jfree.util.ShapeUtilities;
 
 /**
 *
@@ -71,8 +76,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JPanel expressionGraphCheckBoxesPanel = null;
 
     private JCheckBox gridLinesCheckBox = null;
-    private JCheckBox classMeanCheckBox = null;
-    private JCheckBox selectionMeanCheckBox = null;
+    private JComboBox<String> classStatComboBox = null;
+    private JComboBox<String> selectionStatComboBox = null;
     private JCheckBox axesLegendCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
@@ -151,6 +156,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         renderAllCurrentClassSetPlotImagesToFilesAction.setEnabled(false);
     }
 
+    private enum StatisticType
+    {
+        None,
+        Mean,
+        Standard_Deviation,
+        IQR_Box_Plot
+    }
+
     /**
     *  This method is called from within the constructor to initialize the expression graph panel components.
     */
@@ -158,22 +171,34 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         gridLinesCheckBox = new JCheckBox("Grid Lines");
         gridLinesCheckBox.setToolTipText("Grid Lines");
-        classMeanCheckBox = new JCheckBox("Class Mean");
-        classMeanCheckBox.setToolTipText("Class Mean");
-        selectionMeanCheckBox = new JCheckBox("Selection Mean");
-        selectionMeanCheckBox.setToolTipText("Selection Mean");
         axesLegendCheckBox = new JCheckBox("Axes Legend");
         axesLegendCheckBox.setToolTipText("Axes Legend");
         exportPlotExpressionProfileAsButton = new JButton(exportPlotExpressionProfileAsAction);
         exportPlotExpressionProfileAsButton.setToolTipText("Export Plot Expression Profile As...");
         gridLinesCheckBox.addActionListener(this);
-        classMeanCheckBox.addActionListener(this);
-        selectionMeanCheckBox.addActionListener(this);
         axesLegendCheckBox.addActionListener(this);
         gridLinesCheckBox.setSelected( PLOT_GRID_LINES.get() );
-        classMeanCheckBox.setSelected( PLOT_CLASS_MEAN.get() );
-        selectionMeanCheckBox.setSelected( PLOT_SELECTION_MEAN.get() );
         axesLegendCheckBox.setSelected( PLOT_AXES_LEGEND.get() );
+
+        classStatComboBox = new JComboBox<String>();
+        for (StatisticType type : StatisticType.values())
+        {
+            String s = Utils.titleCaseOf(type.toString());
+            classStatComboBox.addItem(s);
+        }
+        classStatComboBox.setSelectedIndex(PLOT_CLASS_STATISTIC_TYPE.get());
+        classStatComboBox.setToolTipText("Class Statistic");
+        classStatComboBox.addActionListener(this);
+
+        selectionStatComboBox = new JComboBox<String>();
+        for (StatisticType type : StatisticType.values())
+        {
+            String s = Utils.titleCaseOf(type.toString());
+            selectionStatComboBox.addItem(s);
+        }
+        selectionStatComboBox.setSelectedIndex(PLOT_CLASS_STATISTIC_TYPE.get());
+        selectionStatComboBox.setToolTipText("Selection Statistic");
+        selectionStatComboBox.addActionListener(this);
 
         transformComboBox = new JComboBox<String>();
         for (ExpressionEnvironment.TransformType type : ExpressionEnvironment.TransformType.values())
@@ -189,9 +214,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         expressionGraphCheckBoxesPanel = new JPanel(true);
         expressionGraphCheckBoxesPanel.add(transformComboBox);
+        expressionGraphCheckBoxesPanel.add(classStatComboBox);
+        expressionGraphCheckBoxesPanel.add(selectionStatComboBox);
         expressionGraphCheckBoxesPanel.add(gridLinesCheckBox);
-        expressionGraphCheckBoxesPanel.add(classMeanCheckBox);
-        expressionGraphCheckBoxesPanel.add(selectionMeanCheckBox);
         expressionGraphCheckBoxesPanel.add(axesLegendCheckBox);
 
         expressionGraphPlotPanel = createExpressionPlot();
@@ -221,25 +246,110 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
     private CategoryPlot plot;
 
-    class MeanOfClassData
+    class RowData
     {
-        public MeanOfClassData(int columns, Color color)
+        public RowData(int columns, Color color)
         {
-            dataTotal = new float[columns];
-            rowCount = 0;
+            rows = new ArrayList<Integer>();
             classColor = color;
         }
 
-        public float[] dataTotal;
-        public int rowCount;
+        public ArrayList<Integer> rows;
         public Color classColor;
+    }
+
+    public int addStatisticalPlot(int datasetIndex, ArrayList<Integer> rows, Color color, String className,
+            StatisticType type)
+    {
+        float[] mean = expressionData.getMeanForRows(rows);
+        float[] stddev = expressionData.getStddevForRows(rows);
+
+        switch (type)
+        {
+            case None:
+                break;
+
+            case Mean:
+            {
+                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                for (int column = 0; column < mean.length; column++)
+                {
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.addValue(mean[column], className, columnName);
+                }
+
+                plot.setDataset(datasetIndex, dataset);
+                DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
+                r.setSeriesPaint(0, color);
+                r.setSeriesShapesVisible(0, false);
+                r.setSeriesStroke(0, new BasicStroke(1.0f, 1, 1, 1.0f, new float[]
+                        {
+                            5.0f, 2.0f
+                        }, 0.0f));
+                plot.setRenderer(datasetIndex, r);
+                datasetIndex++;
+            }
+            break;
+
+            case Standard_Deviation:
+            {
+                DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
+                for (int column = 0; column < mean.length; column++)
+                {
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.add(mean[column], stddev[column], className, columnName);
+                }
+
+                plot.setDataset(datasetIndex, dataset);
+                StatisticalLineAndShapeRenderer r = new StatisticalLineAndShapeRenderer(false, true);
+                r.setSeriesPaint(0, color);
+                r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+                plot.setRenderer(datasetIndex, r);
+                datasetIndex++;
+            }
+            break;
+
+            case IQR_Box_Plot:
+            {
+                DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
+
+                ArrayList<float[]> data = new ArrayList<float[]>();
+                for (int rowIndex : rows)
+                {
+                    data.add(expressionData.getTransformedRow(rowIndex));
+                }
+
+                for (int column = 0; column < mean.length; column++)
+                {
+                    ArrayList<Double> values = new ArrayList<Double>();
+                    for (float[] row : data)
+                    {
+                        values.add((double) row[column]);
+                    }
+
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.add(values, className, columnName);
+                }
+
+                plot.setDataset(datasetIndex, dataset);
+                BoxAndWhiskerRenderer r = new BoxAndWhiskerRenderer();
+                r.setSeriesPaint(0, color);
+                r.setMeanVisible(false);
+                r.setMedianVisible(true);
+                plot.setRenderer(datasetIndex, r);
+                datasetIndex++;
+            }
+            break;
+        }
+
+        return datasetIndex;
     }
 
     public void refreshPlot()
     {
         boolean drawGridLines = PLOT_GRID_LINES.get();
-        boolean drawMeanOfClass = PLOT_CLASS_MEAN.get();
-        boolean drawMeanOfSelection = PLOT_SELECTION_MEAN.get();
+        boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.None;
+        boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.None;
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
 
         HashSet<GraphNode> expandedSelectedNodes =
@@ -256,13 +366,13 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             expressionData.setTransformType(transformType);
 
             // Mean of selection
-            float[] meanOfSelection = new float[totalColumns];
+            RowData meanOfSelection = new RowData(totalColumns, new Color(0));
             int meanR = 0;
             int meanG = 0;
             int meanB = 0;
 
             // Mean of class
-            HashMap<VertexClass, MeanOfClassData> meanOfClassMap = new HashMap<VertexClass, MeanOfClassData>();
+            HashMap<VertexClass, RowData> meanOfClassMap = new HashMap<VertexClass, RowData>();
 
             for (GraphNode graphNode : expandedSelectedNodes)
             {
@@ -277,33 +387,26 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 Color nodeColor = graphNode.getColor();
                 VertexClass nodeClass = graphNode.getVertexClass();
 
-                if (drawMeanOfSelection)
+                if (drawStatsOfSelection)
                 {
-                    for (int column = 0; column < totalColumns; column++)
-                    {
-                        meanOfSelection[column] += (transformedData[column] / numSelectedNodes);
-                    }
+                    meanOfSelection.rows.add(index);
                     meanR += nodeColor.getRed();
                     meanG += nodeColor.getGreen();
                     meanB += nodeColor.getBlue();
                 }
 
-                if (drawMeanOfClass)
+                if (drawStatsOfClass)
                 {
                     if (!meanOfClassMap.containsKey(nodeClass))
                     {
-                        meanOfClassMap.put(nodeClass, new MeanOfClassData(totalColumns, nodeColor));
+                        meanOfClassMap.put(nodeClass, new RowData(totalColumns, nodeColor));
                     }
 
-                    MeanOfClassData data = meanOfClassMap.get(nodeClass);
-                    for (int column = 0; column < totalColumns; column++)
-                    {
-                        data.dataTotal[column] += transformedData[column];
-                    }
-                    data.rowCount++;
+                    RowData data = meanOfClassMap.get(nodeClass);
+                    data.rows.add(index);
                 }
 
-                if (!drawMeanOfSelection && !drawMeanOfClass)
+                if (!drawStatsOfSelection && !drawStatsOfClass)
                 {
                     String nodeName = graphNode.getNodeName();
 
@@ -323,56 +426,24 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
             }
 
-            if (drawMeanOfSelection)
+            if (drawStatsOfSelection)
             {
-                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-                for (int column = 0; column < totalColumns; column++)
-                {
-                    String columnName = expressionData.getColumnName(column);
-                    dataset.addValue(meanOfSelection[column], "Mean", columnName);
-                }
+                Color color = new Color(meanR / numSelectedNodes, meanG / numSelectedNodes, meanB / numSelectedNodes);
 
-                plot.setDataset(datasetIndex, dataset);
-                DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
-                r.setSeriesPaint(0,
-                        new Color(
-                        meanR / numSelectedNodes,
-                        meanG / numSelectedNodes,
-                        meanB / numSelectedNodes));
-                r.setSeriesShapesVisible(0, false);
-                r.setSeriesStroke(0, new BasicStroke(2.0f, 1, 1, 1.0f, new float[]
-                        {
-                            20.0f, 3.0f
-                        }, 0.0f));
-                plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
+                datasetIndex = addStatisticalPlot(datasetIndex, meanOfSelection.rows, color, "Mean",
+                        StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()]);
             }
 
-            if (drawMeanOfClass)
+            if (drawStatsOfClass)
             {
-                for (Map.Entry<VertexClass, MeanOfClassData> entry : meanOfClassMap.entrySet())
+                for (Map.Entry<VertexClass, RowData> entry : meanOfClassMap.entrySet())
                 {
                     VertexClass vertexClass = entry.getKey();
-                    MeanOfClassData data = entry.getValue();
+                    RowData data = entry.getValue();
+                    Color color = entry.getValue().classColor;
 
-                    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-                    for (int column = 0; column < totalColumns; column++)
-                    {
-                        data.dataTotal[column] /= data.rowCount;
-                        String columnName = expressionData.getColumnName(column);
-                        dataset.addValue(data.dataTotal[column], vertexClass.getName(), columnName);
-                    }
-
-                    plot.setDataset(datasetIndex, dataset);
-                    DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
-                    r.setSeriesPaint(0, entry.getValue().classColor);
-                    r.setSeriesShapesVisible(0, false);
-                    r.setSeriesStroke(0, new BasicStroke(1.0f, 1, 1, 1.0f, new float[]
-                            {
-                                5.0f, 2.0f
-                            }, 0.0f));
-                    plot.setRenderer(datasetIndex, r);
-                    datasetIndex++;
+                    datasetIndex = addStatisticalPlot(datasetIndex, data.rows, color,  vertexClass.getName(),
+                        StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()]);
                 }
             }
         }
@@ -669,13 +740,13 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         {
             PLOT_GRID_LINES.set(gridLinesCheckBox.isSelected());
         }
-        else if (e.getSource().equals(classMeanCheckBox))
+        else if (e.getSource().equals(classStatComboBox))
         {
-            PLOT_CLASS_MEAN.set(classMeanCheckBox.isSelected());
+            PLOT_CLASS_STATISTIC_TYPE.set(classStatComboBox.getSelectedIndex());
         }
-        else if (e.getSource().equals(selectionMeanCheckBox))
+        else if (e.getSource().equals(selectionStatComboBox))
         {
-            PLOT_SELECTION_MEAN.set(selectionMeanCheckBox.isSelected());
+            PLOT_SELECTION_STATISTIC_TYPE.set(selectionStatComboBox.getSelectedIndex());
         }
         else if (e.getSource().equals(axesLegendCheckBox))
         {

@@ -73,7 +73,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JCheckBox gridLinesCheckBox = null;
     private JCheckBox classMeanCheckBox = null;
     private JCheckBox selectionMeanCheckBox = null;
-    private JCheckBox rescaleCheckBox = null;
     private JCheckBox axesLegendCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
@@ -163,8 +162,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         classMeanCheckBox.setToolTipText("Class Mean");
         selectionMeanCheckBox = new JCheckBox("Selection Mean");
         selectionMeanCheckBox.setToolTipText("Selection Mean");
-        rescaleCheckBox = new JCheckBox("Rescale");
-        rescaleCheckBox.setToolTipText("Rescale");
         axesLegendCheckBox = new JCheckBox("Axes Legend");
         axesLegendCheckBox.setToolTipText("Axes Legend");
         exportPlotExpressionProfileAsButton = new JButton(exportPlotExpressionProfileAsAction);
@@ -172,12 +169,10 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         gridLinesCheckBox.addActionListener(this);
         classMeanCheckBox.addActionListener(this);
         selectionMeanCheckBox.addActionListener(this);
-        rescaleCheckBox.addActionListener(this);
         axesLegendCheckBox.addActionListener(this);
         gridLinesCheckBox.setSelected( PLOT_GRID_LINES.get() );
         classMeanCheckBox.setSelected( PLOT_CLASS_MEAN.get() );
         selectionMeanCheckBox.setSelected( PLOT_SELECTION_MEAN.get() );
-        rescaleCheckBox.setSelected( PLOT_RESCALE.get() );
         axesLegendCheckBox.setSelected( PLOT_AXES_LEGEND.get() );
 
         transformComboBox = new JComboBox<String>();
@@ -197,7 +192,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         expressionGraphCheckBoxesPanel.add(gridLinesCheckBox);
         expressionGraphCheckBoxesPanel.add(classMeanCheckBox);
         expressionGraphCheckBoxesPanel.add(selectionMeanCheckBox);
-        expressionGraphCheckBoxesPanel.add(rescaleCheckBox);
         expressionGraphCheckBoxesPanel.add(axesLegendCheckBox);
 
         expressionGraphPlotPanel = createExpressionPlot();
@@ -246,14 +240,17 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         boolean drawGridLines = PLOT_GRID_LINES.get();
         boolean drawMeanOfClass = PLOT_CLASS_MEAN.get();
         boolean drawMeanOfSelection = PLOT_SELECTION_MEAN.get();
-        boolean drawRescale = PLOT_RESCALE.get();
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
 
+        HashSet<GraphNode> expandedSelectedNodes =
+                layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
+        int numSelectedNodes = expandedSelectedNodes.size();
+
         int totalColumns = expressionData.getTotalColumns();
+        int datasetIndex = 0;
 
-        if (totalColumns > 0)
+        if (numSelectedNodes > 0 && totalColumns > 0)
         {
-
             ExpressionEnvironment.TransformType transformType =
                     ExpressionEnvironment.TransformType.values()[PLOT_TRANSFORM.get()];
             expressionData.setTransformType(transformType);
@@ -267,10 +264,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             // Mean of class
             HashMap<VertexClass, MeanOfClassData> meanOfClassMap = new HashMap<VertexClass, MeanOfClassData>();
 
-            int datasetIndex = 0;
-            HashSet<GraphNode> expandedSelectedNodes =
-                    layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
-            int numSelectedNodes = expandedSelectedNodes.size();
             for (GraphNode graphNode : expandedSelectedNodes)
             {
                 Integer index = expressionData.getIdentityMap(graphNode.getNodeName());
@@ -347,6 +340,10 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         meanG / numSelectedNodes,
                         meanB / numSelectedNodes));
                 r.setSeriesShapesVisible(0, false);
+                r.setSeriesStroke(0, new BasicStroke(2.0f, 1, 1, 1.0f, new float[]
+                        {
+                            20.0f, 3.0f
+                        }, 0.0f));
                 plot.setRenderer(datasetIndex, r);
                 datasetIndex++;
             }
@@ -370,18 +367,22 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
                     r.setSeriesPaint(0, entry.getValue().classColor);
                     r.setSeriesShapesVisible(0, false);
+                    r.setSeriesStroke(0, new BasicStroke(1.0f, 1, 1, 1.0f, new float[]
+                            {
+                                5.0f, 2.0f
+                            }, 0.0f));
                     plot.setRenderer(datasetIndex, r);
                     datasetIndex++;
                 }
             }
+        }
 
-            // Remove any datasets that shouldn't be displayed any more
-            while (datasetIndex < plot.getDatasetCount())
-            {
-                plot.setDataset(datasetIndex, null);
-                plot.setRenderer(datasetIndex, null);
-                datasetIndex++;
-            }
+        // Remove any datasets that shouldn't be displayed any more
+        while (datasetIndex < plot.getDatasetCount())
+        {
+            plot.setDataset(datasetIndex, null);
+            plot.setRenderer(datasetIndex, null);
+            datasetIndex++;
         }
 
         if (drawAxesLegend)
@@ -394,6 +395,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             plot.getDomainAxis().setLabel(null);
             plot.getRangeAxis().setLabel(null);
         }
+
+        plot.setRangeGridlinesVisible(drawGridLines);
+        plot.setDomainGridlinesVisible(drawGridLines);
     }
 
     private ChartPanel createExpressionPlot()
@@ -672,10 +676,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         else if (e.getSource().equals(selectionMeanCheckBox))
         {
             PLOT_SELECTION_MEAN.set(selectionMeanCheckBox.isSelected());
-        }
-        else if (e.getSource().equals(rescaleCheckBox))
-        {
-            PLOT_RESCALE.set(rescaleCheckBox.isSelected());
         }
         else if (e.getSource().equals(axesLegendCheckBox))
         {

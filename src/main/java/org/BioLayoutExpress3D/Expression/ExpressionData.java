@@ -69,6 +69,7 @@ public final class ExpressionData
     private FloatBuffer expressionRanksBuffer = null;
     private float[] expressionRanksArray = null;
     private HashMap<String, Integer> identityMap = null;
+    private HashMap<String, Integer> columnNameMap = null;
     private int[][] countsArray = null;
     private boolean[] rowsToFilter = null;
     private int numFilteredRows = 0;
@@ -85,6 +86,7 @@ public final class ExpressionData
         this.layoutFrame = layoutFrame;
 
         identityMap = new HashMap<String, Integer>();
+        columnNameMap = new HashMap<String, Integer>();
     }
 
     /**
@@ -111,6 +113,7 @@ public final class ExpressionData
         rowsToFilter = new boolean[totalRows];
 
         identityMap.clear();
+        columnNameMap.clear();
         clearCounts();
     }
 
@@ -921,12 +924,27 @@ public final class ExpressionData
         return columnNamesArray[index];
     }
 
+    private String uniqueColumnName(String name)
+    {
+        String originalId = name;
+        int collisionAvoidanceSuffix = 1;
+        while (columnNameMap.containsKey(name))
+        {
+            name = originalId + "." + collisionAvoidanceSuffix;
+            collisionAvoidanceSuffix++;
+        }
+
+        return name;
+    }
+
     /**
     *  Sets a column name by a given index.
     */
     public void setColumnName(int index, String name)
     {
+        name = uniqueColumnName(name);
         columnNamesArray[index] = name;
+        columnNameMap.put(name, index);
     }
 
     /**

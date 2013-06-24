@@ -1081,6 +1081,97 @@ public final class ExpressionData
         return out;
     }
 
+    public float getTransformedExpressionDataValue(int i, int j)
+    {
+        float transformed[] = getTransformedRow(i);
+        return transformed[j];
+    }
+
+    public float[] getIQRForRows(List<Integer> rows)
+    {
+        float[] iqr = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            float[] values = new float[rows.size()];
+            for (int index = 0; index < rows.size(); index++)
+            {
+                values[index] = getTransformedExpressionDataValue(rows.get(index), column);
+            }
+
+            Arrays.sort(values);
+
+            int _25Column = (int) java.lang.Math.round(rows.size() * 0.25);
+            int _75Column = (int) java.lang.Math.round(rows.size() * 0.75);
+            iqr[column] = values[_75Column] - values[_25Column];
+        }
+
+        return iqr;
+    }
+
+    public float[] getMeanForRows(List<Integer> rows)
+    {
+        float[] mean = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            float rowSum = 0.0f;
+            for (int index = 0; index < rows.size(); index++)
+            {
+                rowSum += getTransformedExpressionDataValue(rows.get(index), column);
+            }
+
+            mean[column] = rowSum / rows.size();
+        }
+
+        return mean;
+    }
+
+    public float[] getVarianceForRows(List<Integer> rows, float[] mean)
+    {
+        float variance[] = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            float varianceSum = 0.0f;
+            float[] values = new float[rows.size()];
+            for (int index = 0; index < rows.size(); index++)
+            {
+                float x = getTransformedExpressionDataValue(rows.get(index), column);
+                varianceSum += ((x - mean[column]) * (x - mean[column]));
+            }
+            variance[column] = varianceSum / rows.size();
+        }
+
+        return variance;
+    }
+
+    public float[] getVarianceForRows(List<Integer> rows)
+    {
+        return getVarianceForRows(rows, getMeanForRows(rows));
+    }
+
+    public float[] getStddevForRows(List<Integer> rows)
+    {
+        float variance[] = getVarianceForRows(rows);
+        float stddev[] = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            stddev[column] = (float)sqrt(variance[column]);
+        }
+
+        return stddev;
+    }
+
+    public float[] getParetoForRows(List<Integer> rows)
+    {
+        float stddev[] = getStddevForRows(rows);
+        float pareto[] = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            stddev[column] = (float)sqrt(stddev[column]);
+        }
+
+        return pareto;
+    }
+
     interface IRescaleDelegate { public float f(float x); }
     class RescaleLog2 implements IRescaleDelegate
     {

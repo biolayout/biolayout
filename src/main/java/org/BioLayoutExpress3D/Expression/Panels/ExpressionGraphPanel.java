@@ -213,11 +213,19 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         JPanel expressionGraphUpperPartPanel = new JPanel(true);
 
         expressionGraphCheckBoxesPanel = new JPanel(true);
-        expressionGraphCheckBoxesPanel.add(transformComboBox);
-        expressionGraphCheckBoxesPanel.add(classStatComboBox);
-        expressionGraphCheckBoxesPanel.add(selectionStatComboBox);
-        expressionGraphCheckBoxesPanel.add(gridLinesCheckBox);
-        expressionGraphCheckBoxesPanel.add(axesLegendCheckBox);
+        JPanel plotOptionsLine1 = new JPanel();
+        JPanel plotOptionsLine2 = new JPanel();
+        plotOptionsLine1.add(new JLabel("Scaling:"));
+        plotOptionsLine1.add(transformComboBox);
+        plotOptionsLine1.add(gridLinesCheckBox);
+        plotOptionsLine1.add(axesLegendCheckBox);
+        plotOptionsLine2.add(new JLabel("Class Statistic:"));
+        plotOptionsLine2.add(classStatComboBox);
+        plotOptionsLine2.add(new JLabel("Selection Statistic:"));
+        plotOptionsLine2.add(selectionStatComboBox);
+        expressionGraphCheckBoxesPanel.setLayout(new BoxLayout(expressionGraphCheckBoxesPanel, BoxLayout.PAGE_AXIS));
+        expressionGraphCheckBoxesPanel.add(plotOptionsLine1);
+        expressionGraphCheckBoxesPanel.add(plotOptionsLine2);
 
         expressionGraphPlotPanel = createExpressionPlot();
         expressionChooseClassesToRenderPlotImagesFromDialog = new ExpressionChooseClassesToRenderPlotImagesFromDialog(jframe, layoutFrame, this);

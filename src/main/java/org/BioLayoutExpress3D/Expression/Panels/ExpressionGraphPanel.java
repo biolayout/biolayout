@@ -196,7 +196,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             String s = Utils.titleCaseOf(type.toString());
             selectionStatComboBox.addItem(s);
         }
-        selectionStatComboBox.setSelectedIndex(PLOT_CLASS_STATISTIC_TYPE.get());
+        selectionStatComboBox.setSelectedIndex(PLOT_SELECTION_STATISTIC_TYPE.get());
         selectionStatComboBox.setToolTipText("Selection Statistic");
         selectionStatComboBox.addActionListener(this);
 

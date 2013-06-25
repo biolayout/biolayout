@@ -59,7 +59,12 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
     @Override
     public Object getValueAt(int row, int col)
     {
-        return (getRowCount() == 0) ? null : data[row][col];
+        if (row >= getRowCount() || col >= getColumnCount())
+        {
+            return null;
+        }
+
+        return data[row][col];
     }
 
     @Override

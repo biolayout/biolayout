@@ -117,8 +117,13 @@ public final class ClassViewerTable extends JTable
         };
     }
 
-    private void synchroniseHighlightWithSelection()
+    public void synchroniseHighlightWithSelection()
     {
+        if (!highlightIsSelection)
+        {
+            return;
+        }
+
         ArrayList<Integer> selectedRows = new ArrayList<Integer>();
 
         for (int row = 0; row < getRowCount(); row++)
@@ -149,13 +154,8 @@ public final class ClassViewerTable extends JTable
 
     public void setHighlightIsSelection(boolean highlightIsSelection)
     {
-        if (highlightIsSelection)
-        {
-            // When we're turning highlight selection on, maintain the existing selection
-            synchroniseHighlightWithSelection();
-        }
-
         this.highlightIsSelection = highlightIsSelection;
+        synchroniseHighlightWithSelection();
     }
 
     /**
@@ -185,13 +185,17 @@ public final class ClassViewerTable extends JTable
             {
                 boolean newState = isRowSelected(row);
 
-                if (row < getRowCount() && (Boolean)getValueAt(row, 0) != isRowSelected(row))
+                if (row < getRowCount())
                 {
-                    // FIXME Doing this per row is definitely not the most
-                    // efficient way, but the selection system is so convoluted
-                    // that batching it all up is probably more effort than its
-                    // worth at the moment.
-                    setValueAt(newState, row, 0);
+                    Boolean value = (Boolean) getValueAt(row, 0);
+                    if (value != null && value != isRowSelected(row))
+                    {
+                        // FIXME Doing this per row is definitely not the most
+                        // efficient way, but the selection system is so convoluted
+                        // that batching it all up is probably more effort than its
+                        // worth at the moment.
+                        setValueAt(newState, row, 0);
+                    }
                 }
             }
         }

@@ -958,6 +958,28 @@ public final class ExpressionData
         return totalAnnotationColunms;
     }
 
+    public float getMaxValueForRow(int row)
+    {
+        float value = Float.MIN_VALUE;
+        for (int column = 0; column < totalColumns; column++)
+        {
+            value = java.lang.Math.max(value, getExpressionDataValue(row, column));
+        }
+
+        return value;
+    }
+
+    public float getMinValueForRow(int row)
+    {
+        float value = Float.MAX_VALUE;
+        for (int column = 0; column < totalColumns; column++)
+        {
+            value = java.lang.Math.min(value, getExpressionDataValue(row, column));
+        }
+
+        return value;
+    }
+
     private TransformType transformType;
     public void setTransformType(TransformType transformType)
     {

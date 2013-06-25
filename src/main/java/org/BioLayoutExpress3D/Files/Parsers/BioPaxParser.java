@@ -203,7 +203,7 @@ public final class BioPAXParser extends CoreParser
                     {
                         this.connectEntityVertices(pathway, process, 0.0f);
                     }
-                    //TODO pathway steps: label edges?
+                    //TODO PathwayStep
                 }
                 
                 //memberPhysicalEntity - defines generic groups of PhysicalEntity - legacy but used by Reactome
@@ -234,6 +234,8 @@ public final class BioPAXParser extends CoreParser
                     this.connectEntityVertices(entity, interaction, 0.0f);
                 }
             }
+            
+            //TODO check for entities with no edges - add self edge?
             
             logger.info(hasInteractionCount + " Entities have Interactions");
            

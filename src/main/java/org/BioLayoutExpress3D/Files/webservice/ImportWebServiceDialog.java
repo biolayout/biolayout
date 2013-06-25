@@ -4,6 +4,7 @@
  */
 package org.BioLayoutExpress3D.Files.webservice;
 
+import com.google.common.base.Joiner;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -21,6 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -47,6 +50,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JTextField organismField;
     private DefaultTableModel model; 
     private LayoutFrame frame;
+    private JRadioButton sifRadio, bioPAXRadio;
+    private List<SearchHit> searchHits;
+    
+    /**
+     * Name of directory where files are downloaded from the web service.
+     */
+    public static final String DIRECTORY = "import";
 
     public ImportWebServiceDialog(LayoutFrame frame, String myMessage, boolean modal) {
         
@@ -88,7 +98,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         });   	
         
         //search term label
-        JLabel searchLabel = new JLabel("Name", JLabel.RIGHT);
+        JLabel searchLabel = new JLabel("Keywords", JLabel.LEFT);
         searchLabel.setLabelFor(searchField);  
         
         fieldPanel.add(searchField);
@@ -107,15 +117,32 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         });   	
         
         //organism text field
-        JLabel organismLabel = new JLabel("Organism", JLabel.RIGHT);
+        JLabel organismLabel = new JLabel("Organism", JLabel.LEFT);
         organismLabel.setLabelFor(organismField);  
         
         fieldPanel.add(organismField);
         fieldPanel.add(organismLabel);
         
+        //web service format parameters - set as action command
+        String sifFormat = "BINARY_SIF";
+        String bioPAXFormat = "BIOPAX";
+        
+        sifRadio = new JRadioButton("SIF");
+        sifRadio.setActionCommand(sifFormat);
+        bioPAXRadio = new JRadioButton("BioPAX");
+        bioPAXRadio.setActionCommand(bioPAXFormat);
+        bioPAXRadio.setSelected(true); //default selection BioPAX
+        
+        final ButtonGroup downloadOptionGroup = new ButtonGroup();
+        downloadOptionGroup.add(bioPAXRadio);
+        downloadOptionGroup.add(sifRadio);
+
+        fieldPanel.add(bioPAXRadio);
+        fieldPanel.add(sifRadio);
+        
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
-        String[] colHeadings = {"Name", "Organism", "Database", "URI"};
+        String[] colHeadings = {"Name", "Organism", "Database"};
         int numRows = 0;
         
         model = new DefaultTableModel(numRows, colHeadings.length) {
@@ -145,14 +172,33 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     int column = target.getSelectedColumn();
                     logger.info("Mouse double clicked on table row " + row + " column " + column);
 
-                    String uriString = target.getModel().getValueAt(row, column).toString();
+                    SearchHit hit = searchHits.get(row); //get SearchHit that relates to values in table row
+                    String uriString = hit.getUri();
                     logger.info("URI is " + uriString);
+                    
+                    //download option - get format parameter from radio button actionPerformed
+                    JRadioButton formatRadio;
+                    String fileExtension;
+                    if(sifRadio.isSelected())
+                    {
+                        formatRadio = sifRadio;
+                        fileExtension = ".sif";
+                    }
+                    else
+                    {
+                        formatRadio = bioPAXRadio;
+                        fileExtension = ".owl";
+                    }
+                    String formatParameter = formatRadio.getActionCommand();
+                    
+                    String hitName = target.getModel().getValueAt(row, 0).toString(); //search hit name
+                    String fileName = hitName + fileExtension; //name of .owl or .sif file to be created
 
                     ClientRequest req = new ClientRequest(ImportWebService.CPATH2_ENDPOINT);
                     req
                         .pathParameter("command", "get")
                         .queryParameter("uri", uriString)
-                        .queryParameter("format", "BINARY_SIF"); //TEST - user to select
+                        .queryParameter("format", formatParameter);
                     try
                     {
                         ClientResponse<String> res = req.get(String.class);
@@ -160,18 +206,26 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         logger.info(res.getEntity());
                         logger.info("DataFolder: " + DataFolder.get());
                         
-                        //File testFile = new File("/Users/dwright8/Desktop/get.sif"); //TEST
-                        File testFile = new File(DataFolder.get(), "get.sif");
-                        logger.info("Writing to file " + testFile);
-                        FileUtils.writeStringToFile(testFile, responseString);
+                        //create directory to store downloaded file
+                        File importDir = new File(DataFolder.get(), DIRECTORY);
+                        if(!importDir.exists())
+                        {
+                            importDir.mkdir();
+                        }
+                        
+                        //create file and save web service data
+                        File importFile = new File(importDir, fileName);
+                        logger.info("Writing to file " + importFile);
+                        FileUtils.writeStringToFile(importFile, responseString);
 
-                        logger.info("Opening file " + testFile);
+                        //display file
+                        logger.info("Opening file " + importFile);
                         ImportWebServiceDialog.this.setVisible(false);
-                        localFrame.loadDataSet(testFile);
+                        localFrame.loadDataSet(importFile);
                     }
                     catch(Exception exception)
                     {
-                        logger.warning("Could not retrieve SIF from Pathway Commons CPath2");
+                        logger.warning("Could not retrieve " + fileName + " from Pathway Commons CPath2");
                         logger.warning(exception.getMessage());
                     }
                }
@@ -183,7 +237,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         setVisible(true);
     }
 
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(ActionEvent e) 
+    {
         if(searchButton == e.getSource()) {
             logger.info("User chose Search");
             
@@ -196,8 +251,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 .pathParameter("format", "xml")
                 .queryParameter("q", searchTerm)
                 .queryParameter("organism", organism)
-                .queryParameter("datasource", "reactome")
-                .queryParameter("type", "BiochemicalReaction");
+                .queryParameter("datasource", "reactome")  //TODO OPTION
+                .queryParameter("type", "Pathway"); //TODO OPTION
         
             try
             {
@@ -206,12 +261,27 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 
                 logger.info(searchResponse.getNumHits() + " search hits");
                 
-                List<SearchHit> searchHits = searchResponse.getSearchHit();
+                searchHits = searchResponse.getSearchHit();
                 
                 model.setRowCount(0); //clear previous search results
+                
                 for(SearchHit hit : searchHits)
                 {
-                    model.addRow(new Object[]{hit.getName(), hit.getOrganism(), hit.getDataSource(), hit.getUri()});  
+                    List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
+                    
+                    //extract organism ID for each organism URI
+                    String[] organismArray = organismList.toArray(new String[0]);
+                    for (int i = 0; i < organismArray.length; i++)
+                    {
+                        String organismString = organismArray[i];
+                        organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+                    }
+                    
+                    //display comma-separated list of organisms
+                    Joiner joiner = Joiner.on(',').skipNulls();
+                    String joinedOrganisms = joiner.join(organismArray);
+                    
+                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, hit.getDataSource()});  
                 }
             }
             catch(Exception exception)
@@ -222,8 +292,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         else if(cancelButton == e.getSource()) {
             logger.info("User cancelled.");
             setVisible(false);
-                                
-
         } 
     }
 }

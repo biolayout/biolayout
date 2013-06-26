@@ -13,7 +13,9 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
@@ -34,6 +36,7 @@ import org.BioLayoutExpress3D.Files.webservice.schema.SearchHit;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchResponse;
 import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.client.ClientRequest;
+import org.jboss.resteasy.client.ClientRequestFactory;
 import org.jboss.resteasy.client.ClientResponse;
 
 /**
@@ -42,6 +45,17 @@ import org.jboss.resteasy.client.ClientResponse;
  */
 public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private static final Logger logger = Logger.getLogger(ImportWebServiceDialog.class.getName());
+
+    //web service command parameters
+    public static final String FORMAT_SIF = "BINARY_SIF";
+    public static final String FORMAT_BIOPAX = "BIOPAX";
+
+    public static final String DATASOURCE_REACTOME = "reactome";
+    public static final String DATASOURCE_PID = "pid";
+    public static final String DATASOURCE_PHOSPHOSITEPLUS = "phosphosite"; //working???
+    public static final String DATASOURCE_HUMANCYC = "humancyc";
+    public static final String DATASOURCE_HPRD = "HPRD";//working???
+    public static final String DATASOURCE_PANTHER = "panther";
     
     private JPanel buttonPanel;
     private JButton searchButton;
@@ -52,6 +66,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private LayoutFrame frame;
     private JRadioButton sifRadio, bioPAXRadio;
     private List<SearchHit> searchHits;
+    private ClientRequestFactory factory;
+    
     
     /**
      * Name of directory where files are downloaded from the web service.
@@ -62,6 +78,22 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //construct search dialog
         super(frame, modal);
+        
+        factory = new ClientRequestFactory();
+        factory.setFollowRedirects(true);
+        
+        //TODO find redirect url of web service
+        //TODO remove limit of search hits
+            /*
+             URLConnection con = new URL( url ).openConnection();
+System.out.println( "orignal url: " + con.getURL() );
+con.connect();
+System.out.println( "connected url: " + con.getURL() );
+InputStream is = con.getInputStream();
+System.out.println( "redirected url: " + con.getURL() );
+is.close;
+             */
+        
         
         this.frame = frame;
         
@@ -123,14 +155,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(organismField);
         fieldPanel.add(organismLabel);
         
-        //web service format parameters - set as action command
-        String sifFormat = "BINARY_SIF";
-        String bioPAXFormat = "BIOPAX";
-        
+       
         sifRadio = new JRadioButton("SIF");
-        sifRadio.setActionCommand(sifFormat);
+        sifRadio.setActionCommand(FORMAT_SIF);
         bioPAXRadio = new JRadioButton("BioPAX");
-        bioPAXRadio.setActionCommand(bioPAXFormat);
+        bioPAXRadio.setActionCommand(FORMAT_BIOPAX);
         bioPAXRadio.setSelected(true); //default selection BioPAX
         
         final ButtonGroup downloadOptionGroup = new ButtonGroup();
@@ -194,7 +223,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     String hitName = target.getModel().getValueAt(row, 0).toString(); //search hit name
                     String fileName = hitName + fileExtension; //name of .owl or .sif file to be created
 
-                    ClientRequest req = new ClientRequest(ImportWebService.CPATH2_ENDPOINT);
+                    //ClientRequest req = new ClientRequest(ImportWebService.CPATH2_ENDPOINT);
+                    ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT);
                     req
                         .pathParameter("command", "get")
                         .queryParameter("uri", uriString)
@@ -242,7 +272,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         if(searchButton == e.getSource()) {
             logger.info("User chose Search");
             
-            ClientRequest req = new ClientRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
+            ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
+            
             String searchTerm = searchField.getText();
             String organism = organismField.getText();
             
@@ -251,7 +282,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 .pathParameter("format", "xml")
                 .queryParameter("q", searchTerm)
                 .queryParameter("organism", organism)
-                .queryParameter("datasource", "reactome")  //TODO OPTION
+                .queryParameter("datasource", DATASOURCE_REACTOME)  //TODO OPTION
                 .queryParameter("type", "Pathway"); //TODO OPTION
         
             try
@@ -264,6 +295,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 searchHits = searchResponse.getSearchHit();
                 
                 model.setRowCount(0); //clear previous search results
+                
+                Map<String, String> databaseDisplayNames = new HashMap<String, String>();
+                databaseDisplayNames.put("reactome", "Reactome");
+                databaseDisplayNames.put("pid", "NCI Nature");
+                databaseDisplayNames.put("psp", "PhosphoSitePlus");
+                databaseDisplayNames.put("humancyc", "HumanCyc");
+                databaseDisplayNames.put("hprd", "HPRD");
+                databaseDisplayNames.put("panther", "PANTHER");
+
+                Joiner joiner = Joiner.on(',').skipNulls();
                 
                 for(SearchHit hit : searchHits)
                 {
@@ -278,13 +319,31 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
                     
                     //display comma-separated list of organisms
-                    Joiner joiner = Joiner.on(',').skipNulls();
                     String joinedOrganisms = joiner.join(organismArray);
                     
-                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, hit.getDataSource()});  
+                    //display datasource
+                    List<String> databases = hit.getDataSource();
+                    String[] databaseArray = databases.toArray(new String[0]);
+                    for(int i = 0; i < databaseArray.length; i++)
+                    {
+                        String databaseUri = databaseArray[i];
+                        
+                        //replace with database real name if found in map
+                        for (Map.Entry<String, String> entry : databaseDisplayNames.entrySet()) 
+                        {
+                            String databaseString = entry.getKey();
+                            if(databaseUri.contains(databaseString))
+                            {
+                                databaseArray[i] = entry.getValue();
+                            }
+                        }
+                    }
+                    String joinedDatabases = joiner.join(databaseArray);
+                    
+                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases});  
                 }
             }
-            catch(Exception exception)
+            catch(Exception exception) //TODO ClientResponseFailure
             {
                 logger.warning(exception.getMessage());
             }

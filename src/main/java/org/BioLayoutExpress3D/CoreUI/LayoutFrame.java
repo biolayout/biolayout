@@ -130,7 +130,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
     /**
      * Multiplier to adjust resizing of nodes in resizeNodesAndArrowHeadsToKvalue()
      */
-    private double nodeResizeFactor = 0;
+    private double nodeResizeFactor = 1;
 
     /**
     *  The constructor of LayoutFrame.
@@ -1795,26 +1795,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
         ARROW_HEAD_SIZE.set( (int)arrowheadsToKValueRatio );
     }
     
-    /**
-     * Adjusts size of all vertices proportionally using a multiplier.
-     * @param nodeResizeFactor - multiplier value
-     */
-    /*
-    public void resizeNodes(double nodeResizeFactor)
-    {
-        int newNodeSize = 0;
-        for ( Vertex vertex : nc.getVertices() )
-        {
-            newNodeSize = (int)(nodeResizeFactor * vertex.getVertexSize() );
-            if (newNodeSize < MIN_NODE_SIZE)
-            {
-                newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
-            }
-            vertex.setVertexSize(newNodeSize);
-        }
-    }
-    * */
-
     /**
     *  Clears any previously loaded network.
     */

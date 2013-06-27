@@ -477,6 +477,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);
+
+        exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
     }
 
     private ChartPanel createExpressionPlot()

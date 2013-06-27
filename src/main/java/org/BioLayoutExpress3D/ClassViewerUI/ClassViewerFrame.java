@@ -437,7 +437,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         generalTable.setDefaultEditor( VertexClass.class, new DefaultCellEditor(classComboBox) );
         generalTable.setDefaultRenderer( VertexClass.class, classComboBox.getClassRenderer() );
-        generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
+        generalTable.setHighlightIsSelection(false);
+        highlightIsSelectionCheckbox.setSelected(false);
 
         if (DEBUG_BUILD) println("Reinit Due to Initial Init.");
 
@@ -888,12 +889,15 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         VertexClass currentVertexClass = findClassDialog.currentVertexClass();
         if (currentVertexClass != null)
         {
+            setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(currentVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
             layoutFrame.getGraph().updateSelectedNodesDisplayList();
             setCurrentClassName( currentVertexClass.getName() );
 
             nextClassButton.setEnabled(true);
+            setUpdateResetSelectDeselectAllButton(true);
+            generalTable.synchroniseHighlightWithSelection();
         }
 
         return currentVertexClass;
@@ -904,12 +908,15 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         VertexClass previousVertexClass = findClassDialog.previousVertexClass();
         if (previousVertexClass != null)
         {
+            setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(previousVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
             layoutFrame.getGraph().updateSelectedNodesDisplayList();
             setCurrentClassName( previousVertexClass.getName() );
 
             nextClassButton.setEnabled(true);
+            setUpdateResetSelectDeselectAllButton(true);
+            generalTable.synchroniseHighlightWithSelection();
         }
 
         previousClassButton.setEnabled( findClassDialog.checkPreviousVertexClass() );
@@ -927,6 +934,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         VertexClass nextVertexClass = findClassDialog.nextVertexClass();
         if (nextVertexClass != null)
         {
+            setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(nextVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
             layoutFrame.getGraph().updateSelectedNodesDisplayList();
@@ -934,6 +942,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 setCurrentClassName( nextVertexClass.getName() );
 
             previousClassButton.setEnabled(findClassDialog.getClassIndex() != 0);
+            setUpdateResetSelectDeselectAllButton(true);
+            generalTable.synchroniseHighlightWithSelection();
         }
 
         nextClassButton.setEnabled( findClassDialog.checkNextVertexClass() );

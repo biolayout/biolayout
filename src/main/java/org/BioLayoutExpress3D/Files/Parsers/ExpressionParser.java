@@ -1,6 +1,7 @@
 package org.BioLayoutExpress3D.Files.Parsers;
 
 import java.io.*;
+import java.util.HashSet;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.Expression.*;
@@ -19,6 +20,7 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 public class ExpressionParser extends CoreParser
 {
     private ObjectInputStream iistream = null;
+    File file = null;
     private ExpressionData expressionData = null;
     private int[][] counts = null;
 
@@ -35,6 +37,7 @@ public class ExpressionParser extends CoreParser
     {
         try
         {
+            this.file = file;
             iistream = new ObjectInputStream( new BufferedInputStream( new FileInputStream(file) ) );
 
             return true;
@@ -62,6 +65,7 @@ public class ExpressionParser extends CoreParser
     public boolean parse()
     {
         int counter = 0;
+        HashSet<Integer> filterSet = new HashSet<Integer>();
         LayoutProgressBarDialog layoutProgressBarDialog = layoutFrame.getLayoutProgressBar();
         layoutProgressBarDialog.prepareProgressBar(100, "Reading in Graph Data:");
         layoutProgressBarDialog.startProgressBar();
@@ -99,8 +103,14 @@ public class ExpressionParser extends CoreParser
                         weight = iistream.readFloat();
                         if (weight > CURRENT_CORRELATION_THRESHOLD)
                         {
-                            nodeTwo = expressionData.getRowID(otherId);
-                            nc.addNetworkConnection(nodeOne, nodeTwo, weight);
+                            boolean filterOne = CURRENT_FILTER_SET.contains(nodeId);
+                            boolean filterTwo = CURRENT_FILTER_SET.contains(otherId);
+
+                            if (!filterOne && !filterTwo)
+                            {
+                                nodeTwo = expressionData.getRowID(otherId);
+                                nc.addNetworkConnection(nodeOne, nodeTwo, weight);
+                            }
                         }
                     }
                 }
@@ -173,8 +183,14 @@ public class ExpressionParser extends CoreParser
                         weight = iistream.readFloat();
                         index = (int)Math.floor(100.0f * weight);
 
-                        counts[nodeId][index]++;
-                        counts[otherId][index]++;
+                        boolean filterOne = CURRENT_FILTER_SET.contains(nodeId);
+                        boolean filterTwo = CURRENT_FILTER_SET.contains(otherId);
+
+                        if (!filterOne && !filterTwo)
+                        {
+                            counts[nodeId][index]++;
+                            counts[otherId][index]++;
+                        }
                     }
                 }
             }
@@ -182,6 +198,23 @@ public class ExpressionParser extends CoreParser
         catch (IOException ioe)
         {
             if (DEBUG_BUILD) println("IOException in ExpressionParser.scan():\n" + ioe.getMessage());
+        }
+    }
+
+    public void rescan()
+    {
+        try
+        {
+            counts = expressionData.clearCounts();
+            iistream = new ObjectInputStream( new BufferedInputStream( new FileInputStream(file) ) );
+            scan();
+        }
+        catch (IOException ioe)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("IOException in ExpressionParser.rescan():\n" + ioe.getMessage());
+            }
         }
     }
 

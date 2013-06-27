@@ -33,11 +33,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     private JComboBox<String> scaleTransformComboBox = null;
     private JEditorPane textArea = null;
     private JCheckBox saveCorrelationTextFileCheckBox = null;
-    private JCheckBox filterValueCheckBox = null;
-    private FloatNumberField filterValueField = null;
-    private JCheckBox filterIQRCheckBox = null;
-    private FloatNumberField filterIQRField = null;
-    private static final float DEFAULT_FILTER_VALUE = 0.0f;
     private File expressionFile = null;
 
     private boolean proceed = false;
@@ -45,8 +40,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     private AbstractAction okAction = null;
     private AbstractAction cancelAction = null;
     private AbstractAction transposeChangedAction = null;
-    private AbstractAction filterValueChangedAction = null;
-    private AbstractAction filterIQRChangedAction = null;
 
     private boolean creatingDialogElements = false;
 
@@ -152,27 +145,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         transposeCheckBox.setText("Transpose");
         tabLine1.add(transposeCheckBox);
 
-        // Filter
-        filterValueCheckBox = new JCheckBox(filterValueChangedAction);
-        filterValueCheckBox.setText("Filter Rows With All Values Less Than");
-        filterValueCheckBox.setSelected(false);
-        filterValueField = new FloatNumberField(0, 5);
-        filterValueField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
-        filterValueField.setEnabled(false);
-        filterValueField.setValue(DEFAULT_FILTER_VALUE);
-        tabLine2.add(filterValueCheckBox);
-        tabLine2.add(filterValueField);
-
-        filterIQRCheckBox = new JCheckBox(filterIQRChangedAction);
-        filterIQRCheckBox.setText("Filter Rows With An IQR Less Than");
-        filterIQRCheckBox.setSelected(false);
-        filterIQRField = new FloatNumberField(0, 5);
-        filterIQRField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
-        filterIQRField.setEnabled(false);
-        filterIQRField.setValue(DEFAULT_FILTER_VALUE);
-        tabLine2.add(filterIQRCheckBox);
-        tabLine2.add(filterIQRField);
-
         tab.setLayout(new BoxLayout(tab, BoxLayout.PAGE_AXIS));
         tab.add(tabLine1);
         tab.add(tabLine2);
@@ -242,26 +214,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
                     return;
                 }
 
-                if (filterValueCheckBox.isSelected())
-                {
-                    if (filterValueField.isEmpty() || filterValueField.getValue() < 0.0f)
-                    {
-                        JOptionPane.showMessageDialog(frame, "A positive filter value must be given.", "Invalid filter value", JOptionPane.INFORMATION_MESSAGE);
-                        filterValueField.setValue(DEFAULT_FILTER_VALUE);
-                        return;
-                    }
-                }
-
-                if (filterIQRCheckBox.isSelected())
-                {
-                    if (filterIQRField.isEmpty() || filterIQRField.getValue() < 0.0f)
-                    {
-                        JOptionPane.showMessageDialog(frame, "A positive filter value must be given.", "Invalid filter value", JOptionPane.INFORMATION_MESSAGE);
-                        filterIQRField.setValue(DEFAULT_FILTER_VALUE);
-                        return;
-                    }
-                }
-
                 CURRENT_METRIC = CorrelationTypes.values()[correlationMetric.getSelectedIndex()];
                 CURRENT_SCALE_TRANSFORM = ScaleTransformType.values()[scaleTransformComboBox.getSelectedIndex()];
                 proceed = true;
@@ -290,24 +242,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
             public void actionPerformed(ActionEvent e)
             {
                 refreshDataPreview(true);
-            }
-        };
-
-        filterValueChangedAction = new AbstractAction("FilterValueToggle")
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                filterValueField.setEnabled(filterValueCheckBox.isSelected());
-            }
-        };
-
-        filterIQRChangedAction = new AbstractAction("FilterIQRToggle")
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                filterIQRField.setEnabled(filterIQRCheckBox.isSelected());
             }
         };
     }
@@ -633,25 +567,5 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     public boolean saveCorrelationTextFile()
     {
         return saveCorrelationTextFileCheckBox.isSelected();
-    }
-
-    public float filterValue()
-    {
-        if (!filterValueCheckBox.isSelected())
-        {
-            return -1.0f;
-        }
-
-        return filterValueField.getValue();
-    }
-
-    public float filterIQR()
-    {
-        if (!filterIQRCheckBox.isSelected())
-        {
-            return -1.0f;
-        }
-
-        return filterIQRField.getValue();
     }
 }

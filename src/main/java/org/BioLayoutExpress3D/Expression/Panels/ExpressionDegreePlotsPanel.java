@@ -22,7 +22,6 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     private static final int POINT_SIZE = 4;
 
     private int totalRows = 0;
-    private int filteredRows = 0;
     private int minThreshold = 0;
     private int threshold = 0;
     private String thresholdString = "";
@@ -35,30 +34,22 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     private Font axisFont = null;
     private Font legendFont = null;
 
-    public ExpressionDegreePlotsPanel(int[][] counts, int totalRows, int filteredRows,
+    public ExpressionDegreePlotsPanel(int[][] counts, int totalRows,
             int minThreshold, int threshold, String thresholdString)
     {
         super(true);
 
         this.totalRows = totalRows;
-        this.filteredRows = filteredRows;
         this.minThreshold = minThreshold;
         this.threshold = threshold;
         this.thresholdString = thresholdString;
-
-        allNodes = new int[101 - minThreshold];
-        allEdges = new int[101 - minThreshold];
-        maxDegree = new int[101 - minThreshold];
-        maxCount = new int[101 - minThreshold];
-        histoGram = new int[101 - minThreshold][totalRows];
 
         Font currentFont = this.getFont();
         tickFont = currentFont.deriveFont(Font.PLAIN, 8);
         axisFont = currentFont.deriveFont(Font.BOLD, 12);
         legendFont = currentFont.deriveFont(Font.BOLD, 15);
 
-        for (int i = 0; i < (101 - minThreshold); i++)
-            calculateDistances(i, counts);
+        updateCounts(counts);
     }
 
     private void calculateDistances(int threshold, int[][] counts)
@@ -95,6 +86,20 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         maxCount[threshold] = max;
         allNodes[threshold] = nodesCounter;
         allEdges[threshold] = totalEdges / 2;
+    }
+
+    public void updateCounts(int[][] counts)
+    {
+        allNodes = new int[101 - minThreshold];
+        allEdges = new int[101 - minThreshold];
+        maxDegree = new int[101 - minThreshold];
+        maxCount = new int[101 - minThreshold];
+        histoGram = new int[101 - minThreshold][totalRows];
+
+        for (int i = 0; i < (101 - minThreshold); i++)
+        {
+            calculateDistances(i, counts);
+        }
     }
 
     private void drawDegreePlot(Graphics2D g2, int x, int y, int width, int height)
@@ -213,9 +218,7 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         g2.setPaint(Color.BLACK);
         g2.setFont(legendFont);
         drawPanelXCenteredText(g2, this.getHeight() - 6, legendFont,
-                "Rows: " + totalRows +
-                (filteredRows > 0 ? " (" + filteredRows + " filtered)" : "") +
-                ", Nodes: " + allNodes[threshold - minThreshold] +
+                "Nodes: " + allNodes[threshold - minThreshold] +
                 ", Edges: " + allEdges[threshold - minThreshold] +
                 ", Correlation (R) = " + thresholdString);
     }

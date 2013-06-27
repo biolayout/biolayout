@@ -1,15 +1,18 @@
 package org.BioLayoutExpress3D.Expression.Dialogs;
 
+import java.util.HashSet;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import org.BioLayoutExpress3D.Expression.Panels.*;
+import org.BioLayoutExpress3D.Expression.ExpressionData;
 import org.BioLayoutExpress3D.StaticLibraries.*;
 import org.BioLayoutExpress3D.Utils.*;
 import static java.lang.Math.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.Expression.ExpressionEnvironment.*;
+import org.BioLayoutExpress3D.Files.Parsers.ExpressionParser;
 
 /**
 *
@@ -38,30 +41,44 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
     private FloatNumberField thresholdValueTextField = null;
     private ExpressionDegreePlotsPanel expressionDegreePlotsPanel = null;
 
-    public ExpressionLoaderSummaryDialog(JFrame jframe, int[][] counts, int totalRows, int filteredRows)
+    private JCheckBox filterValueCheckBox = null;
+    private FloatNumberField filterValueField = null;
+    private JCheckBox filterStddevCheckBox = null;
+    private FloatNumberField filterStddevField = null;
+    private HashSet<Integer> filteredValueRows = null;
+    private HashSet<Integer> filteredStddevRows = null;
+
+    private ExpressionData expressionData;
+    private ExpressionParser scanner;
+
+    public ExpressionLoaderSummaryDialog(JFrame jframe, ExpressionData expressionData, ExpressionParser scanner)
     {
         super(jframe, "Expression Graph Settings", true);
 
         this.jframe = jframe;
+        this.expressionData = expressionData;
+        this.scanner = scanner;
 
         initActions();
-        initComponents(counts, totalRows, filteredRows);
+        initComponents();
 
-        this.setSize(750, 500);
+        this.setSize(750, 600);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
     }
 
-    private void initComponents(int[][] counts, int totalRows, int filteredRows)
+    private void initComponents()
     {
         minThreshold = (int)rint(100.0f * STORED_CORRELATION_THRESHOLD);
         currentThreshold = (int)rint(100.0f * CURRENT_CORRELATION_THRESHOLD);
         currentThresholdFloat = CURRENT_CORRELATION_THRESHOLD;
 
         JPanel topPanel = new JPanel(true);
-        expressionDegreePlotsPanel = new ExpressionDegreePlotsPanel( counts, totalRows, filteredRows,
+        expressionDegreePlotsPanel = new ExpressionDegreePlotsPanel(
+                expressionData.getCounts(), expressionData.getTotalRows(),
                 minThreshold, currentThreshold, createCorrelationTextValue(currentThreshold) );
         JPanel downPanel = new JPanel(true);
+        downPanel.setLayout(new BoxLayout(downPanel, BoxLayout.PAGE_AXIS));
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, expressionDegreePlotsPanel, null);
         splitPane.setEnabled(false); // disable the split pane as we use it here just for its look & feel with the DegreePlots JPanel
@@ -78,15 +95,62 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         thresholdValueTextField.getCaret().setVisible(false);
         thresholdValueTextField.setText( createCorrelationTextValue( thresholdSlider.getValue() ) );
 
+        JPanel topLine = new JPanel();
+        filterValueCheckBox = new JCheckBox(new AbstractAction("FilterValueToggle")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                filterValueField.setEnabled(filterValueCheckBox.isSelected());
+                refreshFilterSet();
+            }
+        });
+
+        filterValueCheckBox.setText("Filter Rows With All Values Less Than");
+        filterValueCheckBox.setSelected(false);
+        filterValueField = new FloatNumberField(0, 5);
+        filterValueField.addCaretListener(this);
+        filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
+        filterValueField.setEnabled(false);
+        filterValueField.setValue(0.0f);
+        topLine.add(filterValueCheckBox);
+        topLine.add(filterValueField);
+
+        JPanel middleLine = new JPanel();
+        filterStddevCheckBox = new JCheckBox(new AbstractAction("FilterStddevToggle")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                filterStddevField.setEnabled(filterStddevCheckBox.isSelected());
+                refreshFilterSet();
+            }
+        });
+
+        filterStddevCheckBox.setText("Filter Rows With Standard Deviation Less Than");
+        filterStddevCheckBox.setSelected(false);
+        filterStddevField = new FloatNumberField(0, 5);
+        filterStddevField.addCaretListener(this);
+        filterStddevField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
+        filterStddevField.setEnabled(false);
+        filterStddevField.setValue(0.0f);
+        middleLine.add(filterStddevCheckBox);
+        middleLine.add(filterStddevField);
+
+        JPanel bottomLine = new JPanel();
         JButton okButton = new JButton(okAction);
         okButton.setToolTipText("OK");
         JButton cancelButton = new JButton(cancelAction);
         cancelButton.setToolTipText("Cancel");
-        downPanel.add( new JLabel("Please Select A Correlation Value: ") );
-        downPanel.add(thresholdSlider);
-        downPanel.add(thresholdValueTextField);
-        downPanel.add(okButton);
-        downPanel.add(cancelButton);
+        bottomLine.add( new JLabel("Please Select A Correlation Value: ") );
+        bottomLine.add(thresholdSlider);
+        bottomLine.add(thresholdValueTextField);
+        bottomLine.add(okButton);
+        bottomLine.add(cancelButton);
+
+        downPanel.add(topLine);
+        downPanel.add(middleLine);
+        downPanel.add(bottomLine);
 
         Container container = this.getContentPane();
         container.setLayout( new BorderLayout() );
@@ -142,14 +206,15 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
     @Override
     public void stateChanged (ChangeEvent e)
     {
-        if ( e.getSource().equals(thresholdSlider) && !thresholdValueTextField.isFocusOwner() )
+        if (e.getSource().equals(thresholdSlider) && !thresholdValueTextField.isFocusOwner())
         {
             currentThreshold = thresholdSlider.getValue();
             currentThresholdFloat = thresholdValueTextField.getValue();
-            expressionDegreePlotsPanel.updatePlots( currentThreshold, createCorrelationTextValue(currentThreshold) );
-            thresholdValueTextField.setText( createCorrelationTextValue(currentThreshold) );
+            expressionDegreePlotsPanel.updatePlots(currentThreshold,
+                    createCorrelationTextValue(currentThreshold));
+            thresholdValueTextField.setText(createCorrelationTextValue(currentThreshold));
 
-            if ( thresholdValueTextField.isEditable() )
+            if (thresholdValueTextField.isEditable())
             {
                 thresholdValueTextField.setEditable(false);
                 thresholdValueTextField.getCaret().setVisible(false);
@@ -167,6 +232,18 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
                 thresholdValueTextField.setEditable(true);
                 thresholdValueTextField.getCaret().setVisible(true);
             }
+        }
+        else if (ce.getSource().equals(filterValueField))
+        {
+            float valueThreshold = filterValueField.getValue();
+            filteredValueRows = expressionData.filterMinValue(valueThreshold);
+            refreshFilterSet();
+        }
+        else if (ce.getSource().equals(filterStddevField))
+        {
+            float stddevThreshold = filterStddevField.getValue();
+            filteredStddevRows = expressionData.filterMinStddev(stddevThreshold);
+            refreshFilterSet();
         }
     }
 
@@ -217,11 +294,33 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
             public void run()
             {
                 if (thresholdValueTextFieldOrThresholdSlider)
+                {
                     thresholdValueTextField.setText(text);
+                }
                 thresholdSlider.setValue(value);
-                expressionDegreePlotsPanel.updatePlots( value, createCorrelationTextValue(value) );
+                expressionDegreePlotsPanel.updatePlots(value, createCorrelationTextValue(value));
             }
         });
+    }
+
+    public void refreshFilterSet()
+    {
+        CURRENT_FILTER_SET = new HashSet<Integer>();
+
+        if (filterValueCheckBox.isSelected() && filteredValueRows != null)
+        {
+            CURRENT_FILTER_SET.addAll(filteredValueRows);
+        }
+
+        if (filterStddevCheckBox.isSelected() && filteredStddevRows != null)
+        {
+            CURRENT_FILTER_SET.addAll(filteredStddevRows);
+        }
+
+        scanner.rescan();
+        expressionDegreePlotsPanel.updateCounts(expressionData.getCounts());
+        expressionDegreePlotsPanel.updatePlots(currentThreshold,
+                createCorrelationTextValue(currentThreshold));
     }
 
     public boolean proceed()
@@ -230,6 +329,4 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
 
         return proceed;
     }
-
-
 }

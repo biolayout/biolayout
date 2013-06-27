@@ -1,5 +1,7 @@
 package org.BioLayoutExpress3D.Expression;
 
+import java.util.HashSet;
+
 /**
 *
 * @author Thanos Theo, 2008-2009-2010
@@ -38,6 +40,7 @@ public final class ExpressionEnvironment
     public static final float DEFAULT_CORRELATION_THRESHOLD = 0.85f;
     public static final float DEFAULT_STORED_CORRELATION_THRESHOLD = 0.70f;
     public static float       CURRENT_CORRELATION_THRESHOLD = DEFAULT_CORRELATION_THRESHOLD;
+    public static HashSet<Integer> CURRENT_FILTER_SET = new HashSet<Integer>();
     public static float       STORED_CORRELATION_THRESHOLD = DEFAULT_STORED_CORRELATION_THRESHOLD;
     public static String      EXPRESSION_FILE = "";
     public static String      EXPRESSION_FILE_PATH = "";

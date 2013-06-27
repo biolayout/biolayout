@@ -1112,10 +1112,8 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     DATA_TYPE = DataTypes.EXPRESSION;
 
                     boolean generateTextFile = expressionLoaderDialog.saveCorrelationTextFile();
-                    float filterValue = expressionLoaderDialog.filterValue();
-                    float filterIQR = expressionLoaderDialog.filterIQR();
 
-                    expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM, filterValue, filterIQR);
+                    expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM);
 
                     if (DEBUG_BUILD) println("Expression File is: " + EXPRESSION_FILE_PATH + EXPRESSION_FILE);
                     String metricName = CURRENT_METRIC.toString().toLowerCase();
@@ -1131,16 +1129,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     if (CURRENT_SCALE_TRANSFORM != ScaleTransformType.NONE)
                     {
                         correlationFilename += "_" + Utils.hyphenatedOf(CURRENT_SCALE_TRANSFORM.toString());
-                    }
-
-                    if (filterValue >= 0.0f)
-                    {
-                        correlationFilename += "_filter-" + filterValue;
-                    }
-
-                    if (filterIQR >= 0.0f)
-                    {
-                        correlationFilename += "_iqr-" + filterIQR;
                     }
 
                     correlationFilename += "_" + metricName;
@@ -1197,8 +1185,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         scanner.scan();
 
                         ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog =
-                                new ExpressionLoaderSummaryDialog(this, expressionData.getCounts(),
-                                expressionData.getTotalRows(), expressionData.getFilteredRows());
+                                new ExpressionLoaderSummaryDialog(this, expressionData, scanner);
                         expressionLoaderSummaryDialog.setVisible(true);
 
                         if (isNotSkipped = expressionLoaderSummaryDialog.proceed())

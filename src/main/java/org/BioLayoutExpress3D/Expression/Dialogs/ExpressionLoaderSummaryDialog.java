@@ -62,7 +62,7 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         initActions();
         initComponents();
 
-        this.setSize(750, 600);
+        this.setSize(850, 600);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
     }
@@ -116,7 +116,6 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         topLine.add(filterValueCheckBox);
         topLine.add(filterValueField);
 
-        JPanel middleLine = new JPanel();
         filterStddevCheckBox = new JCheckBox(new AbstractAction("FilterStddevToggle")
         {
             @Override
@@ -134,8 +133,8 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         filterStddevField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
         filterStddevField.setEnabled(false);
         filterStddevField.setValue(0.0f);
-        middleLine.add(filterStddevCheckBox);
-        middleLine.add(filterStddevField);
+        topLine.add(filterStddevCheckBox);
+        topLine.add(filterStddevField);
 
         JPanel bottomLine = new JPanel();
         JButton okButton = new JButton(okAction);
@@ -149,7 +148,6 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         bottomLine.add(cancelButton);
 
         downPanel.add(topLine);
-        downPanel.add(middleLine);
         downPanel.add(bottomLine);
 
         Container container = this.getContentPane();

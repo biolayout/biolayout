@@ -6,6 +6,8 @@ package org.BioLayoutExpress3D.Files.webservice;
 
 import com.google.common.base.Joiner;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -14,12 +16,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -62,13 +67,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JButton cancelButton;
     private JTextField searchField;
     private JTextField organismField;
+    private JComboBox networkTypeCombo;
     private DefaultTableModel model; 
     private LayoutFrame frame;
     private JRadioButton sifRadio, bioPAXRadio;
     private List<SearchHit> searchHits;
     private ClientRequestFactory factory;
-    
-    
+    private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     /**
      * Name of directory where files are downloaded from the web service.
      */
@@ -116,10 +121,12 @@ is.close;
         getContentPane().add(buttonPanel, BorderLayout.PAGE_END);
         
         JPanel fieldPanel = new JPanel();
+        fieldPanel.setLayout(new FlowLayout());
 
         //search term text field
         String fieldString = "Enter a search term...";
-        searchField = new JTextField(fieldString);
+        searchField = new JTextField(fieldString, 70);
+        
         searchField.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent focusEvent) {
                 if (searchField.getText() != null
@@ -130,15 +137,15 @@ is.close;
         });   	
         
         //search term label
-        JLabel searchLabel = new JLabel("Keywords", JLabel.LEFT);
+        JLabel searchLabel = new JLabel("Keywords", JLabel.TRAILING);    
         searchLabel.setLabelFor(searchField);  
         
         fieldPanel.add(searchField);
         fieldPanel.add(searchLabel);
         
         //organism text field
-        String organismString = "Enter NCBI ID...";
-        organismField = new JTextField(organismString);
+        String organismString = ""; //default message
+        organismField = new JTextField(organismString, 35);
         organismField.addFocusListener(new FocusAdapter() {
             public void focusGained(FocusEvent focusEvent) {
                 if (organismField.getText() != null
@@ -149,13 +156,47 @@ is.close;
         });   	
         
         //organism text field
-        JLabel organismLabel = new JLabel("Organism", JLabel.LEFT);
+        JLabel organismLabel = new JLabel("Organism", JLabel.TRAILING);
         organismLabel.setLabelFor(organismField);  
         
         fieldPanel.add(organismField);
         fieldPanel.add(organismLabel);
         
+        //Network Type Drop Down
+        networkTypeCombo = new JComboBox();
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction" }));
+        fieldPanel.add(networkTypeCombo);
+        
+        //Map checkboxes to web service commands
+        datasourceDisplayCommands = new LinkedHashMap<JCheckBox, String>();
+        datasourceDisplayCommands.put(new JCheckBox("Reactome"), "reactome");
+        datasourceDisplayCommands.put(new JCheckBox("NCI Nature"), "pid");
+        datasourceDisplayCommands.put(new JCheckBox("PhosphoSitePlus"), "phosphosite");
+        datasourceDisplayCommands.put(new JCheckBox("HumanCyc"), "humancyc");
+        datasourceDisplayCommands.put(new JCheckBox("HPRD"), "hprd");
+        datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");
+
+        //datasource checkboxes
+        //final ButtonGroup datasourceGroup = new ButtonGroup();
+        for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
+        {
+          // datasourceGroup.add(checkBox);
+           fieldPanel.add(checkBox);
+        }
+        
+        organismDisplayCommands = new LinkedHashMap<JCheckBox, String>();
+        organismDisplayCommands.put(new JCheckBox("Human"), "9606");
+        organismDisplayCommands.put(new JCheckBox("Mouse"), "10090");
+        //organismDisplayCommands.put(new JCheckBox("Fruit Fly"), "7227");       
+        
+       // final ButtonGroup organismGroup = new ButtonGroup();
+        for(JCheckBox checkBox: organismDisplayCommands.keySet())
+        {
+         //   organismGroup.add(checkBox);
+            fieldPanel.add(checkBox);
+        }
        
+        //SIF/BioPax Radio Buttons
         sifRadio = new JRadioButton("SIF");
         sifRadio.setActionCommand(FORMAT_SIF);
         bioPAXRadio = new JRadioButton("BioPAX");
@@ -168,6 +209,7 @@ is.close;
 
         fieldPanel.add(bioPAXRadio);
         fieldPanel.add(sifRadio);
+        fieldPanel.setPreferredSize(new Dimension(888, 150));
         
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
@@ -277,14 +319,47 @@ is.close;
             String searchTerm = searchField.getText();
             String organism = organismField.getText();
             
+            String networkType = this.networkTypeCombo.getSelectedItem().toString();
+            
+            //get datasource
+            
             req
                 .pathParameter("command", "search")
                 .pathParameter("format", "xml")
                 .queryParameter("q", searchTerm)
-                .queryParameter("organism", organism)
-                .queryParameter("datasource", DATASOURCE_REACTOME)  //TODO OPTION
-                .queryParameter("type", "Pathway"); //TODO OPTION
-        
+                    
+                //.queryParameter("organism", organism)
+                //.queryParameter("datasource", DATASOURCE_REACTOME)  //TODO OPTION
+                .queryParameter("type", networkType);
+            
+            //value from 
+            //TODO muliple organisms with separator
+            if(!organism.equals(""))
+            {
+                req.queryParameter("organism", organism);
+            }
+            
+            //add parameters for datasource checkboxes
+            for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
+                 JCheckBox checkBox = entry.getKey();
+                 if(checkBox.isSelected())
+                 {
+                     String datasourceParameter = entry.getValue();
+                     req.queryParameter("datasource", datasourceParameter);                        
+                 }
+            }            
+            
+            //add parameters for organism checkboxes
+            for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
+                 JCheckBox checkBox = entry.getKey();
+                 if(checkBox.isSelected())
+                 {
+                     String organismParameter = entry.getValue();
+                     req.queryParameter("organism", organismParameter);                        
+                 }
+            }            
+
+            
             try
             {
                 ClientResponse<SearchResponse> res = req.get(SearchResponse.class);
@@ -296,13 +371,14 @@ is.close;
                 
                 model.setRowCount(0); //clear previous search results
                 
-                Map<String, String> databaseDisplayNames = new HashMap<String, String>();
-                databaseDisplayNames.put("reactome", "Reactome");
-                databaseDisplayNames.put("pid", "NCI Nature");
-                databaseDisplayNames.put("psp", "PhosphoSitePlus");
-                databaseDisplayNames.put("humancyc", "HumanCyc");
-                databaseDisplayNames.put("hprd", "HPRD");
-                databaseDisplayNames.put("panther", "PANTHER");
+                //map of database uri substrings to display names 
+                Map<String, String> databaseUriDisplay = new HashMap<String, String>();
+                databaseUriDisplay.put("reactome", "Reactome");
+                databaseUriDisplay.put("pid", "NCI Nature");
+                databaseUriDisplay.put("psp", "PhosphoSitePlus");
+                databaseUriDisplay.put("humancyc", "HumanCyc");
+                databaseUriDisplay.put("hprd", "HPRD");
+                databaseUriDisplay.put("panther", "PANTHER");
 
                 Joiner joiner = Joiner.on(',').skipNulls();
                 
@@ -329,7 +405,7 @@ is.close;
                         String databaseUri = databaseArray[i];
                         
                         //replace with database real name if found in map
-                        for (Map.Entry<String, String> entry : databaseDisplayNames.entrySet()) 
+                        for (Map.Entry<String, String> entry : databaseUriDisplay.entrySet()) 
                         {
                             String databaseString = entry.getKey();
                             if(databaseUri.contains(databaseString))

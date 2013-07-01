@@ -81,6 +81,8 @@ public final class ExpressionData
     private boolean stddevCached = false;
     private float minStddev = Float.MAX_VALUE;
     private float maxStddev = Float.MIN_VALUE;
+    private float[] meanCache = null;
+    private boolean meanCached = false;
 
     // variables needed for N-CP
     private final CyclicBarrierTimer cyclicBarrierTimer = (USE_MULTICORE_PROCESS) ? new CyclicBarrierTimer() : null;
@@ -120,6 +122,19 @@ public final class ExpressionData
 
         identityMap.clear();
         clearCounts();
+
+        minValueCache = null;
+        minValueCached = false;
+        maxValueCache = null;
+        maxValueCached = false;
+        minValue = Float.MAX_VALUE;
+        maxValue = Float.MIN_VALUE;
+        stddevCache = null;
+        stddevCached = false;
+        minStddev = Float.MAX_VALUE;
+        maxStddev = Float.MIN_VALUE;
+        meanCache = null;
+        meanCached = false;
     }
 
     /**
@@ -1060,6 +1075,11 @@ public final class ExpressionData
 
     public float getMeanForRow(int row)
     {
+        if (meanCached)
+        {
+            return meanCache[row];
+        }
+
         float rowSum = 0.0f;
 
         for (int column = 0; column < totalColumns; column++)
@@ -1068,6 +1088,23 @@ public final class ExpressionData
         }
 
         return rowSum / totalColumns;
+    }
+
+    public void cacheMeanValues()
+    {
+        if (meanCached)
+        {
+            return;
+        }
+
+        meanCache = new float[totalRows];
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            meanCache[row] = getMeanForRow(row);
+        }
+
+        meanCached = true;
     }
 
     public float getVarianceForRow(int row, float mean)
@@ -1122,6 +1159,11 @@ public final class ExpressionData
         }
 
         stddevCached = true;
+    }
+
+    public float getCoefficientOfVariationForRow(int row)
+    {
+        return getStddevForRow(row) / getMeanForRow(row);
     }
 
     public float getMinStddev()
@@ -1259,6 +1301,23 @@ public final class ExpressionData
         for (int row = 0; row < totalRows; row++)
         {
             if (getStddevForRow(row) < minStddev)
+            {
+                filtered.add(row);
+            }
+        }
+
+        return filtered;
+    }
+
+    public HashSet<Integer> filterMinCoefficientOfVariation(float minCoefVar)
+    {
+        cacheMeanValues();
+        cacheStddevValues();
+        HashSet<Integer> filtered = new HashSet<Integer>();
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            if (getCoefficientOfVariationForRow(row) < minCoefVar)
             {
                 filtered.add(row);
             }

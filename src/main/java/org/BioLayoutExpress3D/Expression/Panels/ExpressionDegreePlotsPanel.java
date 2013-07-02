@@ -242,28 +242,30 @@ public final class ExpressionDegreePlotsPanel extends JPanel
             }
         }
 
-        NumberAxis domainAxis = new NumberAxis();
-        double xSize = log10DegreeSeries.getMaxX() - log10DegreeSeries.getMinX();
-        double xLowerMargin = xSize * plot.getDomainAxis(0).getLowerMargin();
-        double xUpperMargin = xSize * plot.getDomainAxis(0).getUpperMargin();
-        Range xRange = new Range(log10DegreeSeries.getMinX() - xLowerMargin,
-                log10DegreeSeries.getMaxX() + xUpperMargin);
-        domainAxis.setAutoRange(false);
-        domainAxis.setRange(xRange);
-        domainAxis.setVisible(false);
-
-        NumberAxis rangeAxis = new NumberAxis();
-        double ySize = log10DegreeSeries.getMaxY() - log10DegreeSeries.getMinY();
-        double yLowerMargin = ySize * plot.getRangeAxis(0).getLowerMargin();
-        double yUpperMargin = ySize * plot.getRangeAxis(0).getUpperMargin();
-        Range yRange = new Range(log10DegreeSeries.getMinY() - yLowerMargin,
-                log10DegreeSeries.getMaxY() + yUpperMargin);
-        rangeAxis.setAutoRange(false);
-        rangeAxis.setRange(yRange);
-        rangeAxis.setVisible(false);
-
         if (degreeSeries.getItemCount() > 1)
         {
+            // Hack to set the range of the line plot so that it corresponds with
+            // the scatter plot
+            NumberAxis domainAxis = new NumberAxis();
+            double xSize = log10DegreeSeries.getMaxX() - log10DegreeSeries.getMinX();
+            double xLowerMargin = xSize * plot.getDomainAxis(0).getLowerMargin();
+            double xUpperMargin = xSize * plot.getDomainAxis(0).getUpperMargin();
+            Range xRange = new Range(log10DegreeSeries.getMinX() - xLowerMargin,
+                    log10DegreeSeries.getMaxX() + xUpperMargin);
+            domainAxis.setAutoRange(false);
+            domainAxis.setRange(xRange);
+            domainAxis.setVisible(false);
+
+            NumberAxis rangeAxis = new NumberAxis();
+            double ySize = log10DegreeSeries.getMaxY() - log10DegreeSeries.getMinY();
+            double yLowerMargin = ySize * plot.getRangeAxis(0).getLowerMargin();
+            double yUpperMargin = ySize * plot.getRangeAxis(0).getUpperMargin();
+            Range yRange = new Range(log10DegreeSeries.getMinY() - yLowerMargin,
+                    log10DegreeSeries.getMaxY() + yUpperMargin);
+            rangeAxis.setAutoRange(false);
+            rangeAxis.setRange(yRange);
+            rangeAxis.setVisible(false);
+
             double ad[] = Regression.getOLSRegression(log10DegreeDataset, 0);
             LineFunction2D linefunction2d = new LineFunction2D(ad[0], ad[1]);
             XYDataset fitDataset = DatasetUtilities.sampleFunction2D(linefunction2d,

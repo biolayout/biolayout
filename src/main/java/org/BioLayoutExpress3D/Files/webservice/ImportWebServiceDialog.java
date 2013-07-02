@@ -62,16 +62,25 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public static final String DATASOURCE_HPRD = "HPRD";//working???
     public static final String DATASOURCE_PANTHER = "panther";
     
+    public static final String COMMAND_TOP_PATHWAYS = "top_pathways";
+    public static final String COMMAND_SEARCH = "search";
+    public static final String COMMAND_GET = "get";
+    
     private JPanel buttonPanel;
     private JButton searchButton;
     private JButton cancelButton;
+    private JButton nextButton, previousButton;
     private JTextField searchField;
     private JTextField organismField;
     private JComboBox networkTypeCombo;
     private DefaultTableModel model; 
     private LayoutFrame frame;
     private JRadioButton sifRadio, bioPAXRadio;
-    private List<SearchHit> searchHits;
+    private JLabel numHitsLabel, retrievedLabel, pagesLabel;
+    
+    private List<SearchHit> searchHits; //retrieved search hits
+    private int currentPage;
+    private int totalHits; //total number of search query matches
     private ClientRequestFactory factory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     /**
@@ -112,6 +121,20 @@ is.close;
         searchButton.addActionListener(this);
         buttonPanel.add(searchButton); 
         
+        //previous button
+        previousButton = new JButton("< Previous");
+        previousButton.setToolTipText("Return to previous page");     
+        previousButton.setEnabled(false); //disable until get search results
+        previousButton.addActionListener(this);
+        buttonPanel.add(previousButton);  
+        
+        //next button
+        nextButton = new JButton("Next >");
+        nextButton.setToolTipText("Next page");     
+        nextButton.setEnabled(false); //disable until get search results
+        nextButton.addActionListener(this);
+        buttonPanel.add(nextButton);  
+
         //cancel button
         cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Cancel");     
@@ -164,7 +187,7 @@ is.close;
         
         //Network Type Drop Down
         networkTypeCombo = new JComboBox();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction" }));
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction", "Top Pathways" }));
         fieldPanel.add(networkTypeCombo);
         
         //Map checkboxes to web service commands
@@ -210,6 +233,17 @@ is.close;
         fieldPanel.add(bioPAXRadio);
         fieldPanel.add(sifRadio);
         fieldPanel.setPreferredSize(new Dimension(888, 150));
+        
+        totalHits = 0;
+        numHitsLabel = new JLabel("Hits: " + totalHits);
+        fieldPanel.add(numHitsLabel);
+
+        retrievedLabel = new JLabel("Retrieved: 0");
+        fieldPanel.add(retrievedLabel);
+        
+        currentPage = 0;
+        pagesLabel = new JLabel("Page: " + currentPage);
+        fieldPanel.add(pagesLabel);
         
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
@@ -268,7 +302,7 @@ is.close;
                     //ClientRequest req = new ClientRequest(ImportWebService.CPATH2_ENDPOINT);
                     ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT);
                     req
-                        .pathParameter("command", "get")
+                        .pathParameter("command", COMMAND_GET)
                         .queryParameter("uri", uriString)
                         .queryParameter("format", formatParameter);
                     try
@@ -311,63 +345,110 @@ is.close;
 
     public void actionPerformed(ActionEvent e) 
     {
-        if(searchButton == e.getSource()) {
-            logger.info("User chose Search");
-            
-            ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
-            
-            String searchTerm = searchField.getText();
-            String organism = organismField.getText();
-            
+        if(searchButton == e.getSource() || nextButton == e.getSource() || previousButton == e.getSource()) 
+        {
+            //TODO previous/next should remember last search params in case user changes
             String networkType = this.networkTypeCombo.getSelectedItem().toString();
-            
-            //get datasource
-            
-            req
-                .pathParameter("command", "search")
-                .pathParameter("format", "xml")
-                .queryParameter("q", searchTerm)
-                    
-                //.queryParameter("organism", organism)
-                //.queryParameter("datasource", DATASOURCE_REACTOME)  //TODO OPTION
-                .queryParameter("type", networkType);
-            
-            //value from 
-            //TODO muliple organisms with separator
-            if(!organism.equals(""))
-            {
-                req.queryParameter("organism", organism);
-            }
-            
-            //add parameters for datasource checkboxes
-            for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
-                 JCheckBox checkBox = entry.getKey();
-                 if(checkBox.isSelected())
-                 {
-                     String datasourceParameter = entry.getValue();
-                     req.queryParameter("datasource", datasourceParameter);                        
-                 }
-            }            
-            
-            //add parameters for organism checkboxes
-            for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
-                 JCheckBox checkBox = entry.getKey();
-                 if(checkBox.isSelected())
-                 {
-                     String organismParameter = entry.getValue();
-                     req.queryParameter("organism", organismParameter);                        
-                 }
-            }            
 
-            
+            ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
+            if(networkType.equals("Top Pathways"))
+            {
+                req
+                    .pathParameter("command", COMMAND_TOP_PATHWAYS)
+                    .pathParameter("format", "xml");
+            }
+            else
+            {
+                String searchTerm = searchField.getText();
+                String organism = organismField.getText();
+
+                req
+                    .pathParameter("command", COMMAND_SEARCH)
+                    .pathParameter("format", "xml")
+                    .queryParameter("q", searchTerm)
+                    .queryParameter("type", networkType);
+
+                //TODO muliple organisms with separator?
+                if(!organism.equals(""))
+                {
+                    req.queryParameter("organism", organism);
+                }
+                
+                //page to retrieve
+                int pageParameter = currentPage;
+                if(nextButton == e.getSource())
+                {
+                   pageParameter++;
+                }
+                else if(previousButton == e.getSource())
+                {
+                    pageParameter--;
+                }
+                req.queryParameter("page", pageParameter);
+
+                //add parameters for datasource checkboxes
+                for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
+                     JCheckBox checkBox = entry.getKey();
+                     if(checkBox.isSelected())
+                     {
+                         String datasourceParameter = entry.getValue();
+                         req.queryParameter("datasource", datasourceParameter);                        
+                     }
+                }            
+
+                //add parameters for organism checkboxes
+                for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
+                     JCheckBox checkBox = entry.getKey();
+                     if(checkBox.isSelected())
+                     {
+                         String organismParameter = entry.getValue();
+                         req.queryParameter("organism", organismParameter);                        
+                     }
+                }            
+            }
+
+            //perform search and display search response
             try
             {
-                ClientResponse<SearchResponse> res = req.get(SearchResponse.class);
+                ClientResponse<SearchResponse> res = req.get(SearchResponse.class); //TODO progress bar
                 SearchResponse searchResponse = res.getEntity();
                 
-                logger.info(searchResponse.getNumHits() + " search hits");
-                
+                totalHits = searchResponse.getNumHits();
+                numHitsLabel.setText("Hits: " + totalHits);
+
                 searchHits = searchResponse.getSearchHit();
+                int numRetrieved = searchHits.size();
+                retrievedLabel.setText("Retrieved: " + numRetrieved);
+                
+                int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
+                
+                //display current page number
+                currentPage = searchResponse.getPageNo();
+                pagesLabel.setText("Page: " + currentPage);
+                
+                //INT[(numHits-1)/numHitsPerPage+1].
+                //totalPages = 
+                
+                //enable/disable previous button
+                if(currentPage > 0) //on first page, disable previous
+                {
+                    previousButton.setEnabled(true);
+                }
+                else
+                {
+                    previousButton.setEnabled(false);
+                }
+
+                //enable/disable next button
+                int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
+                if((currentPage + 1) < numPages) //pages indexed from zero
+                {
+                    nextButton.setEnabled(true);
+                }
+                else
+                {
+                    nextButton.setEnabled(false);
+                }
                 
                 model.setRowCount(0); //clear previous search results
                 
@@ -419,7 +500,7 @@ is.close;
                     model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases});  
                 }
             }
-            catch(Exception exception) //TODO ClientResponseFailure
+            catch(Exception exception) //TODO ClientResponseFailure - display error dialog
             {
                 logger.warning(exception.getMessage());
             }

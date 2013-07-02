@@ -43,10 +43,10 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
 
     private JCheckBox filterValueCheckBox = null;
     private FloatNumberField filterValueField = null;
-    private JCheckBox filterStddevCheckBox = null;
-    private FloatNumberField filterStddevField = null;
+    private JCheckBox filterCoefVarCheckBox = null;
+    private FloatNumberField filterCoefVarField = null;
     private HashSet<Integer> filteredValueRows = null;
-    private HashSet<Integer> filteredStddevRows = null;
+    private HashSet<Integer> filteredCoefVarRows = null;
 
     private ExpressionData expressionData;
     private ExpressionParser scanner;
@@ -116,25 +116,25 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         topLine.add(filterValueCheckBox);
         topLine.add(filterValueField);
 
-        filterStddevCheckBox = new JCheckBox(new AbstractAction("FilterStddevToggle")
+        filterCoefVarCheckBox = new JCheckBox(new AbstractAction("FilterCoefVarToggle")
         {
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                filterStddevField.setEnabled(filterStddevCheckBox.isSelected());
+                filterCoefVarField.setEnabled(filterCoefVarCheckBox.isSelected());
                 refreshFilterSet();
             }
         });
 
-        filterStddevCheckBox.setText("Filter Rows With Standard Deviation Less Than");
-        filterStddevCheckBox.setSelected(false);
-        filterStddevField = new FloatNumberField(0, 5);
-        filterStddevField.addCaretListener(this);
-        filterStddevField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
-        filterStddevField.setEnabled(false);
-        filterStddevField.setValue(0.0f);
-        topLine.add(filterStddevCheckBox);
-        topLine.add(filterStddevField);
+        filterCoefVarCheckBox.setText("Filter Rows With Coefficient of Variation Less Than");
+        filterCoefVarCheckBox.setSelected(false);
+        filterCoefVarField = new FloatNumberField(0, 5);
+        filterCoefVarField.addCaretListener(this);
+        filterCoefVarField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
+        filterCoefVarField.setEnabled(false);
+        filterCoefVarField.setValue(0.0f);
+        topLine.add(filterCoefVarCheckBox);
+        topLine.add(filterCoefVarField);
 
         JPanel bottomLine = new JPanel();
         JButton okButton = new JButton(okAction);
@@ -237,10 +237,10 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
             filteredValueRows = expressionData.filterMinValue(valueThreshold);
             refreshFilterSet();
         }
-        else if (ce.getSource().equals(filterStddevField))
+        else if (ce.getSource().equals(filterCoefVarField))
         {
-            float stddevThreshold = filterStddevField.getValue();
-            filteredStddevRows = expressionData.filterMinStddev(stddevThreshold);
+            float coefVarThreshold = filterCoefVarField.getValue();
+            filteredCoefVarRows = expressionData.filterMinCoefficientOfVariation(coefVarThreshold);
             refreshFilterSet();
         }
     }
@@ -310,9 +310,9 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
             CURRENT_FILTER_SET.addAll(filteredValueRows);
         }
 
-        if (filterStddevCheckBox.isSelected() && filteredStddevRows != null)
+        if (filterCoefVarCheckBox.isSelected() && filteredCoefVarRows != null)
         {
-            CURRENT_FILTER_SET.addAll(filteredStddevRows);
+            CURRENT_FILTER_SET.addAll(filteredCoefVarRows);
         }
 
         scanner.rescan();

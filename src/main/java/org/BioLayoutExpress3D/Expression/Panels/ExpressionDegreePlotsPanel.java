@@ -15,6 +15,10 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.*;
 import org.jfree.chart.plot.ValueMarker;
+import org.jfree.data.Range;
+import org.jfree.data.function.LineFunction2D;
+import org.jfree.data.general.DatasetUtilities;
+import org.jfree.data.statistics.Regression;
 
 /**
 *
@@ -38,8 +42,6 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     private JFreeChart nodesEdgesChart;
     private JFreeChart degreeChart;
     private JLabel countsLabel;
-    private XYSeries degreeSeries;
-    private XYDataset degreeDataset;
     private XYSeries edgesSeries;
     private XYSeries nodesSeries;
     private XYSeriesCollection edgesNodesDataset;
@@ -194,11 +196,9 @@ public final class ExpressionDegreePlotsPanel extends JPanel
 
     private JFreeChart createDegreeChart()
     {
-        degreeSeries = new XYSeries("Degree");
-        degreeDataset = new XYSeriesCollection(degreeSeries);
         JFreeChart chart = ChartFactory.createScatterPlot(
                 "Graph Degree Distribution", null, null,
-                degreeDataset, PlotOrientation.VERTICAL, false, false, false);
+                null, PlotOrientation.VERTICAL, false, false, false);
         Font font = chart.getTitle().getFont();
         font = font.deriveFont(12.0f);
         chart.getTitle().setFont(font);
@@ -223,20 +223,68 @@ public final class ExpressionDegreePlotsPanel extends JPanel
 
     private void updateDegreeChart()
     {
-        if (degreeSeries != null)
+        XYPlot plot = degreeChart.getXYPlot();
+
+        XYSeries degreeSeries = new XYSeries("Degree");
+        XYDataset degreeDataset = new XYSeriesCollection(degreeSeries);
+        plot.setDataset(0, degreeDataset);
+
+        XYSeries log10DegreeSeries = new XYSeries("Degree Log10");
+        XYDataset log10DegreeDataset = new XYSeriesCollection(log10DegreeSeries);
+
+        int numPoints = maxDegree[threshold - minThreshold] + 1;
+        for (int i = 1; i < numPoints; i++)
         {
-            degreeSeries.clear();
-
-            int numPoints = maxDegree[threshold - minThreshold] + 1;
-            for (int i = 1; i < numPoints; i++)
+            if (histoGram[threshold - minThreshold][i] > 0)
             {
-                if (histoGram[threshold - minThreshold][i] > 0)
-                {
-                    degreeSeries.add(i, histoGram[threshold - minThreshold][i]);
-                }
+                degreeSeries.add(i, histoGram[threshold - minThreshold][i]);
+                log10DegreeSeries.add(log10(i), log10(histoGram[threshold - minThreshold][i]));
             }
+        }
 
-            //TODO fitted line
+        NumberAxis domainAxis = new NumberAxis();
+        double xSize = log10DegreeSeries.getMaxX() - log10DegreeSeries.getMinX();
+        double xLowerMargin = xSize * plot.getDomainAxis(0).getLowerMargin();
+        double xUpperMargin = xSize * plot.getDomainAxis(0).getUpperMargin();
+        Range xRange = new Range(log10DegreeSeries.getMinX() - xLowerMargin,
+                log10DegreeSeries.getMaxX() + xUpperMargin);
+        domainAxis.setAutoRange(false);
+        domainAxis.setRange(xRange);
+        domainAxis.setVisible(false);
+
+        NumberAxis rangeAxis = new NumberAxis();
+        double ySize = log10DegreeSeries.getMaxY() - log10DegreeSeries.getMinY();
+        double yLowerMargin = ySize * plot.getRangeAxis(0).getLowerMargin();
+        double yUpperMargin = ySize * plot.getRangeAxis(0).getUpperMargin();
+        Range yRange = new Range(log10DegreeSeries.getMinY() - yLowerMargin,
+                log10DegreeSeries.getMaxY() + yUpperMargin);
+        rangeAxis.setAutoRange(false);
+        rangeAxis.setRange(yRange);
+        rangeAxis.setVisible(false);
+
+        if (degreeSeries.getItemCount() > 1)
+        {
+            double ad[] = Regression.getOLSRegression(log10DegreeDataset, 0);
+            LineFunction2D linefunction2d = new LineFunction2D(ad[0], ad[1]);
+            XYDataset fitDataset = DatasetUtilities.sampleFunction2D(linefunction2d,
+                    domainAxis.getLowerBound(), domainAxis.getUpperBound(),
+                    2, "Fitted Regression Line");
+
+            plot.setDataset(1, fitDataset);
+            XYLineAndShapeRenderer r = new XYLineAndShapeRenderer(true, false);
+            r.setSeriesPaint(0, Color.blue);
+            plot.setRenderer(1, r);
+            plot.setRangeAxis(1, rangeAxis);
+            plot.setDomainAxis(1, domainAxis);
+            plot.mapDatasetToRangeAxis(1, 1);
+            plot.mapDatasetToDomainAxis(1, 1);
+        }
+        else
+        {
+            plot.setDataset(1, null);
+            plot.setRenderer(1, null);
+            plot.setRangeAxis(1, null);
+            plot.setDomainAxis(1, null);
         }
     }
 

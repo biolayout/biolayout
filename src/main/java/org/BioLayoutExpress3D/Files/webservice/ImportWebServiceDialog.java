@@ -210,12 +210,13 @@ is.close;
         organismDisplayCommands = new LinkedHashMap<JCheckBox, String>();
         organismDisplayCommands.put(new JCheckBox("Human"), "9606");
         organismDisplayCommands.put(new JCheckBox("Mouse"), "10090");
-        //organismDisplayCommands.put(new JCheckBox("Fruit Fly"), "7227");       
+        organismDisplayCommands.put(new JCheckBox("Fruit Fly"), "7227");
+        organismDisplayCommands.put(new JCheckBox("Rat"), "10116");
+        organismDisplayCommands.put(new JCheckBox("C. elegans"), "6239");
+        organismDisplayCommands.put(new JCheckBox("S. cervisiae"), "4932");
         
-       // final ButtonGroup organismGroup = new ButtonGroup();
         for(JCheckBox checkBox: organismDisplayCommands.keySet())
         {
-         //   organismGroup.add(checkBox);
             fieldPanel.add(checkBox);
         }
        
@@ -247,7 +248,7 @@ is.close;
         
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
-        String[] colHeadings = {"Name", "Organism", "Database"};
+        String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class"};
         int numRows = 0;
         
         model = new DefaultTableModel(numRows, colHeadings.length) {
@@ -262,6 +263,7 @@ is.close;
         model.setColumnIdentifiers(colHeadings);
         
         JTable table = new JTable(model);
+        table.setAutoCreateRowSorter(true);
         JScrollPane pane = new JScrollPane(table);
         getContentPane().add(pane, BorderLayout.CENTER);
         
@@ -273,11 +275,13 @@ is.close;
                if (e.getClickCount() == 2) 
                {
                     JTable target = (JTable)e.getSource();
-                    int row = target.getSelectedRow();
-                    int column = target.getSelectedColumn();
-                    logger.info("Mouse double clicked on table row " + row + " column " + column);
+                    int viewRow = target.getSelectedRow();
+                    int modelRow = target.convertRowIndexToModel(viewRow);
+                    //int column = target.getSelectedColumn();
+                    logger.info("Mouse double clicked on table view row " + viewRow);
+                    logger.info("Mouse double clicked on table model row " + modelRow);
 
-                    SearchHit hit = searchHits.get(row); //get SearchHit that relates to values in table row
+                    SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
                     String uriString = hit.getUri();
                     logger.info("URI is " + uriString);
                     
@@ -296,10 +300,9 @@ is.close;
                     }
                     String formatParameter = formatRadio.getActionCommand();
                     
-                    String hitName = target.getModel().getValueAt(row, 0).toString(); //search hit name
+                    String hitName = target.getModel().getValueAt(modelRow, 0).toString(); //search hit name
                     String fileName = hitName + fileExtension; //name of .owl or .sif file to be created
 
-                    //ClientRequest req = new ClientRequest(ImportWebService.CPATH2_ENDPOINT);
                     ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT);
                     req
                         .pathParameter("command", COMMAND_GET)
@@ -497,7 +500,9 @@ is.close;
                     }
                     String joinedDatabases = joiner.join(databaseArray);
                     
-                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases});  
+                    //display BioPAX Class
+                    
+                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass()});  
                 }
             }
             catch(Exception exception) //TODO ClientResponseFailure - display error dialog

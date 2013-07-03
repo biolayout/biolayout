@@ -726,7 +726,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 String buttonText = ( (!selectDeselectAllButtonModeState) ? "Deselect" : "Select" ) + " All" ;
                 selectDeselectAllButton.setText(buttonText);
                 selectDeselectAllButton.setToolTipText(buttonText);
-                tableModelGeneral.setSelectedAllColumns(!selectDeselectAllButtonModeState);
+                tableModelGeneral.setSelectedAllRows(!selectDeselectAllButtonModeState);
                 generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
             }
         } );

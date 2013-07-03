@@ -10,6 +10,7 @@ import javax.swing.event.ListSelectionEvent;
 import org.BioLayoutExpress3D.ClassViewerUI.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.Network.*;
+import org.BioLayoutExpress3D.ClassViewerUI.Tables.TableModels.ClassViewerTableModelGeneral;
 
 /**
 *
@@ -33,6 +34,8 @@ public final class ClassViewerTable extends JTable
     */
     private String[] columnNames = null;
 
+    private TableModel tableModel;
+
     /**
     *  The constructor of the ClassViewerTable class.
     */
@@ -40,6 +43,7 @@ public final class ClassViewerTable extends JTable
     {
         super(tableModel);
 
+        this.tableModel = tableModel;
         this.columnNames = columnNames;
     }
 
@@ -136,11 +140,15 @@ public final class ClassViewerTable extends JTable
             }
         }
 
+        highlightIsSelection = false;
+
         this.clearSelection();
         for (Integer selectedRow : selectedRows)
         {
             this.addRowSelectionInterval(selectedRow, selectedRow);
         }
+
+        highlightIsSelection = true;
     }
 
     private boolean updateResetSelectDeselectAllButton = true;
@@ -177,27 +185,18 @@ public final class ClassViewerTable extends JTable
     {
         super.valueChanged(e);
 
-        if (highlightIsSelection && updateResetSelectDeselectAllButton)
+        if (highlightIsSelection && updateResetSelectDeselectAllButton && !e.getValueIsAdjusting())
         {
-            ArrayList<Integer> rows = new ArrayList<Integer>();
-
-            for (int row = e.getFirstIndex(); row <= e.getLastIndex(); row++)
+            ArrayList<Integer> highlightedRows = new ArrayList<Integer>();
+            for (int row = 0; row < getRowCount(); row++)
             {
-                boolean newState = isRowSelected(row);
-
-                if (row < getRowCount())
+                if (isRowSelected(row))
                 {
-                    Boolean value = (Boolean) getValueAt(row, 0);
-                    if (value != null && value != isRowSelected(row))
-                    {
-                        // FIXME Doing this per row is definitely not the most
-                        // efficient way, but the selection system is so convoluted
-                        // that batching it all up is probably more effort than its
-                        // worth at the moment.
-                        setValueAt(newState, row, 0);
-                    }
+                    highlightedRows.add(convertRowIndexToModel(row));
                 }
             }
+
+            ((ClassViewerTableModelGeneral)tableModel).setSelectedRows(highlightedRows);
         }
     }
 

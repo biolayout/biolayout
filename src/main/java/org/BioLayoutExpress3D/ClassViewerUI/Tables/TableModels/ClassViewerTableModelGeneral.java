@@ -149,7 +149,30 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
         data[row][col] = value;
     }
 
-    public void setSelectedAllColumns(boolean isSelected)
+    public void setSelectedRows(ArrayList<Integer> rows)
+    {
+        for (int row = 0; row < getRowCount(); row++)
+        {
+            data[row][0] = false;
+        }
+
+        HashSet<GraphNode> graphNodes = new HashSet<GraphNode>();
+        for (int row : rows)
+        {
+            graphNodes.add( (GraphNode)data[row][data[0].length - 1] ); // retrieve GraphNode from last column in table
+            data[row][0] = true;
+        }
+
+        layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(false);
+
+        layoutFrame.getGraph().getSelectionManager().clearAllSelection();
+        layoutFrame.getGraph().getSelectionManager().addNodeToSelectedUpdateExpressionGraphViewOnly(graphNodes, false, true);
+        layoutFrame.getGraph().updateSelectedNodesDisplayList();
+
+        layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(true);
+    }
+
+    public void setSelectedAllRows(boolean isSelected)
     {
         HashSet<GraphNode> graphNodes = new HashSet<GraphNode>();
         for (int i = 0; i < getRowCount(); i++)

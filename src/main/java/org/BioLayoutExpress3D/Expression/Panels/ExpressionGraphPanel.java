@@ -499,6 +499,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         axis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_90);
 
         ChartPanel chartPanel = new ChartPanel(expressionGraphJFreeChart);
+        chartPanel.setMaximumDrawWidth(4096);
+        chartPanel.setMaximumDrawHeight(4096);
 
         return chartPanel;
     }

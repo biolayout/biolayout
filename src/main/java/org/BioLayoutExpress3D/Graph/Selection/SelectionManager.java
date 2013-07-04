@@ -1075,6 +1075,7 @@ public final class SelectionManager
                 include = showConfirmationDialogSomeHidden();
 
             addNodesToSelectedAndNotSelectHiddenNodes(foundGraphNodes, include);
+            layoutFrame.getClassViewerFrame().synchroniseHighlightWithSelection();
             graph.updateAllDisplayLists();
         }
         else
@@ -1127,6 +1128,7 @@ public final class SelectionManager
             include = showConfirmationDialogSomeHidden();
 
         addNodesToSelected(foundGraphNodes, include, true, true, true, false, true);
+        layoutFrame.getClassViewerFrame().synchroniseHighlightWithSelection();
         graph.updateAllDisplayLists();
 
         layoutFrame.getClassViewerFrame().setCurrentClassName( vertexClass.getName()  );
@@ -1164,6 +1166,7 @@ public final class SelectionManager
                 layoutFrame.getClassViewerFrame().setCurrentClassName(className);
             }
 
+            layoutFrame.getClassViewerFrame().synchroniseHighlightWithSelection();
             graph.updateAllDisplayLists();
         }
         else

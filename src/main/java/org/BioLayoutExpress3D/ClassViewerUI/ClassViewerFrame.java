@@ -884,6 +884,14 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         return findClassDialog.getClassIndex();
     }
 
+    public void synchroniseHighlightWithSelection()
+    {
+        if (generalTable != null)
+        {
+            generalTable.synchroniseHighlightWithSelection();
+        }
+    }
+
     public VertexClass navigateToCurrentClass()
     {
         VertexClass currentVertexClass = findClassDialog.currentVertexClass();
@@ -897,7 +905,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
             nextClassButton.setEnabled(true);
             setUpdateResetSelectDeselectAllButton(true);
-            generalTable.synchroniseHighlightWithSelection();
+            synchroniseHighlightWithSelection();
         }
 
         return currentVertexClass;
@@ -916,7 +924,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
             nextClassButton.setEnabled(true);
             setUpdateResetSelectDeselectAllButton(true);
-            generalTable.synchroniseHighlightWithSelection();
+            synchroniseHighlightWithSelection();
         }
 
         previousClassButton.setEnabled( findClassDialog.checkPreviousVertexClass() );
@@ -943,7 +951,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
             previousClassButton.setEnabled(findClassDialog.getClassIndex() != 0);
             setUpdateResetSelectDeselectAllButton(true);
-            generalTable.synchroniseHighlightWithSelection();
+            synchroniseHighlightWithSelection();
         }
 
         nextClassButton.setEnabled( findClassDialog.checkNextVertexClass() );
@@ -963,9 +971,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         {
             if (DEBUG_BUILD) println("refreshTables() General Tab.");
 
+            setUpdateResetSelectDeselectAllButton(false);
             rebuildClassSets();
             tableModelGeneral.fireTableStructureChanged();
             setVertexClassSortingToGeneralTable();
+            setUpdateResetSelectDeselectAllButton(true);
         }
         else if ( tabbedPane.getSelectedIndex() == ENTROPY_TAB.ordinal() )
         {

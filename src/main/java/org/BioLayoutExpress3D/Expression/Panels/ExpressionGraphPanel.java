@@ -367,6 +367,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         int totalColumns = expressionData.getTotalColumns();
         int datasetIndex = 0;
 
+        plot.getRangeAxis().setAutoRange(false);
+
         if (numSelectedNodes > 0 && totalColumns > 0)
         {
             ExpressionEnvironment.TransformType transformType =
@@ -474,6 +476,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             plot.getDomainAxis().setLabel(null);
             plot.getRangeAxis().setLabel(null);
         }
+
+        plot.getRangeAxis().setAutoRange(true);
 
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);

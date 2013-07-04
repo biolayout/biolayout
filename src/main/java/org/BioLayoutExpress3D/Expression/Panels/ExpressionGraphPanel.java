@@ -79,6 +79,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JComboBox<String> classStatComboBox = null;
     private JComboBox<String> selectionStatComboBox = null;
     private JCheckBox axesLegendCheckBox = null;
+    private JCheckBox hideSampleLabelsCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
 
@@ -173,12 +174,16 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         gridLinesCheckBox.setToolTipText("Grid Lines");
         axesLegendCheckBox = new JCheckBox("Axes Legend");
         axesLegendCheckBox.setToolTipText("Axes Legend");
+        hideSampleLabelsCheckBox = new JCheckBox("Hide Samples");
+        hideSampleLabelsCheckBox.setToolTipText("Hide Samples");
         exportPlotExpressionProfileAsButton = new JButton(exportPlotExpressionProfileAsAction);
         exportPlotExpressionProfileAsButton.setToolTipText("Export Plot Expression Profile As...");
         gridLinesCheckBox.addActionListener(this);
         axesLegendCheckBox.addActionListener(this);
-        gridLinesCheckBox.setSelected( PLOT_GRID_LINES.get() );
-        axesLegendCheckBox.setSelected( PLOT_AXES_LEGEND.get() );
+        hideSampleLabelsCheckBox.addActionListener(this);
+        gridLinesCheckBox.setSelected(PLOT_GRID_LINES.get());
+        axesLegendCheckBox.setSelected(PLOT_AXES_LEGEND.get());
+        hideSampleLabelsCheckBox.setSelected(PLOT_HIDE_SAMPLES.get());
 
         classStatComboBox = new JComboBox<String>();
         for (StatisticType type : StatisticType.values())
@@ -219,6 +224,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plotOptionsLine1.add(transformComboBox);
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
+        plotOptionsLine1.add(hideSampleLabelsCheckBox);
         plotOptionsLine2.add(new JLabel("Class Statistic:"));
         plotOptionsLine2.add(classStatComboBox);
         plotOptionsLine2.add(new JLabel("Selection Statistic:"));
@@ -359,6 +365,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.None;
         boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.None;
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
+        boolean hideSampleLabels = PLOT_HIDE_SAMPLES.get();
 
         HashSet<GraphNode> expandedSelectedNodes =
                 layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
@@ -481,6 +488,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);
+        plot.getDomainAxis().setTickLabelsVisible(!hideSampleLabels);
 
         exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
     }
@@ -767,6 +775,10 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         else if (e.getSource().equals(axesLegendCheckBox))
         {
             PLOT_AXES_LEGEND.set(axesLegendCheckBox.isSelected());
+        }
+        else if (e.getSource().equals(hideSampleLabelsCheckBox))
+        {
+            PLOT_HIDE_SAMPLES.set(hideSampleLabelsCheckBox.isSelected());
         }
         else if (e.getSource().equals(transformComboBox))
         {

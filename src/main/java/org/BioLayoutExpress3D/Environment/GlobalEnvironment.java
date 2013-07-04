@@ -457,6 +457,7 @@ public final class GlobalEnvironment
     public static final PrefInt PLOT_CLASS_STATISTIC_TYPE = new PrefInt(0, "plot_class_statistic_type", true);
     public static final PrefInt PLOT_SELECTION_STATISTIC_TYPE = new PrefInt(0, "plot_selection_statistic_type", true);
     public static final PrefBool PLOT_AXES_LEGEND = new PrefBool(false, "plot_axes", true);
+    public static final PrefBool PLOT_HIDE_SAMPLES = new PrefBool(false, "plot_hide_samples", true);
     public static final PrefInt PLOT_TRANSFORM = new PrefInt(0, "plot_transform", true);
 
     public static final boolean SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS = true;

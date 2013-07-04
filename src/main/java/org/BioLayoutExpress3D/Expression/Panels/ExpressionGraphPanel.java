@@ -35,6 +35,7 @@ import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
 import org.jfree.util.ShapeUtilities;
+import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 
 /**
 *
@@ -300,6 +301,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         {
                             5.0f, 2.0f
                         }, 0.0f));
+
+                // The shapes aren't shown, but this defines the tooltip hover zone
+                r.setShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
+                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+
                 plot.setRenderer(datasetIndex, r);
                 datasetIndex++;
             }
@@ -318,6 +324,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 StatisticalLineAndShapeRenderer r = new StatisticalLineAndShapeRenderer(false, true);
                 r.setSeriesPaint(0, color);
                 r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
                 plot.setRenderer(datasetIndex, r);
                 datasetIndex++;
             }
@@ -350,6 +357,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 r.setSeriesPaint(0, color);
                 r.setMeanVisible(false);
                 r.setMedianVisible(true);
+                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
                 plot.setRenderer(datasetIndex, r);
                 datasetIndex++;
             }
@@ -438,6 +446,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
                     r.setSeriesPaint(0, nodeColor);
                     r.setSeriesShapesVisible(0, false);
+
+                    // The shapes aren't shown, but this defines the tooltip hover zone
+                    r.setShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
+                    r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+
                     plot.setRenderer(datasetIndex, r);
                     datasetIndex++;
                 }
@@ -497,7 +510,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         JFreeChart expressionGraphJFreeChart = ChartFactory.createLineChart(
                 null, null, null, null,
-                PlotOrientation.VERTICAL, false, false, false);
+                PlotOrientation.VERTICAL, false, true, false);
 
         plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
 

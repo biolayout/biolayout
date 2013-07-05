@@ -6,6 +6,8 @@ package org.BioLayoutExpress3D.Files.webservice;
 
 import com.google.common.base.Joiner;
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -20,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -34,7 +37,15 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.MatteBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchHit;
@@ -251,10 +262,11 @@ is.close;
         String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class"};
         int numRows = 0;
         
-        model = new DefaultTableModel(numRows, colHeadings.length) {
-
+        model = new DefaultTableModel(numRows, colHeadings.length) 
+        {
             @Override
-            public boolean isCellEditable(int row, int column) {
+            public boolean isCellEditable(int row, int column) 
+            {
                //all cells false
                return false;
             }
@@ -264,6 +276,38 @@ is.close;
         
         JTable table = new JTable(model);
         table.setAutoCreateRowSorter(true);
+        table.setGridColor(Color.BLUE);
+        table.setShowVerticalLines(true);
+        table.setShowHorizontalLines(false);
+        
+        //center align header and cell contents
+        
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setHorizontalAlignment( JLabel.CENTER );
+        headerRenderer.setBackground(Color.LIGHT_GRAY);
+        JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(headerRenderer);
+        
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+        for (int column = 1; column < table.getColumnCount(); ++column) //align columns 1-3
+        {
+            TableColumn tc = table.getColumnModel().getColumn(column);
+            tc.setCellRenderer(centerRenderer);        
+        }
+        
+        //size column width to fit biggest cell
+        /*
+        int column = 3;
+        int width = 0;
+        for (int row = 0; row < table.getRowCount(); row++) {
+            TableCellRenderer renderer = table.getCellRenderer(row, column);
+            Component comp = table.prepareRenderer(renderer, row, column);
+            width = Math.max (comp.getPreferredSize().width, width);
+        }
+        TableColumn tc = table.getColumnModel().getColumn(column);
+        tc.setPreferredWidth(width);
+*/
         JScrollPane pane = new JScrollPane(table);
         getContentPane().add(pane, BorderLayout.CENTER);
         
@@ -515,4 +559,40 @@ is.close;
             setVisible(false);
         } 
     }
+    
+    /**
+     * Sets the preferred width of the visible column specified by vColIndex. The column
+     * will be just wide enough to show the column head and the widest cell in the column.
+     * margin pixels are added to the left and right
+     * (resulting in an additional width of 2*margin pixels).
+     */ 
+    public static void packColumn(JTable table, int vColIndex, int margin) 
+    {
+        DefaultTableColumnModel colModel = (DefaultTableColumnModel)table.getColumnModel();
+        TableColumn col = colModel.getColumn(vColIndex);
+        int width = 0;
+
+        // Get width of column header
+        TableCellRenderer renderer = col.getHeaderRenderer();
+        if (renderer == null) {
+            renderer = table.getTableHeader().getDefaultRenderer();
+        }
+        java.awt.Component comp = renderer.getTableCellRendererComponent(
+            table, col.getHeaderValue(), false, false, 0, 0);
+        width = comp.getPreferredSize().width;
+
+        // Get maximum width of column data
+        for (int r=0; r<table.getRowCount(); r++) {
+            renderer = table.getCellRenderer(r, vColIndex);
+            comp = renderer.getTableCellRendererComponent(
+                table, table.getValueAt(r, vColIndex), false, false, r, vColIndex);
+            width = Math.max(width, comp.getPreferredSize().width);
+        }
+
+        // Add margin
+        width += 2*margin;
+
+        // Set the width
+        col.setPreferredWidth(width);
+    }    
 }

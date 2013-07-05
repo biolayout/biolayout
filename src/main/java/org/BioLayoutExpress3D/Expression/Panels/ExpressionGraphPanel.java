@@ -127,7 +127,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         };
         exportPlotExpressionProfileAsAction.setEnabled(false);
 
-        renderPlotImageToFileAction = new AbstractAction("Render Plot Image To File As...")
+        renderPlotImageToFileAction = new AbstractAction("Render Plot To File...")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -142,7 +142,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         };
         renderPlotImageToFileAction.setEnabled(false);
 
-        renderAllCurrentClassSetPlotImagesToFilesAction = new AbstractAction("Render All Current Class Set Plot Images To Files As...")
+        renderAllCurrentClassSetPlotImagesToFilesAction = new AbstractAction("Render Class Set Plots To Files...")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.

@@ -460,6 +460,8 @@ public final class GlobalEnvironment
     public static final PrefBool PLOT_HIDE_SAMPLES = new PrefBool(false, "plot_hide_samples", true);
     public static final PrefInt PLOT_TRANSFORM = new PrefInt(0, "plot_transform", true);
 
+    public static final PrefBool CV_AUTO_SIZE_COLUMNS = new PrefBool(true, "cv_auto_size_columns", true);
+
     public static final boolean SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS = true;
     public static final PrefString CUSTOMIZE_NODE_NAMES_DELIMITER = new PrefString("", "customize_node_names_delimiter", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefBool CUSTOMIZE_NODE_NAMES_SHOW_FULL_NAME = new PrefBool(true, "customize_node_names_show_full_name", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);

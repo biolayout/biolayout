@@ -41,7 +41,7 @@ public final class ClassViewerHideColumnsDialog extends JDialog
     private void initComponents(final ClassViewerFrame classViewerFrame)
     {
         hideColumnsTableModel = new ClassViewerHideColumnsTableModel(classViewerFrame);
-        ClassViewerTable table = new ClassViewerTable(hideColumnsTableModel, ClassViewerHideColumnsTableModel.COLUMN_NAMES);
+        ClassViewerTable table = new ClassViewerTable(hideColumnsTableModel, ClassViewerHideColumnsTableModel.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         table.setRowSorter( new TableRowSorter<ClassViewerHideColumnsTableModel>(hideColumnsTableModel) ); // provide a sorting mechanism to the table
 
         selectDeselectAllButton = createSelectDeselectAllButton();

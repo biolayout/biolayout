@@ -11,6 +11,7 @@ import org.BioLayoutExpress3D.ClassViewerUI.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.Network.*;
 import org.BioLayoutExpress3D.ClassViewerUI.Tables.TableModels.ClassViewerTableModelGeneral;
+import org.BioLayoutExpress3D.StaticLibraries.Utils;
 
 /**
 *
@@ -34,17 +35,20 @@ public final class ClassViewerTable extends JTable
     */
     private String[] columnNames = null;
 
-    private TableModel tableModel;
+    /**
+    *  When true, automatically size the columns in prepareRenderer.
+    */
+    private boolean autoSizeColumns;
 
     /**
     *  The constructor of the ClassViewerTable class.
     */
-    public ClassViewerTable(TableModel tableModel, String[] columnNames)
+    public ClassViewerTable(TableModel tableModel, String[] columnNames, boolean autoSizeColumns)
     {
         super(tableModel);
 
-        this.tableModel = tableModel;
         this.columnNames = columnNames;
+        this.autoSizeColumns = autoSizeColumns;
     }
 
     /**
@@ -115,8 +119,12 @@ public final class ClassViewerTable extends JTable
             public String getToolTipText(MouseEvent e)
             {
                 int index = columnModel.getColumnIndexAtX( e.getPoint().x );
-                int realIndex = columnModel.getColumn(index).getModelIndex();
-                return columnNames[realIndex];
+                if (index < 0)
+                {
+                    return "";
+                }
+                int modelIndex = columnModel.getColumn(index).getModelIndex();
+                return columnNames[modelIndex];
             }
         };
     }
@@ -196,7 +204,7 @@ public final class ClassViewerTable extends JTable
                 }
             }
 
-            ((ClassViewerTableModelGeneral)tableModel).setSelectedRows(highlightedRows);
+            ((ClassViewerTableModelGeneral)dataModel).setSelectedRows(highlightedRows);
         }
     }
 
@@ -205,6 +213,12 @@ public final class ClassViewerTable extends JTable
     */
     public void updateTableColumnNames(String[] columnNames)
     {
+        if (autoSizeColumns || !Utils.areArraysEqual(columnNames, this.columnNames))
+        {
+            // Only recreate the columns when autosizing or when the column names change
+            setAutoCreateColumnsFromModel(true);
+        }
+
         this.columnNames = columnNames;
     }
 
@@ -251,5 +265,30 @@ public final class ClassViewerTable extends JTable
 
     }
 
+    public boolean getAutoSizeColumns()
+    {
+        return autoSizeColumns;
+    }
 
+    public void setAutoSizeColumns(boolean autoSizeColumns)
+    {
+        this.autoSizeColumns = autoSizeColumns;
+    }
+
+    @Override
+    public Component prepareRenderer(TableCellRenderer renderer, int row, int column)
+    {
+        Component component = super.prepareRenderer(renderer, row, column);
+
+        if (autoSizeColumns)
+        {
+            int rendererWidth = component.getPreferredSize().width;
+            TableColumn tableColumn = getColumnModel().getColumn(column);
+            tableColumn.setPreferredWidth(Math.max(rendererWidth +
+                    getIntercellSpacing().width,
+                    tableColumn.getPreferredWidth()));
+        }
+
+        return component;
+    }
 }

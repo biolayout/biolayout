@@ -56,6 +56,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JComboBox<String> classSetsBox = null;
     private JCheckBox viewAllClassSets = null;
     private AbstractAction refreshSelectionInTableAction = null;
+    private JCheckBox autoSizeColumnsCheckBox = null;
     private JButton selectDeselectAllButton = null;
     private boolean selectDeselectAllButtonModeState = false;
     private boolean updateResetSelectDeselectAllButton = true;
@@ -291,7 +292,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             }
         };
 
-        refreshSelectionInTableAction = new AbstractAction("Refresh Selection In Table")
+        refreshSelectionInTableAction = new AbstractAction("Hide Unselected Rows")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -503,18 +504,23 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         classSetsBox = new JComboBox<String>();
         classSetsBox.addItemListener(this);
-        classSetsBox.setToolTipText("Select Current Class Set");
+        classSetsBox.setToolTipText("Class Set");
 
-        viewAllClassSets = new JCheckBox("View All Class Sets");
+        viewAllClassSets = new JCheckBox("Show All Class Sets");
         viewAllClassSets.addActionListener(this);
-        viewAllClassSets.setToolTipText("View All Class Sets");
+        viewAllClassSets.setToolTipText("Show All Class Sets");
+
+        autoSizeColumnsCheckBox = new JCheckBox("Auto Size Columns");
+        autoSizeColumnsCheckBox.addActionListener(this);
+        autoSizeColumnsCheckBox.setToolTipText("Auto Size Columns");
+        autoSizeColumnsCheckBox.setSelected(CV_AUTO_SIZE_COLUMNS.get());
 
         // generalTable, center
         tableModelGeneral = new ClassViewerTableModelGeneral(layoutFrame, this);
-        generalTable = new ClassViewerTable(tableModelGeneral, ClassViewerTableModelGeneral.ORIGINAL_COLUMN_NAMES);
+        generalTable = new ClassViewerTable(tableModelGeneral, ClassViewerTableModelGeneral.ORIGINAL_COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         generalTableSorter = new TableRowSorter<ClassViewerTableModelGeneral>(tableModelGeneral);
         generalTable.setRowSorter(generalTableSorter); // provide a sorting mechanism to the table
-        generalTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        generalTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         generalTable.setAutoscrolls(true);
         generalTable.sortTableByColumn(NAME_COLUMN, generalTableSorter);
 
@@ -578,11 +584,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         nextClassButton.setToolTipText("►► (Next Class)");
 
         JButton renderAllCurrentClassSetPlotImagesToFilesButton = new JButton( expressionGraphPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction() );
-        renderAllCurrentClassSetPlotImagesToFilesButton.setToolTipText("Render All Current Class Set Plot Images To Files As...");
+        renderAllCurrentClassSetPlotImagesToFilesButton.setToolTipText("Render Class Set Plots To Files...");
         generalTopPanel.add(renderAllCurrentClassSetPlotImagesToFilesButton);
         // generalTopPanel.add( Box.createRigidArea( new Dimension(20, 30) ) );
         JButton renderPlotImageToFileButton = new JButton( expressionGraphPanel.getRenderPlotImageToFileAction() );
-        renderPlotImageToFileButton.setToolTipText("Render Plot Image To File As...");
+        renderPlotImageToFileButton.setToolTipText("Render Plot To File...");
         generalTopPanel.add(renderPlotImageToFileButton);
         // generalTopPanel.add( Box.createRigidArea( new Dimension(10, 30) ) );
 
@@ -596,7 +602,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         refreshSelectionInTableButton = new JButton(refreshSelectionInTableAction);
         refreshSelectionInTableButton.setEnabled(false);
-        refreshSelectionInTableButton.setToolTipText("Refresh Selection In Table");
+        refreshSelectionInTableButton.setToolTipText("Hide Unselected Rows");
         exportTableAsButton = new JButton(exportTableToFileAction);
         exportTableAsButton.setEnabled(false);
         exportTableAsButton.setToolTipText("Export Table As...");
@@ -605,10 +611,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         chooseColumnsToHideButton.setToolTipText("Choose Columns To Hide");
 
         // topPanel, north
-        generalTopPanel.add( new JLabel("Select Current Class Set:") );
+        generalTopPanel.add( new JLabel("Class Set:") );
         generalTopPanel.add(classSetsBox);
         generalTopPanel.add(viewAllClassSets);
         generalTopPanel.add(refreshSelectionInTableButton);
+        generalTopPanel.add(autoSizeColumnsCheckBox);
 
         tabGeneralPanel.add(generalTopPanel, BorderLayout.NORTH);
 
@@ -628,9 +635,9 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         // entropy, center
         entropyTableModel = new ClassViewerTableModelAnalysis(layoutFrame);
-        entropyTable = new ClassViewerTable(entropyTableModel, ClassViewerTableModelAnalysis.COLUMN_NAMES);
+        entropyTable = new ClassViewerTable(entropyTableModel, ClassViewerTableModelAnalysis.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         entropyTable.setRowSorter( new TableRowSorter<ClassViewerTableModelAnalysis>(entropyTableModel) ); // provide a sorting mechanism to the table
-        entropyTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        entropyTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         entropyTable.setAutoscrolls(true);
         entropyTable.setDefaultRenderer(Double.class, new EntropyTableCellRenderer());
         ( (DefaultTableCellRenderer)entropyTable.getTableHeader().getDefaultRenderer() ).setHorizontalAlignment(SwingConstants.CENTER);
@@ -668,9 +675,9 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         // analysis table
         analysisTableModel = new ClassViewerTableModelDetail();
-        ClassViewerTable analysisDetailsTable = new ClassViewerTable(analysisTableModel, ClassViewerTableModelDetail.COLUMN_NAMES);
+        ClassViewerTable analysisDetailsTable = new ClassViewerTable(analysisTableModel, ClassViewerTableModelDetail.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         analysisDetailsTable.setRowSorter( new TableRowSorter<ClassViewerTableModelDetail>(analysisTableModel) ); // provide a sorting mechanism to the table
-        analysisDetailsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        analysisDetailsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         analysisDetailsTable.setAutoscrolls(true);
         analysisDetailsTable.setDefaultRenderer(Double.class, new EntropyTableCellRenderer());
         analysisDetailsTable.setDefaultRenderer(Integer.class, new EntropyTableCellRenderer());
@@ -829,6 +836,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 generalTable.updateTableColumnNames( getGeneralTableColumnNames() );
 
                 refreshTables();
+
+                generalTable.setAutoCreateColumnsFromModel(false);
 
                 boolean enableHideColumnsAndExportButtons = (generalTable.getRowCount() > 0);
                 refreshSelectionInTableButton.setEnabled(enableHideColumnsAndExportButtons);
@@ -1225,6 +1234,12 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         {
             if (DEBUG_BUILD) println("Reinit Due to Action:" + e.toString());
 
+            populateClassViewer(false, true);
+        }
+        else if ( e.getSource().equals(autoSizeColumnsCheckBox) )
+        {
+            CV_AUTO_SIZE_COLUMNS.set(autoSizeColumnsCheckBox.isSelected());
+            generalTable.setAutoSizeColumns(CV_AUTO_SIZE_COLUMNS.get());
             populateClassViewer(false, true);
         }
     }

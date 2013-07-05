@@ -303,7 +303,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         }, 0.0f));
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
-                r.setShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
+                r.setBaseShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
                 plot.setRenderer(datasetIndex, r);
@@ -448,7 +448,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     r.setSeriesShapesVisible(0, false);
 
                     // The shapes aren't shown, but this defines the tooltip hover zone
-                    r.setShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
+                    r.setBaseShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
                     r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
                     plot.setRenderer(datasetIndex, r);

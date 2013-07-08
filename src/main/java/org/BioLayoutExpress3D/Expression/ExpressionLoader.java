@@ -87,17 +87,8 @@ public final class ExpressionLoader
             int numColumns = tdm.numColumns();
             int numRows = tdm.numRows();
 
+            // - 1 because the first column is always the row ID
             int totalAnnotationColumns = firstDataColumn - 1;
-
-            if (totalAnnotationColumns <= 0)
-            {
-                if (DEBUG_BUILD)
-                {
-                    println("Zero annotation columns when loading expression file");
-                }
-
-                return false;
-            }
 
             annotationColumnLabels = new String[totalAnnotationColumns];
             expressionData.initialize(
@@ -125,7 +116,7 @@ public final class ExpressionLoader
                             // Data column names
                             expressionData.setColumnName(dataColumn, value);
                         }
-                        else if (column >= 1)
+                        else if (column >= 1) // First column is always the row ID
                         {
                             // Annotation classes
                             String annotation = cleanString(value);

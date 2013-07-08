@@ -209,10 +209,12 @@ public final class ExpressionLoader
                 for (int column = 0; column < firstDataColumn; column++)
                 {
                     String value = tdm.valueAt(column, row);
+                    int dataColumn = column - firstDataColumn;
+                    int dataRow = row - firstDataRow;
 
                     if (column == 0)
                     {
-                        vertex = nc.getVerticesMap().get(value);
+                        vertex = nc.getVerticesMap().get(expressionData.getRowID(dataRow));
                     }
                     else if (vertex != null)
                     {

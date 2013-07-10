@@ -1368,6 +1368,12 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
             if (!layoutProgressBarDialog.userHasCancelled())
             {
+                // skip resizeNodesAndArrowHeadsToKvalue() if the file is a layout file (for now, in the future it will be incorporated within the layout algorithm)
+                if (!fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString()) && RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get())
+                {
+                    resizeNodesAndArrowHeadsToKvalue();
+                }
+
                 nc.clearRoot();
                 nc.normaliseWeights();
                 graph.rebuildGraph();
@@ -1783,6 +1789,29 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutGraphPropertiesDialog.setEnabledProportionalEdgesSizeToWeight(false);
         layoutGraphPropertiesDialog.setEnabledNodeNameTextFieldAndSelectNodesTab(false, null, 0);
         layoutGraphPropertiesDialog.setEnabledGraphmlRelatedOptions(false);
+    }
+
+    /**
+     * Resizes nodes to K value.
+     */
+    private void resizeNodesAndArrowHeadsToKvalue()
+    {
+        double nodesToKValueRatio = nc.getKValue() / REFERENCE_K_VALUE;
+        double arrowheadsToKValueRatio = nc.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
+
+        int newNodeSize = 0;
+        for (Vertex vertex : nc.getVertices())
+        {
+            newNodeSize = (int) (nodesToKValueRatio * vertex.getVertexSize());
+            if (newNodeSize < MIN_NODE_SIZE)
+            {
+                newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
+            }
+            vertex.setVertexSize(newNodeSize);
+        }
+
+        arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ((arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio);
+        ARROW_HEAD_SIZE.set((int) arrowheadsToKValueRatio);
     }
 
     /**

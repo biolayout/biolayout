@@ -154,26 +154,6 @@ public final class NetworkRootContainer extends NetworkContainer
         }
     }
 
-    /**
-    *  Resizes nodes to K value.
-    */
-    private void resizeNodesAndArrowHeadsToKvalue()
-    {
-        double nodesToKValueRatio = this.getKValue() / REFERENCE_K_VALUE;
-        double arrowheadsToKValueRatio = this.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
-
-        int newNodeSize = 0;
-        for ( Vertex vertex : this.getVertices() )
-        {
-            newNodeSize = (int)( nodesToKValueRatio * vertex.getVertexSize() );
-            if (newNodeSize < MIN_NODE_SIZE) newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
-            vertex.setVertexSize(newNodeSize);
-        }
-
-        arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ( (arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio );
-        ARROW_HEAD_SIZE.set( (int)arrowheadsToKValueRatio );
-    }
-
     @Override
     public void optimize(GraphLayoutAlgorithm gla)
     {
@@ -313,11 +293,6 @@ public final class NetworkRootContainer extends NetworkContainer
                     tilingLevelsContainer.optimize();
 
                     layoutProgressBarDialog.endProgressBar();
-                }
-
-                if (RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get())
-                {
-                    resizeNodesAndArrowHeadsToKvalue();
                 }
 
                 break;

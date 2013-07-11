@@ -334,7 +334,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             }
         };
 
-        okAction = new AbstractAction("OK")
+        okAction = new AbstractAction("Close")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -623,7 +623,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         generalButtonPanel.add(chooseColumnsToHideButton);
         generalButtonPanel.add(exportTableAsButton);
         JButton okButton = new JButton(okAction);
-        okButton.setToolTipText("OK");
+        okButton.setToolTipText("Close");
         generalButtonPanel.add(okButton);
 
         tabGeneralPanel.add(generalButtonPanel, BorderLayout.SOUTH);
@@ -664,7 +664,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         okButtonPanel.add(detailsButton);
         okButtonPanel.add(detailsForAllButton);
         okButton = new JButton(okAction);
-        okButton.setToolTipText("OK");
+        okButton.setToolTipText("Close");
         okButtonPanel.add(okButton);
         tabEntropyPanel.add(okButtonPanel, BorderLayout.SOUTH);
 
@@ -692,7 +692,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // ok, south
         JPanel okButtonPanelDetails = new JPanel(true);
         okButton = new JButton(okAction);
-        okButton.setToolTipText("OK");
+        okButton.setToolTipText("Close");
         okButtonPanelDetails.add(okButton);
         tabEntropyDetailPanel.add(okButtonPanelDetails, BorderLayout.SOUTH);
 

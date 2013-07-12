@@ -227,7 +227,6 @@ public final class ExpressionDegreePlotsPanel extends JPanel
 
         XYSeries degreeSeries = new XYSeries("Degree");
         XYDataset degreeDataset = new XYSeriesCollection(degreeSeries);
-        plot.setDataset(0, degreeDataset);
 
         XYSeries log10DegreeSeries = new XYSeries("Degree Log10");
         XYDataset log10DegreeDataset = new XYSeriesCollection(log10DegreeSeries);
@@ -241,6 +240,8 @@ public final class ExpressionDegreePlotsPanel extends JPanel
                 log10DegreeSeries.add(log10(i), log10(histoGram[threshold - minThreshold][i]));
             }
         }
+
+        plot.setDataset(0, degreeDataset);
 
         if (degreeSeries.getItemCount() > 1)
         {

@@ -19,6 +19,11 @@ import org.jfree.data.Range;
 import org.jfree.data.function.LineFunction2D;
 import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.statistics.Regression;
+import org.jfree.chart.annotations.XYTitleAnnotation;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.chart.block.BlockBorder;
 
 /**
 *
@@ -153,7 +158,7 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         r.setSeriesOutlinePaint(0, Color.BLACK);
         r.setUseOutlinePaint(true);
 
-        r.setSeriesShape(1, new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
+        r.setSeriesShape(1, new Rectangle.Double(-3.0, -3.0, 6.0, 6.0));
         r.setSeriesFillPaint(1, Color.MAGENTA);
         r.setUseFillPaint(true);
         r.setSeriesOutlinePaint(1, Color.BLACK);
@@ -173,6 +178,15 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         thresholdMarker.setPaint(Color.red);
         thresholdMarker.setStroke(new BasicStroke(2.0F));
         plot.addDomainMarker(thresholdMarker);
+
+        LegendTitle legendtitle = new LegendTitle(plot);
+        legendtitle.setItemFont(new Font("Dialog", 0, 9));
+        legendtitle.setBackgroundPaint(new Color(255, 255, 255, 200));
+        legendtitle.setFrame(new BlockBorder(Color.white));
+        legendtitle.setPosition(RectangleEdge.TOP);
+        XYTitleAnnotation xytitleannotation = new XYTitleAnnotation(0.98, 0.9, legendtitle, RectangleAnchor.TOP_RIGHT);
+        xytitleannotation.setMaxWidth(0.5);
+        plot.addAnnotation(xytitleannotation);
 
         return chart;
     }

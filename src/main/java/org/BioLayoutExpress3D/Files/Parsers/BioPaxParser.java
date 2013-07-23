@@ -47,9 +47,9 @@ import org.biopax.paxtools.model.level3.TemplateReaction;
 * @author Derek Wright
 */
 
-public final class BioPAXParser extends CoreParser
+public final class BioPaxParser extends CoreParser
 {
-    private static final Logger logger = Logger.getLogger(BioPAXParser.class.getName());
+    private static final Logger logger = Logger.getLogger(BioPaxParser.class.getName());
     
     /**
      * Multiplier to resize nodes to accommodate mEPN glyphs in a network graph.
@@ -59,7 +59,7 @@ public final class BioPAXParser extends CoreParser
     private BioPAXIOHandler handler;
     private HashMap<Entity, Vertex> entityVertexMap = null; //created during parsing
 
-    public BioPAXParser(NetworkContainer nc, LayoutFrame layoutFrame)
+    public BioPaxParser(NetworkContainer nc, LayoutFrame layoutFrame)
     {
         super(nc, layoutFrame);
         layoutFrame.setNodeResizeFactor(NODE_RESIZE_FACTOR); //mEPN glyphs are too big for network graph, resize proportionally
@@ -139,21 +139,21 @@ public final class BioPAXParser extends CoreParser
                 {
                     Interaction interaction = (Interaction)entity;
                     Tuple7 interactionShape;
-                    interactionShape = BioPAXParser.lookupInteractionShape(interaction);
+                    interactionShape = BioPaxParser.lookupInteractionShape(interaction);
                     
-                    BioPAXParser.setVertexPropertiesInteraction(vertex, interactionShape);
+                    BioPaxParser.setVertexPropertiesInteraction(vertex, interactionShape);
                }
                 else
                 {
-                    Tuple6 entityShape = BioPAXParser.lookupEntityShape(entity);
+                    Tuple6 entityShape = BioPaxParser.lookupEntityShape(entity);
                     if(entityShape.second instanceof GraphmlShapesGroup2) //Pathway
                     {
                         logger.info("Pathway vertex");
-                        BioPAXParser.setVertexPropertiesPathway(vertex, entityShape);
+                        BioPaxParser.setVertexPropertiesPathway(vertex, entityShape);
                     }
                     else //PhysicalEntity, Gene
                     {
-                        BioPAXParser.setVertexPropertiesEntity(vertex, entityShape);
+                        BioPaxParser.setVertexPropertiesEntity(vertex, entityShape);
                     }
                }
                 nc.getVerticesMap().put(vertex.getVertexName(), vertex);

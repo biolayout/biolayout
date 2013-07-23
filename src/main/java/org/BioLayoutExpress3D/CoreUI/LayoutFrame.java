@@ -1095,7 +1095,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         // Reactome OWL Data
         else if ( fileExtension.equals( SupportedInputFileTypes.OWL.toString() ) )
         {
-            parser = new BioPAXParser(nc, this);
+            parser = new BioPaxParser(nc, this);
             DATA_TYPE = DataTypes.OWL;
         }
         // Expression data (non-layed out)

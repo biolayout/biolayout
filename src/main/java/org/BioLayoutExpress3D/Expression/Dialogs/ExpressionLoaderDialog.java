@@ -254,9 +254,14 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         {
             for (int row = tdm.numRows() - 1; row >= 0; row--)
             {
-                if (isNumeric(tdm.valueAt(column, row)))
+                String value = tdm.valueAt(column, row);
+                if (isNumeric(value))
                 {
                     heightHistogram[column]++;
+                }
+                else
+                {
+                    break;
                 }
             }
         }

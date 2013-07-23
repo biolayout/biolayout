@@ -76,7 +76,7 @@ public class TextDelimitedMatrix
                     progressIndicator.notify(linesRead * 100 / numLines);
                 }
 
-                String[] split = line.split(delimiterRegex, -1);
+                String[] split = line.split(delimiterRegex);
 
                 if (columnCount >= 0 && split.length != columnCount)
                 {
@@ -109,13 +109,7 @@ public class TextDelimitedMatrix
                         split[column] = split[column].substring(0, split[column].length() - 1);
                     }
 
-                    String value = split[column];
-                    if (value.isEmpty())
-                    {
-                        value = "0";
-                    }
-
-                    data.add(column + (row * numColumnsToParse), value);
+                    data.add(column + (row * numColumnsToParse), split[column]);
                 }
 
                 row++;

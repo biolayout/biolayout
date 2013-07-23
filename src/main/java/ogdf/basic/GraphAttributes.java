@@ -109,7 +109,7 @@ public class GraphAttributes
                         NetworkContainer.CANVAS_Z_SIZE * 0.5f);
 
             // Seems like a sensible default
-            vertex.setVertexSize(5.0f * (float)scale);
+            vertex.setVertexSize(15.0f * (float)scale);
         }
     }
 

@@ -9,4 +9,4 @@ package org.BioLayoutExpress3D.Environment.Preferences;
 *
 */
 
-public enum PrefTypes { PREF_INT, PREF_BOOL, PREF_FLOAT, PREF_STRING, PREF_COLOR, PREF_DOUBLE }
+public enum PrefTypes { PREF_INT, PREF_BOOL, PREF_FLOAT, PREF_STRING, PREF_COLOR, PREF_DOUBLE, PREF_ENUM }

@@ -761,11 +761,7 @@ public class Graph extends GLCanvas implements GraphInterface
     */
     private void disposeTexture(GL2 gl, Texture texture)
     {
-        if (texture != null)
-        {
-            texture.dispose(gl);
-            texture = null;
-        }
+        texture = null;
     }
 
     /**
@@ -925,34 +921,54 @@ public class Graph extends GLCanvas implements GraphInterface
 
     private void performBurstIterations()
     {
+        if (GRAPH_LAYOUT_ALGORITHM.get() != GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD)
+        {
+            if (JOptionPane.showConfirmDialog(layoutFrame,
+                    "Burst Layout Iterations can only be performed using the " +
+                    "Fruchterman-Rheingold algorithm. Do you wish to proceed?",
+                    "Are You Sure?", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION)
+            {
+                return;
+            }
+        }
+
         boolean performBurstIterations = true;
         boolean hasChangedShowLayoutIterationsValue = false;
 
-        if ( !SHOW_LAYOUT_ITERATIONS.get() )
+        if (!SHOW_LAYOUT_ITERATIONS.get())
         {
-            int option = JOptionPane.showConfirmDialog(layoutFrame, "The Show Layout Iterations option is turned off.\nDo you really want to perform animated Burst Layout Iterations ?", "Burst Layout Iterations Question", JOptionPane.YES_NO_OPTION);
-            if ( performBurstIterations = hasChangedShowLayoutIterationsValue = (option == JOptionPane.YES_OPTION) )
+            int option = JOptionPane.showConfirmDialog(layoutFrame,
+                    "The Show Layout Iterations option is turned off.\n" +
+                    "Do you really want to perform animated Burst Layout Iterations ?",
+                    "Burst Layout Iterations Question", JOptionPane.YES_NO_OPTION);
+            if (performBurstIterations = hasChangedShowLayoutIterationsValue = (option == JOptionPane.YES_OPTION))
+            {
                 SHOW_LAYOUT_ITERATIONS.set(true);
+            }
         }
 
         if (performBurstIterations)
         {
             // to do relayout with animation works only if tiling is off, temporarily disabling it below
             boolean originalTilingValue = false;
-            if ( SHOW_LAYOUT_ITERATIONS.get() )
+            if (SHOW_LAYOUT_ITERATIONS.get())
             {
                 originalTilingValue = TILED_LAYOUT.get();
                 TILED_LAYOUT.set(false);
             }
 
-            nc.relayout();
+            nc.relayout(GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD);
             burstUpdate();
 
-            if ( SHOW_LAYOUT_ITERATIONS.get() )
+            if (SHOW_LAYOUT_ITERATIONS.get())
+            {
                 TILED_LAYOUT.set(originalTilingValue);
+            }
 
             if (hasChangedShowLayoutIterationsValue)
+            {
                 SHOW_LAYOUT_ITERATIONS.set(false);
+            }
         }
     }
 

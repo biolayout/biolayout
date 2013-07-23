@@ -1126,9 +1126,8 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     DATA_TYPE = DataTypes.EXPRESSION;
 
                     boolean generateTextFile = expressionLoaderDialog.saveCorrelationTextFile();
-                    float filterValue = expressionLoaderDialog.filterValue();
 
-                    expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM, filterValue);
+                    expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM);
 
                     if (DEBUG_BUILD) println("Expression File is: " + EXPRESSION_FILE_PATH + EXPRESSION_FILE);
                     String metricName = CURRENT_METRIC.toString().toLowerCase();
@@ -1146,11 +1145,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         correlationFilename += "_" + Utils.hyphenatedOf(CURRENT_SCALE_TRANSFORM.toString());
                     }
 
-                    if (filterValue >= 0.0f)
-                    {
-                        correlationFilename += "_filter-" + filterValue;
-                    }
-
                     correlationFilename += "_" + metricName;
                     correlationFilename += ".correlationcache";
 
@@ -1160,7 +1154,15 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         expressionData.buildCorrelationNetwork(layoutProgressBarDialog,
                                 correlationFile, metricName, STORED_CORRELATION_THRESHOLD,
                                 generateTextFile);
-                        file = correlationFile;
+
+                        if (!layoutProgressBarDialog.userHasCancelled())
+                        {
+                            file = correlationFile;
+                        }
+                        else
+                        {
+                            isNotSkipped = false;
+                        }
                     }
                     else
                     {
@@ -1190,19 +1192,25 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         }
                     }
 
-                    ExpressionParser scanner = new ExpressionParser(nc, this, expressionData);
-                    scanner.init(file, fileExtension);
-                    scanner.scan();
-
-                    ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog = new ExpressionLoaderSummaryDialog( this, expressionData.getCounts(), expressionData.getTotalRows() );
-                    expressionLoaderSummaryDialog.setVisible(true);
-
-                    if ( isNotSkipped = expressionLoaderSummaryDialog.proceed() )
+                    if (isNotSkipped)
                     {
-                        parser = new ExpressionParser(nc, this, expressionData);
+                        ExpressionParser scanner = new ExpressionParser(nc, this, expressionData);
+                        scanner.init(file, fileExtension);
+                        scanner.scan();
 
-                        if ( !exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().isEnabled() )
-                            exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().setEnabled(true);
+                        ExpressionLoaderSummaryDialog expressionLoaderSummaryDialog =
+                                new ExpressionLoaderSummaryDialog(this, expressionData, scanner);
+                        expressionLoaderSummaryDialog.setVisible(true);
+
+                        if (isNotSkipped = expressionLoaderSummaryDialog.proceed())
+                        {
+                            parser = new ExpressionParser(nc, this, expressionData);
+
+                            if (!exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().isEnabled())
+                            {
+                                exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction().setEnabled(true);
+                            }
+                        }
                     }
                 }
 
@@ -1351,23 +1359,45 @@ public final class LayoutFrame extends JFrame implements GraphListener
             graph.getSelectionManager().getGroupManager().resetState();
             nc.createNetworkComponentsContainer();
 
-            if ( !nc.getVertices().isEmpty() ) // fail-safe check in case the parsed file is an empty graph
+            if (!nc.getVertices().isEmpty()) // fail-safe check in case the parsed file is an empty graph
             {
-                if ( !nc.isOptimized() )
-                    nc.optimize();
+                if (!nc.isOptimized())
+                {
+                    GraphLayoutAlgorithm gla = GRAPH_LAYOUT_ALGORITHM.get();
+
+                    if (gla == GraphLayoutAlgorithm.ALWAYS_ASK)
+                    {
+                        // Ask the user
+                        LayoutAlgorithmSelectionDialog lasd = new LayoutAlgorithmSelectionDialog(this);
+                        gla = lasd.getGraphLayoutAlgorithm();
+                    }
+
+                    nc.optimize(gla);
+                }
                 else
+                {
                     nc.setKvalue();
+                }
             }
 
-            // skip resizeNodesAndArrowHeadsToKvalue() if the file is a layout file (for now, in the future it will be incorporated within the layout algorithm)
-            if ( !fileExtension.equals( SupportedInputFileTypes.LAYOUT.toString() ) && RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get() )
-                resizeNodesAndArrowHeadsToKvalue();
+            if (!layoutProgressBarDialog.userHasCancelled())
+            {
+                // skip resizeNodesAndArrowHeadsToKvalue() if the file is a layout file (for now, in the future it will be incorporated within the layout algorithm)
+                if (!fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString()) && RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get())
+                {
+                    resizeNodesAndArrowHeadsToKvalue();
+                }
 
-            nc.clearRoot();
-            nc.normaliseWeights();
-            graph.rebuildGraph();
-            graph.resetAllValues();
-            reachedRebuildNetwork = true;
+                nc.clearRoot();
+                nc.normaliseWeights();
+                graph.rebuildGraph();
+                graph.resetAllValues();
+                reachedRebuildNetwork = true;
+            }
+            else
+            {
+                isNotSkipped = false;
+            }
         }
 
         if (isSuccessful && isNotSkipped)
@@ -1776,18 +1806,21 @@ public final class LayoutFrame extends JFrame implements GraphListener
     }
 
     /**
-    *  Resizes nodes to K value.
-    */
+     * Resizes nodes to K value.
+     */
     private void resizeNodesAndArrowHeadsToKvalue()
     {
         double nodesToKValueRatio = nc.getKValue() / REFERENCE_K_VALUE;
         double arrowheadsToKValueRatio = nc.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
         
         int newNodeSize = 0;
-        for ( Vertex vertex : nc.getVertices() )
+        for (Vertex vertex : nc.getVertices())
         {
             newNodeSize = (int)( nodesToKValueRatio * vertex.getVertexSize() * this.nodeResizeFactor);
-            if (newNodeSize < MIN_NODE_SIZE) newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
+            if (newNodeSize < MIN_NODE_SIZE)
+            {
+                newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
+            }
             vertex.setVertexSize(newNodeSize);
         }
         
@@ -1804,8 +1837,16 @@ public final class LayoutFrame extends JFrame implements GraphListener
         graph.clear();
     }
 
+    /**
+     * Handler for when user quits the application.
+     * Presents dialog to confirm or save preferences if changed.
+     * Removes graph and shuts down the application.
+     */
     private void closeApplication()
     {
+        //Workaround to ignore Exception thrown by JOGL on OS X - TODO remove when JOGL bug fixed
+        Thread.setDefaultUncaughtExceptionHandler(null);
+
         boolean savePreferences = true;
 
         if ( layoutGraphPropertiesDialog.getHasNewPreferencesBeenApplied() && CONFIRM_PREFERENCES_SAVE.get())

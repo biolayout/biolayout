@@ -53,12 +53,14 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private TableRowSorter<ClassViewerTableModelGeneral> generalTableSorter = null;
     private AbstractAction classViewerDialogAction = null;
     private AbstractAction okAction = null;
-    private JComboBox classSetsBox = null;
+    private JComboBox<String> classSetsBox = null;
     private JCheckBox viewAllClassSets = null;
     private AbstractAction refreshSelectionInTableAction = null;
+    private JCheckBox autoSizeColumnsCheckBox = null;
     private JButton selectDeselectAllButton = null;
     private boolean selectDeselectAllButtonModeState = false;
     private boolean updateResetSelectDeselectAllButton = true;
+    private JCheckBox highlightIsSelectionCheckbox = null;
 
     private ExpressionGraphPanel expressionGraphPanel = null;
     private FindNameDialog findNameDialog = null;
@@ -290,7 +292,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             }
         };
 
-        refreshSelectionInTableAction = new AbstractAction("Refresh Selection In Table")
+        refreshSelectionInTableAction = new AbstractAction("Hide Unselected Rows")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -332,7 +334,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             }
         };
 
-        okAction = new AbstractAction("OK")
+        okAction = new AbstractAction("Close")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -436,6 +438,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         generalTable.setDefaultEditor( VertexClass.class, new DefaultCellEditor(classComboBox) );
         generalTable.setDefaultRenderer( VertexClass.class, classComboBox.getClassRenderer() );
+        generalTable.setHighlightIsSelection(false);
+        highlightIsSelectionCheckbox.setSelected(false);
 
         if (DEBUG_BUILD) println("Reinit Due to Initial Init.");
 
@@ -453,7 +457,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if ( !updateEntropyTableRunnable.getAbortThread() )
             {
                 updateEntropyTableRunnable.setAbortThread(true);
-                LayoutFrame.sleep(TIME_TO_SLEEP_TO_ABORT_THREADS);
+
+                if (updateEntropyTableRunnable.getThreadStarted())
+                {
+                    while (!updateEntropyTableRunnable.getThreadFinished());
+                }
             }
         }
     }
@@ -466,7 +474,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if ( !updateDetailedEntropyTableRunnable.getAbortThread() )
             {
                 updateDetailedEntropyTableRunnable.setAbortThread(true);
-                LayoutFrame.sleep(TIME_TO_SLEEP_TO_ABORT_THREADS);
+
+                if (updateDetailedEntropyTableRunnable.getThreadStarted())
+                {
+                    while (!updateDetailedEntropyTableRunnable.getThreadFinished());
+                }
             }
         }
     }
@@ -490,20 +502,25 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // topPanel, north
         JPanel generalTopPanel = new JPanel(true);
 
-        classSetsBox = new JComboBox();
+        classSetsBox = new JComboBox<String>();
         classSetsBox.addItemListener(this);
-        classSetsBox.setToolTipText("Select Current Class Set");
+        classSetsBox.setToolTipText("Class Set");
 
-        viewAllClassSets = new JCheckBox("View All Class Sets");
+        viewAllClassSets = new JCheckBox("Show All Class Sets");
         viewAllClassSets.addActionListener(this);
-        viewAllClassSets.setToolTipText("View All Class Sets");
+        viewAllClassSets.setToolTipText("Show All Class Sets");
+
+        autoSizeColumnsCheckBox = new JCheckBox("Auto Size Columns");
+        autoSizeColumnsCheckBox.addActionListener(this);
+        autoSizeColumnsCheckBox.setToolTipText("Auto Size Columns");
+        autoSizeColumnsCheckBox.setSelected(CV_AUTO_SIZE_COLUMNS.get());
 
         // generalTable, center
         tableModelGeneral = new ClassViewerTableModelGeneral(layoutFrame, this);
-        generalTable = new ClassViewerTable(tableModelGeneral, ClassViewerTableModelGeneral.ORIGINAL_COLUMN_NAMES);
+        generalTable = new ClassViewerTable(tableModelGeneral, ClassViewerTableModelGeneral.ORIGINAL_COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         generalTableSorter = new TableRowSorter<ClassViewerTableModelGeneral>(tableModelGeneral);
         generalTable.setRowSorter(generalTableSorter); // provide a sorting mechanism to the table
-        generalTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        generalTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         generalTable.setAutoscrolls(true);
         generalTable.sortTableByColumn(NAME_COLUMN, generalTableSorter);
 
@@ -518,9 +535,15 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         selectDeselectAllButton = createSelectDeselectAllButton();
         selectDeselectAllButton.setToolTipText("Deselect All");
+
+        highlightIsSelectionCheckbox = createHighlightIsSelectionButton();
+        highlightIsSelectionCheckbox.setToolTipText("Highlight Is Selection");
+
         JPanel generalTableButtonPanel = new JPanel(true);
         generalTableButtonPanel.setLayout( new BoxLayout(generalTableButtonPanel, BoxLayout.X_AXIS) );
+        generalTableButtonPanel.add(highlightIsSelectionCheckbox);
         generalTableButtonPanel.add(selectDeselectAllButton);
+
         // generalTableButtonPanel.add( Box.createRigidArea( new Dimension(10, 10) ) );
         // generalTableButtonPanel.add( new JButton("Dummy Button 2") );
 
@@ -561,11 +584,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         nextClassButton.setToolTipText("►► (Next Class)");
 
         JButton renderAllCurrentClassSetPlotImagesToFilesButton = new JButton( expressionGraphPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction() );
-        renderAllCurrentClassSetPlotImagesToFilesButton.setToolTipText("Render All Current Class Set Plot Images To Files As...");
+        renderAllCurrentClassSetPlotImagesToFilesButton.setToolTipText("Render Class Set Plots To Files...");
         generalTopPanel.add(renderAllCurrentClassSetPlotImagesToFilesButton);
         // generalTopPanel.add( Box.createRigidArea( new Dimension(20, 30) ) );
         JButton renderPlotImageToFileButton = new JButton( expressionGraphPanel.getRenderPlotImageToFileAction() );
-        renderPlotImageToFileButton.setToolTipText("Render Plot Image To File As...");
+        renderPlotImageToFileButton.setToolTipText("Render Plot To File...");
         generalTopPanel.add(renderPlotImageToFileButton);
         // generalTopPanel.add( Box.createRigidArea( new Dimension(10, 30) ) );
 
@@ -579,7 +602,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         refreshSelectionInTableButton = new JButton(refreshSelectionInTableAction);
         refreshSelectionInTableButton.setEnabled(false);
-        refreshSelectionInTableButton.setToolTipText("Refresh Selection In Table");
+        refreshSelectionInTableButton.setToolTipText("Hide Unselected Rows");
         exportTableAsButton = new JButton(exportTableToFileAction);
         exportTableAsButton.setEnabled(false);
         exportTableAsButton.setToolTipText("Export Table As...");
@@ -588,10 +611,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         chooseColumnsToHideButton.setToolTipText("Choose Columns To Hide");
 
         // topPanel, north
-        generalTopPanel.add( new JLabel("Select Current Class Set:") );
+        generalTopPanel.add( new JLabel("Class Set:") );
         generalTopPanel.add(classSetsBox);
         generalTopPanel.add(viewAllClassSets);
         generalTopPanel.add(refreshSelectionInTableButton);
+        generalTopPanel.add(autoSizeColumnsCheckBox);
 
         tabGeneralPanel.add(generalTopPanel, BorderLayout.NORTH);
 
@@ -599,7 +623,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         generalButtonPanel.add(chooseColumnsToHideButton);
         generalButtonPanel.add(exportTableAsButton);
         JButton okButton = new JButton(okAction);
-        okButton.setToolTipText("OK");
+        okButton.setToolTipText("Close");
         generalButtonPanel.add(okButton);
 
         tabGeneralPanel.add(generalButtonPanel, BorderLayout.SOUTH);
@@ -611,9 +635,9 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         // entropy, center
         entropyTableModel = new ClassViewerTableModelAnalysis(layoutFrame);
-        entropyTable = new ClassViewerTable(entropyTableModel, ClassViewerTableModelAnalysis.COLUMN_NAMES);
+        entropyTable = new ClassViewerTable(entropyTableModel, ClassViewerTableModelAnalysis.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         entropyTable.setRowSorter( new TableRowSorter<ClassViewerTableModelAnalysis>(entropyTableModel) ); // provide a sorting mechanism to the table
-        entropyTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        entropyTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         entropyTable.setAutoscrolls(true);
         entropyTable.setDefaultRenderer(Double.class, new EntropyTableCellRenderer());
         ( (DefaultTableCellRenderer)entropyTable.getTableHeader().getDefaultRenderer() ).setHorizontalAlignment(SwingConstants.CENTER);
@@ -640,7 +664,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         okButtonPanel.add(detailsButton);
         okButtonPanel.add(detailsForAllButton);
         okButton = new JButton(okAction);
-        okButton.setToolTipText("OK");
+        okButton.setToolTipText("Close");
         okButtonPanel.add(okButton);
         tabEntropyPanel.add(okButtonPanel, BorderLayout.SOUTH);
 
@@ -651,9 +675,9 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
         // analysis table
         analysisTableModel = new ClassViewerTableModelDetail();
-        ClassViewerTable analysisDetailsTable = new ClassViewerTable(analysisTableModel, ClassViewerTableModelDetail.COLUMN_NAMES);
+        ClassViewerTable analysisDetailsTable = new ClassViewerTable(analysisTableModel, ClassViewerTableModelDetail.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         analysisDetailsTable.setRowSorter( new TableRowSorter<ClassViewerTableModelDetail>(analysisTableModel) ); // provide a sorting mechanism to the table
-        analysisDetailsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        analysisDetailsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         analysisDetailsTable.setAutoscrolls(true);
         analysisDetailsTable.setDefaultRenderer(Double.class, new EntropyTableCellRenderer());
         analysisDetailsTable.setDefaultRenderer(Integer.class, new EntropyTableCellRenderer());
@@ -668,7 +692,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // ok, south
         JPanel okButtonPanelDetails = new JPanel(true);
         okButton = new JButton(okAction);
-        okButton.setToolTipText("OK");
+        okButton.setToolTipText("Close");
         okButtonPanelDetails.add(okButton);
         tabEntropyDetailPanel.add(okButtonPanelDetails, BorderLayout.SOUTH);
 
@@ -709,7 +733,20 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 String buttonText = ( (!selectDeselectAllButtonModeState) ? "Deselect" : "Select" ) + " All" ;
                 selectDeselectAllButton.setText(buttonText);
                 selectDeselectAllButton.setToolTipText(buttonText);
-                tableModelGeneral.setSelectedAllColumns(!selectDeselectAllButtonModeState);
+                tableModelGeneral.setSelectedAllRows(!selectDeselectAllButtonModeState);
+                generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
+            }
+        } );
+    }
+
+    private JCheckBox createHighlightIsSelectionButton()
+    {
+        return new JCheckBox( new AbstractAction("Highlight Is Selection")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                generalTable.setHighlightIsSelection(highlightIsSelectionCheckbox.isSelected());
             }
         } );
     }
@@ -800,6 +837,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
                 refreshTables();
 
+                generalTable.setAutoCreateColumnsFromModel(false);
+
                 boolean enableHideColumnsAndExportButtons = (generalTable.getRowCount() > 0);
                 refreshSelectionInTableButton.setEnabled(enableHideColumnsAndExportButtons);
                 exportTableAsButton.setEnabled(enableHideColumnsAndExportButtons);
@@ -822,7 +861,9 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if (!layoutFrame.getExpressionData().isTransposed())
             {
                 expressionGraphPanel.setVisible(true);
+                expressionGraphPanel.refreshPlot();
                 expressionGraphPanel.repaint();
+                generalTable.repaint();
             }
             else
             {
@@ -852,17 +893,28 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         return findClassDialog.getClassIndex();
     }
 
+    public void synchroniseHighlightWithSelection()
+    {
+        if (generalTable != null)
+        {
+            generalTable.synchroniseHighlightWithSelection();
+        }
+    }
+
     public VertexClass navigateToCurrentClass()
     {
         VertexClass currentVertexClass = findClassDialog.currentVertexClass();
         if (currentVertexClass != null)
         {
+            setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(currentVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
             layoutFrame.getGraph().updateSelectedNodesDisplayList();
             setCurrentClassName( currentVertexClass.getName() );
 
             nextClassButton.setEnabled(true);
+            setUpdateResetSelectDeselectAllButton(true);
+            synchroniseHighlightWithSelection();
         }
 
         return currentVertexClass;
@@ -873,12 +925,15 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         VertexClass previousVertexClass = findClassDialog.previousVertexClass();
         if (previousVertexClass != null)
         {
+            setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(previousVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
             layoutFrame.getGraph().updateSelectedNodesDisplayList();
             setCurrentClassName( previousVertexClass.getName() );
 
             nextClassButton.setEnabled(true);
+            setUpdateResetSelectDeselectAllButton(true);
+            synchroniseHighlightWithSelection();
         }
 
         previousClassButton.setEnabled( findClassDialog.checkPreviousVertexClass() );
@@ -896,6 +951,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         VertexClass nextVertexClass = findClassDialog.nextVertexClass();
         if (nextVertexClass != null)
         {
+            setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(nextVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
             layoutFrame.getGraph().updateSelectedNodesDisplayList();
@@ -903,6 +959,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 setCurrentClassName( nextVertexClass.getName() );
 
             previousClassButton.setEnabled(findClassDialog.getClassIndex() != 0);
+            setUpdateResetSelectDeselectAllButton(true);
+            synchroniseHighlightWithSelection();
         }
 
         nextClassButton.setEnabled( findClassDialog.checkNextVertexClass() );
@@ -922,9 +980,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         {
             if (DEBUG_BUILD) println("refreshTables() General Tab.");
 
+            setUpdateResetSelectDeselectAllButton(false);
             rebuildClassSets();
             tableModelGeneral.fireTableStructureChanged();
             setVertexClassSortingToGeneralTable();
+            setUpdateResetSelectDeselectAllButton(true);
         }
         else if ( tabbedPane.getSelectedIndex() == ENTROPY_TAB.ordinal() )
         {
@@ -956,7 +1016,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 generalTableSorter.setComparator( i, new ClassViewerTable.VertexClassSorting() );
     }
 
-    private void addClassSets(JComboBox comboBox)
+    private void addClassSets(JComboBox<String> comboBox)
     {
         comboBox.removeAllItems();
 
@@ -1143,6 +1203,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     public void setUpdateResetSelectDeselectAllButton(boolean updateResetSelectDeselectAllButton)
     {
         this.updateResetSelectDeselectAllButton = updateResetSelectDeselectAllButton;
+        generalTable.setUpdateResetSelectDeselectAllButton(updateResetSelectDeselectAllButton);
     }
 
     @Override
@@ -1173,6 +1234,12 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         {
             if (DEBUG_BUILD) println("Reinit Due to Action:" + e.toString());
 
+            populateClassViewer(false, true);
+        }
+        else if ( e.getSource().equals(autoSizeColumnsCheckBox) )
+        {
+            CV_AUTO_SIZE_COLUMNS.set(autoSizeColumnsCheckBox.isSelected());
+            generalTable.setAutoSizeColumns(CV_AUTO_SIZE_COLUMNS.get());
             populateClassViewer(false, true);
         }
     }

@@ -87,7 +87,9 @@ public final class ExpressionLoader
             int numColumns = tdm.numColumns();
             int numRows = tdm.numRows();
 
+            // - 1 because the first column is always the row ID
             int totalAnnotationColumns = firstDataColumn - 1;
+
             annotationColumnLabels = new String[totalAnnotationColumns];
             expressionData.initialize(
                     numRows - firstDataRow,
@@ -114,7 +116,7 @@ public final class ExpressionLoader
                             // Data column names
                             expressionData.setColumnName(dataColumn, value);
                         }
-                        else if (column >= 1)
+                        else if (column >= 1) // First column is always the row ID
                         {
                             // Annotation classes
                             String annotation = cleanString(value);
@@ -207,10 +209,12 @@ public final class ExpressionLoader
                 for (int column = 0; column < firstDataColumn; column++)
                 {
                     String value = tdm.valueAt(column, row);
+                    int dataColumn = column - firstDataColumn;
+                    int dataRow = row - firstDataRow;
 
                     if (column == 0)
                     {
-                        vertex = nc.getVerticesMap().get(value);
+                        vertex = nc.getVerticesMap().get(expressionData.getRowID(dataRow));
                     }
                     else if (vertex != null)
                     {

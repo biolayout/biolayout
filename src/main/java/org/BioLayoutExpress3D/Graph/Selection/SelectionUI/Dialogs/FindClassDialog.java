@@ -202,7 +202,16 @@ public final class FindClassDialog extends JDialog
     public void setVisible(boolean state)
     {
         classComboBox.updateClasses( layoutFrame.getLayoutClassSetsManager().getCurrentClassSetAllClasses() );
-        classComboBox.setSelectedIndex(currentClassIndex);
+
+        if (currentClassIndex >= 0 && currentClassIndex < classComboBox.getItemCount())
+        {
+            classComboBox.setSelectedIndex(currentClassIndex);
+        }
+        else
+        {
+            System.out.println("FindClassDialog.setVisible currentClassIndex " + currentClassIndex +
+                    " out of bounds (classComboBox has " + classComboBox.getItemCount() + " elements)" );
+        }
 
         super.setVisible(state);
     }

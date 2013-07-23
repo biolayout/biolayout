@@ -42,7 +42,7 @@ public final class LayoutCustomizeNodeNamesDialog extends JDialog implements Act
     private JLabel partialNameNumberOfCharactersLabel = null;
     private WholeNumberField partialNameNumberOfCharactersField = null;
 
-    private JComboBox openGLNameFontTypesComboBox = null;
+    private JComboBox<String> openGLNameFontTypesComboBox = null;
 
     private JRadioButton[] allNameRenderingRadioButtons = null;
 
@@ -128,7 +128,7 @@ public final class LayoutCustomizeNodeNamesDialog extends JDialog implements Act
         partialNameNumberOfCharactersField.addCaretListener(this);
 
         JPanel openGLNameFontTypesComboBoxOptionsPanel = new JPanel(true);
-        openGLNameFontTypesComboBox = new JComboBox();
+        openGLNameFontTypesComboBox = new JComboBox<String>();
         for ( OpenGLFontTypes openGLFontType : OpenGLFontTypes.values() )
             openGLNameFontTypesComboBox.addItem( splitCapitalizeFirstCharactersAndAddWhiteSpaceBetweenNames(openGLFontType) );
         openGLNameFontTypesComboBox.setSelectedIndex( getEnumIndexForName( OpenGLFontTypes.class, CUSTOMIZE_NODE_NAMES_OPENGL_NAME_FONT_TYPE.get() ) );

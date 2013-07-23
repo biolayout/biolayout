@@ -205,6 +205,10 @@ public final class GlobalEnvironment
     public static final PrefBool COLLAPSE_NODES_BY_VOLUME = new PrefBool(false, "collapse_nodes_by_volume", true);
     public static final PrefBool CONFIRM_PREFERENCES_SAVE  = new PrefBool(true, "confirm_preferences_save", true);
 
+    public static enum GraphLayoutAlgorithm { FRUCHTERMAN_RHEINGOLD, FMMM, CIRCLE, ALWAYS_ASK }
+    public static final PrefEnum<GraphLayoutAlgorithm> GRAPH_LAYOUT_ALGORITHM = new PrefEnum<GraphLayoutAlgorithm>(
+            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD, "graph_layout_algorithm", true);
+
     public static final boolean RANDOM_INITIAL_LAYOUT_COORDS = true;
     public static final double REFERENCE_K_VALUE = 30.0;
     public static final PrefBool RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE = new PrefBool(true, "resize_nodes_and_arrowheads_to_kvalue", true);
@@ -215,6 +219,24 @@ public final class GlobalEnvironment
     public static final PrefFloat KVALUE_MODIFIER = new PrefFloat(1.0f, "kvalue_modifier", true);
     public static final PrefInt BURST_LAYOUT_ITERATIONS = new PrefInt(20, "burst_layout_iterations", true);
     public static final PrefInt MINIMUM_COMPONENT_SIZE = new PrefInt(1, "minimum_component_size", true);
+
+    public static final PrefFloat FMMM_DESIRED_EDGE_LENGTH = new PrefFloat(20.0f, "fmmm_desired_edge_length", true);
+    public static enum FmmmQualityVsSpeed
+    {
+        VERY_HIGH_QUALITY_VERY_LOW_SPEED,
+        HIGH_QUALITY_LOW_SPEED,
+        MEDIUM_QUALITY_MEDIUM_SPEED,
+        LOW_QUALITY_HIGH_SPEED
+    }
+    public static final PrefEnum<FmmmQualityVsSpeed> FMMM_QUALITY_VS_SPEED = new PrefEnum<FmmmQualityVsSpeed>(
+            FmmmQualityVsSpeed.class, FmmmQualityVsSpeed.MEDIUM_QUALITY_MEDIUM_SPEED, "fmmm_quality_vs_speed", true);
+    public static enum FmmmForceModel { EADES, FRUCHTERMAN_RHEINGOLD/*, NMM*/ }
+    public static final PrefEnum<FmmmForceModel> FMMM_FORCE_MODEL = new PrefEnum<FmmmForceModel>(
+            FmmmForceModel.class, FmmmForceModel.FRUCHTERMAN_RHEINGOLD, "fmmm_force_model", true);
+    public static enum FmmmStopCriterion { FORCE_THRESHOLD_AND_FIXED_ITERATIONS, FIXED_ITERATIONS, FORCE_THRESHOLD }
+    public static final PrefEnum<FmmmStopCriterion> FMMM_STOP_CRITERION = new PrefEnum<FmmmStopCriterion>(
+            FmmmStopCriterion.class, FmmmStopCriterion.FORCE_THRESHOLD_AND_FIXED_ITERATIONS, "fmmm_stop_criterion", true);
+    public static final PrefInt FMMM_ITERATION_LEVEL_FACTOR = new PrefInt(10, "fmmm_iteration_level_factor", true);
 
     public static final String DEFAULT_SURFACE_IMAGE_FILES_PATH = IMAGE_FILES_PATH + "SurfaceImages/";
     private static final String DEFAULT_SURFACE_IMAGE_FILE_NAME = "SurfaceImagesData.txt";
@@ -432,11 +454,13 @@ public final class GlobalEnvironment
     public static boolean IS_BLOCKED = false;
 
     public static final PrefBool PLOT_GRID_LINES = new PrefBool(false, "plot_grid_lines", true);
-    public static final PrefBool PLOT_CLASS_MEAN = new PrefBool(false, "plot_class_mean", true);
-    public static final PrefBool PLOT_SELECTION_MEAN = new PrefBool(false, "plot_selection_mean", true);
-    public static final PrefBool PLOT_RESCALE = new PrefBool(true, "plot_rescale", true);
+    public static final PrefInt PLOT_CLASS_STATISTIC_TYPE = new PrefInt(0, "plot_class_statistic_type", true);
+    public static final PrefInt PLOT_SELECTION_STATISTIC_TYPE = new PrefInt(0, "plot_selection_statistic_type", true);
     public static final PrefBool PLOT_AXES_LEGEND = new PrefBool(false, "plot_axes", true);
+    public static final PrefBool PLOT_HIDE_SAMPLES = new PrefBool(false, "plot_hide_samples", true);
     public static final PrefInt PLOT_TRANSFORM = new PrefInt(0, "plot_transform", true);
+
+    public static final PrefBool CV_AUTO_SIZE_COLUMNS = new PrefBool(true, "cv_auto_size_columns", true);
 
     public static final boolean SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS = true;
     public static final PrefString CUSTOMIZE_NODE_NAMES_DELIMITER = new PrefString("", "customize_node_names_delimiter", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);

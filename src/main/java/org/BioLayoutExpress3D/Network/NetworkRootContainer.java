@@ -3,6 +3,9 @@ package org.BioLayoutExpress3D.Network;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import ogdf.basic.PointFactory;
+import ogdf.basic.GraphAttributes;
+import ogdf.energybased.FMMMLayout;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
@@ -152,43 +155,147 @@ public final class NetworkRootContainer extends NetworkContainer
     }
 
     @Override
-    public void optimize()
+    public void optimize(GraphLayoutAlgorithm gla)
     {
-        if (WEIGHTED_EDGES)
+        LayoutProgressBarDialog layoutProgressBarDialog = layoutFrame.getLayoutProgressBar();
+
+        switch (gla)
         {
-            normaliseWeights();
-            layoutClassSetsManager.getCurrentClassSetAllClasses().setClassColor( 0, new Color(0, 144, 0) );
-        }
+            case FMMM:
+                GraphAttributes GA = new GraphAttributes(this,
+                        RENDERER_MODE_3D ? PointFactory.Dimensions._3 : PointFactory.Dimensions._2);
+                FMMMLayout fmmm = new FMMMLayout();
 
-        setKvalue();
+                fmmm.useHighLevelOptions(false);
+                fmmm.unitEdgeLength(FMMM_DESIRED_EDGE_LENGTH.get());
+                fmmm.newInitialPlacement(true);
 
-        if ( !TILED_LAYOUT.get() )
-        {
-            super.optimize();
-        }
-        else
-        {
-            int componentNumber = 0;
-            for (NetworkComponentContainer ncc : componentCollection)
-                ncc.optimize(++componentNumber);
+                switch (FMMM_QUALITY_VS_SPEED.get())
+                {
+                    case VERY_HIGH_QUALITY_VERY_LOW_SPEED:
+                        fmmm.fixedIterations(200);
+                        fmmm.fineTuningIterations(100);
+                        break;
+                    case HIGH_QUALITY_LOW_SPEED:
+                        fmmm.fixedIterations(100);
+                        fmmm.fineTuningIterations(50);
+                        break;
+                    case MEDIUM_QUALITY_MEDIUM_SPEED:
+                        fmmm.fixedIterations(60);
+                        fmmm.fineTuningIterations(30);
+                        break;
+                    case LOW_QUALITY_HIGH_SPEED:
+                        fmmm.fixedIterations(15);
+                        fmmm.fineTuningIterations(10);
+                        break;
+                }
 
-            frLayout.clean();
+                switch (FMMM_FORCE_MODEL.get())
+                {
+                    case EADES:
+                        fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcExact);
+                        break;
+                    case FRUCHTERMAN_RHEINGOLD:
+                        fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcGridApproximation);
+                        break;
+                    /*case NMM:
+                        fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcNMM);
+                        break;*/
+                }
 
-            Collections.sort( componentCollection, new NetworkComponentSorter() );
+                switch (FMMM_STOP_CRITERION.get())
+                {
+                    case FORCE_THRESHOLD_AND_FIXED_ITERATIONS:
+                        fmmm.stopCriterion(FMMMLayout.StopCriterion.scFixedIterationsOrThreshold);
+                        break;
+                    case FIXED_ITERATIONS:
+                        fmmm.stopCriterion(FMMMLayout.StopCriterion.scFixedIterations);
+                        break;
+                    case FORCE_THRESHOLD:
+                        fmmm.stopCriterion(FMMMLayout.StopCriterion.scThreshold);
+                        break;
+                }
 
-            LayoutProgressBarDialog layoutProgressBarDialog = layoutFrame.getLayoutProgressBar();
-            layoutProgressBarDialog.prepareProgressBar(componentCollection.size(), "Tiling Graph Components");
-            layoutProgressBarDialog.startProgressBar();
+                fmmm.maxIterFactor(FMMM_ITERATION_LEVEL_FACTOR.get());
 
-            for (NetworkComponentContainer ncc :componentCollection)
-            {
-                layoutProgressBarDialog.incrementProgress();
-                tilingLevelsContainer.addNetworkComponentContainer(ncc);
-            }
+                fmmm.initialPlacementForces(FMMMLayout.InitialPlacementForces.ipfUniformGrid);
+                fmmm.call(GA, layoutProgressBarDialog);
+                GA.applyTo(this);
+                break;
 
-            tilingLevelsContainer.optimize();
+            case CIRCLE:
+                CircleLayout ca = new CircleLayout();
+                for (NetworkComponentContainer ncc : componentCollection)
+                {
+                    ca.layout(ncc);
+                    ncc.calcBoundaries();
+                }
 
-            layoutProgressBarDialog.endProgressBar();
+                Collections.sort(componentCollection, new NetworkComponentSorter());
+
+                layoutProgressBarDialog.prepareProgressBar(componentCollection.size(), "Tiling Graph Components");
+                layoutProgressBarDialog.startProgressBar();
+
+                for (NetworkComponentContainer ncc : componentCollection)
+                {
+                    layoutProgressBarDialog.incrementProgress();
+                    tilingLevelsContainer.addNetworkComponentContainer(ncc);
+                }
+
+                tilingLevelsContainer.optimize();
+
+                layoutProgressBarDialog.endProgressBar();
+                break;
+
+            default:
+            case FRUCHTERMAN_RHEINGOLD:
+                if (WEIGHTED_EDGES)
+                {
+                    normaliseWeights();
+                }
+
+                setKvalue();
+
+                if (!TILED_LAYOUT.get())
+                {
+                    super.optimize(gla);
+                }
+                else
+                {
+                    int componentNumber = 0;
+                    for (NetworkComponentContainer ncc : componentCollection)
+                    {
+                        if (layoutProgressBarDialog.userHasCancelled())
+                        {
+                            break;
+                        }
+                        ncc.optimize(++componentNumber);
+                    }
+
+                    if (layoutProgressBarDialog.userHasCancelled())
+                    {
+                        break;
+                    }
+
+                    frLayout.clean();
+
+                    Collections.sort(componentCollection, new NetworkComponentSorter());
+
+                    layoutProgressBarDialog.prepareProgressBar(componentCollection.size(), "Tiling Graph Components");
+                    layoutProgressBarDialog.startProgressBar();
+
+                    for (NetworkComponentContainer ncc : componentCollection)
+                    {
+                        layoutProgressBarDialog.incrementProgress();
+                        tilingLevelsContainer.addNetworkComponentContainer(ncc);
+                    }
+
+                    tilingLevelsContainer.optimize();
+
+                    layoutProgressBarDialog.endProgressBar();
+                }
+
+                break;
         }
     }
 
@@ -196,14 +303,14 @@ public final class NetworkRootContainer extends NetworkContainer
     public void optimize(int componentID) {}
 
     @Override
-    public void relayout()
+    public void relayout(GraphLayoutAlgorithm gla)
     {
         isOptimized = false;
         isRelayout = true;
 
         if ( !TILED_LAYOUT.get() )
         {
-            super.relayout();
+            super.relayout(gla);
         }
         else
         {

@@ -4,7 +4,7 @@
 
     <groupId>org.BioLayoutExpress3D</groupId>
     <artifactId>Layout</artifactId>
-    <version>3.0</version>
+    <version>3.1</version>
     <packaging>jar</packaging>
 
     <name>BioLayout Express 3D</name>
@@ -19,7 +19,7 @@
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
-        <jogampVersion>2.0.2-rc-20130425</jogampVersion>
+        <jogampVersion>2.0.2-rc12</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
 
@@ -120,6 +120,11 @@
             <groupId>org.swinglabs</groupId>
             <artifactId>swing-layout</artifactId>
             <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.0.14</version>
         </dependency>
     </dependencies>
 
@@ -567,6 +572,10 @@
                 <configuration>
                     <source>${minJavaVersion}</source>
                     <target>${minJavaVersion}</target>
+                    <compilerArguments>
+                        <Xlint:unchecked />
+                        <Xlint:deprecation />
+                    </compilerArguments>
                 </configuration>
             </plugin>
 

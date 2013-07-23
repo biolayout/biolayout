@@ -160,6 +160,22 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
         layoutProgressBarDialog.incrementProgress();
     }
 
+    private Color parseColor(String s)
+    {
+        if (s == null || s.length() == 0)
+        {
+            return DEFAULT_NODE_COLOR;
+        }
+
+        if (s.length() > 7)
+        {
+            // Assume this is an RGBA string; strip off the A
+            s = s.substring(0, s.length() - 2);
+        }
+
+        return Color.decode(s);
+    }
+
     /**
     *  Converts the xml parsed information to layout compatible format.
     */
@@ -228,11 +244,11 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
                 node2Width = node2Tuple6.first[1];  // reverse index because graphml file & parser has it in height/width format instead of width/height!
                 node2Height = node2Tuple6.first[0]; // reverse index because graphml file & parser has it in height/width format instead of width/height!
 
-                node1Color1 = (node1Tuple6.second[1] != null) ? Color.decode(node1Tuple6.second[1]) : DEFAULT_NODE_COLOR;
-                node1Color2 = (node1Tuple6.second[2] != null) ? Color.decode(node1Tuple6.second[2]) : DEFAULT_NODE_COLOR;
+                node1Color1 = parseColor(node1Tuple6.second[1]);
+                node1Color2 = parseColor(node1Tuple6.second[2]);
 
-                node2Color1 = (node2Tuple6.second[1] != null) ? Color.decode(node2Tuple6.second[1]) : DEFAULT_NODE_COLOR;
-                node2Color2 = (node2Tuple6.second[2] != null) ? Color.decode(node2Tuple6.second[2]) : DEFAULT_NODE_COLOR;
+                node2Color1 = parseColor(node2Tuple6.second[1]);
+                node2Color2 = parseColor(node2Tuple6.second[2]);
 
                 node1Shape = node1Tuple6.sixth;
                 node2Shape = node2Tuple6.sixth;

@@ -69,8 +69,21 @@ public final class ExpressionData
     private FloatBuffer expressionRanksBuffer = null;
     private float[] expressionRanksArray = null;
     private HashMap<String, Integer> identityMap = null;
+    private HashMap<String, Integer> columnNameMap = null;
     private int[][] countsArray = null;
-    private boolean[] rowsToFilter = null;
+
+    private float[] minValueCache = null;
+    private boolean minValueCached = false;
+    private float[] maxValueCache = null;
+    private boolean maxValueCached = false;
+    private float minValue = Float.MAX_VALUE;
+    private float maxValue = Float.MIN_VALUE;
+    private float[] stddevCache = null;
+    private boolean stddevCached = false;
+    private float minStddev = Float.MAX_VALUE;
+    private float maxStddev = Float.MIN_VALUE;
+    private float[] meanCache = null;
+    private boolean meanCached = false;
 
     // variables needed for N-CP
     private final CyclicBarrierTimer cyclicBarrierTimer = (USE_MULTICORE_PROCESS) ? new CyclicBarrierTimer() : null;
@@ -84,6 +97,7 @@ public final class ExpressionData
         this.layoutFrame = layoutFrame;
 
         identityMap = new HashMap<String, Integer>();
+        columnNameMap = new HashMap<String, Integer>();
     }
 
     /**
@@ -107,10 +121,23 @@ public final class ExpressionData
         sumColumns_X2_cacheArray = sumColumns_X2_cacheBuffer.array();
         expressionDataBuffer = FloatBuffer.allocate(totalRows * totalColumns);
         expressionDataArray = expressionDataBuffer.array();
-        rowsToFilter = new boolean[totalRows];
 
         identityMap.clear();
+        columnNameMap.clear();
         clearCounts();
+
+        minValueCache = null;
+        minValueCached = false;
+        maxValueCache = null;
+        maxValueCached = false;
+        minValue = Float.MAX_VALUE;
+        maxValue = Float.MIN_VALUE;
+        stddevCache = null;
+        stddevCached = false;
+        minStddev = Float.MAX_VALUE;
+        maxStddev = Float.MIN_VALUE;
+        meanCache = null;
+        meanCached = false;
     }
 
     /**
@@ -215,7 +242,7 @@ public final class ExpressionData
             }
 
             WEIGHTED_EDGES = true;
-            layoutProgressBarDialog.prepareProgressBar(100, "Calculating " + metricName + " Graph:");
+            layoutProgressBarDialog.prepareProgressBar(100, "Calculating " + metricName + " Graph:", true);
             layoutProgressBarDialog.startProgressBar();
             layoutProgressBarDialog.setText("Caching...");
 
@@ -288,10 +315,21 @@ public final class ExpressionData
             }
 
             // good, we are done
-            correlationFileTmp.renameTo(correlationFile);
-            if ( writeCorrelationTextFile )
+            if (!layoutProgressBarDialog.userHasCancelled())
             {
-                correlationFileTextTmp.renameTo( new File(correlationFile.getAbsolutePath() + ".txt") );
+                correlationFileTmp.renameTo(correlationFile);
+                if (writeCorrelationTextFile)
+                {
+                    correlationFileTextTmp.renameTo(new File(correlationFile.getAbsolutePath() + ".txt"));
+                }
+            }
+            else
+            {
+                correlationFileTmp.delete();
+                if (writeCorrelationTextFile)
+                {
+                    correlationFileTextTmp.delete();
+                }
             }
 
             clearAllCachedDataStructures();
@@ -311,30 +349,24 @@ public final class ExpressionData
         {
             updateSingleCoreGUI();
 
-            if (!rowsToFilter[i])
+            outOstream.writeInt(i);
+
+            for (int j = (i + 1); j < totalRows; j++)
             {
-                outOstream.writeInt(i);
-
-                for (int j = (i + 1); j < totalRows; j++)
+                correlation = calculateCorrelation(i, j, expressionData);
+                if (correlation >= threshold)
                 {
-                    if (!rowsToFilter[j])
-                    {
-                        correlation = calculateCorrelation(i, j, expressionData);
-                        if (correlation >= threshold)
-                        {
-                            outOstream.writeInt(j);
-                            outOstream.writeFloat(correlation);
-                        }
-
-                        if (writeCorrelationTextFile)
-                        {
-                            outPrintWriter.println(rowIDsArray[i] + "\t" + rowIDsArray[j] + "\t" + nf3.format(correlation));
-                        }
-                    }
+                    outOstream.writeInt(j);
+                    outOstream.writeFloat(correlation);
                 }
 
-                outOstream.writeInt(i);
+                if (writeCorrelationTextFile)
+                {
+                    outPrintWriter.println(rowIDsArray[i] + "\t" + rowIDsArray[j] + "\t" + nf3.format(correlation));
+                }
             }
+
+            outOstream.writeInt(i);
         }
     }
 
@@ -387,6 +419,12 @@ public final class ExpressionData
 
             if (DEBUG_BUILD) println("Now starting the N-Core parallelization process with the variables below:\nstartRow: " + (startRow + 1) + " endRow: " + (endRow + 1) + " arraySize: " + arraySize + " rowsSearchProcessedStopped: " + rowsSearchProcessedStopped);
             performMultiCoreCorrelationCalculation(isPowerOfTwo, startRow, endRow, stepResults, cachedRowsResultsIndicesToSkip);
+
+            if (layoutProgressBarDialog.userHasCancelled())
+            {
+                break;
+            }
+
             writeAllStepResultsToFile(threshold, startRow, endRow, stepNumber, stepResults,
                     outOstream, outPrintWriter, writeCorrelationTextFile);
 
@@ -457,6 +495,11 @@ public final class ExpressionData
                 {
                     rowResultIndex += cachedRowsResultsIndicesToSkip[i];
                 }
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    break;
+                }
             }
         }
         else
@@ -473,6 +516,11 @@ public final class ExpressionData
                 else
                 {
                     rowResultIndex += cachedRowsResultsIndicesToSkip[i];
+                }
+
+                if (layoutProgressBarDialog.userHasCancelled())
+                {
+                    break;
                 }
             }
         }
@@ -574,39 +622,25 @@ public final class ExpressionData
         {
             int percent = ((i - startRow) * 100) / (endRow - startRow);
 
-            if (!rowsToFilter[i])
+            outOstream.writeInt(i);
+
+            for (int j = (i + 1); j < totalRows; j++)
             {
-                outOstream.writeInt(i);
-
-                for (int j = (i + 1); j < totalRows; j++)
+                correlation = stepResults[index++];
+                if (correlation >= threshold)
                 {
-                    if (!rowsToFilter[j])
-                    {
-                        correlation = stepResults[index++];
-                        if (correlation >= threshold)
-                        {
-                            outOstream.writeInt(j);
-                            outOstream.writeFloat(correlation);
-                        }
-
-                        if (writeCorrelationTextFile)
-                        {
-                            outPrintWriter.println(rowIDsArray[i] + "\t" + rowIDsArray[j] +
-                                    "\t" + nf3.format(correlation));
-                        }
-                    }
-                    else
-                    {
-                        index++;
-                    }
+                    outOstream.writeInt(j);
+                    outOstream.writeFloat(correlation);
                 }
 
-                outOstream.writeInt(i);
+                if (writeCorrelationTextFile)
+                {
+                    outPrintWriter.println(rowIDsArray[i] + "\t" + rowIDsArray[j] +
+                            "\t" + nf3.format(correlation));
+                }
             }
-            else
-            {
-                index += (totalRows - (i + 1));
-            }
+
+            outOstream.writeInt(i);
 
             layoutProgressBarDialog.setText(currentLayoutProgressBarText +
                     "  (Saving " + percent + "%)");
@@ -786,9 +820,10 @@ public final class ExpressionData
     /**
     *  Clears the countsArray data structure.
     */
-    public void clearCounts()
+    public int[][] clearCounts()
     {
         countsArray = new int[totalRows][101];
+        return countsArray;
     }
 
     /**
@@ -893,12 +928,27 @@ public final class ExpressionData
         return columnNamesArray[index];
     }
 
+    private String uniqueColumnName(String name)
+    {
+        String originalId = name;
+        int collisionAvoidanceSuffix = 1;
+        while (columnNameMap.containsKey(name))
+        {
+            name = originalId + "." + collisionAvoidanceSuffix;
+            collisionAvoidanceSuffix++;
+        }
+
+        return name;
+    }
+
     /**
     *  Sets a column name by a given index.
     */
     public void setColumnName(int index, String name)
     {
+        name = uniqueColumnName(name);
         columnNamesArray[index] = name;
+        columnNameMap.put(name, index);
     }
 
     /**
@@ -930,15 +980,124 @@ public final class ExpressionData
         return totalAnnotationColunms;
     }
 
+    public float getMaxValueForRow(int row)
+    {
+        if (maxValueCached)
+        {
+            return maxValueCache[row];
+        }
+
+        float value = Float.MIN_VALUE;
+        for (int column = 0; column < totalColumns; column++)
+        {
+            value = java.lang.Math.max(value, getExpressionDataValue(row, column));
+        }
+
+        return value;
+    }
+
+    public void cacheMaxValues()
+    {
+        if (maxValueCached)
+        {
+            return;
+        }
+
+        maxValueCache = new float[totalRows];
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            maxValueCache[row] = getMaxValueForRow(row);
+
+            if (maxValueCache[row] > maxValue)
+            {
+                maxValue = maxValueCache[row];
+            }
+        }
+
+        maxValueCached = true;
+    }
+
+    public float getMaxValue()
+    {
+        cacheMaxValues();
+        return maxValue;
+    }
+
+    public float getMinValueForRow(int row)
+    {
+        if (minValueCached)
+        {
+            return minValueCache[row];
+        }
+
+        float value = Float.MAX_VALUE;
+        for (int column = 0; column < totalColumns; column++)
+        {
+            value = java.lang.Math.min(value, getExpressionDataValue(row, column));
+        }
+
+        return value;
+    }
+
+    public void cacheMinValues()
+    {
+        if (minValueCached)
+        {
+            return;
+        }
+
+        minValueCache = new float[totalRows];
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            minValueCache[row] = getMinValueForRow(row);
+
+            if (minValueCache[row] < minValue)
+            {
+                minValue = minValueCache[row];
+            }
+        }
+
+        minValueCached = true;
+    }
+
+    public float getMinValue()
+    {
+        cacheMinValues();
+        return minValue;
+    }
+
     private TransformType transformType;
     public void setTransformType(TransformType transformType)
     {
         this.transformType = transformType;
     }
 
-    public float[] getTransformedRow(int row)
+    public float getIQRForRow(int row)
     {
-        float[] out = new float[totalColumns];
+        float[] values = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            values[column] = getExpressionDataValue(row, column);
+        }
+
+        Arrays.sort(values);
+
+        int _25Column = (int)java.lang.Math.round(totalColumns * 0.25);
+        int _75Column = (int)java.lang.Math.round(totalColumns * 0.75);
+        float iqr = values[_75Column] - values[_25Column];
+
+        return iqr;
+    }
+
+    public float getMeanForRow(int row)
+    {
+        if (meanCached)
+        {
+            return meanCache[row];
+        }
+
         float rowSum = 0.0f;
 
         for (int column = 0; column < totalColumns; column++)
@@ -946,15 +1105,108 @@ public final class ExpressionData
             rowSum += getExpressionDataValue(row, column);
         }
 
-        float mean = rowSum / totalColumns;
+        return rowSum / totalColumns;
+    }
 
+    public void cacheMeanValues()
+    {
+        if (meanCached)
+        {
+            return;
+        }
+
+        meanCache = new float[totalRows];
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            meanCache[row] = getMeanForRow(row);
+        }
+
+        meanCached = true;
+    }
+
+    public float getVarianceForRow(int row, float mean)
+    {
         float variance = 0.0f;
         for (int column = 0; column < totalColumns; column++)
         {
             float x = getExpressionDataValue(row, column);
             variance += ((x - mean) * (x - mean));
         }
-        variance = variance / totalColumns;
+
+        return variance / totalColumns;
+    }
+
+    public float getVarianceForRow(int row)
+    {
+        return getVarianceForRow(row, getMeanForRow(row));
+    }
+
+    public float getStddevForRow(int row)
+    {
+        if (stddevCached)
+        {
+            return stddevCache[row];
+        }
+
+        return (float)sqrt(getVarianceForRow(row));
+    }
+
+    public void cacheStddevValues()
+    {
+        if (stddevCached)
+        {
+            return;
+        }
+
+        stddevCache = new float[totalRows];
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            stddevCache[row] = getStddevForRow(row);
+
+            if (stddevCache[row] < minStddev)
+            {
+                minStddev = stddevCache[row];
+            }
+
+            if (stddevCache[row] > maxStddev)
+            {
+                maxStddev = stddevCache[row];
+            }
+        }
+
+        stddevCached = true;
+    }
+
+    public float getCoefficientOfVariationForRow(int row)
+    {
+        return getStddevForRow(row) / getMeanForRow(row);
+    }
+
+    public float getMinStddev()
+    {
+        cacheStddevValues();
+        return minStddev;
+    }
+
+    public float getMaxStddev()
+    {
+        cacheStddevValues();
+        return maxStddev;
+    }
+
+    public float getParetoForRow(int row)
+    {
+        return (float)sqrt(getStddevForRow(row));
+    }
+
+    public float[] getTransformedRow(int row)
+    {
+        float[] out = new float[totalColumns];
+
+        float mean = getMeanForRow(row);
+        float variance = getVarianceForRow(row, mean);
 
         float stddev = (float)sqrt(variance);
         float pareto = (float)sqrt(stddev);
@@ -990,6 +1242,97 @@ public final class ExpressionData
         }
 
         return out;
+    }
+
+    public float getTransformedExpressionDataValue(int i, int j)
+    {
+        float transformed[] = getTransformedRow(i);
+        return transformed[j];
+    }
+
+    public float[] getIQRForRows(List<Integer> rows)
+    {
+        float[] iqr = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            float[] values = new float[rows.size()];
+            for (int index = 0; index < rows.size(); index++)
+            {
+                values[index] = getTransformedExpressionDataValue(rows.get(index), column);
+            }
+
+            Arrays.sort(values);
+
+            int _25Column = (int) java.lang.Math.round(rows.size() * 0.25);
+            int _75Column = (int) java.lang.Math.round(rows.size() * 0.75);
+            iqr[column] = values[_75Column] - values[_25Column];
+        }
+
+        return iqr;
+    }
+
+    public float[] getMeanForRows(List<Integer> rows)
+    {
+        float[] mean = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            float rowSum = 0.0f;
+            for (int index = 0; index < rows.size(); index++)
+            {
+                rowSum += getTransformedExpressionDataValue(rows.get(index), column);
+            }
+
+            mean[column] = rowSum / rows.size();
+        }
+
+        return mean;
+    }
+
+    public float[] getVarianceForRows(List<Integer> rows, float[] mean)
+    {
+        float variance[] = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            float varianceSum = 0.0f;
+            float[] values = new float[rows.size()];
+            for (int index = 0; index < rows.size(); index++)
+            {
+                float x = getTransformedExpressionDataValue(rows.get(index), column);
+                varianceSum += ((x - mean[column]) * (x - mean[column]));
+            }
+            variance[column] = varianceSum / rows.size();
+        }
+
+        return variance;
+    }
+
+    public float[] getVarianceForRows(List<Integer> rows)
+    {
+        return getVarianceForRows(rows, getMeanForRows(rows));
+    }
+
+    public float[] getStddevForRows(List<Integer> rows)
+    {
+        float variance[] = getVarianceForRows(rows);
+        float stddev[] = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            stddev[column] = (float)sqrt(variance[column]);
+        }
+
+        return stddev;
+    }
+
+    public float[] getParetoForRows(List<Integer> rows)
+    {
+        float stddev[] = getStddevForRows(rows);
+        float pareto[] = new float[totalColumns];
+        for (int column = 0; column < totalColumns; column++)
+        {
+            stddev[column] = (float)sqrt(stddev[column]);
+        }
+
+        return pareto;
     }
 
     interface IRescaleDelegate { public float f(float x); }
@@ -1043,41 +1386,57 @@ public final class ExpressionData
         }
     }
 
-    private void filter(float filterValue)
+    public HashSet<Integer> filterMinValue(float minValue)
     {
+        cacheMaxValues();
+        HashSet<Integer> filtered = new HashSet<Integer>();
+
         for (int row = 0; row < totalRows; row++)
         {
-            boolean filter = true;
-
-            for (int column = 0; column < totalColumns; column++)
+            if (getMaxValueForRow(row) < minValue)
             {
-                float value = getExpressionDataValue(row, column);
-                if (value >= filterValue)
-                {
-                    filter = false;
-                }
+                filtered.add(row);
             }
-
-            rowsToFilter[row] = filter;
         }
 
-        if (DEBUG_BUILD)
+        return filtered;
+    }
+
+    public HashSet<Integer> filterMinStddev(float minStddev)
+    {
+        cacheStddevValues();
+        HashSet<Integer> filtered = new HashSet<Integer>();
+
+        for (int row = 0; row < totalRows; row++)
         {
-            int numFilteredRows = 0;
-            for (int row = 0; row < totalRows; row++)
+            if (getStddevForRow(row) < minStddev)
             {
-                if (rowsToFilter[row])
-                {
-                    numFilteredRows++;
-                }
+                filtered.add(row);
             }
-
-            println("Filtering " + numFilteredRows + " rows");
         }
+
+        return filtered;
+    }
+
+    public HashSet<Integer> filterMinCoefficientOfVariation(float minCoefVar)
+    {
+        cacheMeanValues();
+        cacheStddevValues();
+        HashSet<Integer> filtered = new HashSet<Integer>();
+
+        for (int row = 0; row < totalRows; row++)
+        {
+            if (getCoefficientOfVariationForRow(row) < minCoefVar)
+            {
+                filtered.add(row);
+            }
+        }
+
+        return filtered;
     }
 
     public void preprocess(LayoutProgressBarDialog layoutProgressBarDialog,
-            ScaleTransformType scaleTransformType, float filterValue)
+            ScaleTransformType scaleTransformType)
     {
         layoutProgressBarDialog.prepareProgressBar(100, "Preprocessing");
         layoutProgressBarDialog.startProgressBar();
@@ -1109,10 +1468,5 @@ public final class ExpressionData
         sumRows();
 
         layoutProgressBarDialog.endProgressBar();
-
-        if (filterValue >= 0.0f)
-        {
-            filter(filterValue);
-        }
     }
 }

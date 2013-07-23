@@ -1,9 +1,10 @@
 !include "MUI2.nsh"
 !include "x64.nsh"
 !include "FileAssociation.nsh"
+!include "LogicLib.nsh"
 
 !define LONG_NAME "BioLayout Express 3D"
-!define VERSION "3.0"
+!define VERSION "3.1"
 !define BASE_NAME "BioLayoutExpress3D"
 !define BASE_DIR ".."
 
@@ -76,6 +77,31 @@ Function Launch
     ExecShell "" "$INSTDIR\${OUTPUT_EXE_NAME}"
 FunctionEnd
 
+Function CheckJVM
+    Var /GLOBAL JVM_BITNESS
+
+    File DetectJVM.exe
+    ClearErrors
+    nsExec::Exec "$INSTDIR\DetectJVM.exe"
+    Pop $0
+    IfErrors DetectExecError
+    IntCmp $0 0 DetectError DetectError DoneDetect
+    DetectExecError:
+        StrCpy $0 "exec error"
+    DetectError:
+        MessageBox MB_OK "Could not determine JVM architecture ($0). Assuming 32-bit."
+        Goto NotX64
+    DoneDetect:
+    IntCmp $0 64 X64 NotX64 NotX64
+    X64:
+        StrCpy $JVM_BITNESS "64"
+        Goto DoneX64
+    NotX64:
+        StrCpy $JVM_BITNESS "32"
+    DoneX64:
+    Delete $INSTDIR\DetectJvm.exe
+FunctionEnd
+
 ;Languages
 !insertmacro MUI_LANGUAGE "English"
 
@@ -84,7 +110,9 @@ Section "-${LONG_NAME}"
 
     SetOutPath "$INSTDIR"
 
-    ${If} ${RunningX64}
+    Call CheckJVM
+
+    ${If} $JVM_BITNESS = '64'
         File "/oname=${OUTPUT_EXE_NAME}" "${BASE_DIR}/target/${64BIT_EXE_NAME}"
     ${Else}
         File "/oname=${OUTPUT_EXE_NAME}" "${BASE_DIR}/target/${32BIT_EXE_NAME}"

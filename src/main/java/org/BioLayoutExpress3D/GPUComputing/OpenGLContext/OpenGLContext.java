@@ -650,6 +650,8 @@ public abstract class OpenGLContext extends Canvas
         }
     }
 
+    static String previousErrorReport;
+
     /**
     *  Checks for OpenGL errors.
     *  Extremely useful debugging function: When developing,
@@ -677,10 +679,13 @@ public abstract class OpenGLContext extends Canvas
                 println(errorReport);
             }
 
-            if (dialog)
+            // Don't show a dialog if we've just shown the same error
+            if (dialog && (previousErrorReport.compareTo(errorReport) != 0))
             {
                 JOptionPane.showMessageDialog(null, errorReport, "OpenGL Error", JOptionPane.WARNING_MESSAGE);
             }
+
+            previousErrorReport = errorReport;
 
             return errorReport;
         }

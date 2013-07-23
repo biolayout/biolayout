@@ -1114,10 +1114,9 @@ public class ShaderLightingSFXs
         }
         if (bump3DEmboss2DTexture != null)
         {
-            bump3DEmboss2DTexture.dispose(gl);
             bump3DEmboss2DTexture = null;
         }
-        if (waterBufferTexture != null) waterBufferTexture.dispose(gl);
+        if (waterBufferTexture != null) waterBufferTexture = null;
     }
 
 

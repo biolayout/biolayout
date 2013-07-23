@@ -1,9 +1,29 @@
 package org.BioLayoutExpress3D.Expression.Panels;
 
 import java.awt.*;
-import java.util.*;
+import java.awt.geom.Ellipse2D;
 import javax.swing.*;
 import static java.lang.Math.*;
+import java.text.DecimalFormat;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.axis.LogAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.*;
+import org.jfree.chart.plot.ValueMarker;
+import org.jfree.data.Range;
+import org.jfree.data.function.LineFunction2D;
+import org.jfree.data.general.DatasetUtilities;
+import org.jfree.data.statistics.Regression;
+import org.jfree.chart.annotations.XYTitleAnnotation;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.chart.block.BlockBorder;
 
 /**
 *
@@ -14,13 +34,6 @@ import static java.lang.Math.*;
 
 public final class ExpressionDegreePlotsPanel extends JPanel
 {
-    /**
-    *  Serial version UID variable for the ExpressionDegreePlotsPanel class.
-    */
-    public static final long serialVersionUID = 111222333444555703L;
-
-    private static final int POINT_SIZE = 4;
-
     private int totalRows = 0;
     private int minThreshold = 0;
     private int threshold = 0;
@@ -30,32 +43,29 @@ public final class ExpressionDegreePlotsPanel extends JPanel
     private int[] maxCount = null;
     private int[] allNodes = null;
     private int[] allEdges = null;
-    private Font tickFont = null;
-    private Font axisFont = null;
-    private Font legendFont = null;
 
-    public ExpressionDegreePlotsPanel(int[][] counts, int totalRows, int minThreshold, int threshold, String thresholdString)
+    private JFreeChart nodesEdgesChart;
+    private JFreeChart degreeChart;
+    private JLabel countsLabel;
+    private XYSeries edgesSeries;
+    private XYSeries nodesSeries;
+    private XYSeriesCollection edgesNodesDataset;
+    private ValueMarker thresholdMarker;
+
+    public ExpressionDegreePlotsPanel(int[][] counts, int totalRows,
+            int minThreshold, int threshold, String thresholdString)
     {
         super(true);
+        this.setLayout(new GridBagLayout());
 
         this.totalRows = totalRows;
         this.minThreshold = minThreshold;
         this.threshold = threshold;
         this.thresholdString = thresholdString;
 
-        allNodes = new int[101 - minThreshold];
-        allEdges = new int[101 - minThreshold];
-        maxDegree = new int[101 - minThreshold];
-        maxCount = new int[101 - minThreshold];
-        histoGram = new int[101 - minThreshold][totalRows];
+        updateCounts(counts);
 
-        Font currentFont = this.getFont();
-        tickFont = currentFont.deriveFont(Font.PLAIN, 8);
-        axisFont = currentFont.deriveFont(Font.BOLD, 12);
-        legendFont = currentFont.deriveFont(Font.BOLD, 15);
-
-        for (int i = 0; i < (101 - minThreshold); i++)
-            calculateDistances(i, counts);
+        initCharts();
     }
 
     private void calculateDistances(int threshold, int[][] counts)
@@ -94,266 +104,241 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         allEdges[threshold] = totalEdges / 2;
     }
 
-    private void drawDegreePlot(Graphics2D g2, int x, int y, int width, int height)
+    public void updateCounts(int[][] counts)
     {
-        double sumXX = 0.0;
-        double sumXY = 0.0;
-        double sumX = 0.0;
-        double sumY = 0.0 ;
-        double a = 0.0;
-        double b = 0.0;
-        int n = 0;
+        allNodes = new int[101 - minThreshold];
+        allEdges = new int[101 - minThreshold];
+        maxDegree = new int[101 - minThreshold];
+        maxCount = new int[101 - minThreshold];
+        histoGram = new int[101 - minThreshold][totalRows];
 
-        g2.setPaint(Color.WHITE);
-        g2.fillRect(x,y,width,height);
-        g2.setPaint(Color.BLACK);
-        g2.drawRect(x,y,width,height);
-
-        int adjustX = 20;
-        int adjustY = 20;
-        int padX = (int)rint(adjustX / 2);
-        int padY = (int)rint(adjustY / 2);
-
-        width = width - adjustX;
-        height = height - adjustY;
-        y += padY;
-        x += padX;
-
-        double maxX = log(maxDegree[threshold - minThreshold]);
-        double maxY = log(maxCount[threshold - minThreshold]);
-
-        ArrayList<Integer> logScale = logScale(maxCount[threshold - minThreshold]);
-        Color color = new Color(240, 240, 240);
-        double scaleX = 0.0;
-        int pointX = 0;
-        for (int i = 0; i < logScale.size(); i++)
-        {
-            scaleX = log( logScale.get(i) ) / maxX;
-            pointX = (int)( x + rint(width * scaleX) );
-
-            g2.setPaint(color);
-            g2.drawLine(pointX, y, pointX, y + height);
-            g2.setPaint(Color.BLACK);
-            g2.drawLine(pointX, y + height + padY, pointX, y + height + padY - 5);
-            drawXCenteredText( g2, pointX, y + height + padY + 8, tickFont, logScale.get(i).toString() );
-        }
-
-        logScale = logScale(maxDegree[threshold - minThreshold]);
-        double scaleY = 0.0;
-        int pointY = 0;
-        for (int i = 0; i < logScale.size(); i++)
-        {
-            scaleY = 1.0 - log( logScale.get(i) ) / maxY;
-            pointY = (int)( y + rint(height * scaleY) );
-
-            g2.setPaint(color);
-            g2.drawLine(x, pointY, x + width, pointY);
-            g2.setPaint(Color.BLACK);
-            g2.drawLine(x - padX, pointY, x - padX + 5, pointY);
-            drawYCenteredText( g2, x - padX, pointY, tickFont, logScale.get(i).toString() );
-        }
-
-        for (int i = 1; i <= maxDegree[threshold - minThreshold]; i++)
-        {
-            scaleX = log(i) / maxX;
-            scaleY = 1.0 - log(histoGram[threshold - minThreshold][i]) / maxY;
-
-            if (histoGram[threshold - minThreshold][i] > 0)
-            {
-                pointX = (int)( x + rint( width * scaleX) );
-                pointY = (int)( y + rint(height * scaleY) );
-
-                g2.setPaint(Color.PINK);
-                g2.fillOval(pointX, pointY, POINT_SIZE, POINT_SIZE);
-                g2.setPaint(Color.BLACK);
-                g2.drawOval(pointX, pointY, POINT_SIZE, POINT_SIZE);
-
-                sumX += pointX;
-                sumY += pointY;
-                sumXX += (pointX * pointX);
-                sumXY += (pointX * pointY);
-                n++;
-            }
-        }
-
-        b = ( (n * sumXY) - (sumX * sumY) ) / ( (n * sumXX) - (sumX * sumX) );
-        a = (sumY - b * sumX) / n;
-        g2.setPaint(Color.BLACK);
-        drawXCenteredText(g2, x + (width / 2), 20, axisFont, "Graph Degree Distribution at: " + thresholdString);
-
-        g2.setPaint(Color.BLACK);
-        drawXCenteredText(g2, x + (width / 2), y + height + padY + 20, axisFont, "Node Degree");
-
-        g2.rotate(-PI / 2, x - padX - 1, y + (height / 2));
-        drawXCenteredText(g2, x - padX, y + (height / 2), axisFont, "No. of Nodes");
-        g2.rotate( PI / 2, x - padX, y + (height / 2));
-
-        g2.setPaint( (threshold >= 85) ? Color.RED : Color.GREEN );
-        g2.drawLine( x, (int)( y + rint(a) + rint(b * x) ), x + width, (int)( y + rint(a) + rint(b * (x + width) ) ) );
-        g2.setPaint(Color.BLACK);
-        g2.setFont(legendFont);
-        drawPanelXCenteredText(g2, this.getHeight() - 6, legendFont, "Nodes: " + allNodes[threshold - minThreshold] + ", \t Edges: " + allEdges[threshold - minThreshold] + ", \t Correlation (R) = " + thresholdString);
-    }
-
-    private void drawEdgesPlot(Graphics2D g2,int x, int y, int width, int height)
-    {
-        g2.setPaint(Color.WHITE);
-        g2.fillRect(x, y, width, height);
-        g2.setPaint(Color.BLACK);
-        g2.drawRect(x, y, width, height);
-
-        double maxX = 100;
-        double maxY = log(allEdges[0]);
-
-        int adjustX = 20;
-        int adjustY = 20;
-        int padX = (int)rint(adjustX / 2);
-        int padY = (int)rint(adjustY / 2);
-
-        width = width - adjustX;
-        height = height - adjustY;
-        y = y + padY;
-        x = x + padX;
-
-        Color color = new Color(240, 240, 240);
-        ArrayList<Integer> logScale = logScale(allEdges[0]);
-        double scaleY = 0.0;
-        int pointY = 0;
-        for (int i = 0; i < logScale.size(); i++)
-        {
-            scaleY = 1.0 - log( logScale.get(i) ) / maxY;
-            pointY = y +(int)rint(height * scaleY);
-
-            g2.setPaint(color);
-            g2.drawLine(x, pointY, x + width, pointY);
-            g2.setPaint(Color.BLACK);
-            g2.drawLine(x - padX, pointY, x - padX + 5, pointY);
-            drawYCenteredText( g2, x - padX, pointY, tickFont, logScale.get(i).toString() );
-        }
-
-        double scaleX = 0.0;
-        double scaleZ = 0.0;
-        int pointX = 0;
-        int pointZ = 0;
         for (int i = 0; i < (101 - minThreshold); i++)
         {
-            scaleX = (double)i / (maxX - minThreshold);
-            scaleY = 1.0 - log(allEdges[i]) / maxY;
-            scaleZ = 1.0 - log(allNodes[i]) / maxY;
-
-            pointX = x + (int)rint(width * scaleX);
-            pointY = y + (int)rint(height * scaleY);
-            pointZ = y + (int)rint(height * scaleZ);
-
-            g2.setPaint(Color.PINK);
-            g2.fillOval(pointX, pointY, POINT_SIZE, POINT_SIZE);
-            g2.setPaint(Color.BLACK);
-            g2.drawOval(pointX, pointY, POINT_SIZE, POINT_SIZE);
-            g2.setPaint(Color.MAGENTA);
-            g2.fillOval(pointX, pointZ, POINT_SIZE, POINT_SIZE);
-            g2.setPaint(Color.BLACK);
-            g2.drawOval(pointX, pointZ, POINT_SIZE, POINT_SIZE);
-
-            g2.setPaint(Color.BLACK);
-            g2.drawLine(pointX, y + height + padY, pointX, y + height + padY - 5);
-            drawXCenteredText( g2, pointX, y + height + 8 + padY, tickFont, Integer.toString(i) );
+            calculateDistances(i, counts);
         }
-
-        g2.setPaint(Color.BLACK);
-        drawXCenteredText(g2, x + (width / 2), 20, axisFont, "Graph Size vs Correlation Threshold");
-
-        g2.setPaint(Color.BLACK);
-        drawXCenteredText(g2, x + (width / 2), y + height + padY + 20, axisFont, "Correlation Threshold");
-
-        g2.rotate(-PI / 2, x - padX - 1, y + (height / 2));
-        drawXCenteredText(g2, x - padX, y + (height / 2), axisFont, "Number of Nodes / Edges");
-        g2.rotate( PI / 2, x - padX, y + (height / 2));
-
-        double scalelineX = (double)(threshold - minThreshold) / (maxX - minThreshold);
-        int pointlinex = (int)( x + rint(width * scalelineX) );
-
-        g2.setPaint(Color.RED);
-        g2.drawLine(pointlinex, y, pointlinex, height + y);
-
-    }
-
-    private void drawXCenteredText(Graphics2D g2, int x, int y, Font font, String string)
-    {
-       int width = g2.getFontMetrics(font).stringWidth(string) + 2;
-
-       g2.setFont(font);
-       g2.drawString(string, (int)( x - rint(width / 2.0) ), y);
-    }
-
-    private void drawYCenteredText(Graphics2D g2, int x, int y, Font font, String string)
-    {
-       int height = g2.getFontMetrics(font).getHeight() + 2;
-
-       g2.setFont(font);
-       g2.drawString(string, x, (int)( y + rint(height / 2.0) + 2) );
-    }
-
-    private void drawPanelXCenteredText(Graphics2D g2, int y, Font font, String string)
-    {
-       int width = g2.getFontMetrics(font).stringWidth(string) + 2;
-
-       g2.setFont(font);
-       g2.drawString(string, (this.getWidth() - width) / 2, y);
-    }
-
-    // Simple Fuction that generates a useful and readable Log Scale from 1 to some Max Number
-    private ArrayList<Integer> logScale(int maxValue)
-    {
-        int[] scale = { 1, 2, 3, 5, 7 };
-        int currentValue = 0;
-        int realValue = 1;
-        int cycles = 1;
-        ArrayList<Integer> logScale = new ArrayList<Integer>();
-
-        while (realValue < maxValue)
-        {
-            realValue = scale[currentValue] * ( (int)pow(10, (cycles - 1) ) );
-            logScale.add(realValue);
-
-            currentValue++;
-            if (currentValue > 4)
-            {
-                currentValue = 0;
-                cycles++;
-            }
-        }
-
-        return logScale;
     }
 
     public void updatePlots(int threshold, String thresholdString)
     {
         this.threshold = threshold;
+        if (threshold < minThreshold)
+        {
+            System.out.println("updatePlots: threshold " + threshold + " < minThreshold" + minThreshold);
+        }
+
         this.thresholdString = thresholdString;
+
+        this.updateEdgesNodesChart();
+        this.updateDegreeChart();
+        this.updateCountsLabel();
 
         this.repaint();
     }
 
-    @Override
-    public void paintComponent(Graphics g)
+    private JFreeChart createEdgesNodesChart()
     {
-        int padX = 10;
-        int padY = 5;
-        int bottomY = 40;
-        int topY = 20;
+        edgesSeries = new XYSeries("Edges");
+        nodesSeries = new XYSeries("Nodes");
+        edgesNodesDataset = new XYSeriesCollection();
+        edgesNodesDataset.addSeries(edgesSeries);
+        edgesNodesDataset.addSeries(nodesSeries);
+        JFreeChart chart = ChartFactory.createScatterPlot(
+                "Graph Size vs. Correlation Threshold", null, null,
+                edgesNodesDataset, PlotOrientation.VERTICAL, false, false, false);
+        Font font = chart.getTitle().getFont();
+        font = font.deriveFont(12.0f);
+        chart.getTitle().setFont(font);
 
-        int plotWidth = this.getWidth() / 2 - (padX * 2);
-        int plotHeight = this.getHeight() - (padY * 4 + bottomY + topY);
+        XYPlot plot = (XYPlot) chart.getPlot();
+        XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) plot.getRenderer();
 
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        r.setSeriesShape(0, new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
+        r.setSeriesFillPaint(0, Color.PINK);
+        r.setUseFillPaint(true);
+        r.setSeriesOutlinePaint(0, Color.BLACK);
+        r.setUseOutlinePaint(true);
 
-        g2.setPaint(Color.WHITE);
-        g2.fillRect(0, 0, this.getWidth(), this.getHeight());
-        drawEdgesPlot(g2, padX, padY + topY, plotWidth, plotHeight);
-        padX += plotWidth + 20;
-        drawDegreePlot(g2, padX, padY + topY, plotWidth, plotHeight);
+        r.setSeriesShape(1, new Rectangle.Double(-3.0, -3.0, 6.0, 6.0));
+        r.setSeriesFillPaint(1, Color.MAGENTA);
+        r.setUseFillPaint(true);
+        r.setSeriesOutlinePaint(1, Color.BLACK);
+        r.setUseOutlinePaint(true);
+
+        NumberAxis xAxis = new NumberAxis("Correlation Threshold");
+        xAxis.setNumberFormatOverride(new DecimalFormat("##"));
+        xAxis.setAutoRangeIncludesZero(false);
+        xAxis.setAutoRange(true);
+        plot.setDomainAxis(xAxis);
+
+        LogAxis yAxis = new LogAxis("Nodes / Edges");
+        yAxis.setNumberFormatOverride(new DecimalFormat("#.##E0"));
+        plot.setRangeAxis(yAxis);
+
+        thresholdMarker = new ValueMarker(threshold);
+        thresholdMarker.setPaint(Color.red);
+        thresholdMarker.setStroke(new BasicStroke(2.0F));
+        plot.addDomainMarker(thresholdMarker);
+
+        LegendTitle legendtitle = new LegendTitle(plot);
+        legendtitle.setItemFont(new Font("Dialog", 0, 9));
+        legendtitle.setBackgroundPaint(new Color(255, 255, 255, 200));
+        legendtitle.setFrame(new BlockBorder(Color.white));
+        legendtitle.setPosition(RectangleEdge.TOP);
+        XYTitleAnnotation xytitleannotation = new XYTitleAnnotation(0.98, 0.9, legendtitle, RectangleAnchor.TOP_RIGHT);
+        xytitleannotation.setMaxWidth(0.5);
+        plot.addAnnotation(xytitleannotation);
+
+        return chart;
     }
 
+    private void updateEdgesNodesChart()
+    {
+        if (edgesSeries != null && nodesSeries != null)
+        {
+            edgesSeries.clear();
+            nodesSeries.clear();
 
+            for (int i = 0; i < (100 - minThreshold); i++)
+            {
+                edgesSeries.add((double) i + minThreshold, allEdges[i]);
+                nodesSeries.add((double) i + minThreshold, allNodes[i]);
+            }
+
+            thresholdMarker.setValue(threshold);
+        }
+    }
+
+    private JFreeChart createDegreeChart()
+    {
+        JFreeChart chart = ChartFactory.createScatterPlot(
+                "Graph Degree Distribution", null, null,
+                null, PlotOrientation.VERTICAL, false, false, false);
+        Font font = chart.getTitle().getFont();
+        font = font.deriveFont(12.0f);
+        chart.getTitle().setFont(font);
+
+        XYPlot plot = (XYPlot) chart.getPlot();
+        XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) plot.getRenderer();
+        r.setSeriesShape(0, new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
+        r.setSeriesFillPaint(0, Color.PINK);
+        r.setUseFillPaint(true);
+        r.setSeriesOutlinePaint(0, Color.BLACK);
+        r.setUseOutlinePaint(true);
+
+        LogAxis xAxis = new LogAxis("Node Degree");
+        xAxis.setNumberFormatOverride(new DecimalFormat("###.#"));
+        LogAxis yAxis = new LogAxis("Nodes");
+        yAxis.setNumberFormatOverride(new DecimalFormat("###.#"));
+        plot.setDomainAxis(xAxis);
+        plot.setRangeAxis(yAxis);
+
+        return chart;
+    }
+
+    private void updateDegreeChart()
+    {
+        XYPlot plot = degreeChart.getXYPlot();
+
+        XYSeries degreeSeries = new XYSeries("Degree");
+        XYDataset degreeDataset = new XYSeriesCollection(degreeSeries);
+
+        XYSeries log10DegreeSeries = new XYSeries("Degree Log10");
+        XYDataset log10DegreeDataset = new XYSeriesCollection(log10DegreeSeries);
+
+        int numPoints = maxDegree[threshold - minThreshold] + 1;
+        for (int i = 1; i < numPoints; i++)
+        {
+            if (histoGram[threshold - minThreshold][i] > 0)
+            {
+                degreeSeries.add(i, histoGram[threshold - minThreshold][i]);
+                log10DegreeSeries.add(log10(i), log10(histoGram[threshold - minThreshold][i]));
+            }
+        }
+
+        plot.setDataset(0, degreeDataset);
+
+        if (degreeSeries.getItemCount() > 1)
+        {
+            // Hack to set the range of the line plot so that it corresponds with
+            // the scatter plot
+            NumberAxis domainAxis = new NumberAxis();
+            double xSize = log10DegreeSeries.getMaxX() - log10DegreeSeries.getMinX();
+            double xLowerMargin = xSize * plot.getDomainAxis(0).getLowerMargin();
+            double xUpperMargin = xSize * plot.getDomainAxis(0).getUpperMargin();
+            Range xRange = new Range(log10DegreeSeries.getMinX() - xLowerMargin,
+                    log10DegreeSeries.getMaxX() + xUpperMargin);
+            domainAxis.setAutoRange(false);
+            domainAxis.setRange(xRange);
+            domainAxis.setVisible(false);
+
+            NumberAxis rangeAxis = new NumberAxis();
+            double ySize = log10DegreeSeries.getMaxY() - log10DegreeSeries.getMinY();
+            double yLowerMargin = ySize * plot.getRangeAxis(0).getLowerMargin();
+            double yUpperMargin = ySize * plot.getRangeAxis(0).getUpperMargin();
+            Range yRange = new Range(log10DegreeSeries.getMinY() - yLowerMargin,
+                    log10DegreeSeries.getMaxY() + yUpperMargin);
+            rangeAxis.setAutoRange(false);
+            rangeAxis.setRange(yRange);
+            rangeAxis.setVisible(false);
+
+            double ad[] = Regression.getOLSRegression(log10DegreeDataset, 0);
+            LineFunction2D linefunction2d = new LineFunction2D(ad[0], ad[1]);
+            XYDataset fitDataset = DatasetUtilities.sampleFunction2D(linefunction2d,
+                    domainAxis.getLowerBound(), domainAxis.getUpperBound(),
+                    2, "Fitted Regression Line");
+
+            plot.setDataset(1, fitDataset);
+            XYLineAndShapeRenderer r = new XYLineAndShapeRenderer(true, false);
+            r.setSeriesPaint(0, Color.blue);
+            plot.setRenderer(1, r);
+            plot.setRangeAxis(1, rangeAxis);
+            plot.setDomainAxis(1, domainAxis);
+            plot.mapDatasetToRangeAxis(1, 1);
+            plot.mapDatasetToDomainAxis(1, 1);
+        }
+        else
+        {
+            plot.setDataset(1, null);
+            plot.setRenderer(1, null);
+            plot.setRangeAxis(1, null);
+            plot.setDomainAxis(1, null);
+        }
+    }
+
+    private void updateCountsLabel()
+    {
+        countsLabel.setText("Nodes: " + allNodes[threshold - minThreshold] +
+                ", Edges: " + allEdges[threshold - minThreshold] +
+                ", Correlation (R) = " + thresholdString);
+    }
+
+    private void initCharts()
+    {
+        GridBagConstraints c = new GridBagConstraints();
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        nodesEdgesChart = createEdgesNodesChart();
+        this.add(new ChartPanel(nodesEdgesChart), c);
+        updateEdgesNodesChart();
+
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 1;
+        c.gridy = 0;
+        degreeChart = createDegreeChart();
+        this.add(new ChartPanel(degreeChart), c);
+        updateDegreeChart();
+
+        c.weighty = 0.0;
+        c.fill = GridBagConstraints.CENTER;
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 2;
+        countsLabel = new JLabel("Some Text");
+        this.add(countsLabel, c);
+        updateCountsLabel();
+    }
 }

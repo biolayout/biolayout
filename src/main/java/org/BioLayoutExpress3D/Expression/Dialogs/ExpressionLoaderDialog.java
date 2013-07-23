@@ -26,16 +26,13 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     public static final long serialVersionUID = 111222333444555706L;
 
     private FloatNumberField correlationField = null;
-    private JComboBox firstDataColumn = null;
-    private JComboBox firstDataRow = null;
-    private JComboBox correlationMetric = null;
+    private JComboBox<String> firstDataColumn = null;
+    private JComboBox<String> firstDataRow = null;
+    private JComboBox<String> correlationMetric = null;
     private JCheckBox transposeCheckBox = null;
-    private JComboBox scaleTransformComboBox = null;
+    private JComboBox<String> scaleTransformComboBox = null;
     private JEditorPane textArea = null;
     private JCheckBox saveCorrelationTextFileCheckBox = null;
-    private JCheckBox filterCheckBox = null;
-    private FloatNumberField filterField = null;
-    private static final float DEFAULT_FILTER_VALUE = 0.0f;
     private File expressionFile = null;
 
     private boolean proceed = false;
@@ -43,7 +40,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     private AbstractAction okAction = null;
     private AbstractAction cancelAction = null;
     private AbstractAction transposeChangedAction = null;
-    private AbstractAction filterChangedAction = null;
 
     private boolean creatingDialogElements = false;
 
@@ -91,7 +87,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         tabLine1.add(correlationField);
 
         // Correlation metric
-        correlationMetric = new JComboBox();
+        correlationMetric = new JComboBox<String>();
         for (CorrelationTypes type : CorrelationTypes.values())
         {
             String s = Utils.titleCaseOf(type.toString());
@@ -108,12 +104,12 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         tabLine1.add(saveCorrelationTextFileCheckBox);
 
         // Data bounds
-        firstDataColumn = new JComboBox();
+        firstDataColumn = new JComboBox<String>();
         firstDataColumn.addActionListener(this);
         firstDataColumn.setToolTipText("First Data Column");
         tabLine2.add(new JLabel("First Data Column:"));
         tabLine2.add(firstDataColumn);
-        firstDataRow = new JComboBox();
+        firstDataRow = new JComboBox<String>();
         firstDataRow.addActionListener(this);
         firstDataRow.setToolTipText("First Data Row");
         tabLine2.add(new JLabel("First Data Row:"));
@@ -133,7 +129,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         JPanel tabLine2 = new JPanel();
 
         // Scale transform
-        scaleTransformComboBox = new JComboBox();
+        scaleTransformComboBox = new JComboBox<String>();
         for (ScaleTransformType type : ScaleTransformType.values())
         {
             String s = Utils.titleCaseOf(type.toString());
@@ -148,17 +144,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         transposeCheckBox = new JCheckBox(transposeChangedAction);
         transposeCheckBox.setText("Transpose");
         tabLine1.add(transposeCheckBox);
-
-        // Filter
-        filterCheckBox = new JCheckBox(filterChangedAction);
-        filterCheckBox.setText("Filter Rows With All Values Less Than");
-        filterCheckBox.setSelected(false);
-        filterField = new FloatNumberField(0, 5);
-        filterField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
-        filterField.setEnabled(false);
-        filterField.setValue(DEFAULT_FILTER_VALUE);
-        tabLine2.add(filterCheckBox);
-        tabLine2.add(filterField);
 
         tab.setLayout(new BoxLayout(tab, BoxLayout.PAGE_AXIS));
         tab.add(tabLine1);
@@ -229,16 +214,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
                     return;
                 }
 
-                if (filterCheckBox.isSelected())
-                {
-                    if (filterField.isEmpty() || filterField.getValue() < 0.0f)
-                    {
-                        JOptionPane.showMessageDialog(frame, "A positive filter value must be given.", "Invalid filter value", JOptionPane.INFORMATION_MESSAGE);
-                        filterField.setValue(DEFAULT_FILTER_VALUE);
-                        return;
-                    }
-                }
-
                 CURRENT_METRIC = CorrelationTypes.values()[correlationMetric.getSelectedIndex()];
                 CURRENT_SCALE_TRANSFORM = ScaleTransformType.values()[scaleTransformComboBox.getSelectedIndex()];
                 proceed = true;
@@ -269,15 +244,6 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
                 refreshDataPreview(true);
             }
         };
-
-        filterChangedAction = new AbstractAction("FilterToggle")
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                filterField.setEnabled(filterCheckBox.isSelected());
-            }
-        };
     }
 
     private DataRect findLargestDataRect(TextDelimitedMatrix tdm)
@@ -288,9 +254,14 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         {
             for (int row = tdm.numRows() - 1; row >= 0; row--)
             {
-                if (isNumeric(tdm.valueAt(column, row)))
+                String value = tdm.valueAt(column, row);
+                if (isNumeric(value))
                 {
                     heightHistogram[column]++;
+                }
+                else
+                {
+                    break;
                 }
             }
         }
@@ -601,15 +572,5 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     public boolean saveCorrelationTextFile()
     {
         return saveCorrelationTextFileCheckBox.isSelected();
-    }
-
-    public float filterValue()
-    {
-        if (!filterCheckBox.isSelected())
-        {
-            return -1.0f;
-        }
-
-        return filterField.getValue();
     }
 }

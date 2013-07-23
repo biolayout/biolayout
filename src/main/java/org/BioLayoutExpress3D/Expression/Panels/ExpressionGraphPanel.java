@@ -21,6 +21,21 @@ import org.BioLayoutExpress3D.StaticLibraries.*;
 import org.BioLayoutExpress3D.Textures.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
+import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
+import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
+import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
+import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
+import org.jfree.util.ShapeUtilities;
+import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 
 /**
 *
@@ -47,8 +62,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     public static final BasicStroke THIN_BASIC_STROKE = new BasicStroke(0.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     public static final BasicStroke THICK_BASIC_STROKE = new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
-    public static final String EXPRESSION_X_AXIS_LABEL = "X Axis: Sample";
-    public static final String EXPRESSION_Y_AXIS_LABEL = "Y Axis: Intensity";
+    public static final String EXPRESSION_X_AXIS_LABEL = "Sample";
+    public static final String EXPRESSION_Y_AXIS_LABEL = "Intensity";
     public static final int VALUES_FONT_SIZE = 6;
     public static final int AXIS_FONT_SIZE = 14;
     public static final int AXIS_FONT_STYLE = Font.ITALIC | Font.BOLD;
@@ -62,11 +77,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JPanel expressionGraphCheckBoxesPanel = null;
 
     private JCheckBox gridLinesCheckBox = null;
-    private JCheckBox classMeanCheckBox = null;
-    private JCheckBox selectionMeanCheckBox = null;
-    private JCheckBox rescaleCheckBox = null;
+    private JComboBox<String> classStatComboBox = null;
+    private JComboBox<String> selectionStatComboBox = null;
     private JCheckBox axesLegendCheckBox = null;
-    private JComboBox transformComboBox = null;
+    private JCheckBox hideSampleLabelsCheckBox = null;
+    private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
 
     private AbstractAction renderPlotImageToFileAction = null;
@@ -76,7 +91,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JFileChooser exportPlotExpressionProfileToFileChooser = null;
     private FileNameExtensionFilter fileNameExtensionFilterText = null;
 
-    private ExpressionGraphPlotPanel expressionGraphPlotPanel = null;
+    private ChartPanel expressionGraphPlotPanel = null;
     private ExpressionChooseClassesToRenderPlotImagesFromDialog expressionChooseClassesToRenderPlotImagesFromDialog = null;
 
     public ExpressionGraphPanel(JFrame jframe, LayoutFrame layoutFrame, ExpressionData expressionData)
@@ -112,7 +127,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         };
         exportPlotExpressionProfileAsAction.setEnabled(false);
 
-        renderPlotImageToFileAction = new AbstractAction("Render Plot Image To File As...")
+        renderPlotImageToFileAction = new AbstractAction("Render Plot To File...")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -127,7 +142,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         };
         renderPlotImageToFileAction.setEnabled(false);
 
-        renderAllCurrentClassSetPlotImagesToFilesAction = new AbstractAction("Render All Current Class Set Plot Images To Files As...")
+        renderAllCurrentClassSetPlotImagesToFilesAction = new AbstractAction("Render Class Set Plots To Files...")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -143,6 +158,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         renderAllCurrentClassSetPlotImagesToFilesAction.setEnabled(false);
     }
 
+    private enum StatisticType
+    {
+        None,
+        Mean,
+        Standard_Deviation,
+        IQR_Box_Plot
+    }
+
     /**
     *  This method is called from within the constructor to initialize the expression graph panel components.
     */
@@ -150,28 +173,40 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         gridLinesCheckBox = new JCheckBox("Grid Lines");
         gridLinesCheckBox.setToolTipText("Grid Lines");
-        classMeanCheckBox = new JCheckBox("Class Mean");
-        classMeanCheckBox.setToolTipText("Class Mean");
-        selectionMeanCheckBox = new JCheckBox("Selection Mean");
-        selectionMeanCheckBox.setToolTipText("Selection Mean");
-        rescaleCheckBox = new JCheckBox("Rescale");
-        rescaleCheckBox.setToolTipText("Rescale");
         axesLegendCheckBox = new JCheckBox("Axes Legend");
         axesLegendCheckBox.setToolTipText("Axes Legend");
+        hideSampleLabelsCheckBox = new JCheckBox("Hide Sample Names");
+        hideSampleLabelsCheckBox.setToolTipText("Hide Sample Names");
         exportPlotExpressionProfileAsButton = new JButton(exportPlotExpressionProfileAsAction);
         exportPlotExpressionProfileAsButton.setToolTipText("Export Plot Expression Profile As...");
         gridLinesCheckBox.addActionListener(this);
-        classMeanCheckBox.addActionListener(this);
-        selectionMeanCheckBox.addActionListener(this);
-        rescaleCheckBox.addActionListener(this);
         axesLegendCheckBox.addActionListener(this);
-        gridLinesCheckBox.setSelected( PLOT_GRID_LINES.get() );
-        classMeanCheckBox.setSelected( PLOT_CLASS_MEAN.get() );
-        selectionMeanCheckBox.setSelected( PLOT_SELECTION_MEAN.get() );
-        rescaleCheckBox.setSelected( PLOT_RESCALE.get() );
-        axesLegendCheckBox.setSelected( PLOT_AXES_LEGEND.get() );
+        hideSampleLabelsCheckBox.addActionListener(this);
+        gridLinesCheckBox.setSelected(PLOT_GRID_LINES.get());
+        axesLegendCheckBox.setSelected(PLOT_AXES_LEGEND.get());
+        hideSampleLabelsCheckBox.setSelected(PLOT_HIDE_SAMPLES.get());
 
-        transformComboBox = new JComboBox();
+        classStatComboBox = new JComboBox<String>();
+        for (StatisticType type : StatisticType.values())
+        {
+            String s = Utils.titleCaseOf(type.toString());
+            classStatComboBox.addItem(s);
+        }
+        classStatComboBox.setSelectedIndex(PLOT_CLASS_STATISTIC_TYPE.get());
+        classStatComboBox.setToolTipText("Class Statistic");
+        classStatComboBox.addActionListener(this);
+
+        selectionStatComboBox = new JComboBox<String>();
+        for (StatisticType type : StatisticType.values())
+        {
+            String s = Utils.titleCaseOf(type.toString());
+            selectionStatComboBox.addItem(s);
+        }
+        selectionStatComboBox.setSelectedIndex(PLOT_SELECTION_STATISTIC_TYPE.get());
+        selectionStatComboBox.setToolTipText("Selection Statistic");
+        selectionStatComboBox.addActionListener(this);
+
+        transformComboBox = new JComboBox<String>();
         for (ExpressionEnvironment.TransformType type : ExpressionEnvironment.TransformType.values())
         {
             String s = Utils.titleCaseOf(type.toString());
@@ -184,14 +219,22 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         JPanel expressionGraphUpperPartPanel = new JPanel(true);
 
         expressionGraphCheckBoxesPanel = new JPanel(true);
-        expressionGraphCheckBoxesPanel.add(transformComboBox);
-        expressionGraphCheckBoxesPanel.add(gridLinesCheckBox);
-        expressionGraphCheckBoxesPanel.add(classMeanCheckBox);
-        expressionGraphCheckBoxesPanel.add(selectionMeanCheckBox);
-        expressionGraphCheckBoxesPanel.add(rescaleCheckBox);
-        expressionGraphCheckBoxesPanel.add(axesLegendCheckBox);
+        JPanel plotOptionsLine1 = new JPanel();
+        JPanel plotOptionsLine2 = new JPanel();
+        plotOptionsLine1.add(new JLabel("Scaling:"));
+        plotOptionsLine1.add(transformComboBox);
+        plotOptionsLine1.add(gridLinesCheckBox);
+        plotOptionsLine1.add(axesLegendCheckBox);
+        plotOptionsLine1.add(hideSampleLabelsCheckBox);
+        plotOptionsLine2.add(new JLabel("Class Statistic:"));
+        plotOptionsLine2.add(classStatComboBox);
+        plotOptionsLine2.add(new JLabel("Selection Statistic:"));
+        plotOptionsLine2.add(selectionStatComboBox);
+        expressionGraphCheckBoxesPanel.setLayout(new BoxLayout(expressionGraphCheckBoxesPanel, BoxLayout.PAGE_AXIS));
+        expressionGraphCheckBoxesPanel.add(plotOptionsLine1);
+        expressionGraphCheckBoxesPanel.add(plotOptionsLine2);
 
-        expressionGraphPlotPanel = new ExpressionGraphPlotPanel(true);
+        expressionGraphPlotPanel = createExpressionPlot();
         expressionChooseClassesToRenderPlotImagesFromDialog = new ExpressionChooseClassesToRenderPlotImagesFromDialog(jframe, layoutFrame, this);
 
         JPanel expressionGraphButtonPanel = new JPanel(true);
@@ -216,410 +259,271 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         exportPlotExpressionProfileToFileChooser.setDialogTitle("Export Plot Expression Profile As");
     }
 
-    private class ExpressionGraphPlotPanel extends JPanel
+    private CategoryPlot plot;
+
+    class RowData
     {
-
-        /**
-        *  Serial version UID variable for the ExpressionGraphPlotPanel class.
-        */
-        public static final long serialVersionUID = 111222333444555799L;
-
-        /**
-        *  The constructor of the ExpressionGraphPlotPanel inner class.
-        */
-        public ExpressionGraphPlotPanel(boolean isDoubleBuffered)
+        public RowData(int columns, Color color)
         {
-            super(isDoubleBuffered);
+            rows = new ArrayList<Integer>();
+            classColor = color;
         }
 
-        @Override
-        public void paintComponent(Graphics g)
+        public ArrayList<Integer> rows;
+        public Color classColor;
+    }
+
+    public int addStatisticalPlot(int datasetIndex, ArrayList<Integer> rows, Color color, String className,
+            StatisticType type)
+    {
+        float[] mean = expressionData.getMeanForRows(rows);
+        float[] stddev = expressionData.getStddevForRows(rows);
+
+        switch (type)
         {
-            // render the panel background
-            super.paintComponent(g);
+            case None:
+                break;
 
-            int totalColumns = expressionData.getTotalColumns();
-            // don't render anything if no expression, besides the panel background (above)
-            if (totalColumns == 0) return;
-
-            Graphics2D g2d = (Graphics2D)g;
-            AffineTransform origTransform = g2d.getTransform(); // save original affine transform
-            RenderingHints currentRenderingHints = g2d.getRenderingHints();  // save original rendering hints
-            org.BioLayoutExpress3D.StaticLibraries.ImageProducer.qualityRendering(g2d);
-
-            double maxStringWidth = Double.MIN_VALUE;
-            double maxStringHeight = Double.MIN_VALUE;
-            Rectangle2D rectangle2D = null;
-            for (int j = 0; j < totalColumns; j++)
+            case Mean:
             {
-                rectangle2D = g2d.getFontMetrics( g2d.getFont() ).getStringBounds(expressionData.getColumnName(j), g2d);
+                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                for (int column = 0; column < mean.length; column++)
+                {
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.addValue(mean[column], className, columnName);
+                }
 
-                if (rectangle2D.getWidth() > maxStringWidth)
-                    maxStringWidth = rectangle2D.getWidth();
+                plot.setDataset(datasetIndex, dataset);
+                DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
+                r.setSeriesPaint(0, color);
+                r.setSeriesShapesVisible(0, false);
+                r.setSeriesStroke(0, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
+                        {
+                            9.0f, 4.0f
+                        }, 0.0f));
 
-                if (rectangle2D.getHeight() > maxStringHeight)
-                    maxStringHeight = rectangle2D.getHeight();
+                // The shapes aren't shown, but this defines the tooltip hover zone
+                r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
+                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+
+                plot.setRenderer(datasetIndex, r);
+                datasetIndex++;
             }
+            break;
 
-            int padY = (int)maxStringWidth + expressionGraphCheckBoxesPanel.getHeight();
-            double width = this.getSize().getWidth() - PAD_X;
-            double height = this.getSize().getHeight();
-            double columnWidth = width / totalColumns;
+            case Standard_Deviation:
+            {
+                DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
+                for (int column = 0; column < mean.length; column++)
+                {
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.add(mean[column], stddev[column], className, columnName);
+                }
 
-            boolean drawGridLines = PLOT_GRID_LINES.get();
-            boolean drawMeanOfClass = PLOT_CLASS_MEAN.get();
-            boolean drawMeanOfSelection = PLOT_SELECTION_MEAN.get();
-            boolean drawRescale = PLOT_RESCALE.get();
-            boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
+                plot.setDataset(datasetIndex, dataset);
+                StatisticalLineAndShapeRenderer r = new StatisticalLineAndShapeRenderer(false, true);
+                r.setSeriesPaint(0, color);
+                r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                plot.setRenderer(datasetIndex, r);
+                datasetIndex++;
+            }
+            break;
+
+            case IQR_Box_Plot:
+            {
+                DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
+
+                ArrayList<float[]> data = new ArrayList<float[]>();
+                for (int rowIndex : rows)
+                {
+                    data.add(expressionData.getTransformedRow(rowIndex));
+                }
+
+                for (int column = 0; column < mean.length; column++)
+                {
+                    ArrayList<Double> values = new ArrayList<Double>();
+                    for (float[] row : data)
+                    {
+                        values.add((double) row[column]);
+                    }
+
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.add(values, className, columnName);
+                }
+
+                plot.setDataset(datasetIndex, dataset);
+                BoxAndWhiskerRenderer r = new BoxAndWhiskerRenderer();
+                r.setSeriesPaint(0, color);
+                r.setMeanVisible(false);
+                r.setMedianVisible(true);
+                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                plot.setRenderer(datasetIndex, r);
+                datasetIndex++;
+            }
+            break;
+        }
+
+        return datasetIndex;
+    }
+
+    public void refreshPlot()
+    {
+        boolean drawGridLines = PLOT_GRID_LINES.get();
+        boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.None;
+        boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.None;
+        boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
+        boolean hideSampleLabels = PLOT_HIDE_SAMPLES.get();
+
+        HashSet<GraphNode> expandedSelectedNodes =
+                layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
+        int numSelectedNodes = expandedSelectedNodes.size();
+
+        int totalColumns = expressionData.getTotalColumns();
+        int datasetIndex = 0;
+
+        plot.getRangeAxis().setAutoRange(false);
+
+        if (numSelectedNodes > 0 && totalColumns > 0)
+        {
             ExpressionEnvironment.TransformType transformType =
                     ExpressionEnvironment.TransformType.values()[PLOT_TRANSFORM.get()];
-
             expressionData.setTransformType(transformType);
 
-            int plotRectangleWidth = (int)( ( width / totalColumns ) * (totalColumns - 1) ) + 2;
-            g2d.setStroke(THIN_BASIC_STROKE);
-            g2d.setColor( PLOT_BACKGROUND_COLOR.get() );
-            g2d.fill3DRect(PAD_X, 0, plotRectangleWidth, (int)(height - padY), true);
-            g2d.setColor(DESCRIPTIONS_COLOR);
-            g2d.drawRect( PAD_X, 0, plotRectangleWidth, (int)(height - padY) );
+            // Mean of selection
+            RowData meanOfSelection = new RowData(totalColumns, new Color(0));
+            int meanR = 0;
+            int meanG = 0;
+            int meanB = 0;
 
-            double value = 0.0;
-            double max = Double.MIN_VALUE;
-            double min = 0.0; // has to be 0.0 so as to not confuse the plot rendering
-            Integer index = null;
-            HashSet<GraphNode> expandedSelectedNodes = layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
-            renderPlotImageToFileAction.setEnabled( !expandedSelectedNodes.isEmpty() );
-            exportPlotExpressionProfileAsAction.setEnabled( !expandedSelectedNodes.isEmpty() );
+            // Mean of class
+            HashMap<VertexClass, RowData> meanOfClassMap = new HashMap<VertexClass, RowData>();
+
             for (GraphNode graphNode : expandedSelectedNodes)
             {
-                index = expressionData.getIdentityMap( graphNode.getNodeName() );
-                if (index == null) continue;
+                Integer index = expressionData.getIdentityMap(graphNode.getNodeName());
+                if (index == null)
+                {
+                    continue;
+                }
 
                 float[] transformedData = expressionData.getTransformedRow(index);
-                for (int j = 0; j < totalColumns; j++)
+
+                Color nodeColor = graphNode.getColor();
+                VertexClass nodeClass = graphNode.getVertexClass();
+
+                if (drawStatsOfSelection)
                 {
-                    value = transformedData[j];
-
-                    if (value > max)
-                        max = value;
-
-                    if (value < min)
-                        min = value;
+                    meanOfSelection.rows.add(index);
+                    meanR += nodeColor.getRed();
+                    meanG += nodeColor.getGreen();
+                    meanB += nodeColor.getBlue();
                 }
-            }
 
-            double yScale = (height - padY) / (max - min);
-
-            expandedSelectedNodes = layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
-            double[][] meanLineStepsData = (drawMeanOfClass || drawMeanOfSelection) ? new double[totalColumns][2] : null;
-            HashMap<Color, double[][]> meanOfClassLineStepsDataMap = (drawMeanOfClass) ? new HashMap<Color, double[][]>() : null;
-            HashMap<Color, Integer> meanOfClassLineStepsTimesUsedMap = (drawMeanOfClass) ? new HashMap<Color, Integer>() : null;
-            HashSet<Color> lineColors = (drawMeanOfSelection) ? new HashSet<Color>(): null;
-            Color nodeColor = null;
-            for (GraphNode graphNode : expandedSelectedNodes)
-            {
-               index = expressionData.getIdentityMap( graphNode.getNodeName() );
-               if (index == null) continue;
-
-               nodeColor = graphNode.getColor();
-               if (drawMeanOfClass)
-               {
-                   if ( !meanOfClassLineStepsDataMap.containsKey(nodeColor) )
-                   {
-                       // put meanOfClassLineStepsData in HashMap
-                       meanLineStepsData = new double[totalColumns][2];
-                       meanOfClassLineStepsTimesUsedMap.put(nodeColor, 1);
-                       meanOfClassLineStepsDataMap.put(nodeColor, meanLineStepsData);
-                   }
-                   else
-                   {
-                       meanLineStepsData = meanOfClassLineStepsDataMap.get(nodeColor);
-                       meanOfClassLineStepsTimesUsedMap.put(nodeColor, meanOfClassLineStepsTimesUsedMap.get(nodeColor) + 1); // increment integer counter in HashMap
-                   }
-               }
-               else if (drawMeanOfSelection)
-               {
-                   lineColors.add(nodeColor);
-               }
-               else
-               {
-                   g2d.setColor(nodeColor);
-               }
-
-               float[] transformedData = expressionData.getTransformedRow(index);
-
-               double currentX = 0.0;
-               double nextX = 0.0;
-               double thisY = 0.0;
-               double nextY = 0.0;
-               for (int j = 0; j < totalColumns - 1; j++)
-               {
-                   currentX = (j * columnWidth) + PAD_X;
-                   nextX = ( (j + 1) * columnWidth ) + PAD_X;
-                   thisY = transformedData[j] - min;
-                   nextY = transformedData[j + 1] - min;
-
-                   if (drawMeanOfClass || drawMeanOfSelection)
-                   {
-                       meanLineStepsData[j][0] += thisY;
-                       meanLineStepsData[j][1] += nextY;
-                   }
-                   else
-                   {
-                       thisY *= yScale;
-                       nextY *= yScale;
-
-                       g2d.drawLine( (int)currentX, (int)(height - padY - thisY), (int)nextX, (int)(height - padY - nextY) );
-                   }
-               }
-            }
-
-            if (drawMeanOfClass)
-            {
-                if ( !meanOfClassLineStepsDataMap.isEmpty() )
+                if (drawStatsOfClass)
                 {
-                    g2d.setStroke(THICK_BASIC_STROKE);
-
-                    // put meanOfClassLineStepsData in HashMap as last step from previous loop
-                    meanOfClassLineStepsDataMap.put(nodeColor, meanLineStepsData);
-
-                    if (drawRescale)
+                    if (!meanOfClassMap.containsKey(nodeClass))
                     {
-                        ArrayList<Double> allMaxValues = new ArrayList<Double>();
-                        ArrayList<Double> allMinValues = new ArrayList<Double>();
-                        for ( Color lineColor : meanOfClassLineStepsDataMap.keySet() )
-                        {
-                            double tempMax = Double.MIN_VALUE;
-                            double tempMin = Double.MAX_VALUE;
-                            double checkNewMinMaxY = 0.0;
-                            // has to check both this & next min/max for correct results
-                            for (int j = 0; j < totalColumns; j++)
-                            {
-                                checkNewMinMaxY = meanOfClassLineStepsDataMap.get(lineColor)[j][0] / meanOfClassLineStepsTimesUsedMap.get(lineColor);
-
-                                if (checkNewMinMaxY > tempMax)
-                                    tempMax = checkNewMinMaxY;
-
-                                if (checkNewMinMaxY < tempMin)
-                                    tempMin = checkNewMinMaxY;
-
-                                checkNewMinMaxY = meanOfClassLineStepsDataMap.get(lineColor)[j][1] / meanOfClassLineStepsTimesUsedMap.get(lineColor);
-
-                                if (checkNewMinMaxY > tempMax)
-                                    tempMax = checkNewMinMaxY;
-
-                                if (checkNewMinMaxY < tempMin)
-                                    tempMin = checkNewMinMaxY;
-                            }
-
-                            allMaxValues.add(tempMax);
-                            allMinValues.add(tempMin);
-                        }
-
-                        max = allMaxValues.get(0);
-                        min = 0.0; // has to be 0.0 so as to not confuse the plot rendering
-                        for (int j = 1; j < meanOfClassLineStepsDataMap.keySet().size(); j++)
-                        {
-                            if (allMaxValues.get(j) > max)
-                                max = allMaxValues.get(j);
-
-                            if (allMaxValues.get(j) < min)
-                                min = allMaxValues.get(j);
-                        }
-
-                        yScale = (height - padY) / (max - min);
+                        meanOfClassMap.put(nodeClass, new RowData(totalColumns, nodeColor));
                     }
 
-                    for ( Color lineColor : meanOfClassLineStepsDataMap.keySet() )
+                    RowData data = meanOfClassMap.get(nodeClass);
+                    data.rows.add(index);
+                }
+
+                if (!drawStatsOfSelection && !drawStatsOfClass)
+                {
+                    String nodeName = graphNode.getNodeName();
+
+                    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                    for (int column = 0; column < totalColumns; column++)
                     {
-                        g2d.setColor(lineColor);
-
-                        double currentX = 0.0;
-                        double nextX = 0.0;
-                        double thisY = 0.0;
-                        double nextY = 0.0;
-                        for (int j = 0; j < totalColumns - 1; j++)
-                        {
-                            currentX = (j * columnWidth) + PAD_X;
-                            nextX = ( (j + 1) * columnWidth ) + PAD_X;
-                            thisY = ( meanOfClassLineStepsDataMap.get(lineColor)[j][0] / meanOfClassLineStepsTimesUsedMap.get(lineColor) ) * yScale;
-                            nextY = ( meanOfClassLineStepsDataMap.get(lineColor)[j][1] / meanOfClassLineStepsTimesUsedMap.get(lineColor) ) * yScale;
-
-                            g2d.drawLine( (int)currentX, (int)(height - padY - thisY), (int)nextX, (int)(height - padY - nextY) );
-                        }
+                        String columnName = expressionData.getColumnName(column);
+                        dataset.addValue(transformedData[column], nodeName, columnName);
                     }
 
-                    g2d.setStroke(THIN_BASIC_STROKE);
+                    plot.setDataset(datasetIndex, dataset);
+                    DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
+                    r.setSeriesPaint(0, nodeColor);
+                    r.setSeriesShapesVisible(0, false);
+
+                    // The shapes aren't shown, but this defines the tooltip hover zone
+                    r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
+                    r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+
+                    plot.setRenderer(datasetIndex, r);
+                    datasetIndex++;
                 }
             }
 
-            if (drawMeanOfSelection)
+            if (drawStatsOfSelection)
             {
-                if ( !lineColors.isEmpty() )
+                Color color = new Color(meanR / numSelectedNodes, meanG / numSelectedNodes, meanB / numSelectedNodes);
+
+                datasetIndex = addStatisticalPlot(datasetIndex, meanOfSelection.rows, color, "Mean",
+                        StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()]);
+            }
+
+            if (drawStatsOfClass)
+            {
+                for (Map.Entry<VertexClass, RowData> entry : meanOfClassMap.entrySet())
                 {
-                    g2d.setStroke(THICK_BASIC_STROKE);
+                    VertexClass vertexClass = entry.getKey();
+                    RowData data = entry.getValue();
+                    Color color = entry.getValue().classColor;
 
-                    int colorR = 0;
-                    int colorG = 0;
-                    int colorB = 0;
-                    for (Color lineColor : lineColors)
-                    {
-                        colorR += lineColor.getRed();
-                        colorG += lineColor.getGreen();
-                        colorB += lineColor.getBlue();
-                    }
-
-                    colorR /= lineColors.size();
-                    colorG /= lineColors.size();
-                    colorB /= lineColors.size();
-
-                    g2d.setColor( new Color(colorR, colorG, colorB) );
-
-                    if (drawRescale)
-                    {
-                        max = Double.MIN_VALUE;
-                        min = 0.0; // has to be 0.0 so as to not confuse the plot rendering
-                        double checkNewMinMaxY = 0.0;
-                        // has to check both this & next min/max for correct results
-                        for (int j = 0; j < totalColumns; j++)
-                        {
-                            checkNewMinMaxY = meanLineStepsData[j][0] / expandedSelectedNodes.size();
-
-                            if (checkNewMinMaxY > max)
-                                max = checkNewMinMaxY;
-
-                            if (checkNewMinMaxY < min)
-                                min = checkNewMinMaxY;
-
-                            checkNewMinMaxY = meanLineStepsData[j][1] / expandedSelectedNodes.size();
-
-                            if (checkNewMinMaxY > max)
-                                max = checkNewMinMaxY;
-
-                            if (checkNewMinMaxY < min)
-                                min = checkNewMinMaxY;
-                        }
-
-                        yScale = (height - padY) / (max - min);
-                    }
-
-                    double currentX = 0.0;
-                    double nextX = 0.0;
-                    double thisY = 0.0;
-                    double nextY = 0.0;
-                    for (int j = 0; j < totalColumns - 1; j++)
-                    {
-                        currentX = (j * columnWidth) + PAD_X;
-                        nextX = ( (j + 1) * columnWidth ) + PAD_X;
-                        thisY = ( meanLineStepsData[j][0] / expandedSelectedNodes.size() ) * yScale;
-                        nextY = ( meanLineStepsData[j][1] / expandedSelectedNodes.size() ) * yScale;
-
-                        g2d.drawLine( (int)currentX,(int)(height - padY - thisY), (int)nextX, (int)(height - padY - nextY) );
-                    }
-
-                    g2d.setStroke(THIN_BASIC_STROKE);
+                    datasetIndex = addStatisticalPlot(datasetIndex, data.rows, color,  vertexClass.getName(),
+                        StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()]);
                 }
             }
-
-            if (drawAxesLegend)
-            {
-                Font prevFont = g2d.getFont();
-                g2d.setFont( prevFont.deriveFont(AXIS_FONT_STYLE, AXIS_FONT_SIZE) );
-
-                double maxAxesLegendStringWidth = 0.0;
-                double maxAxesLegendStringHeight = 0.0;
-                rectangle2D = g2d.getFontMetrics( g2d.getFont() ).getStringBounds(EXPRESSION_X_AXIS_LABEL, g2d);
-                if (rectangle2D.getWidth() > maxAxesLegendStringWidth)
-                    maxAxesLegendStringWidth = rectangle2D.getWidth();
-                if (rectangle2D.getHeight() > maxAxesLegendStringHeight)
-                    maxAxesLegendStringHeight = rectangle2D.getHeight();
-
-                rectangle2D = g2d.getFontMetrics( g2d.getFont() ).getStringBounds(EXPRESSION_Y_AXIS_LABEL, g2d);
-                if (rectangle2D.getWidth() > maxAxesLegendStringWidth)
-                    maxAxesLegendStringWidth = rectangle2D.getWidth();
-                if (rectangle2D.getHeight() > maxAxesLegendStringHeight)
-                    maxAxesLegendStringHeight = rectangle2D.getHeight();
-
-                g2d.setStroke(AXES_BASIC_STROKE);
-                g2d.setColor(DESCRIPTIONS_COLOR);
-
-                // draw rectangle
-                int[] lineCoords = { PAD_X + plotRectangleWidth - (int)maxAxesLegendStringWidth - 2 * PAD_BORDER, PAD_BORDER, PAD_X + plotRectangleWidth - PAD_BORDER, (int)(2 * maxAxesLegendStringHeight + 2.5 * PAD_BORDER) };
-                g2d.drawLine(lineCoords[0], lineCoords[1], lineCoords[2], lineCoords[1]);
-                g2d.drawLine(lineCoords[0], lineCoords[1], lineCoords[0], lineCoords[3]);
-                g2d.drawLine(lineCoords[0], lineCoords[3], lineCoords[2], lineCoords[3]);
-                g2d.drawLine(lineCoords[2], lineCoords[3], lineCoords[2], lineCoords[1]);
-
-                // draw axes legend
-                g2d.drawString(EXPRESSION_X_AXIS_LABEL, PAD_X + plotRectangleWidth - (int)(maxAxesLegendStringWidth + 1.5 * PAD_BORDER) - 1, (int)(maxAxesLegendStringHeight + 1.5 * PAD_BORDER) - 2);
-                g2d.drawString(EXPRESSION_Y_AXIS_LABEL, PAD_X + plotRectangleWidth - (int)(maxAxesLegendStringWidth + 1.5 * PAD_BORDER) - 1, (int)(2 * maxAxesLegendStringHeight + 2.0 * PAD_BORDER) - 2);
-
-                g2d.setStroke(THIN_BASIC_STROKE);
-                g2d.setFont(prevFont);
-            }
-
-            g2d.setColor(DESCRIPTIONS_COLOR);
-            int tickY = 0;
-            double tickHeight = ( (max - min) / Y_TICKS ) * yScale;
-            Double result = 0.0;
-            String label = "";
-            for (int ticks = 0; ticks < Y_TICKS; ticks++)
-            {
-                tickY = (int)(ticks * tickHeight);
-                if (transformType == ExpressionEnvironment.TransformType.LOG_SCALE)
-                {
-                    result = pow(E, (double) ticks * tickHeight / yScale);
-                }
-                else
-                {
-                    result = ((double) ticks * tickHeight / yScale) + min;
-                }
-                label = " " + ( ( !result.equals(Double.NaN) ) ? Utils.numberFormatting(result, 1) : "" );
-
-                g2d.drawLine( PAD_X, (int)(height - padY - tickY), PAD_X + PAD_BORDER, (int)(height - padY - tickY) );
-                g2d.drawString( label, 0, (int)(height - padY - tickY) );
-            }
-
-            if ( drawGridLines && (min < 0.0) )
-            {
-                g2d.setColor(GRID_LINES_COLOR);
-                g2d.drawLine( PAD_X, (int)(max * yScale), (int)width, (int)(max * yScale) );
-            }
-
-            // add rotation to original transform to preserve any previous transformations
-            AffineTransform addedRotation = new AffineTransform(origTransform);
-            addedRotation.rotate(PI / 2.0);
-            g2d.setTransform(addedRotation);
-
-            // for using a smaller font when samples too many
-            /*
-            if ( (totalColumns * maxStringHeight) > width )
-            {
-                Font currentFont = g2d.getFont();
-                int newFontSize = (int)floor( currentFont.getSize() / ( (totalColumns * maxStringHeight) / width ) );
-                g2d.setFont( currentFont.deriveFont(currentFont.getStyle(), newFontSize) );
-            }
-            */
-
-            int xTicks = totalColumns;
-            double tickWidth = width / (double)xTicks;
-            for (int ticks = 0; ticks < xTicks; ticks++)
-            {
-                g2d.setColor(DESCRIPTIONS_COLOR);
-                g2d.drawString( expressionData.getColumnName(ticks), (int)(height - padY + PAD_BORDER), -(int)( PAD_X + (ticks * tickWidth) ) );
-
-                if (drawGridLines)
-                {
-                    g2d.setColor(GRID_LINES_COLOR);
-                    g2d.drawLine( (int)(height - padY), -(int)( PAD_X + (ticks * tickWidth) ), 0, -(int)( PAD_X + (ticks * tickWidth) ) );
-                }
-            }
-
-            g2d.setTransform(origTransform); // restore original affine transform
-            g2d.setRenderingHints(currentRenderingHints); // restore original rendering hints
         }
 
+        // Remove any datasets that shouldn't be displayed any more
+        while (datasetIndex < plot.getDatasetCount())
+        {
+            plot.setDataset(datasetIndex, null);
+            plot.setRenderer(datasetIndex, null);
+            datasetIndex++;
+        }
 
+        if (drawAxesLegend)
+        {
+            plot.getDomainAxis().setLabel(EXPRESSION_X_AXIS_LABEL);
+            plot.getRangeAxis().setLabel(EXPRESSION_Y_AXIS_LABEL);
+        }
+        else
+        {
+            plot.getDomainAxis().setLabel(null);
+            plot.getRangeAxis().setLabel(null);
+        }
+
+        plot.getRangeAxis().setAutoRange(true);
+
+        plot.setRangeGridlinesVisible(drawGridLines);
+        plot.setDomainGridlinesVisible(drawGridLines);
+        plot.getDomainAxis().setTickLabelsVisible(!hideSampleLabels);
+
+        exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
+    }
+
+    private ChartPanel createExpressionPlot()
+    {
+        JFreeChart expressionGraphJFreeChart = ChartFactory.createLineChart(
+                null, null, null, null,
+                PlotOrientation.VERTICAL, false, true, false);
+
+        plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+
+        CategoryAxis axis = plot.getDomainAxis();
+        axis.setLowerMargin(0.0);
+        axis.setUpperMargin(0.0);
+        axis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_90);
+
+        ChartPanel chartPanel = new ChartPanel(expressionGraphJFreeChart);
+        chartPanel.setMaximumDrawWidth(4096);
+        chartPanel.setMaximumDrawHeight(4096);
+
+        return chartPanel;
     }
 
     private void initiateTakeSingleScreenShotProcess()
@@ -873,21 +777,21 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         {
             PLOT_GRID_LINES.set(gridLinesCheckBox.isSelected());
         }
-        else if (e.getSource().equals(classMeanCheckBox))
+        else if (e.getSource().equals(classStatComboBox))
         {
-            PLOT_CLASS_MEAN.set(classMeanCheckBox.isSelected());
+            PLOT_CLASS_STATISTIC_TYPE.set(classStatComboBox.getSelectedIndex());
         }
-        else if (e.getSource().equals(selectionMeanCheckBox))
+        else if (e.getSource().equals(selectionStatComboBox))
         {
-            PLOT_SELECTION_MEAN.set(selectionMeanCheckBox.isSelected());
-        }
-        else if (e.getSource().equals(rescaleCheckBox))
-        {
-            PLOT_RESCALE.set(rescaleCheckBox.isSelected());
+            PLOT_SELECTION_STATISTIC_TYPE.set(selectionStatComboBox.getSelectedIndex());
         }
         else if (e.getSource().equals(axesLegendCheckBox))
         {
             PLOT_AXES_LEGEND.set(axesLegendCheckBox.isSelected());
+        }
+        else if (e.getSource().equals(hideSampleLabelsCheckBox))
+        {
+            PLOT_HIDE_SAMPLES.set(hideSampleLabelsCheckBox.isSelected());
         }
         else if (e.getSource().equals(transformComboBox))
         {
@@ -895,6 +799,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         }
 
         layoutFrame.getLayoutGraphPropertiesDialog().setHasNewPreferencesBeenApplied(true);
+        refreshPlot();
         this.repaint();
     }
 

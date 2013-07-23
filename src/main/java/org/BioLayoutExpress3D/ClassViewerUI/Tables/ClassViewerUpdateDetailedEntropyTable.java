@@ -48,6 +48,8 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
     @Override
     public void run()
     {
+        setThreadStarted();
+
         Set<String> annotationClasses = AnnotationTypeManagerBG.getInstanceSingleton().getAllTypes();
         int numberOfAllAnnotationClasses = annotationClasses.size();
         layoutProgressBarDialog.prepareProgressBar(numberOfAllAnnotationClasses, " Calculating analysis values for all terms of all classes...");
@@ -76,6 +78,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
 
@@ -93,6 +96,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
                 {
                     layoutProgressBarDialog.endProgressBar();
                     layoutProgressBarDialog.stopProgressBar();
+                    setThreadFinished();
                     return;
                 }
 
@@ -106,6 +110,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
                 {
                     layoutProgressBarDialog.endProgressBar();
                     layoutProgressBarDialog.stopProgressBar();
+                    setThreadFinished();
                     return;
                 }
 
@@ -124,6 +129,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
                 {
                     layoutProgressBarDialog.endProgressBar();
                     layoutProgressBarDialog.stopProgressBar();
+                    setThreadFinished();
                     return;
                 }
 
@@ -148,6 +154,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
             {
                 layoutProgressBarDialog.endProgressBar();
                 layoutProgressBarDialog.stopProgressBar();
+                setThreadFinished();
                 return;
             }
 
@@ -163,6 +170,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
         {
             layoutProgressBarDialog.endProgressBar();
             layoutProgressBarDialog.stopProgressBar();
+            setThreadFinished();
             return;
         }
 
@@ -174,6 +182,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
         {
             layoutProgressBarDialog.endProgressBar();
             layoutProgressBarDialog.stopProgressBar();
+            setThreadFinished();
             return;
         }
 
@@ -183,6 +192,7 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
         {
             layoutProgressBarDialog.endProgressBar();
             layoutProgressBarDialog.stopProgressBar();
+            setThreadFinished();
             return;
         }
 
@@ -192,16 +202,17 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
         {
             layoutProgressBarDialog.endProgressBar();
             layoutProgressBarDialog.stopProgressBar();
+            setThreadFinished();
             return;
         }
-
-        tabbedPane.setSelectedIndex( ENTROPY_DETAILS_TAB.ordinal() );
 
         layoutProgressBarDialog.endProgressBar();
         layoutProgressBarDialog.stopProgressBar();
 
         if ( classViewerFrame.isVisible() )
             classViewerFrame.processAndSetWindowState();
+
+        setThreadFinished();
     }
 
     public void setAbortThread(boolean abortThread)
@@ -216,5 +227,26 @@ public final class ClassViewerUpdateDetailedEntropyTable implements Runnable
         return abortThread;
     }
 
+    boolean threadStarted = false;
+    void setThreadStarted()
+    {
+        threadStarted = true;
+    }
+
+    public boolean getThreadStarted()
+    {
+        return threadStarted;
+    }
+
+    boolean threadFinished = false;
+    void setThreadFinished()
+    {
+        threadFinished = true;
+    }
+
+    public boolean getThreadFinished()
+    {
+        return threadFinished;
+    }
 
 }

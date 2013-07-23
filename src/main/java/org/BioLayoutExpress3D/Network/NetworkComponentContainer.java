@@ -34,7 +34,7 @@ public final class NetworkComponentContainer extends NetworkContainer
         maxY = 0.0;
     }
 
-    private void calcBoundaries()
+    public void calcBoundaries()
     {
         double tempWidth = 0.0, tempHeight = 0.0;
         for ( Vertex vertex : verticesMap.values() )
@@ -82,7 +82,9 @@ public final class NetworkComponentContainer extends NetworkContainer
         else
         {
             numberOfIterations = frLayout.getNumberOfIterations();
-            layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations " + progressBarParallelismTitle + " for Graph Component: " + componentID);
+            layoutProgressBarDialog.prepareProgressBar(numberOfIterations,
+                    "Now Processing Layout Iterations " + progressBarParallelismTitle +
+                    " for Graph Component: " + componentID, true);
         }
 
         layoutProgressBarDialog.startProgressBar();

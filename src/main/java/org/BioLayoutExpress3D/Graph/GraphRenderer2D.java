@@ -11,10 +11,11 @@ import javax.swing.*;
 import javax.media.opengl.*;
 import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.texture.*;
-import com.jogamp.opengl.util.awt.Screenshot;
 import com.jogamp.opengl.util.awt.ImageUtil;
 import com.jogamp.common.nio.Buffers;
+import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 import static java.lang.Math.*;
+import javax.imageio.ImageIO;
 import static javax.media.opengl.GL2.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.DataStructures.*;
@@ -502,13 +503,13 @@ final class GraphRenderer2D implements GraphInterface // package access
     */
     private void prepareImageAndTextureSFXs(GL2 gl)
     {
-        if (backgroundImageTexture != null) backgroundImageTexture.dispose(gl);
+        if (backgroundImageTexture != null) backgroundImageTexture = null;
         backgroundImageTexture = TextureProducer.createTextureFromBufferedImage(BACKGROUND_IMAGE, qualityRendering);
 
-        if (biolayoutLogoImageTexture != null) biolayoutLogoImageTexture.dispose(gl);
+        if (biolayoutLogoImageTexture != null) biolayoutLogoImageTexture = null;
         biolayoutLogoImageTexture = TextureProducer.createTextureFromBufferedImage(BIOLAYOUT_EXDPRESS_3D_LOGO_IMAGE, qualityRendering);
 
-        if (biolayoutLogoImageTextureWithBorders != null) biolayoutLogoImageTextureWithBorders.dispose(gl);
+        if (biolayoutLogoImageTextureWithBorders != null) biolayoutLogoImageTextureWithBorders = null;
         biolayoutLogoImageTextureWithBorders = TextureProducer.createTextureFromBufferedImage(BIOLAYOUT_EXDPRESS_3D_LOGO_IMAGE_WITH_BORDERS, qualityRendering);
 
         if ( blobInitAnimIndex.isEmpty() )
@@ -588,20 +589,22 @@ final class GraphRenderer2D implements GraphInterface // package access
     /**
     *  Takes a screenshot.
     */
-    private void takeScreenshot(boolean renderToFile)
+    private void takeScreenshot(GL2 gl, boolean renderToFile)
     {
         if (DEBUG_BUILD) println("GraphRenderer2D takeScreenshot()");
 
         try
         {
+            AWTGLReadBufferUtil agrbu = new AWTGLReadBufferUtil(GLProfile.getDefault(), false);
+            screenshot = agrbu.readPixelsToBufferedImage(gl, true);
+
             if (renderToFile)
             {
                 if (DEBUG_BUILD) println("Screenshot " + saveScreenshotFile.getAbsolutePath() + " taken");
-                Screenshot.writeToFile(saveScreenshotFile, width, height , true);
+                ImageIO.write(screenshot, "png", saveScreenshotFile);
+                screenshot = null;
                 InitDesktop.open(saveScreenshotFile);
             }
-            else
-                screenshot = Screenshot.readToBufferedImage(width, height , true);
         }
         catch (GLException glExc)
         {
@@ -857,19 +860,16 @@ final class GraphRenderer2D implements GraphInterface // package access
 
         if (backgroundImageTexture != null)
         {
-            backgroundImageTexture.dispose(gl);
             backgroundImageTexture = null;
         }
 
         if (biolayoutLogoImageTexture != null)
         {
-            biolayoutLogoImageTexture.dispose(gl);
             biolayoutLogoImageTexture = null;
         }
 
         if (biolayoutLogoImageTextureWithBorders != null)
         {
-            biolayoutLogoImageTextureWithBorders.dispose(gl);
             biolayoutLogoImageTextureWithBorders = null;
         }
 
@@ -2369,7 +2369,7 @@ final class GraphRenderer2D implements GraphInterface // package access
             }
             if (foregroundAnimation || continueRenderingForegroundAnimationWhileSwitchingRenderer) renderForegroundLayer(gl);
 
-            if (takeScreenshot) takeScreenshot(renderToFile);
+            if (takeScreenshot) takeScreenshot(gl, renderToFile);
             if (takeHighResScreenshot) takeHighResScreenshot(gl);
             if (ANIMATION_INITIATE_END_OF_ANIMATION)
             {

@@ -173,14 +173,13 @@ public abstract class NetworkContainer
             node.setNodeName(newNodeName);
     }
 
-    public void optimize()
+    public void optimize(GraphLayoutAlgorithm gla)
     {
         if (DEBUG_BUILD) println("Optimizing");
 
         if (WEIGHTED_EDGES)
         {
             normaliseWeights();
-            layoutClassSetsManager.getCurrentClassSetAllClasses().setClassColor( 0, new Color(0, 144, 0) );
         }
 
         float initialTemperature = frLayout.getTemperature();
@@ -193,15 +192,15 @@ public abstract class NetworkContainer
         if (isRelayout)
         {
             numberOfIterations = BURST_LAYOUT_ITERATIONS.get();
-            if (frLayout.getTemperature() == 100.0f) // TODO ASK
-                frLayout.setTemperature(4.0f);
+            frLayout.setTemperature((frLayout.getTemperature() * numberOfIterations) / frLayout.getNumberOfIterations());
 
             layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Burst Layout Iterations" + progressBarParallelismTitle + "...");
         }
         else
         {
             numberOfIterations = frLayout.getNumberOfIterations();
-            layoutProgressBarDialog.prepareProgressBar(numberOfIterations, "Now Processing Layout Iterations" + progressBarParallelismTitle + "...");
+            layoutProgressBarDialog.prepareProgressBar(numberOfIterations,
+                    "Now Processing Layout Iterations" + progressBarParallelismTitle + "...", true);
         }
 
         layoutProgressBarDialog.startProgressBar();
@@ -308,15 +307,15 @@ public abstract class NetworkContainer
             }
             else
             {
-                edge.setScaledWeight( edge.getWeight() );
-                edge.setNormalisedWeight( edge.getWeight() );
+                edge.setScaledWeight( 1.0f );
+                edge.setNormalisedWeight( 1.0f );
             }
         }
     }
 
     public abstract void optimize(int componentNo);
 
-    public void relayout()
+    public void relayout(GraphLayoutAlgorithm gla)
     {
         isOptimized = false;
         isRelayout = true;
@@ -324,7 +323,7 @@ public abstract class NetworkContainer
         if ( layoutFrame.getGraph().getSelectionManager().getUndeleteAllNodesAction().isEnabled() )
             layoutFrame.getGraph().getSelectionManager().undeleteAllNodes();
 
-        optimize();
+        optimize(gla);
         isRelayout = false;
     }
 

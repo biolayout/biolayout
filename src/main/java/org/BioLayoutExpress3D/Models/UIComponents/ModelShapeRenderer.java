@@ -1532,7 +1532,7 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
                 else
                     ShaderUtils.detachAndDeleteShader(gl, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, 0);
             }
-            nodeTexture.dispose(gl);
+            nodeTexture = null;
             modelShape.disposeAllModelShapeResources(gl);
 
             if (DEBUG_BUILD) println("Deallocated all ModelShapeRenderer resources.");

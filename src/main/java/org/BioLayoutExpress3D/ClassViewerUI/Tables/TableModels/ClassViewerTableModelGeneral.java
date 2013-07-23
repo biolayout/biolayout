@@ -23,7 +23,7 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
     */
     public static final long serialVersionUID = 111222333444555790L;
 
-    public static final String[] ORIGINAL_COLUMN_NAMES = { "Selected", "Name", "Incoming", "Outgoing" };
+    public static final String[] ORIGINAL_COLUMN_NAMES = { "Selected", "Name", "Connections" };
 
     private int originalNumberOfColumns = ORIGINAL_COLUMN_NAMES.length;
     private String[] columnNames = ORIGINAL_COLUMN_NAMES;
@@ -59,7 +59,12 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
     @Override
     public Object getValueAt(int row, int col)
     {
-        return (getRowCount() == 0) ? null : data[row][col];
+        if (row >= getRowCount() || col >= getColumnCount())
+        {
+            return null;
+        }
+
+        return data[row][col];
     }
 
     @Override
@@ -144,7 +149,30 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
         data[row][col] = value;
     }
 
-    public void setSelectedAllColumns(boolean isSelected)
+    public void setSelectedRows(ArrayList<Integer> rows)
+    {
+        for (int row = 0; row < getRowCount(); row++)
+        {
+            data[row][0] = false;
+        }
+
+        HashSet<GraphNode> graphNodes = new HashSet<GraphNode>();
+        for (int row : rows)
+        {
+            graphNodes.add( (GraphNode)data[row][data[0].length - 1] ); // retrieve GraphNode from last column in table
+            data[row][0] = true;
+        }
+
+        layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(false);
+
+        layoutFrame.getGraph().getSelectionManager().clearAllSelection();
+        layoutFrame.getGraph().getSelectionManager().addNodeToSelectedUpdateExpressionGraphViewOnly(graphNodes, false, true);
+        layoutFrame.getGraph().updateSelectedNodesDisplayList();
+
+        layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(true);
+    }
+
+    public void setSelectedAllRows(boolean isSelected)
     {
         HashSet<GraphNode> graphNodes = new HashSet<GraphNode>();
         for (int i = 0; i < getRowCount(); i++)
@@ -248,20 +276,28 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
         for (GraphNode node : selectedNodes)
         {
             columnsPruned = 0;
+            // Selected
             data[rowIndex][0] = Boolean.TRUE;
+
+            // Node name
             data[rowIndex][1] = layoutFrame.getNetworkRootContainer().getNodeName( node.getNodeName() );
 
-            if ( (howManyColumnsToHide == 0) || !allHiddenColumnIndices.contains(0) )  // index columnIndex - 2 = 2 - 2
-                    data[rowIndex][2 - columnsPruned] = Integer.valueOf( node.getNodeChildren().size() );
-            else
-                 columnsPruned++;
+            int incomingEdges = Integer.valueOf(node.getNodeChildren().size());
+            int outgoingEdges = Integer.valueOf(node.getNodeParents().size());
+            int nodeDegree = incomingEdges + outgoingEdges;
 
-            if ( (howManyColumnsToHide == 0) || !allHiddenColumnIndices.contains(1) ) // index columnIndex - 2 = 3 - 2
-                    data[rowIndex][3 - columnsPruned] = Integer.valueOf( node.getNodeParents().size() );
+            // Edge degree
+            if ((howManyColumnsToHide == 0) || !allHiddenColumnIndices.contains(0))  // index columnIndex - 2 = 2 - 2
+            {
+                data[rowIndex][2 - columnsPruned] = nodeDegree;
+            }
             else
+            {
                 columnsPruned++;
+            }
 
-            columnIndex = 4;
+            // Class
+            columnIndex = 3;
             if (allClasses)
             {
                 ArrayList<LayoutClasses> classSets = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().getClassSetNames();

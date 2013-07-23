@@ -2,4 +2,6 @@ target/*
 *.swp
 nbactions.xml
 nsis-installer/*.exe
+nsis-installer/*.class
+nsis-installer/*.jar
 .DS_Store

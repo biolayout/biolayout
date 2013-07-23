@@ -92,13 +92,15 @@ public final class Layout
 
             try
             {
+                String build = BuildConfig.VERSION +
+                    (!BuildConfig.BUILD_TAG.isEmpty() ? " " + BuildConfig.BUILD_TAG : "") +
+                    "(" + BuildConfig.BUILD_TIME + ")";
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
                 String dataFolder = DataFolder.get();
                 String exceptionLogFileName = Path.combine(dataFolder, "ReleaseConsoleOutput.txt");
                 PrintWriter logOut = new PrintWriter(new BufferedWriter(new FileWriter(exceptionLogFileName, true)));
-                logOut.println(BuildConfig.BUILD_TIME);
-                logOut.print(timeStamp + ": ");
+                logOut.print(build + " " + timeStamp + ": ");
                 logOut.println(s);
                 logOut.close();
             }
@@ -113,7 +115,7 @@ public final class Layout
         String output = "";
 
         Set<String> keySet = properties.stringPropertyNames();
-        ArrayList keyList = new ArrayList(keySet);
+        ArrayList<String> keyList = new ArrayList<String>(keySet);
         Collections.sort(keyList);
         int longestKey = 0;
 

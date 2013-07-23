@@ -134,7 +134,12 @@ public class GraphNode implements Comparable<GraphNode>
 
     public Color getColor()
     {
-        return ( !vertex.getOverrideClassColor() ) ? ( (vertex.getVertexClass() != null) ? vertex.getVertexClass().getColor() : vertex.getVertexColor() ) : vertex.getVertexColor();
+        if (!vertex.getOverrideClassColor() && vertex.getVertexClass() != null)
+        {
+            return vertex.getVertexClass().getColor();
+        }
+
+        return vertex.getVertexColor();
     }
 
     public String getHexColor()

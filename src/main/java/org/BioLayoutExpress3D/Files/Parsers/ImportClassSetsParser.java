@@ -401,8 +401,12 @@ public final class ImportClassSetsParser extends CoreParser implements ImportCla
                                     lc = nc.getLayoutClassSetsManager().getClassSet(classSetKey);
                                     vc = lc.createClass(classKey);
                                     lc.setClass(vertex, vc);
-                                    // in this loop so as to not add redundant class sets / classes
-                                    vc.setColor( allClassSetsColorData.get(classSetKey).get(classKey) );
+
+                                    if (allClassSetsColorData.containsKey(classSetKey))
+                                    {
+                                        // in this loop so as to not add redundant class sets / classes
+                                        vc.setColor(allClassSetsColorData.get(classSetKey).get(classKey));
+                                    }
                                 }
                             }
                         }

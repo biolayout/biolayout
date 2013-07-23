@@ -13,7 +13,7 @@ import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 *
 */
 
-public class LayoutProgressBarDialog extends JDialog
+public class LayoutProgressBarDialog extends JDialog implements ActionListener
 {
     /**
     *  Serial version UID variable for the LayoutProgressBar class.
@@ -23,6 +23,7 @@ public class LayoutProgressBarDialog extends JDialog
     private JProgressBar progressBar = null;
     private JLabel label = null;
     private JLabel statusLabel = null;
+    private JButton cancelButton = null;
     private LayoutFrame layoutFrame = null;
     private Timer timer = null;
 
@@ -37,6 +38,9 @@ public class LayoutProgressBarDialog extends JDialog
         progressBar  = new JProgressBar(0, 1000);
         label = new JLabel();
         statusLabel  = new JLabel();
+        cancelButton = new JButton();
+        cancelButton.setText("Cancel");
+        cancelButton.addActionListener(this);
 
         label.setText(" " + VERSION);
         progressBar.setValue(0);
@@ -52,9 +56,10 @@ public class LayoutProgressBarDialog extends JDialog
     {
         progressBar.setPreferredSize( new Dimension(700, 50) );
 
-        this.getContentPane().setLayout( new BorderLayout() );
+        this.getContentPane().setLayout( new BorderLayout(10, 0) );
         this.getContentPane().add(label, BorderLayout.NORTH);
         this.getContentPane().add(progressBar, BorderLayout.CENTER);
+        this.getContentPane().add(cancelButton, BorderLayout.EAST);
         this.getContentPane().add(statusLabel, BorderLayout.SOUTH);
         this.getContentPane().setSize( new Dimension(700, 500) );
         this.setUndecorated(true);
@@ -65,11 +70,19 @@ public class LayoutProgressBarDialog extends JDialog
         this.setVisible(false);
     }
 
-    public void prepareProgressBar(int max, String title)
+    public void prepareProgressBar(int max, String title, boolean isCancellable)
     {
         reset = false;
         statusLabel.setText(" " + title);
         progressBar.setMaximum(max);
+        cancelled = false;
+        cancelButton.setEnabled(true);
+        cancelButton.setVisible(isCancellable);
+    }
+
+    public void prepareProgressBar(int max, String title)
+    {
+        prepareProgressBar(max, title, false);
     }
 
     public void startProgressBar()
@@ -127,6 +140,22 @@ public class LayoutProgressBarDialog extends JDialog
     public synchronized String getText()
     {
         return statusLabel.getText();
+    }
+
+    boolean cancelled = false;
+    public synchronized boolean userHasCancelled()
+    {
+        return cancelled;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e)
+    {
+        if (e.getSource().equals(cancelButton))
+        {
+            cancelled = true;
+            cancelButton.setEnabled(false);
+        }
     }
 
     /**

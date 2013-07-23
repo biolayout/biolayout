@@ -44,7 +44,7 @@ final class ImportSelectClassSetsDialog extends JDialog // package access
     private void initComponents(ImportClassSetsDialog importClassSetsDialog)
     {
         importSelectClassSetsTableModel = new ImportSelectClassSetsTableModel();
-        ClassViewerTable table = new ClassViewerTable(importSelectClassSetsTableModel, ImportSelectClassSetsTableModel.COLUMN_NAMES);
+        ClassViewerTable table = new ClassViewerTable(importSelectClassSetsTableModel, ImportSelectClassSetsTableModel.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         TableRowSorter<ImportSelectClassSetsTableModel> sorter = new TableRowSorter<ImportSelectClassSetsTableModel>(importSelectClassSetsTableModel);
         table.setRowSorter(sorter); // provide a sorting mechanism to the table
         table.sortTableByColumn(CLASS_SET_NAMES_COLUMN, sorter);

@@ -67,7 +67,7 @@ public final class FindMultipleClassesDialog extends JDialog
     private void initComponents(final JFrame jFrame)
     {
         findMultipleClassesTableModel = new FindMultipleClassesTableModel();
-        ClassViewerTable table = new ClassViewerTable(findMultipleClassesTableModel, FindMultipleClassesTableModel.COLUMN_NAMES);
+        ClassViewerTable table = new ClassViewerTable(findMultipleClassesTableModel, FindMultipleClassesTableModel.COLUMN_NAMES, CV_AUTO_SIZE_COLUMNS.get());
         TableRowSorter<FindMultipleClassesTableModel> sorter = new TableRowSorter<FindMultipleClassesTableModel>(findMultipleClassesTableModel);
         table.setRowSorter(sorter); // provide a sorting mechanism to the table
         table.sortTableByColumn(CLASS_SET_NAMES_COLUMN, sorter);

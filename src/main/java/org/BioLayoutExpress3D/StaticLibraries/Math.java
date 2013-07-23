@@ -656,5 +656,35 @@ public final class Math
         return allPrimeNumbers;
     }
 
+    public static int clamp(int v, int min, int max)
+    {
+        if (v < min)
+        {
+            return min;
+        }
+        else if (v > max)
+        {
+            return max;
+        }
+        else
+        {
+            return v;
+        }
+    }
 
+    public static double clamp(double v, double min, double max)
+    {
+        if (v < min)
+        {
+            return min;
+        }
+        else if (v > max)
+        {
+            return max;
+        }
+        else
+        {
+            return v;
+        }
+    }
 }

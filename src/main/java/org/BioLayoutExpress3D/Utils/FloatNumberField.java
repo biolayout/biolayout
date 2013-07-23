@@ -25,7 +25,7 @@ public final class FloatNumberField extends JTextField
 
     private NumberFormat numberFormatter = null;
 
-    public FloatNumberField(int value, int columns)
+    public FloatNumberField(float value, int columns)
     {
         super(columns);
 

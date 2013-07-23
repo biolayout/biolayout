@@ -74,8 +74,7 @@ public final class VertexClass implements Comparable<VertexClass>
 
     public static int compare(String vertexClassName1, String vertexClassName2)
     {
-        // push the NO_CLASS string at the end of a possible sorting
-        return ( vertexClassName1.equals(LayoutClasses.NO_CLASS) ) ? 1 : ( ( vertexClassName2.equals(LayoutClasses.NO_CLASS) ) ? -1 : vertexClassName1.compareTo(vertexClassName2) );
+        return vertexClassName1.compareTo(vertexClassName2);
     }
 
     @Override

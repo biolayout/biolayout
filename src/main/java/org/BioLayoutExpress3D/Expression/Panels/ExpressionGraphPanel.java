@@ -175,8 +175,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         gridLinesCheckBox.setToolTipText("Grid Lines");
         axesLegendCheckBox = new JCheckBox("Axes Legend");
         axesLegendCheckBox.setToolTipText("Axes Legend");
-        hideSampleLabelsCheckBox = new JCheckBox("Hide Samples");
-        hideSampleLabelsCheckBox.setToolTipText("Hide Samples");
+        hideSampleLabelsCheckBox = new JCheckBox("Hide Sample Names");
+        hideSampleLabelsCheckBox.setToolTipText("Hide Sample Names");
         exportPlotExpressionProfileAsButton = new JButton(exportPlotExpressionProfileAsAction);
         exportPlotExpressionProfileAsButton.setToolTipText("Export Plot Expression Profile As...");
         gridLinesCheckBox.addActionListener(this);
@@ -297,13 +297,13 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
                 r.setSeriesPaint(0, color);
                 r.setSeriesShapesVisible(0, false);
-                r.setSeriesStroke(0, new BasicStroke(1.0f, 1, 1, 1.0f, new float[]
+                r.setSeriesStroke(0, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
                         {
-                            5.0f, 2.0f
+                            9.0f, 4.0f
                         }, 0.0f));
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
-                r.setBaseShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
+                r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
                 plot.setRenderer(datasetIndex, r);
@@ -448,7 +448,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     r.setSeriesShapesVisible(0, false);
 
                     // The shapes aren't shown, but this defines the tooltip hover zone
-                    r.setBaseShape(new Rectangle2D.Double(-5.0, -5.0, 10.0, 10.0));
+                    r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
                     r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
                     plot.setRenderer(datasetIndex, r);

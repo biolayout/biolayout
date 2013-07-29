@@ -29,17 +29,22 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.MatteBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
@@ -88,6 +93,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private LayoutFrame frame;
     private JRadioButton sifRadio, bioPAXRadio;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel;
+    private JEditorPane editorPane;
     
     private List<SearchHit> searchHits; //retrieved search hits
     private int currentPage;
@@ -258,6 +264,14 @@ is.close;
         fieldPanel.add(pagesLabel);
         
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
+        
+        //Search hit excerpt
+        editorPane = new JEditorPane();
+        editorPane.setEditable(false);
+        editorPane.setContentType("text/html");
+        String text = "<b>Excerpt:</b>";
+        editorPane.setText(text);
+        
 
         String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class"};
         int numRows = 0;
@@ -279,9 +293,25 @@ is.close;
         table.setGridColor(Color.BLUE);
         table.setShowVerticalLines(true);
         table.setShowHorizontalLines(false);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        //center align header and cell contents
-        
+        ListSelectionModel rowSelectionModel = table.getSelectionModel();
+        ListSelectionModel rowSM = table.getSelectionModel();
+        rowSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                //Ignore extra messages.
+                if (e.getValueIsAdjusting()) return;
+
+                ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+                if (!lsm.isSelectionEmpty()) {
+                    int selectedRow = lsm.getMinSelectionIndex();
+                    SearchHit hit = searchHits.get(selectedRow);
+                        editorPane.setText("<b>Excerpt:</b><br />" + hit.getExcerpt());
+                }
+            }
+        });        
+
+        //center align header and cell contents        
         DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
         headerRenderer.setHorizontalAlignment( JLabel.CENTER );
         headerRenderer.setBackground(Color.LIGHT_GRAY);
@@ -308,8 +338,6 @@ is.close;
         TableColumn tc = table.getColumnModel().getColumn(column);
         tc.setPreferredWidth(width);
 */
-        JScrollPane pane = new JScrollPane(table);
-        getContentPane().add(pane, BorderLayout.CENTER);
         
         final LayoutFrame localFrame = frame;
         
@@ -384,8 +412,15 @@ is.close;
                }
             }
          });
+        
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPane, editorPane);
+        getContentPane().add(splitPane ,BorderLayout.CENTER);
+                
         pack();
+        splitPane.setDividerLocation(0.8);
+        
         setLocationRelativeTo(frame);
         setVisible(true);
     }

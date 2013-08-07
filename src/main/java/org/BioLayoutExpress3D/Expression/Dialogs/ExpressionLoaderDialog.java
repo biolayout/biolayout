@@ -350,7 +350,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         }
 
         final int NUM_PREVIEW_COLUMNS = 128;
-        final int NUM_PREVIEW_ROWS = 16;
+        final int NUM_PREVIEW_ROWS = 32;
 
         TextDelimitedMatrix tdm;
 

@@ -163,6 +163,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         None,
         Mean,
         Standard_Deviation,
+        Standard_Error,
         IQR_Box_Plot
     }
 
@@ -278,6 +279,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         float[] mean = expressionData.getMeanForRows(rows);
         float[] stddev = expressionData.getStddevForRows(rows);
+        float[] stderr = expressionData.getStderrForRows(rows);
 
         switch (type)
         {
@@ -312,12 +314,21 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             break;
 
             case Standard_Deviation:
+            case Standard_Error:
             {
                 DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
                 for (int column = 0; column < mean.length; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
-                    dataset.add(mean[column], stddev[column], className, columnName);
+
+                    if (type == StatisticType.Standard_Deviation)
+                    {
+                        dataset.add(mean[column], stddev[column], className, columnName);
+                    }
+                    else if (type == StatisticType.Standard_Error)
+                    {
+                        dataset.add(mean[column], stderr[column], className, columnName);
+                    }
                 }
 
                 plot.setDataset(datasetIndex, dataset);

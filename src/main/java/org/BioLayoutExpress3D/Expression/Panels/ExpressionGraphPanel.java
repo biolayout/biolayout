@@ -513,6 +513,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);
         plot.getDomainAxis().setTickLabelsVisible(!hideSampleLabels);
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
     }
@@ -524,6 +527,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 PlotOrientation.VERTICAL, false, true, false);
 
         plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         CategoryAxis axis = plot.getDomainAxis();
         axis.setLowerMargin(0.0);

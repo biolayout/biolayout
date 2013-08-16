@@ -24,6 +24,7 @@ import org.jfree.chart.title.LegendTitle;
 import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.chart.block.BlockBorder;
+import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 
 /**
 *
@@ -150,6 +151,10 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         chart.getTitle().setFont(font);
 
         XYPlot plot = (XYPlot) chart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+
         XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) plot.getRenderer();
 
         r.setSeriesShape(0, new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
@@ -218,6 +223,10 @@ public final class ExpressionDegreePlotsPanel extends JPanel
         chart.getTitle().setFont(font);
 
         XYPlot plot = (XYPlot) chart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+
         XYLineAndShapeRenderer r = (XYLineAndShapeRenderer) plot.getRenderer();
         r.setSeriesShape(0, new Ellipse2D.Double(-3.0, -3.0, 6.0, 6.0));
         r.setSeriesFillPaint(0, Color.PINK);

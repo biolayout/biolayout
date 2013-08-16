@@ -102,6 +102,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private ColorButton generalColor = null;
     private ColorButton generalColorSelection = null;
     private ColorButton generalColorPlotBackground = null;
+    private ColorButton generalColorPlotGridlines = null;
     private JCheckBox generalTrippyBackground = null;
 
     private JCheckBox generalDisableNodesRendering = null;
@@ -838,6 +839,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         JPanel colorPanel2 = new JPanel(true);
         JPanel colorPanel3 = new JPanel(true);
         JPanel colorPanel4 = new JPanel(true);
+        JPanel colorPanel5 = new JPanel(true);
         JPanel graphOptionsPanel = new JPanel(true);
         JPanel graphOptionsPanel1 = new JPanel(true);
         JPanel graphOptionsPanel2 = new JPanel(true);
@@ -860,6 +862,11 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         generalColorPlotBackground.addActionListener(this);
         generalColorPlotBackground.setPreferredSize( new Dimension(15, 15) );
         generalColorPlotBackground.setToolTipText("Plot Background Color");
+        generalColorPlotGridlines = new ColorButton(" ");
+        generalColorPlotGridlines.setActionCommand(CHANGE_ACTION_COMMAND);
+        generalColorPlotGridlines.addActionListener(this);
+        generalColorPlotGridlines.setPreferredSize( new Dimension(15, 15) );
+        generalColorPlotGridlines.setToolTipText("Plot Grid Lines Color");
         generalTrippyBackground = new JCheckBox("Trippy Background");
         generalTrippyBackground.setActionCommand(CHANGE_ACTION_COMMAND);
         generalTrippyBackground.addActionListener(this);
@@ -963,6 +970,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         colorPanel3.add( new JLabel("Selection Color") );
         colorPanel4.add(generalColorPlotBackground);
         colorPanel4.add( new JLabel("Plot Background Color") );
+        colorPanel5.add(generalColorPlotGridlines);
+        colorPanel5.add( new JLabel("Plot Grid Lines Color") );
 
         colorOptionsPanel.setBorder(paneEdge);
         colorOptionsPanel.setLayout( new BoxLayout(colorOptionsPanel, BoxLayout.X_AXIS) );
@@ -974,6 +983,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         colorOptionsPanel.add(colorPanel3);
         colorOptionsPanel.add( Box.createRigidArea( new Dimension(15, 15) ) );
         colorOptionsPanel.add(colorPanel4);
+        colorOptionsPanel.add( Box.createRigidArea( new Dimension(15, 15) ) );
+        colorOptionsPanel.add(colorPanel5);
         colorOptionsPanel.add( Box.createRigidArea( new Dimension(15, 15) ) );
         colorOptionsPanel.add(generalTrippyBackground);
 
@@ -2469,7 +2480,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         {
             ColorButton.showColorChooser( (ColorButton)e.getSource(), this );
 
-            if ( e.getSource().equals(generalColorPlotBackground) ) // update Class Viewer
+            if ( e.getSource().equals(generalColorPlotBackground) || e.getSource().equals(generalColorPlotGridlines) ) // update Class Viewer
                 refreshClassViewer = true;
         }
         else if ( e.getSource().equals(newClassInClassSetButton) )
@@ -2962,6 +2973,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         generalColor.setBackground( BACKGROUND_COLOR.get() );
         generalColorSelection.setBackground( SELECTION_COLOR.get() );
         generalColorPlotBackground.setBackground( PLOT_BACKGROUND_COLOR.get() );
+        generalColorPlotGridlines.setBackground( PLOT_GRIDLINES_COLOR.get() );
         generalTrippyBackground.setSelected( TRIPPY_BACKGROUND.get() );
 
         generalDirectional.setSelected( DIRECTIONAL_EDGES.get() );
@@ -3418,6 +3430,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             BACKGROUND_COLOR.set( generalColor.getBackground() );
             SELECTION_COLOR.set( generalColorSelection.getBackground() );
             PLOT_BACKGROUND_COLOR.set( generalColorPlotBackground.getBackground() );
+            PLOT_GRIDLINES_COLOR.set( generalColorPlotGridlines.getBackground() );
             TRIPPY_BACKGROUND.set( generalTrippyBackground.isSelected() );
 
             DIRECTIONAL_EDGES.set( generalDirectional.isSelected() );

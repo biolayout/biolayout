@@ -274,7 +274,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         public Color classColor;
     }
 
-    public int addStatisticalPlot(int datasetIndex, ArrayList<Integer> rows, Color color, String className,
+    private int addStatisticalPlot(int datasetIndex, ArrayList<Integer> rows, Color color, String className,
             StatisticType type)
     {
         float[] mean = expressionData.getMeanForRows(rows);

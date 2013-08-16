@@ -779,7 +779,10 @@ public final class SelectionManager
         dialog.setVisible(true);
     }
 
-    private void selectAll()
+    /**
+     * Selects all nodes in the graph.
+     */
+    public void selectAll()
     {
         clearAllSelection();
         addNodesToSelected(graph.getGraphNodes(), false, true);

@@ -172,6 +172,48 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             }
         } );
     }
+    
+    /**
+     * Displays the Class Viewer. May be called by an Action or programmatically.
+     * Initializes the Class Viewer if not already visible.
+     * If visible, deiconifies the frame, maximizes and brings to the front.
+     */
+    public void displayClassViewer()
+    {
+        if ( !isVisible() )
+        {
+            initializeCommonComponents();
+
+            if (getExtendedState() != JFrame.NORMAL)
+                setExtendedState(JFrame.NORMAL);
+
+            classViewerWidthValue = (SCREEN_DIMENSION.width > 1280) ? (int)(0.75 * SCREEN_DIMENSION.width) : 1010;
+            int classViewerHeightValue = (SCREEN_DIMENSION.height > 1024) ? (int)(0.75 * SCREEN_DIMENSION.height) : 680;
+            setSize(classViewerWidthValue, classViewerHeightValue);
+            setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+            setVisible(true);
+
+            if ( ( this.getWidth() + 1.5 * classViewerHideColumnsDialog.getWidth() ) > SCREEN_DIMENSION.width )
+                classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
+            else
+                classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2 - classViewerHideColumnsDialog.getWidth(), ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
+
+            // only if expression data is loaded, otherwise the divider location will have been already set to 0
+            if (DATA_TYPE.equals(DataTypes.EXPRESSION) && !layoutFrame.getExpressionData().isTransposed())
+            {
+                splitPane.setDividerLocation(this.getWidth() / 2);
+                prevSplitPaneDividerLocation = splitPane.getDividerLocation();
+            }
+
+            // make sure to clear all plot/tables if current selection is empty
+            if ( layoutFrame.getGraph().getSelectionManager().getSelectedNodes().isEmpty() )
+                populateClassViewer();
+        }
+        else
+        {
+            processAndSetWindowState();
+        }
+    }
 
     private void initActions(final ClassViewerFrame classViewerFrame)
     {
@@ -185,39 +227,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                if ( !isVisible() )
-                {
-                    initializeCommonComponents();
-
-                    if (getExtendedState() != JFrame.NORMAL)
-                        setExtendedState(JFrame.NORMAL);
-
-                    classViewerWidthValue = (SCREEN_DIMENSION.width > 1280) ? (int)(0.75 * SCREEN_DIMENSION.width) : 1010;
-                    int classViewerHeightValue = (SCREEN_DIMENSION.height > 1024) ? (int)(0.75 * SCREEN_DIMENSION.height) : 680;
-                    setSize(classViewerWidthValue, classViewerHeightValue);
-                    setLocation( ( SCREEN_DIMENSION.width - classViewerFrame.getWidth() ) / 2, ( SCREEN_DIMENSION.height - classViewerFrame.getHeight() ) / 2 );
-                    setVisible(true);
-
-                    if ( ( classViewerFrame.getWidth() + 1.5 * classViewerHideColumnsDialog.getWidth() ) > SCREEN_DIMENSION.width )
-                        classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - classViewerFrame.getWidth() ) / 2, ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
-                    else
-                        classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - classViewerFrame.getWidth() ) / 2 - classViewerHideColumnsDialog.getWidth(), ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
-
-                    // only if expression data is loaded, otherwise the divider location will have been already set to 0
-                    if (DATA_TYPE.equals(DataTypes.EXPRESSION) && !layoutFrame.getExpressionData().isTransposed())
-                    {
-                        splitPane.setDividerLocation(classViewerFrame.getWidth() / 2);
-                        prevSplitPaneDividerLocation = splitPane.getDividerLocation();
-                    }
-
-                    // make sure to clear all plot/tables if current selection is empty
-                    if ( layoutFrame.getGraph().getSelectionManager().getSelectedNodes().isEmpty() )
-                        populateClassViewer();
-                }
-                else
-                {
-                    processAndSetWindowState();
-                }
+                displayClassViewer();
             }
         };
         classViewerDialogAction.setEnabled(false);
@@ -529,7 +539,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         setUpStringEditor(generalTable);
 
-        JPanel generalTablePanel = new JPanel(true);
+            JPanel generalTablePanel = new JPanel(true);
         generalTablePanel.setLayout( new BoxLayout(generalTablePanel, BoxLayout.Y_AXIS) );
         generalTablePanel.add(scrollPane);
 

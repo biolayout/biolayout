@@ -5,11 +5,20 @@
 package org.BioLayoutExpress3D.Files.webservice;
 
 import com.google.common.base.Joiner;
+
+import gov.nih.nlm.ncbi.soap.eutils.EFetchTaxonService;
+import gov.nih.nlm.ncbi.soap.eutils.EUtilsServiceSoap;
+import gov.nih.nlm.ncbi.soap.eutils.efetch_taxonomy.EFetchRequest;
+import gov.nih.nlm.ncbi.soap.eutils.efetch_taxonomy.EFetchResult;
+import gov.nih.nlm.ncbi.soap.eutils.efetch_taxonomy.ObjectFactory;
+import gov.nih.nlm.ncbi.soap.eutils.efetch_taxonomy.TaxonType;
+
+//import gov.nih.nlm.ncbi.www.soap.eutils.EFetchTaxonServiceStub; //Apache Axis2 stub
+
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -22,17 +31,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -40,9 +46,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.MatteBorder;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -51,6 +56,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
+import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchHit;
@@ -82,7 +91,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public static final String COMMAND_SEARCH = "search";
     public static final String COMMAND_GET = "get";
     
-    private JPanel buttonPanel;
     private JButton searchButton;
     private JButton cancelButton;
     private JButton nextButton, previousButton;
@@ -94,74 +102,68 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JRadioButton sifRadio, bioPAXRadio;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel;
     private JEditorPane editorPane;
+    private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox;
     
     private List<SearchHit> searchHits; //retrieved search hits
     private int currentPage;
     private int totalHits; //total number of search query matches
-    private ClientRequestFactory factory;
+    private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
+    private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
+    
     /**
      * Name of directory where files are downloaded from the web service.
      */
-    public static final String DIRECTORY = "import";
-
-    public ImportWebServiceDialog(LayoutFrame frame, String myMessage, boolean modal) {
-        
+    public static final String DIRECTORY = "import";   
+    
+    /**
+     * Constructor.
+     * @param frame
+     * @param myMessage
+     * @param modal 
+     */
+    public ImportWebServiceDialog(LayoutFrame frame, String myMessage, boolean modal) 
+    {        
         //construct search dialog
-        super(frame, modal);
+        super(); //do not attach the dialog to a parent frame so it does not stay on top
+        setModal(modal);
         
-        factory = new ClientRequestFactory();
-        factory.setFollowRedirects(true);
+        setAlwaysOnTop(false);
         
-        //TODO find redirect url of web service
-        //TODO remove limit of search hits
-            /*
-             URLConnection con = new URL( url ).openConnection();
-System.out.println( "orignal url: " + con.getURL() );
-con.connect();
-System.out.println( "connected url: " + con.getURL() );
-InputStream is = con.getInputStream();
-System.out.println( "redirected url: " + con.getURL() );
-is.close;
-             */
+        clientRequestFactory = new ClientRequestFactory();
+        clientRequestFactory.setFollowRedirects(true);
         
+        organismIdNameMap = new HashMap();
         
         this.frame = frame;
         
         this.setTitle(myMessage);
         
-        buttonPanel = new JPanel();
-        
         //search button
         searchButton = new JButton("Search");
         searchButton.setToolTipText("Search");     
         searchButton.addActionListener(this);
-        buttonPanel.add(searchButton); 
+        getRootPane().setDefaultButton(searchButton); //searches with enter key
         
         //previous button
         previousButton = new JButton("< Previous");
         previousButton.setToolTipText("Return to previous page");     
         previousButton.setEnabled(false); //disable until get search results
         previousButton.addActionListener(this);
-        buttonPanel.add(previousButton);  
         
         //next button
         nextButton = new JButton("Next >");
         nextButton.setToolTipText("Next page");     
         nextButton.setEnabled(false); //disable until get search results
         nextButton.addActionListener(this);
-        buttonPanel.add(nextButton);  
 
         //cancel button
         cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Cancel");     
         cancelButton.addActionListener(this);
-        buttonPanel.add(cancelButton);  
 
-        getContentPane().add(buttonPanel, BorderLayout.PAGE_END);
-        
         JPanel fieldPanel = new JPanel();
-        fieldPanel.setLayout(new FlowLayout());
+        fieldPanel.setLayout(new MigLayout());
 
         //search term text field
         String fieldString = "Enter a search term...";
@@ -179,10 +181,7 @@ is.close;
         //search term label
         JLabel searchLabel = new JLabel("Keywords", JLabel.TRAILING);    
         searchLabel.setLabelFor(searchField);  
-        
-        fieldPanel.add(searchField);
-        fieldPanel.add(searchLabel);
-        
+                
         //organism text field
         String organismString = ""; //default message
         organismField = new JTextField(organismString, 35);
@@ -199,31 +198,6 @@ is.close;
         JLabel organismLabel = new JLabel("Organism", JLabel.TRAILING);
         organismLabel.setLabelFor(organismField);  
         
-        fieldPanel.add(organismField);
-        fieldPanel.add(organismLabel);
-        
-        //Network Type Drop Down
-        networkTypeCombo = new JComboBox();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction", "Top Pathways" }));
-        fieldPanel.add(networkTypeCombo);
-        
-        //Map checkboxes to web service commands
-        datasourceDisplayCommands = new LinkedHashMap<JCheckBox, String>();
-        datasourceDisplayCommands.put(new JCheckBox("Reactome"), "reactome");
-        datasourceDisplayCommands.put(new JCheckBox("NCI Nature"), "pid");
-        datasourceDisplayCommands.put(new JCheckBox("PhosphoSitePlus"), "phosphosite");
-        datasourceDisplayCommands.put(new JCheckBox("HumanCyc"), "humancyc");
-        datasourceDisplayCommands.put(new JCheckBox("HPRD"), "hprd");
-        datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");
-
-        //datasource checkboxes
-        //final ButtonGroup datasourceGroup = new ButtonGroup();
-        for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
-        {
-          // datasourceGroup.add(checkBox);
-           fieldPanel.add(checkBox);
-        }
-        
         organismDisplayCommands = new LinkedHashMap<JCheckBox, String>();
         organismDisplayCommands.put(new JCheckBox("Human"), "9606");
         organismDisplayCommands.put(new JCheckBox("Mouse"), "10090");
@@ -232,47 +206,141 @@ is.close;
         organismDisplayCommands.put(new JCheckBox("C. elegans"), "6239");
         organismDisplayCommands.put(new JCheckBox("S. cervisiae"), "4932");
         
-        for(JCheckBox checkBox: organismDisplayCommands.keySet())
-        {
-            fieldPanel.add(checkBox);
-        }
-       
+        anyOrganismCheckBox = new JCheckBox("Any");
+        anyOrganismCheckBox.addActionListener(this);
+        
+        //Network Type Drop Down
+        networkTypeCombo = new JComboBox();
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction", "Top Pathways" }));
+        JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
+        networkTypeLabel.setLabelFor(networkTypeCombo);
+        
+        //Map checkboxes to web service commands
+        datasourceDisplayCommands = new LinkedHashMap<JCheckBox, String>();
+        datasourceDisplayCommands.put(new JCheckBox("Reactome"), "reactome");
+        datasourceDisplayCommands.put(new JCheckBox("NCI Nature"), "pid");
+        datasourceDisplayCommands.put(new JCheckBox("PhosphoSitePlus"), "phosphosite");
+        datasourceDisplayCommands.put(new JCheckBox("HumanCyc"), "humancyc");
+        datasourceDisplayCommands.put(new JCheckBox("HPRD"), "hprd");
+        datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");        
+        JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
+        
+        allDatasourceCheckBox = new JCheckBox("All");
+        allDatasourceCheckBox.addActionListener(this);
+        
         //SIF/BioPax Radio Buttons
         sifRadio = new JRadioButton("SIF");
         sifRadio.setActionCommand(FORMAT_SIF);
         bioPAXRadio = new JRadioButton("BioPAX");
         bioPAXRadio.setActionCommand(FORMAT_BIOPAX);
         bioPAXRadio.setSelected(true); //default selection BioPAX
+        JLabel formatLabel = new JLabel("Format", JLabel.TRAILING);    
         
         final ButtonGroup downloadOptionGroup = new ButtonGroup();
         downloadOptionGroup.add(bioPAXRadio);
         downloadOptionGroup.add(sifRadio);
 
-        fieldPanel.add(bioPAXRadio);
-        fieldPanel.add(sifRadio);
-        fieldPanel.setPreferredSize(new Dimension(888, 150));
-        
         totalHits = 0;
         numHitsLabel = new JLabel("Hits: " + totalHits);
-        fieldPanel.add(numHitsLabel);
 
         retrievedLabel = new JLabel("Retrieved: 0");
-        fieldPanel.add(retrievedLabel);
         
         currentPage = 0;
         pagesLabel = new JLabel("Page: " + currentPage);
-        fieldPanel.add(pagesLabel);
+
+        /**********add form fields******************/
         
+        fieldPanel.add(searchLabel, "align label");
+        fieldPanel.add(searchField, "wrap, span");
+
+        fieldPanel.add(organismLabel, "align label");
+        JPanel organismPanel = new JPanel();
+        organismPanel.setLayout(new BoxLayout(organismPanel, BoxLayout.LINE_AXIS));
+        for(JCheckBox checkBox: organismDisplayCommands.keySet())
+        {
+            organismPanel.add(checkBox);
+        }        
+        organismPanel.add(anyOrganismCheckBox);
+        fieldPanel.add(organismPanel, "wrap");
+        
+        //organism checkboxes
+        fieldPanel.add(new JLabel(), "align label"); //dummy label for empty cell
+        fieldPanel.add(organismField, "wrap, span");                
+        
+        fieldPanel.add(networkTypeLabel, "newline, ,align label");
+        fieldPanel.add(networkTypeCombo, "wrap");
+
+        //datasource checkboxes
+        fieldPanel.add(datasourceLabel);
+        JPanel datasourcePanel = new JPanel();
+        datasourcePanel.setLayout(new BoxLayout(datasourcePanel, BoxLayout.LINE_AXIS));
+        for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
+        {
+           datasourcePanel.add(checkBox);
+        }
+        datasourcePanel.add(allDatasourceCheckBox);
+        fieldPanel.add(datasourcePanel, "wrap");
+       
+        fieldPanel.add(formatLabel, "align label");
+        
+        JPanel formatPanel = new JPanel();
+        formatPanel.setLayout(new BoxLayout(formatPanel, BoxLayout.LINE_AXIS));
+        formatPanel.add(bioPAXRadio);
+        formatPanel.add(sifRadio);
+        fieldPanel.add(formatPanel, "wrap");
+        
+        fieldPanel.add(this.searchButton, "tag ok, span, split 4, sizegroup bttn");
+        fieldPanel.add(this.previousButton, "tag back, sizegroup bttn");
+        fieldPanel.add(this.nextButton, "tag next, sizegroup bttn");
+        fieldPanel.add(this.cancelButton, "tag cancel, sizegroup bttn");
+        
+        fieldPanel.setPreferredSize(new Dimension(888, 250));
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
+
+        JPanel hitsPanel = new JPanel();
+        hitsPanel.setLayout(new MigLayout());
+        hitsPanel.add(numHitsLabel, "w 33%, sizegroup hits");
+        hitsPanel.add(retrievedLabel, "w 33%, sizegroup hits");
+        hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");
+        hitsPanel.setPreferredSize(new Dimension(888, 35));
+        getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
+        
+        /**********************************************/
+ 
+        HTMLEditorKit hed = new HTMLEditorKit();
+        StyleSheet ss = hed.getStyleSheet();
+        ss.addRule("b {color : blue;}");
+        ss.addRule(".hitHL {color : green; font-weight : bold}");
+        Document doc = hed.createDefaultDocument();
         
         //Search hit excerpt
         editorPane = new JEditorPane();
         editorPane.setEditable(false);
         editorPane.setContentType("text/html");
+        editorPane.setEditorKit(hed);
+        editorPane.setDocument(doc);
+        
+        //open system web browser on hyperlink click
+        editorPane.addHyperlinkListener(new HyperlinkListener() {
+            public void hyperlinkUpdate(HyperlinkEvent e) {
+                if(e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    if(Desktop.isDesktopSupported()) {
+                        try
+                        {
+                            Desktop.getDesktop().browse(e.getURL().toURI());                            
+                        }
+                        catch(Exception exception)
+                        {
+                            logger.warning("Cannot open web browser: " + exception.getMessage()); //TODO error alert
+                        }
+                    }
+                }
+            }
+        });
+        
         String text = "<b>Excerpt:</b>";
         editorPane.setText(text);
         
-
         String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class"};
         int numRows = 0;
         
@@ -306,7 +374,23 @@ is.close;
                 if (!lsm.isSelectionEmpty()) {
                     int selectedRow = lsm.getMinSelectionIndex();
                     SearchHit hit = searchHits.get(selectedRow);
-                        editorPane.setText("<b>Excerpt:</b><br />" + hit.getExcerpt());
+                    
+                    //construct HTML snippet of organism scientific names
+                    List<String> organismIdList = hit.getOrganism();
+                    String organismHTML = "<b>Organism:</b>";
+                    for(String organismString : organismIdList)
+                    {
+                        String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+                        String scientificName = organismIdNameMap.get(ncbiId);
+                        organismHTML = organismHTML 
+                                + "<br />" 
+                                + "<a href='" + organismString + "'>" + scientificName + "</a>";
+                    }
+                    
+                    editorPane.setText("<b>Excerpt:</b><br />" 
+                            + hit.getExcerpt() 
+                            + "<br>" 
+                            + organismHTML);
                 }
             }
         });        
@@ -327,7 +411,7 @@ is.close;
         }
         
         //size column width to fit biggest cell
-        /*
+        /* 
         int column = 3;
         int width = 0;
         for (int row = 0; row < table.getRowCount(); row++) {
@@ -339,7 +423,7 @@ is.close;
         tc.setPreferredWidth(width);
 */
         
-        final LayoutFrame localFrame = frame;
+        final LayoutFrame localFrame = frame; //local reference can be referenced from inner class
         
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) 
@@ -375,7 +459,7 @@ is.close;
                     String hitName = target.getModel().getValueAt(modelRow, 0).toString(); //search hit name
                     String fileName = hitName + fileExtension; //name of .owl or .sif file to be created
 
-                    ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT);
+                    ClientRequest req = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT);
                     req
                         .pathParameter("command", COMMAND_GET)
                         .queryParameter("uri", uriString)
@@ -401,7 +485,9 @@ is.close;
 
                         //display file
                         logger.info("Opening file " + importFile);
-                        ImportWebServiceDialog.this.setVisible(false);
+                        
+                        localFrame.requestFocus();
+                        localFrame.toFront();                        
                         localFrame.loadDataSet(importFile);
                     }
                     catch(Exception exception)
@@ -413,13 +499,13 @@ is.close;
             }
          });
         
-
+        //split search results on left and highlighted search hit excerpt on right
         JScrollPane scrollPane = new JScrollPane(table);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPane, editorPane);
         getContentPane().add(splitPane ,BorderLayout.CENTER);
                 
         pack();
-        splitPane.setDividerLocation(0.8);
+        splitPane.setDividerLocation(0.75);
         
         setLocationRelativeTo(frame);
         setVisible(true);
@@ -429,10 +515,11 @@ is.close;
     {
         if(searchButton == e.getSource() || nextButton == e.getSource() || previousButton == e.getSource()) 
         {
+            
             //TODO previous/next should remember last search params in case user changes
             String networkType = this.networkTypeCombo.getSelectedItem().toString();
 
-            ClientRequest req = factory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
+            ClientRequest req = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
             if(networkType.equals("Top Pathways"))
             {
                 req
@@ -469,30 +556,36 @@ is.close;
                 req.queryParameter("page", pageParameter);
 
                 //add parameters for datasource checkboxes
-                for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
-                     JCheckBox checkBox = entry.getKey();
-                     if(checkBox.isSelected())
-                     {
-                         String datasourceParameter = entry.getValue();
-                         req.queryParameter("datasource", datasourceParameter);                        
-                     }
-                }            
+                if(!allDatasourceCheckBox.isSelected())
+                {
+                    for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
+                         JCheckBox checkBox = entry.getKey();
+                         if(checkBox.isSelected())
+                         {
+                             String datasourceParameter = entry.getValue();
+                             req.queryParameter("datasource", datasourceParameter);                        
+                         }
+                    }            
+                }
 
                 //add parameters for organism checkboxes
-                for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
-                     JCheckBox checkBox = entry.getKey();
-                     if(checkBox.isSelected())
-                     {
-                         String organismParameter = entry.getValue();
-                         req.queryParameter("organism", organismParameter);                        
-                     }
-                }            
+                if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
+                {
+                    for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
+                         JCheckBox checkBox = entry.getKey();
+                         if(checkBox.isSelected())
+                         {
+                             String organismParameter = entry.getValue();
+                             req.queryParameter("organism", organismParameter);                        
+                         }
+                    }
+                }
             }
 
             //perform search and display search response
             try
             {
-                ClientResponse<SearchResponse> res = req.get(SearchResponse.class); //TODO progress bar
+                ClientResponse<SearchResponse> res = req.get(SearchResponse.class); //TODO progress bar //TODO ErrorResponse
                 SearchResponse searchResponse = res.getEntity();
                 
                 totalHits = searchResponse.getNumHits();
@@ -555,6 +648,11 @@ is.close;
                     {
                         String organismString = organismArray[i];
                         organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+                        //add to NCBI ID/name map for later web service lookup if not already added
+                        if(!organismIdNameMap.containsKey(organismArray[i]))
+                        {
+                            organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
+                        }
                     }
                     
                     //display comma-separated list of organisms
@@ -583,6 +681,24 @@ is.close;
                     
                     model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass()});  
                 }
+                
+                if(this.organismIdNameMap.size() > 0)
+                {
+                    //populate organism scientific names from NCBI web service
+                    EFetchTaxonService service = new EFetchTaxonService();
+                    EUtilsServiceSoap serviceSoap = service.getEUtilsServiceSoap();
+                    ObjectFactory objectFactory = new ObjectFactory();
+                    EFetchRequest requ = objectFactory.createEFetchRequest();
+                    String eFetchQuery = joiner.join(this.organismIdNameMap.keySet()); //comma-separated organism IDs
+                    requ.setId(eFetchQuery);
+                    EFetchResult resp = serviceSoap.runEFetch(requ);
+                    logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
+                    List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
+                    for(TaxonType taxonType : taxon)
+                    {
+                        organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
+                    }
+                }
             }
             catch(Exception exception) //TODO ClientResponseFailure - display error dialog
             {
@@ -592,7 +708,51 @@ is.close;
         else if(cancelButton == e.getSource()) {
             logger.info("User cancelled.");
             setVisible(false);
-        } 
+        }
+        else if(anyOrganismCheckBox == e.getSource()) //"Any" organism checkbox has been checked or unchecked
+        {
+            //enable/disable organism checkboxes
+            for(JCheckBox checkBox: organismDisplayCommands.keySet())
+            {
+                if(anyOrganismCheckBox.isSelected())
+                {
+                    checkBox.setSelected(true);
+                    checkBox.setEnabled(false);
+                }
+                else
+                {
+                    checkBox.setSelected(false);
+                    checkBox.setEnabled(true);
+                }
+            }
+            
+            //enable/disable organism text field
+            if(anyOrganismCheckBox.isSelected())
+            {
+                organismField.setText("");
+                organismField.setEnabled(false);
+            }
+            else
+            {
+                organismField.setEnabled(true);
+            }
+        }
+        else if(allDatasourceCheckBox == e.getSource())
+        {
+            for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
+            {
+                if(allDatasourceCheckBox.isSelected())
+                {
+                    checkBox.setSelected(true);
+                    checkBox.setEnabled(false);
+                }
+                else
+                {
+                    checkBox.setSelected(false);
+                    checkBox.setEnabled(true);
+                }
+            }
+        }
     }
     
     /**

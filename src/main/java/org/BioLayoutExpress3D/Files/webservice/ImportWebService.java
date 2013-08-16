@@ -39,6 +39,11 @@ public class ImportWebService {
     //http://webservice.baderlab.org:48080/search.xml?q=Q06609
     //http://webservice.baderlab.org:48080
     
+    /**
+     * Singleton instance of dialog.
+     */
+    private static ImportWebServiceDialog importWebServiceDialog;
+    
     public ImportWebService(LayoutFrame layoutFrame)
     {
         this.layoutFrame = layoutFrame;
@@ -59,7 +64,15 @@ public class ImportWebService {
                 try
                 {
                     logger.info("action performed: " + importWebServiceAction.toString());
-                    ImportWebServiceDialog importWebServiceDialog = new ImportWebServiceDialog(layoutFrame, "Import Network", true);
+                    if(importWebServiceDialog == null)
+                    {
+                        importWebServiceDialog = new ImportWebServiceDialog(layoutFrame, "Import Network", false);
+                    }
+                    else
+                    {
+                        importWebServiceDialog.requestFocus();
+                        importWebServiceDialog.toFront();
+                    }
                 }
                 catch(Exception e)
                 {

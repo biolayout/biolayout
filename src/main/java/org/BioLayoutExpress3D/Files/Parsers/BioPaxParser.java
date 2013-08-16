@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.DataStructures.Tuple6;
@@ -103,7 +104,7 @@ public final class BioPaxParser extends CoreParser
             //int edgeCounter = 1;
             Model model = handler.convertFromOWL(new FileInputStream(file)); //construct object model from OWL file
             
-            //Query BioPAX level and upgrade if lbelow level 3
+            //Query BioPAX level and upgrade if below level 3
             BioPAXLevel level = model.getLevel();
             switch(level)
             {
@@ -116,24 +117,21 @@ public final class BioPaxParser extends CoreParser
             
             Set<Entity> modelEntitySet = model.getObjects(Entity.class); //get all Entities in the model
            
-            //create a graph node for each entity
-            
-            logger.info(modelEntitySet.size() + " Entities parsed from " + file.getName());
+            //create a graph node for each entity            
+            logger.fine(modelEntitySet.size() + " Entities parsed from " + file.getName());
 
             entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
             for(Entity entity: modelEntitySet)
             {
-                logger.info("Entity RDFId: " + entity.getRDFId());
-                logger.info("Entity displayName: " + entity.getDisplayName());
+                logger.finer("Entity RDFId: " + entity.getRDFId());
+                logger.finer("Entity displayName: " + entity.getDisplayName());
                 
                 
                 String xrefs = Arrays.toString(entity.getXref().toArray());
-                logger.info("Entity Xrefs: " + xrefs);
+                logger.finer("Entity Xrefs: " + xrefs);
                 
                 Vertex vertex;
-                String vertexName = entity.getRDFId() + ";" + entity.getDisplayName();
-                //vertexName = (entity.getDisplayName() != null ? entity.getDisplayName() : xrefs);
-                //messageColor = (color != null ? color : messageColor);
+                String vertexName = "" + entity.getDisplayName(); //"null" if no displayName //TODO use XRefs?
                 vertex = new Vertex(vertexName, nc);
                 if(entity instanceof Interaction)
                 {
@@ -148,7 +146,6 @@ public final class BioPaxParser extends CoreParser
                     Tuple6 entityShape = BioPaxParser.lookupEntityShape(entity);
                     if(entityShape.second instanceof GraphmlShapesGroup2) //Pathway
                     {
-                        logger.info("Pathway vertex");
                         BioPaxParser.setVertexPropertiesPathway(vertex, entityShape);
                     }
                     else //PhysicalEntity, Gene
@@ -159,6 +156,21 @@ public final class BioPaxParser extends CoreParser
                 nc.getVerticesMap().put(vertex.getVertexName(), vertex);
                 
                 entityVertexMap.put(entity, vertex);
+                
+                //create class set
+                String classSetName = "BioPAX";
+                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().createNewClassSet(classSetName);
+                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().switchClassSet(classSetName);
+            
+                //convert PaxTools Java class name to something human readable and use as class viewer class name
+                String className = entity.getClass().getSimpleName();
+                className = className.replace("Impl", ""); //trim Impl from the concrete class name
+                className = splitCamelCase(className); //split class name into words
+
+                //assign vertices to classes
+                LayoutClasses layoutClasses = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().getCurrentClassSetAllClasses();
+                VertexClass vertexClass = layoutClasses.createClass(className);
+                layoutClasses.setClass(vertex, vertexClass);                
             }
             
             /*
@@ -172,11 +184,9 @@ public final class BioPaxParser extends CoreParser
              *      get participant's Vertex
              *      connect to entity Vertex
              */
-            
-            //TODO Edge directionality
-            
+                        
             Set<Entity> graphEntitySet = entityVertexMap.keySet();
-            logger.info("Entity Set has " + graphEntitySet.size() + " Entities");
+            logger.fine("Entity Set has " + graphEntitySet.size() + " Entities");
             
             int hasInteractionCount = 0; //TEST
             
@@ -187,10 +197,10 @@ public final class BioPaxParser extends CoreParser
                 {
                     Complex complex = (Complex) entity;
                     Set<PhysicalEntity> components = complex.getComponent();
-                    logger.info("Complex contains " + components.size() + " components");
+                    logger.fine("Complex contains " + components.size() + " components");
                     for(PhysicalEntity component: components)
                     {
-                        this.connectEntityVertices(complex, component, 0.0f); //TODO stoichiometry as edge weight?
+                        this.connectEntityVertices(component, complex, 0.0f); //TODO stoichiometry as edge weight?
                     }
                 }
                 
@@ -198,12 +208,12 @@ public final class BioPaxParser extends CoreParser
                 {
                     Pathway pathway = (Pathway) entity;
                     Set<Process> processes = pathway.getPathwayComponent();
-                    logger.info("Pathway contains " + processes.size() + " processes");
+                    logger.fine("Pathway contains " + processes.size() + " processes");
                     for(Process process: processes)
                     {
-                        this.connectEntityVertices(pathway, process, 0.0f);
+                        this.connectEntityVertices(process, pathway, 0.0f);
                     }
-                    //TODO PathwayStep
+                    //TODO PathwayStep - label edge with order?
                 }
                 
                 //memberPhysicalEntity - defines generic groups of PhysicalEntity - legacy but used by Reactome
@@ -211,19 +221,19 @@ public final class BioPaxParser extends CoreParser
                 {
                     PhysicalEntity physicalEntity = (PhysicalEntity)entity;
                     Set<PhysicalEntity> members = physicalEntity.getMemberPhysicalEntity();
-                    logger.info("Physical entity has " + members.size() + " members");
+                    logger.fine("Physical entity has " + members.size() + " members");
                     for(PhysicalEntity member: members)
                     {
-                        this.connectEntityVertices(physicalEntity, member, 0.0f);
+                        this.connectEntityVertices(member, physicalEntity, 0.0f);
                     }
                 }
                 
-                //TODO EntityReference
+                //TODO EntityReference?
                 
                 Set<Interaction> interactionSet = entity.getParticipantOf();
                 
                 //TEST
-                logger.info("Entity " + entity.getRDFId() + " participates in " + interactionSet.size() + " Interactions");
+                logger.fine("Entity " + entity.getRDFId() + " participates in " + interactionSet.size() + " Interactions");
                 if(interactionSet.size() > 0)
                 {
                     hasInteractionCount++;
@@ -237,30 +247,16 @@ public final class BioPaxParser extends CoreParser
             
             //TODO check for entities with no edges - add self edge?
             
-            logger.info(hasInteractionCount + " Entities have Interactions");
+            logger.fine(hasInteractionCount + " Entities have Interactions");
            
-                /*
-                    nc.addNetworkConnection(vertex1, edgeType + lines, 0.0f);
-                    nc.addNetworkConnection(edgeType + lines, vertex2, 0.0f);
-
-                    Vertex vertex = nc.getVerticesMap().get(edgeType + lines);
-                    vertex.setVertexSize(vertex.getVertexSize() / 2);
-                    vertex.setPseudoVertex();
-
-                    LayoutClasses lc = nc.getLayoutClassSetsManager().getClassSet(0);
-                    VertexClass vc = lc.createClass(edgeType);
-                    lc.setClass(nc.getVerticesMap().get(edgeType + lines), vc);
-               */
-            
             layoutProgressBarDialog.incrementProgress(++progressCounter);
            
             isSuccessful = true;
         }
         catch(FileNotFoundException e)
         {
-            //TODO display error dialogue
             logger.warning(e.getMessage());
-            return false;
+            isSuccessful = false;
         }
         finally
         {
@@ -423,5 +419,24 @@ public final class BioPaxParser extends CoreParser
         vertex.setVertexColor(shapeLookup.fourth);
        
    }
+
+    public HashMap<Entity, Vertex> getEntityVertexMap() {
+        return entityVertexMap;
+    }
     
+    /**
+     * Utility to split a camel case String into human readable form.
+     * @param s - String to be split
+     * @return - human readable string
+     */
+    public static String splitCamelCase(String s) {
+       return s.replaceAll(
+          String.format("%s|%s|%s",
+             "(?<=[A-Z])(?=[A-Z][a-z])",
+             "(?<=[^A-Z])(?=[A-Z])",
+             "(?<=[A-Za-z])(?=[^A-Za-z])"
+          ),
+          " "
+       );
+    }    
 }

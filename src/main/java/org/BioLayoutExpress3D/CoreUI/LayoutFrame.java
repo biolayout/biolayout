@@ -180,7 +180,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         splashScreen.setText(" Initializing Classes...");
         layoutClassSetsManager = new LayoutClassSetsManager();
         layoutClassSetsManager.createNewClassSet("Default Classes...");
-
+        
         sleepMaxTime(prevTimeInMSecs);
         prevTimeInMSecs = System.nanoTime() / 1000000;
 
@@ -1475,6 +1475,13 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
         if (!nc.getHasStandardPetriNetTransitions() || initCheckToShowNavigationWizardOnStartup)
             checkToShowNavigationWizardOnStartup();
+        
+        //if BioPAX network, display the class viewer
+        if(DATA_TYPE == DataTypes.OWL)
+        {
+            graph.getSelectionManager().selectAll();
+            classViewerFrame.displayClassViewer();
+        }
     }
 
     private void resetAllRelevantLoadingValues()

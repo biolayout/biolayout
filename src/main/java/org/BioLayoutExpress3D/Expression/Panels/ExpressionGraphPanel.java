@@ -34,6 +34,8 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
+import org.jfree.chart.renderer.category.StatisticalBarRenderer;
+import org.jfree.chart.renderer.category.AbstractCategoryItemRenderer;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 
@@ -163,7 +165,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         None,
         Mean,
         Standard_Deviation,
+        Standard_Deviation_With_Line,
+        Standard_Deviation_With_Bars,
         Standard_Error,
+        Standard_Error_With_Line,
+        Standard_Error_With_Bars,
         IQR_Box_Plot
     }
 
@@ -314,27 +320,58 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             break;
 
             case Standard_Deviation:
+            case Standard_Deviation_With_Line:
+            case Standard_Deviation_With_Bars:
             case Standard_Error:
+            case Standard_Error_With_Line:
+            case Standard_Error_With_Bars:
             {
                 DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
                 for (int column = 0; column < mean.length; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
 
-                    if (type == StatisticType.Standard_Deviation)
+                    switch (type)
                     {
-                        dataset.add(mean[column], stddev[column], className, columnName);
-                    }
-                    else if (type == StatisticType.Standard_Error)
-                    {
-                        dataset.add(mean[column], stderr[column], className, columnName);
+                        case Standard_Deviation:
+                        case Standard_Deviation_With_Line:
+                        case Standard_Deviation_With_Bars:
+                            dataset.add(mean[column], stddev[column], className, columnName);
+                            break;
+
+                        case Standard_Error:
+                        case Standard_Error_With_Line:
+                        case Standard_Error_With_Bars:
+                            dataset.add(mean[column], stderr[column], className, columnName);
+                            break;
                     }
                 }
 
                 plot.setDataset(datasetIndex, dataset);
-                StatisticalLineAndShapeRenderer r = new StatisticalLineAndShapeRenderer(false, true);
+                AbstractCategoryItemRenderer r;
+
+                switch (type)
+                {
+                    case Standard_Deviation_With_Bars:
+                    case Standard_Error_With_Bars:
+                        StatisticalBarRenderer sbr = new StatisticalBarRenderer();
+                        sbr.setErrorIndicatorPaint(Color.black);
+                        r = sbr;
+                        break;
+
+                    case Standard_Deviation_With_Line:
+                    case Standard_Error_With_Line:
+                        r = new StatisticalLineAndShapeRenderer(true, true);
+                        r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+                        break;
+
+                    default:
+                        r = new StatisticalLineAndShapeRenderer(false, true);
+                        r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+                        break;
+                }
+
                 r.setSeriesPaint(0, color);
-                r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
                 plot.setRenderer(datasetIndex, r);
                 datasetIndex++;
@@ -483,7 +520,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     RowData data = entry.getValue();
                     Color color = entry.getValue().classColor;
 
-                    datasetIndex = addStatisticalPlot(datasetIndex, data.rows, color,  vertexClass.getName(),
+                    datasetIndex = addStatisticalPlot(datasetIndex, data.rows, color, vertexClass.getName(),
                         StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()]);
                 }
             }

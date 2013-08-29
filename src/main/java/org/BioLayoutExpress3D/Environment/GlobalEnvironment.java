@@ -183,7 +183,7 @@ public final class GlobalEnvironment
     public static boolean TEMPORARILY_DISABLE_ALL_GRAPH_RENDERING = false;
     public static final PrefColor BACKGROUND_COLOR = new PrefColor(Color.WHITE, "background_color", true);
     public static final PrefColor SELECTION_COLOR = new PrefColor(Color.GREEN, "selection_color", true);
-    public static final PrefColor PLOT_BACKGROUND_COLOR = new PrefColor(new Color(0, 0, 0), "plot_background_color", true);
+    public static final PrefColor PLOT_BACKGROUND_COLOR = new PrefColor(new Color(255, 255, 255), "plot_background_color", true);
     public static final PrefColor PLOT_GRIDLINES_COLOR = new PrefColor(new Color(204, 204, 204), "plot_gridlines_color", true);
     public static final PrefBool TRIPPY_BACKGROUND = new PrefBool(false, "trippy_background", true);
     public static final PrefBool DIRECTIONAL_EDGES = new PrefBool(false, "directional_edges", true);

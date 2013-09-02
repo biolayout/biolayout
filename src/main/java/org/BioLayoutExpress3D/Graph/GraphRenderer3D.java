@@ -1925,7 +1925,6 @@ final class GraphRenderer3D implements GraphInterface // package access
         // make sure to disable shaders before the 2D rendering of node labels, but also need to disable shaders out of the display lists to avoid horribly slow FPSs!
         // shaderLinesSFXs.disableShaders(gl);
 
-        boolean defineOnce = false;
         for (GraphEdge edge : visibleEdges)
         {
             if ( edge.isShowEdgeName() )
@@ -1935,15 +1934,6 @@ final class GraphRenderer3D implements GraphInterface // package access
 
                 if ( !node1.equals(node2) ) // don't need to draw an arrow to itself (for now)
                 {
-                    if (!defineOnce)
-                    {
-                        defineOnce = true;
-
-                        // gl.glDisable(GL_DEPTH_TEST);
-                        gl.glEnable(GL_COLOR_LOGIC_OP);
-                        gl.glLogicOp(GL_EQUIV);
-                    }
-
                     if ( nc.getIsGraphml() && YED_STYLE_RENDERING_FOR_GPAPHML_FILES.get() )
                     {
                         currentNode1GraphmlMapCoord = gnc.getAllGraphmlNodesMap().get( node1.getNodeName() ).first;
@@ -1992,12 +1982,6 @@ final class GraphRenderer3D implements GraphInterface // package access
                     }
                 }
             }
-        }
-
-        if (defineOnce)
-        {
-            gl.glDisable(GL_COLOR_LOGIC_OP);
-            // gl.glEnable(GL_DEPTH_TEST);
         }
 
         if (glNewList)

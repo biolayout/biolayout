@@ -242,7 +242,7 @@ public final class GraphmlLookUpmEPNTables
                                                                           // Components
                                                                           Tuples.tuple("roundrectangle", PROTEIN_COMPLEX,           decode("#FFFF99"), 10.0f, ROUND_RECTANGLE, ROUND_CUBE_LARGE),
                                                                           Tuples.tuple("roundrectangle", PROTEIN_PEPTIDE,           decode("#CCFFFF"),  7.0f, ROUND_RECTANGLE, ROUND_CUBE_THIN), // distinguish by using ':' in name
-                                                                          Tuples.tuple("rectangle",      GENE,                      decode("#CCCC00"), 25.0f, RECTANGLE,       GENE_MODEL),
+                                                                          Tuples.tuple("rectangle",      GENE,                      decode("#CCCC00"), 25.0f, RECTANGLE,       Shapes3D.RECTANGLE_HORIZONTAL),
                                                                           Tuples.tuple("parallelogram",  DNA_SEQUENCE,              decode("#CCCC00"),  6.0f, PARALLELOGRAM,   CONE_RIGHT),
                                                                           Tuples.tuple("hexagon",        SIMPLE_BIOCHEMICAL,        decode("#FFA200"), 10.0f, HEXAGON,         PINEAPPLE_SLICE_TOROID),
                                                                           Tuples.tuple("ellipse",        GENERIC_ENTITY,            decode("#CC99FF"), 15.5f, CIRCLE,          PINEAPPLE_SLICE_ELLIPSOID),

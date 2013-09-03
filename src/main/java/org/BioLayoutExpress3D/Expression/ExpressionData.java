@@ -1323,6 +1323,19 @@ public final class ExpressionData
         return stddev;
     }
 
+    public float[] getStderrForRows(List<Integer> rows)
+    {
+        float stddev[] = getStddevForRows(rows);
+        float stderr[] = new float[totalColumns];
+        float sqrtOfSampleSize = (float)sqrt(totalColumns);
+        for (int column = 0; column < totalColumns; column++)
+        {
+            stderr[column] = (float)stddev[column] / sqrtOfSampleSize;
+        }
+
+        return stderr;
+    }
+
     public float[] getParetoForRows(List<Integer> rows)
     {
         float stddev[] = getStddevForRows(rows);

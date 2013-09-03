@@ -34,6 +34,8 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
+import org.jfree.chart.renderer.category.StatisticalBarRenderer;
+import org.jfree.chart.renderer.category.AbstractCategoryItemRenderer;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 
@@ -163,6 +165,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         None,
         Mean,
         Standard_Deviation,
+        Standard_Deviation_With_Line,
+        Standard_Deviation_With_Bars,
+        Standard_Error,
+        Standard_Error_With_Line,
+        Standard_Error_With_Bars,
         IQR_Box_Plot
     }
 
@@ -273,11 +280,12 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         public Color classColor;
     }
 
-    public int addStatisticalPlot(int datasetIndex, ArrayList<Integer> rows, Color color, String className,
+    private void addStatisticalPlot(int datasetIndex, int seriesIndex, ArrayList<Integer> rows, Color color, String className,
             StatisticType type)
     {
         float[] mean = expressionData.getMeanForRows(rows);
         float[] stddev = expressionData.getStddevForRows(rows);
+        float[] stderr = expressionData.getStderrForRows(rows);
 
         switch (type)
         {
@@ -286,47 +294,106 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
             case Mean:
             {
-                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultCategoryDataset();
+                    r = new DefaultCategoryItemRenderer();
+                }
+
                 for (int column = 0; column < mean.length; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
-                    dataset.addValue(mean[column], className, columnName);
+                    dataset.addValue(mean[column], "Mean of " + className, columnName);
                 }
 
+                DefaultCategoryItemRenderer dcir = (DefaultCategoryItemRenderer)r;
                 plot.setDataset(datasetIndex, dataset);
-                DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
-                r.setSeriesPaint(0, color);
-                r.setSeriesShapesVisible(0, false);
-                r.setSeriesStroke(0, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
+                dcir.setSeriesPaint(seriesIndex, color);
+                dcir.setSeriesShapesVisible(seriesIndex, false);
+                dcir.setSeriesStroke(seriesIndex, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
                         {
                             9.0f, 4.0f
                         }, 0.0f));
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
-                r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
-                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                dcir.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
+                dcir.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
-                plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
+                plot.setRenderer(datasetIndex, dcir);
             }
             break;
 
             case Standard_Deviation:
+            case Standard_Deviation_With_Line:
+            case Standard_Deviation_With_Bars:
+            case Standard_Error:
+            case Standard_Error_With_Line:
+            case Standard_Error_With_Bars:
             {
-                DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
+                DefaultStatisticalCategoryDataset dataset = (DefaultStatisticalCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultStatisticalCategoryDataset();
+
+                    switch (type)
+                    {
+                        case Standard_Deviation_With_Bars:
+                        case Standard_Error_With_Bars:
+                            StatisticalBarRenderer sbr = new StatisticalBarRenderer();
+                            sbr.setErrorIndicatorPaint(Color.black);
+                            r = sbr;
+                            break;
+
+                        case Standard_Deviation_With_Line:
+                        case Standard_Error_With_Line:
+                        {
+                            StatisticalLineAndShapeRenderer slsr = new StatisticalLineAndShapeRenderer(true, true);
+                            slsr.setUseSeriesOffset(true);
+                            r = slsr;
+                            break;
+                        }
+
+                        default:
+                        {
+                            StatisticalLineAndShapeRenderer slsr = new StatisticalLineAndShapeRenderer(false, true);
+                            slsr.setUseSeriesOffset(true);
+                            r = slsr;
+                            break;
+                        }
+                    }
+                }
+
                 for (int column = 0; column < mean.length; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
-                    dataset.add(mean[column], stddev[column], className, columnName);
+
+                    switch (type)
+                    {
+                        case Standard_Deviation:
+                        case Standard_Deviation_With_Line:
+                        case Standard_Deviation_With_Bars:
+                            dataset.add(mean[column], stddev[column], className, columnName);
+                            break;
+
+                        case Standard_Error:
+                        case Standard_Error_With_Line:
+                        case Standard_Error_With_Bars:
+                            dataset.add(mean[column], stderr[column], className, columnName);
+                            break;
+                    }
                 }
 
                 plot.setDataset(datasetIndex, dataset);
-                StatisticalLineAndShapeRenderer r = new StatisticalLineAndShapeRenderer(false, true);
-                r.setSeriesPaint(0, color);
-                r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+
+                r.setSeriesShape(seriesIndex, ShapeUtilities.createDiamond(3.0f));
+                r.setSeriesPaint(seriesIndex, color);
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
                 plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
             }
             break;
 
@@ -354,17 +421,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
                 plot.setDataset(datasetIndex, dataset);
                 BoxAndWhiskerRenderer r = new BoxAndWhiskerRenderer();
-                r.setSeriesPaint(0, color);
+                r.setSeriesPaint(seriesIndex, color);
                 r.setMeanVisible(false);
                 r.setMedianVisible(true);
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
                 plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
             }
             break;
         }
-
-        return datasetIndex;
     }
 
     public void refreshPlot()
@@ -456,25 +520,30 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
             }
 
+            plot.setDataset(datasetIndex, null);
             if (drawStatsOfSelection)
             {
                 Color color = new Color(meanR / numSelectedNodes, meanG / numSelectedNodes, meanB / numSelectedNodes);
 
-                datasetIndex = addStatisticalPlot(datasetIndex, meanOfSelection.rows, color, "Mean",
+                addStatisticalPlot(datasetIndex, 0, meanOfSelection.rows, color, "Mean",
                         StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()]);
+                datasetIndex++;
             }
 
+            plot.setDataset(datasetIndex, null);
             if (drawStatsOfClass)
             {
+                int seriesIndex = 0;
                 for (Map.Entry<VertexClass, RowData> entry : meanOfClassMap.entrySet())
                 {
                     VertexClass vertexClass = entry.getKey();
                     RowData data = entry.getValue();
                     Color color = entry.getValue().classColor;
 
-                    datasetIndex = addStatisticalPlot(datasetIndex, data.rows, color,  vertexClass.getName(),
+                    addStatisticalPlot(datasetIndex, seriesIndex++, data.rows, color, vertexClass.getName(),
                         StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()]);
                 }
+                datasetIndex++;
             }
         }
 
@@ -502,6 +571,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);
         plot.getDomainAxis().setTickLabelsVisible(!hideSampleLabels);
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
     }
@@ -513,6 +585,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 PlotOrientation.VERTICAL, false, true, false);
 
         plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         CategoryAxis axis = plot.getDomainAxis();
         axis.setLowerMargin(0.0);

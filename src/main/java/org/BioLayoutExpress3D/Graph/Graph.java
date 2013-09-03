@@ -428,8 +428,6 @@ public class Graph extends GLCanvas implements GraphInterface
         else
         {
             legendStringColor = Color.BLACK;
-            gl.glEnable(GL_COLOR_LOGIC_OP);
-            gl.glLogicOp(GL_EQUIV);
         }
 
         // old-fashioned GLUT-based FPS font rendering
@@ -441,9 +439,6 @@ public class Graph extends GLCanvas implements GraphInterface
         gl.glColor4f(r, g, b, textAlpha);
         gl.glRasterPos2f(START_COORD_TO_RENDER_BACKGROUND_TEXTURE + START_COORD_TO_RENDER_BACKGROUND_TEXTURE / 2, 3 * START_COORD_TO_RENDER_BACKGROUND_TEXTURE);
         GLUT.glutBitmapString(LEGENDS_OPENGL_FONT_TYPE, legend);
-
-        if (!USE_SHADERS_PROCESS)
-            gl.glDisable(GL_COLOR_LOGIC_OP);
     }
 
     /**

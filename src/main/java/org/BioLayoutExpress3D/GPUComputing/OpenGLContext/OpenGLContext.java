@@ -650,7 +650,7 @@ public abstract class OpenGLContext extends Canvas
         }
     }
 
-    static String previousErrorReport;
+    static String previousErrorReport = "";
 
     /**
     *  Checks for OpenGL errors.

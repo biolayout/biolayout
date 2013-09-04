@@ -35,6 +35,8 @@ import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
 import org.jfree.chart.renderer.category.StatisticalBarRenderer;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.category.AbstractCategoryItemRenderer;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
@@ -162,14 +164,15 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
     private enum StatisticType
     {
-        None,
-        Mean,
-        Standard_Deviation,
-        Standard_Deviation_With_Line,
-        Standard_Deviation_With_Bars,
-        Standard_Error,
-        Standard_Error_With_Line,
-        Standard_Error_With_Bars,
+        Individual_Lines,
+        Mean_Line,
+        Mean_Histogram,
+        Mean_With_Std_Dev,
+        Mean_Line_With_Std_Dev,
+        Mean_Histogram_With_Std_Dev,
+        Mean_With_Std_Err,
+        Mean_Line_With_Std_Err,
+        Mean_Histogram_With_Std_Err,
         IQR_Box_Plot
     }
 
@@ -200,7 +203,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             classStatComboBox.addItem(s);
         }
         classStatComboBox.setSelectedIndex(PLOT_CLASS_STATISTIC_TYPE.get());
-        classStatComboBox.setToolTipText("Class Statistic");
+        classStatComboBox.setToolTipText("Class Plot");
         classStatComboBox.addActionListener(this);
 
         selectionStatComboBox = new JComboBox<String>();
@@ -210,7 +213,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             selectionStatComboBox.addItem(s);
         }
         selectionStatComboBox.setSelectedIndex(PLOT_SELECTION_STATISTIC_TYPE.get());
-        selectionStatComboBox.setToolTipText("Selection Statistic");
+        selectionStatComboBox.setToolTipText("Selection Plot");
         selectionStatComboBox.addActionListener(this);
 
         transformComboBox = new JComboBox<String>();
@@ -233,9 +236,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
         plotOptionsLine1.add(hideSampleLabelsCheckBox);
-        plotOptionsLine2.add(new JLabel("Class Statistic:"));
+        plotOptionsLine2.add(new JLabel("Class Plot:"));
         plotOptionsLine2.add(classStatComboBox);
-        plotOptionsLine2.add(new JLabel("Selection Statistic:"));
+        plotOptionsLine2.add(new JLabel("Selection Plot:"));
         plotOptionsLine2.add(selectionStatComboBox);
         expressionGraphCheckBoxesPanel.setLayout(new BoxLayout(expressionGraphCheckBoxesPanel, BoxLayout.PAGE_AXIS));
         expressionGraphCheckBoxesPanel.add(plotOptionsLine1);
@@ -289,10 +292,10 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         switch (type)
         {
-            case None:
+            case Individual_Lines:
                 break;
 
-            case Mean:
+            case Mean_Line:
             {
                 DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
                 AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
@@ -326,12 +329,43 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             }
             break;
 
-            case Standard_Deviation:
-            case Standard_Deviation_With_Line:
-            case Standard_Deviation_With_Bars:
-            case Standard_Error:
-            case Standard_Error_With_Line:
-            case Standard_Error_With_Bars:
+            case Mean_Histogram:
+            {
+                DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultCategoryDataset();
+                    r = new BarRenderer();
+                }
+
+                for (int column = 0; column < mean.length; column++)
+                {
+                    String columnName = expressionData.getColumnName(column);
+                    dataset.addValue(mean[column], "Mean of " + className, columnName);
+                }
+
+                BarRenderer br = (BarRenderer)r;
+                plot.setDataset(datasetIndex, dataset);
+                br.setSeriesPaint(seriesIndex, color);
+
+                // The shapes aren't shown, but this defines the tooltip hover zone
+                br.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
+                br.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                br.setShadowVisible(false);
+                br.setBarPainter(new StandardBarPainter());
+
+                plot.setRenderer(datasetIndex, br);
+            }
+            break;
+
+            case Mean_With_Std_Dev:
+            case Mean_Line_With_Std_Dev:
+            case Mean_Histogram_With_Std_Dev:
+            case Mean_With_Std_Err:
+            case Mean_Line_With_Std_Err:
+            case Mean_Histogram_With_Std_Err:
             {
                 DefaultStatisticalCategoryDataset dataset = (DefaultStatisticalCategoryDataset)plot.getDataset(datasetIndex);
                 AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
@@ -342,15 +376,15 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
                     switch (type)
                     {
-                        case Standard_Deviation_With_Bars:
-                        case Standard_Error_With_Bars:
+                        case Mean_Histogram_With_Std_Dev:
+                        case Mean_Histogram_With_Std_Err:
                             StatisticalBarRenderer sbr = new StatisticalBarRenderer();
                             sbr.setErrorIndicatorPaint(Color.black);
                             r = sbr;
                             break;
 
-                        case Standard_Deviation_With_Line:
-                        case Standard_Error_With_Line:
+                        case Mean_Line_With_Std_Dev:
+                        case Mean_Line_With_Std_Err:
                         {
                             StatisticalLineAndShapeRenderer slsr = new StatisticalLineAndShapeRenderer(true, true);
                             slsr.setUseSeriesOffset(true);
@@ -374,15 +408,15 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
                     switch (type)
                     {
-                        case Standard_Deviation:
-                        case Standard_Deviation_With_Line:
-                        case Standard_Deviation_With_Bars:
+                        case Mean_With_Std_Dev:
+                        case Mean_Line_With_Std_Dev:
+                        case Mean_Histogram_With_Std_Dev:
                             dataset.add(mean[column], stddev[column], className, columnName);
                             break;
 
-                        case Standard_Error:
-                        case Standard_Error_With_Line:
-                        case Standard_Error_With_Bars:
+                        case Mean_With_Std_Err:
+                        case Mean_Line_With_Std_Err:
+                        case Mean_Histogram_With_Std_Err:
                             dataset.add(mean[column], stderr[column], className, columnName);
                             break;
                     }
@@ -434,8 +468,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     public void refreshPlot()
     {
         boolean drawGridLines = PLOT_GRID_LINES.get();
-        boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.None;
-        boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.None;
+        boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
+        boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
         boolean hideSampleLabels = PLOT_HIDE_SAMPLES.get();
 

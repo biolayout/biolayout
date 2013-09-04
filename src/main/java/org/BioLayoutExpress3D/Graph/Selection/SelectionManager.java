@@ -30,6 +30,7 @@ public final class SelectionManager
     private HashSet<GraphEdge> selectedEdges = null;
 
     private AbstractAction deleteSelectionAction = null;
+    private AbstractAction deleteHiddenAction = null;
     private AbstractAction deleteUnselectedAction = null;
     private AbstractAction undoLastDeleteAction = null;
     private AbstractAction undeleteAllNodesAction = null;
@@ -285,8 +286,6 @@ public final class SelectionManager
                     {
                         deleteSelection();
                     }
-
-
                 } );
 
                 runLightWeightThread.setPriority(Thread.NORM_PRIORITY);
@@ -294,6 +293,32 @@ public final class SelectionManager
             }
         };
         deleteSelectionAction.setEnabled(false);
+
+        deleteHiddenAction = new AbstractAction("Delete Hidden")
+        {
+            /**
+            *  Serial version UID variable for the AbstractAction class.
+            */
+            public static final long serialVersionUID = 111222333444555766L;
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                Thread runLightWeightThread = new Thread( new Runnable()
+                {
+
+                    @Override
+                    public void run()
+                    {
+                        deleteHidden();
+                    }
+                } );
+
+                runLightWeightThread.setPriority(Thread.NORM_PRIORITY);
+                runLightWeightThread.start();
+            }
+        };
+        deleteHiddenAction.setEnabled(false);
 
         deleteUnselectedAction = new AbstractAction("Delete Unselected")
         {
@@ -625,15 +650,15 @@ public final class SelectionManager
         graph.updateSelectedNodesDisplayList();
     }
 
-    private void deleteSelection()
+    private void deleteNodes(HashSet<GraphNode> nodes, String progressMessage)
     {
         LayoutProgressBarDialog layoutProgressBarDialog = layoutFrame.getLayoutProgressBar();
-        layoutProgressBarDialog.prepareProgressBar(selectedNodes.size(), "Now Deleting Selection...");
+        layoutProgressBarDialog.prepareProgressBar(selectedNodes.size(), progressMessage);
         layoutProgressBarDialog.startProgressBar();
 
         HashSet<Vertex> undoVertices = new HashSet<Vertex>();
         HashSet<Edge> undoEdges = new HashSet<Edge>();
-        for (GraphNode graphNode : selectedNodes)
+        for (GraphNode graphNode : nodes)
         {
             layoutProgressBarDialog.incrementProgress();
 
@@ -658,6 +683,22 @@ public final class SelectionManager
 
         layoutProgressBarDialog.endProgressBar();
         layoutProgressBarDialog.stopProgressBar();
+    }
+
+    private void deleteSelection()
+    {
+        deleteNodes(selectedNodes, "Now Deleting Selection...");
+    }
+
+    private void deleteHidden()
+    {
+        HashSet<GraphNode> hiddenNodes = new HashSet<GraphNode>(graph.getGraphNodes());
+        hiddenNodes.removeAll(graph.getVisibleNodes());
+
+        deleteNodes(hiddenNodes, "Now Deleting Hidden Nodes...");
+
+        // Nothing is hidden at this point, but we still need to set the enable/disable state of various menu items
+        unhideAll(false);
     }
 
     private void undoLastDelete()
@@ -716,7 +757,10 @@ public final class SelectionManager
         graph.updateAllDisplayLists();
 
         if ( !unhideAllAction.isEnabled() )
+        {
             unhideAllAction.setEnabled(true);
+            deleteHiddenAction.setEnabled(true);
+        }
 
         if ( !layoutFrame.getCoreSaver().getSaveVisibleAction().isEnabled() )
             layoutFrame.getCoreSaver().getSaveVisibleAction().setEnabled(true);
@@ -741,6 +785,7 @@ public final class SelectionManager
         graph.updateAllDisplayLists();
 
         unhideAllAction.setEnabled(false);
+        deleteHiddenAction.setEnabled(false);
         layoutFrame.getCoreSaver().getSaveVisibleAction().setEnabled(false);
         layoutFrame.getExportClassSets().getExportClassSetsFromVisibleGraphAction().setEnabled(false);
 
@@ -1223,6 +1268,11 @@ public final class SelectionManager
     public AbstractAction getDeleteSelectionAction()
     {
         return deleteSelectionAction;
+    }
+
+    public AbstractAction getDeleteHiddenAction()
+    {
+        return deleteHiddenAction;
     }
 
     public AbstractAction getDeleteUnselectedAction()

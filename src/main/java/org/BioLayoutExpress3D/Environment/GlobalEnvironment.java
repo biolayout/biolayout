@@ -147,7 +147,7 @@ public final class GlobalEnvironment
     public static final int MAX_FILE_HISTORY = 10;
 
     // file input/output variables
-    public static enum SupportedInputFileTypes { BLAST, OWL, EXPRESSION, GRAPHML, MEPN, LAYOUT, SIF, TGF, TXT, MATRIX, XML }
+    public static enum SupportedInputFileTypes { BLAST, OWL, EXPRESSION, GRAPHML, MEPN, LAYOUT, SIF, TGF, TXT, MATRIX, XML, GML }
     public static enum SupportedOutputFileTypes { LAYOUT, TGF }
     public static enum SupportedImportExportFileTypes { CLASSSETS, TXT }
     public static enum SupportedSimulationFileTypes { SPN, TXT }
@@ -167,7 +167,7 @@ public final class GlobalEnvironment
     public static final PrefInt MAX_HTML_TIPS = new PrefInt(5, "max_html_tips", false);
     public static final PrefString FILE_CHOOSER_PATH = new PrefString("", "file_chooser_path", true);
 
-    public static enum DataTypes { BLAST, OWL, EXPRESSION, GRAPHML, LAYOUT, MATRIX, ONDEX, NONE };
+    public static enum DataTypes { BLAST, OWL, EXPRESSION, GRAPHML, LAYOUT, MATRIX, ONDEX, GML, NONE };
     public static DataTypes DATA_TYPE = DataTypes.NONE;
     public static final PrefBool RENDERER_MODE_START_3D = new PrefBool(true, "renderer_mode_start_3d", true);
     public static boolean RENDERER_MODE_3D = false;

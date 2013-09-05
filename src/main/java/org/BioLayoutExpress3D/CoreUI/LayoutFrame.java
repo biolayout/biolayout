@@ -1256,6 +1256,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
             parser = new OXLParser(nc, this);
             DATA_TYPE = DataTypes.ONDEX;
         }
+        else if (fileExtension.equals(SupportedInputFileTypes.GML.toString()))
+        {
+            parser = new GmlFileParser(nc, this);
+            DATA_TYPE = DataTypes.GML;
+        }
         else
         {
             if (DEBUG_BUILD) println( "Unsupported file format! " + file.getAbsolutePath() );

@@ -62,7 +62,7 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         initActions();
         initComponents();
 
-        this.setSize(850, 600);
+        this.setSize(950, 600);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
     }
@@ -147,8 +147,6 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                float valueThreshold = filterValueField.getValue();
-                filteredValueRows = expressionData.filterMinValue(valueThreshold);
                 refreshFilterSet();
             }
         });
@@ -176,13 +174,21 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                float coefVarThreshold = filterCoefVarField.getValue();
-                filteredCoefVarRows = expressionData.filterMinCoefficientOfVariation(coefVarThreshold);
                 refreshFilterSet();
             }
         });
         topLine.add(filterCoefVarCheckBox);
         topLine.add(filterCoefVarField);
+
+        JButton applyButton = new JButton(new AbstractAction("Apply")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                refreshFilterSet();
+            }
+        });
+        topLine.add(applyButton);
 
         JPanel bottomLine = new JPanel();
         JButton okButton = new JButton(okAction);
@@ -285,13 +291,17 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
     {
         CURRENT_FILTER_SET = new HashSet<Integer>();
 
-        if (filterValueCheckBox.isSelected() && filteredValueRows != null)
+        if (filterValueCheckBox.isSelected())
         {
+            float valueThreshold = filterValueField.getValue();
+            filteredValueRows = expressionData.filterMinValue(valueThreshold);
             CURRENT_FILTER_SET.addAll(filteredValueRows);
         }
 
-        if (filterCoefVarCheckBox.isSelected() && filteredCoefVarRows != null)
+        if (filterCoefVarCheckBox.isSelected())
         {
+            float coefVarThreshold = filterCoefVarField.getValue();
+            filteredCoefVarRows = expressionData.filterMinCoefficientOfVariation(coefVarThreshold);
             CURRENT_FILTER_SET.addAll(filteredCoefVarRows);
         }
 

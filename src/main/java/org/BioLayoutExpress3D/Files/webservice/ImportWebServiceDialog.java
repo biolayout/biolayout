@@ -211,7 +211,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //Network Type Drop Down
         networkTypeCombo = new JComboBox();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction", "Top Pathways" }));
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction", "EntityReference", "Top Pathways" }));
         JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
         networkTypeLabel.setLabelFor(networkTypeCombo);
         
@@ -341,7 +341,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         String text = "<b>Excerpt:</b>";
         editorPane.setText(text);
         
-        String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class"};
+        String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class", "Pathways"};
         int numRows = 0;
         
         model = new DefaultTableModel(numRows, colHeadings.length) 
@@ -679,7 +679,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     
                     //display BioPAX Class
                     
-                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass()});  
+                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
                 }
                 
                 if(this.organismIdNameMap.size() > 0)

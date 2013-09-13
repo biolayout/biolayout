@@ -121,6 +121,7 @@ public final class BioPaxParser extends CoreParser
             logger.fine(modelEntitySet.size() + " Entities parsed from " + file.getName());
 
             entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
+            int setIndex = 0; //loop counter
             for(Entity entity: modelEntitySet)
             {
                 logger.finer("Entity RDFId: " + entity.getRDFId());
@@ -153,7 +154,7 @@ public final class BioPaxParser extends CoreParser
                         BioPaxParser.setVertexPropertiesEntity(vertex, entityShape);
                     }
                }
-                nc.getVerticesMap().put(vertex.getVertexName(), vertex);
+                nc.getVerticesMap().put(vertex.getVertexName() + "#" + setIndex, vertex); //create a unique name by numbering the vertices
                 
                 entityVertexMap.put(entity, vertex);
                 
@@ -170,7 +171,9 @@ public final class BioPaxParser extends CoreParser
                 //assign vertices to classes
                 LayoutClasses layoutClasses = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().getCurrentClassSetAllClasses();
                 VertexClass vertexClass = layoutClasses.createClass(className);
-                layoutClasses.setClass(vertex, vertexClass);                
+                layoutClasses.setClass(vertex, vertexClass);
+                
+                setIndex++;
             }
             
             /*

@@ -756,11 +756,8 @@ public final class SelectionManager
 
         graph.updateAllDisplayLists();
 
-        if ( !unhideAllAction.isEnabled() )
-        {
-            unhideAllAction.setEnabled(true);
-            deleteHiddenAction.setEnabled(true);
-        }
+        unhideAllAction.setEnabled(true);
+        deleteHiddenAction.setEnabled(true);
 
         if ( !layoutFrame.getCoreSaver().getSaveVisibleAction().isEnabled() )
             layoutFrame.getCoreSaver().getSaveVisibleAction().setEnabled(true);

@@ -433,7 +433,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
             case IQR_Box_Plot:
             {
-                DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
+                DefaultBoxAndWhiskerCategoryDataset dataset = (DefaultBoxAndWhiskerCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultBoxAndWhiskerCategoryDataset();
+                    r = new BoxAndWhiskerRenderer();
+                }
 
                 ArrayList<float[]> data = new ArrayList<float[]>();
                 for (int rowIndex : rows)
@@ -453,13 +460,12 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     dataset.add(values, className, columnName);
                 }
 
+                BoxAndWhiskerRenderer bawr = (BoxAndWhiskerRenderer)r;
                 plot.setDataset(datasetIndex, dataset);
-                BoxAndWhiskerRenderer r = new BoxAndWhiskerRenderer();
-                r.setSeriesPaint(seriesIndex, color);
-                r.setMeanVisible(false);
-                r.setMedianVisible(true);
-                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
-                plot.setRenderer(datasetIndex, r);
+                bawr.setSeriesPaint(seriesIndex, color);
+                bawr.setMedianVisible(true);
+                bawr.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                plot.setRenderer(datasetIndex, bawr);
             }
             break;
         }

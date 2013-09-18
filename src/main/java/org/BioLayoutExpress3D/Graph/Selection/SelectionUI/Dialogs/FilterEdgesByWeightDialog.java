@@ -298,10 +298,11 @@ public final class FilterEdgesByWeightDialog extends JDialog implements ChangeLi
                 if (graphEdge.getEdge().getWeight() >= checkCurrentSliderValue)
                     movedEdges.add(graphEdge);
 
-            // enable the unhideAll action if a change has been detected
+            // enable the unhide all and delete hidden actions if a change has been detected
             boolean flag = ( visibleEdges.size() != movedEdges.size() );
             layoutFrame.getCoreSaver().getSaveVisibleAction().setEnabled(flag);
             layoutFrame.getGraph().getSelectionManager().getUnhideAllAction().setEnabled(flag);
+            layoutFrame.getGraph().getSelectionManager().getDeleteHiddenAction().setEnabled(flag);
 
             // better doing the inverse than doing it with < weightsField.getValue() and then visibleEdges.removeAll(movedEdges),
             // avoids an expensive loop and addAll() is using a fast System.arrayCopy()

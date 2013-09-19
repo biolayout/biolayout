@@ -868,6 +868,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             else
             {
                 expressionGraphPanel.setVisible(false);
+                generalTable.repaint();
             }
 
             checkClassViewerNavigationButtons();

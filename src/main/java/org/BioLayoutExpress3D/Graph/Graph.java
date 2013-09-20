@@ -508,15 +508,23 @@ public class Graph extends GLCanvas implements GraphInterface
     */
     void drawNodeNameBackgroundLegend(GL2 gl, GraphNode node, String nodeName)
     {
+        if (nodeName.isEmpty())
+        {
+            return;
+        }
+
         float[] colorArray = new float[]{ 1.0f, 1.0f, 1.0f, 0.5f }; // default is white color with 0.5 alpha
         if (CUSTOMIZE_NODE_NAMES_NAME_RENDERING_TYPE.get() == 2)
             node.getColor().getRGBComponents(colorArray);
 
-        final int BORDER_WIDTH = 6;
         // + 2 for GLUT public static variables ordering for excluding STROKE_ROMAN/STROKE_MONO_ROMAN
-        int backgroundWidth = GLUT.glutBitmapLength(NODE_NAMES_OPENGL_FONT_TYPE.ordinal() + 2, nodeName) +
-                (2 * BORDER_WIDTH);
-        int backgroundHeight = OPENGL_FONT_SIZES[NODE_NAMES_OPENGL_FONT_TYPE.ordinal()] + (2 * BORDER_WIDTH);
+        int textWidth = GLUT.glutBitmapLength(NODE_NAMES_OPENGL_FONT_TYPE.ordinal() + 2, nodeName);
+        int textHeight = OPENGL_FONT_HEIGHTS[NODE_NAMES_OPENGL_FONT_TYPE.ordinal()];
+        int textDescender = OPENGL_FONT_DESCENDERS[NODE_NAMES_OPENGL_FONT_TYPE.ordinal()];
+
+        final int BORDER_WIDTH = 1;
+        int backgroundWidth = textWidth + (2 * BORDER_WIDTH);
+        int backgroundHeight = textHeight + (2 * BORDER_WIDTH);
         ByteBuffer nodeNamebackgroundLegendImageBuffer = ByteBuffer.allocate(4 * backgroundWidth * backgroundHeight);
         for (int i = 0; i < nodeNamebackgroundLegendImageBuffer.capacity(); i += 4)
         {
@@ -534,7 +542,7 @@ public class Graph extends GLCanvas implements GraphInterface
         // as part of the usual nodes display list using glRasterPos and perspective projection, i.e. not an
         // orthographic projection. In light of that, this is the sanest way I can think of to offset in
         // screen space. SNAFU.
-        gl.glBitmap(0, 0, 0, 0, BORDER_WIDTH, BORDER_WIDTH, nodeNamebackgroundLegendImageBuffer);
+        gl.glBitmap(0, 0, 0, 0, BORDER_WIDTH, textDescender + BORDER_WIDTH, nodeNamebackgroundLegendImageBuffer);
     }
 
     /**

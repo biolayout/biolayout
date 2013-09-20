@@ -468,8 +468,9 @@ public final class GlobalEnvironment
     public static final PrefBool CUSTOMIZE_NODE_NAMES_SHOW_FULL_NAME = new PrefBool(true, "customize_node_names_show_full_name", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefBool CUSTOMIZE_NODE_NAMES_SHOW_PARTIAL_NAME_LENGTH = new PrefBool(false, "customize_node_names_show_partial_name_length", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefInt CUSTOMIZE_NODE_NAMES_SHOW_PARTIAL_NAME_LENGTH_NUMBER_OF_CHARACTERS = new PrefInt(10, "customize_node_names_show_partial_name_length_number_of_characters", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
-    public static enum OpenGLFontTypes { BITMAP_9_BY_15, BITMAP_8_BY_13, BITMAP_TIMES_ROMAN_10, BITMAP_TIMES_ROMAN_24, BITMAP_HELVETICA_10, BITMAP_HELVETICA_12, BITMAP_HELVETICA_18 }
-    public static int[] OPENGL_FONT_SIZES =  {       10,              9,                     7,                    17,                   8,                   9,                  14 };
+    public static enum OpenGLFontTypes     { BITMAP_9_BY_15, BITMAP_8_BY_13, BITMAP_TIMES_ROMAN_10, BITMAP_TIMES_ROMAN_24, BITMAP_HELVETICA_10, BITMAP_HELVETICA_12, BITMAP_HELVETICA_18 }
+    public static int[] OPENGL_FONT_HEIGHTS =    {       16,             14,                    11,                    25,                  11,                  13,                  19 };
+    public static int[] OPENGL_FONT_DESCENDERS = {       4,               3,                     4,                    6,                    3,                   4,                  5  };
     public static OpenGLFontTypes NODE_NAMES_OPENGL_FONT_TYPE = OpenGLFontTypes.BITMAP_HELVETICA_12;
     public static final PrefString CUSTOMIZE_NODE_NAMES_OPENGL_NAME_FONT_TYPE = new PrefString(OpenGLFontTypes.BITMAP_HELVETICA_12.toString(), "customize_node_names_opengl_name_font_type", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefInt CUSTOMIZE_NODE_NAMES_NAME_RENDERING_TYPE = new PrefInt(0, "customize_node_names_name_rendering_type", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);

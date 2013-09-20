@@ -511,9 +511,13 @@ public class Graph extends GLCanvas implements GraphInterface
         float[] colorArray = new float[]{ 1.0f, 1.0f, 1.0f, 0.5f }; // default is white color with 0.5 alpha
         if (CUSTOMIZE_NODE_NAMES_NAME_RENDERING_TYPE.get() == 2)
             node.getColor().getRGBComponents(colorArray);
-        int maxStringWidth = GLUT.glutBitmapLength(NODE_NAMES_OPENGL_FONT_TYPE.ordinal() + 2, nodeName); // + 2 for GLUT public static variables ordering for excluding STROKE_ROMAN/STROKE_MONO_ROMAN
-        int maxStringHeight = OPENGL_FONT_SIZES[NODE_NAMES_OPENGL_FONT_TYPE.ordinal()];
-        ByteBuffer nodeNamebackgroundLegendImageBuffer = ByteBuffer.allocate(4 * maxStringWidth * maxStringHeight);
+
+        final int BORDER_WIDTH = 6;
+        // + 2 for GLUT public static variables ordering for excluding STROKE_ROMAN/STROKE_MONO_ROMAN
+        int backgroundWidth = GLUT.glutBitmapLength(NODE_NAMES_OPENGL_FONT_TYPE.ordinal() + 2, nodeName) +
+                (2 * BORDER_WIDTH);
+        int backgroundHeight = OPENGL_FONT_SIZES[NODE_NAMES_OPENGL_FONT_TYPE.ordinal()] + (2 * BORDER_WIDTH);
+        ByteBuffer nodeNamebackgroundLegendImageBuffer = ByteBuffer.allocate(4 * backgroundWidth * backgroundHeight);
         for (int i = 0; i < nodeNamebackgroundLegendImageBuffer.capacity(); i += 4)
         {
             nodeNamebackgroundLegendImageBuffer.put( (byte)(colorArray[0] * 255.0f) );
@@ -522,7 +526,15 @@ public class Graph extends GLCanvas implements GraphInterface
             nodeNamebackgroundLegendImageBuffer.put( (byte)(colorArray[3] * 255.0f));
         }
         nodeNamebackgroundLegendImageBuffer.rewind();
-        gl.glDrawPixels(maxStringWidth, maxStringHeight, GL_RGBA, GL_UNSIGNED_BYTE, nodeNamebackgroundLegendImageBuffer);
+        gl.glDrawPixels(backgroundWidth, backgroundHeight, GL_RGBA,
+                GL_UNSIGNED_BYTE, nodeNamebackgroundLegendImageBuffer);
+
+        // This isn't actually drawing anything; it's just being used to offset the raster position so that
+        // the text is rendered in the middle of the background. This is done because the text is rendered
+        // as part of the usual nodes display list using glRasterPos and perspective projection, i.e. not an
+        // orthographic projection. In light of that, this is the sanest way I can think of to offset in
+        // screen space. SNAFU.
+        gl.glBitmap(0, 0, 0, 0, BORDER_WIDTH, BORDER_WIDTH, nodeNamebackgroundLegendImageBuffer);
     }
 
     /**

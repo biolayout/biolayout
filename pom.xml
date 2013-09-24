@@ -92,7 +92,7 @@
             <artifactId>resteasy-jaxb-provider</artifactId>
             <version>2.3.6.Final</version>
         </dependency>
-       <dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>1.1.2</version>
@@ -169,9 +169,7 @@
         <!-- The name for the jar that doesn't include the dependencies -->
         <finalName>${jarName}-${project.version}-no-deps</finalName>
 
-
         <plugins>
-            
             <!-- This unpacks the jars we depend on into the final jar -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -184,10 +182,6 @@
                         <manifest>
                             <mainClass>${mainClass}</mainClass>
                             <packageName>org.BioLayoutExpress3D</packageName>
-                            <!--
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>dependencies/</classpathPrefix>
-                            -->
                         </manifest>
                         <manifestEntries>
                             <url>${project.url}</url>
@@ -444,26 +438,9 @@
                             </artifactItems>
                         </configuration>
                     </execution>
-
-                    <!-- copy dependency jar files to subdirectory -->   
-                    <!--
-                    <execution>
-                           <id>copy-dependencies</id>
-                           <phase>prepare-package</phase>
-                           <goals>
-                               <goal>copy-dependencies</goal>
-                           </goals>
-                           <configuration>
-                               <outputDirectory>${project.build.directory}/dependencies</outputDirectory>
-                               <overWriteReleases>false</overWriteReleases>
-                               <overWriteSnapshots>false</overWriteSnapshots>
-                               <overWriteIfNewer>true</overWriteIfNewer>
-                           </configuration>
-                       </execution>                
-                      -->
                 </executions>
-                
             </plugin>
+
             <!-- The native libraries in the jocl jar aren't named suitably for our purposes, so
                  we have this antrun task list to fix them up. Be aware that the original file names
                  include the version number so will need adjusted if the version of jocl is changed -->
@@ -664,12 +641,4 @@
             
         </plugins>
     </build>
-    
-   <pluginRepositories>
-        <pluginRepository>
-            <id>onejar-maven-plugin.googlecode.com</id>
-            <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
-        </pluginRepository>
-    </pluginRepositories>    
-
 </project>

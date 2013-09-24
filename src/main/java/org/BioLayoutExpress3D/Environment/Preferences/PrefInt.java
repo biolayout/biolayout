@@ -1,6 +1,7 @@
 package org.BioLayoutExpress3D.Environment.Preferences;
 
 import java.util.prefs.*;
+import javax.swing.JTextField;
 
 /**
 *
@@ -51,6 +52,22 @@ public class PrefInt extends PrefType
     public void set(int value)
     {
         currentValue = value;
+    }
+
+    /**
+    *  Sets the Integer preference value.
+    */
+    public void set(JTextField value)
+    {
+        try
+        {
+            set(Integer.parseInt(value.getText()));
+        }
+        catch(Exception e)
+        {
+            value.setText(Integer.toString(defaultValue));
+            set(defaultValue);
+        }
     }
 
     /**

@@ -3393,10 +3393,10 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         USE_EDGE_WEIGHTS_FOR_LAYOUT.set( layoutUseEdgeWeightsForLayout.isSelected() );
         TILED_LAYOUT.set( layoutTiledLayout.isSelected() );
         STARTING_TEMPERATURE.set( layoutStartingTemperatureField.getValue() );
-        NUMBER_OF_LAYOUT_ITERATIONS.set( Integer.parseInt( layoutIterationsField.getText() ) );
+        NUMBER_OF_LAYOUT_ITERATIONS.set(layoutIterationsField);
         KVALUE_MODIFIER.set( layoutKvalueField.getValue() );
-        BURST_LAYOUT_ITERATIONS.set( Integer.parseInt( layoutBurstIterationsField.getText() ) );
-        MINIMUM_COMPONENT_SIZE.set( Integer.parseInt( layoutMinimumComponentSizeField.getText() ) );
+        BURST_LAYOUT_ITERATIONS.set(layoutBurstIterationsField);
+        MINIMUM_COMPONENT_SIZE.set(layoutMinimumComponentSizeField);
 
         FMMM_DESIRED_EDGE_LENGTH.set(fmmmDesiredEdgeLength.getValue());
         FMMM_FORCE_MODEL.set(FmmmForceModel.values()[fmmmForceModel.getSelectedIndex()]);
@@ -3406,11 +3406,11 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
 
         MCL_INFLATION_VALUE.set( MCL_inflationField.getValue() );
         MCL_PRE_INFLATION_VALUE.set( MCL_preInflationField.getValue() );
-        MCL_SCHEME.set( Integer.parseInt( MCL_schemeField.getText() ) );
+        MCL_SCHEME.set(MCL_schemeField);
         MCL_ASSIGN_RANDOM_CLUSTER_COLOURS.set( MCL_assignRandomClusterColorsCheckBox.isSelected() );
         USE_MCL_N_CORE_PARALLELISM.set( parallelismUseMCLNCoreParallelism.isSelected() );
         MCL_ADVANCED_OPTIONS.set( MCL_advancedOptionsTextField.getText() );
-        MCL_SMALLEST_CLUSTER.set( Integer.parseInt( MCL_smallestClusterAllowedField.getText() ) );
+        MCL_SMALLEST_CLUSTER.set(MCL_smallestClusterAllowedField);
 
         SAVE_SPN_RESULTS.set( saveSPNResultsCheckBox.isSelected() );
         AUTOMATICALLY_SAVE_SPN_RESULTS_TO_PRECHOSEN_FOLDER.set( automaticallySaveSPNResultsToPreChosenFolderCheckBox.isSelected() );

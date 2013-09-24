@@ -23,38 +23,42 @@ public class ThreadExceptionHandler implements
     @Override
     public void uncaughtException(Thread thread, Throwable e)
     {
+        String build = BuildConfig.VERSION +
+                (!BuildConfig.BUILD_TAG.isEmpty() ? " " + BuildConfig.BUILD_TAG : "") +
+                "(" + BuildConfig.BUILD_TIME + ")";
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+
+        String exceptionText = "Exception \"" + e.toString() + "\" occurred in thread ID " +
+                    thread.getId() + "(" + thread.getName() + ")";
+
+        String logText = build + "\n" + timeStamp + ": " + exceptionText + "\n" + stackTraceForThrowable(e);
+        String shortLogText = exceptionText + ":\n\n" + stackTraceForThrowable(e, 5) + "...";
+
+        while (e.getCause() != null)
+        {
+            e = e.getCause();
+            logText += "\n...caused by: " + e.toString() + "\n" + stackTraceForThrowable(e);
+            shortLogText += "\n...caused by: " + e.toString() + "\n" + stackTraceForThrowable(e, 5) + "...";
+        }
+
+        System.out.println(logText);
+
+        try
+        {
+            String dataFolder = DataFolder.get();
+            String exceptionLogFileName = Path.combine(dataFolder, "UncaughtExceptions.txt");
+            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(exceptionLogFileName, true)));
+            out.println(logText);
+            out.close();
+        }
+        catch (IOException ioe)
+        {
+        }
+
         if (!handlingThreadException)
         {
             handlingThreadException = true;
-
-            String build = BuildConfig.VERSION +
-                    (!BuildConfig.BUILD_TAG.isEmpty() ? " " + BuildConfig.BUILD_TAG : "") +
-                    "(" + BuildConfig.BUILD_TIME + ")";
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-
-            String logText = build + "\n" + timeStamp +
-                    ": Exception \"" + e.toString() + "\" occurred in thread ID " +
-                    thread.getId() + "(" + thread.getName() + ")\n" + stackTraceForThrowable(e);
-
-            System.out.println(logText);
-
-            try
-            {
-                String dataFolder = DataFolder.get();
-                String exceptionLogFileName = Path.combine(dataFolder, "UncaughtExceptions.txt");
-                PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(exceptionLogFileName, true)));
-                out.println(logText);
-                out.close();
-            }
-            catch (IOException ioe)
-            {
-            }
-
-            JOptionPane.showMessageDialog(null,
-                    "Exception \"" + e.toString() + "\" occurred in thread ID " +
-                    thread.getId() + "(" + thread.getName() + "):\n\n" +
-                    stackTraceForThrowable(e, 5) + "...",
-                    "Thread exception", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, shortLogText, "Thread exception", JOptionPane.ERROR_MESSAGE);
         }
 
         handlingThreadException = false;

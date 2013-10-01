@@ -455,6 +455,9 @@ public final class Layout
         if ( LoadNativeLibrary.isWin() )
             System.setProperty("sun.java2d.noddraw", "true");
 
+        // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7075600
+        System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+
         if (DEBUG_BUILD)
             setLoggingParameters(consoleOutput, fileOutput);
         setLookAndFeel(nimbusLAF);

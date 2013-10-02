@@ -96,7 +96,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JButton nextButton, previousButton;
     private JTextField searchField;
     private JTextField organismField;
-    private JComboBox networkTypeCombo;
+    private JComboBox<String> networkTypeCombo;
     private DefaultTableModel model; 
     private LayoutFrame frame;
     private JRadioButton sifRadio, bioPAXRadio;
@@ -133,7 +133,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         clientRequestFactory = new ClientRequestFactory();
         clientRequestFactory.setFollowRedirects(true);
         
-        organismIdNameMap = new HashMap();
+        organismIdNameMap = new HashMap<String, String>();
         
         this.frame = frame;
         
@@ -210,8 +210,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         anyOrganismCheckBox.addActionListener(this);
         
         //Network Type Drop Down
-        networkTypeCombo = new JComboBox();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Pathway", "Interaction", "EntityReference", "Top Pathways" }));
+        networkTypeCombo = new JComboBox<String>();
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "EntityReference", "Top Pathways" }));
         JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
         networkTypeLabel.setLabelFor(networkTypeCombo);
         

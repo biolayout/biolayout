@@ -396,30 +396,30 @@ public final class BioPaxParser extends CoreParser
      * Expects a tuple in the format found in GraphmlLookUpmEPNTables.GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3
      * @param shapeLookup - a tuple of size, shape and color
      */
-    private static void setVertexPropertiesEntity(Vertex vertex, Tuple6<String, GraphmlShapesGroup3, Color, Float, Shapes2D, Shapes3D> shapeLookup)
+    private static void setVertexPropertiesEntity(Vertex vertex, Tuple6 shapeLookup)
     {
-        vertex.setVertex2DShape(shapeLookup.fifth);
-        vertex.setVertex3DShape(shapeLookup.sixth);
-        vertex.setVertexSize(shapeLookup.fourth);
-        vertex.setVertexColor(shapeLookup.third);
+        vertex.setVertex2DShape((Shapes2D)shapeLookup.fifth);
+        vertex.setVertex3DShape((Shapes3D)shapeLookup.sixth);
+        vertex.setVertexSize((Float)shapeLookup.fourth);
+        vertex.setVertexColor((Color)shapeLookup.third);
     }
     
     //special case for pathway - uses different enumeration
-    private static void setVertexPropertiesPathway(Vertex vertex, Tuple6<String, GraphmlShapesGroup2, Color, Float, Shapes2D, Shapes3D> shapeLookup)
+    private static void setVertexPropertiesPathway(Vertex vertex, Tuple6 shapeLookup)
     {
-        vertex.setVertex2DShape(shapeLookup.fifth);
-        vertex.setVertex3DShape(shapeLookup.sixth);
-        vertex.setVertexSize(shapeLookup.fourth);
-        vertex.setVertexColor(shapeLookup.third);
+        vertex.setVertex2DShape((Shapes2D)shapeLookup.fifth);
+        vertex.setVertex3DShape((Shapes3D)shapeLookup.sixth);
+        vertex.setVertexSize((Float)shapeLookup.fourth);
+        vertex.setVertexColor((Color)shapeLookup.third);
     }
 
     //interaction
-   private static void setVertexPropertiesInteraction(Vertex vertex, Tuple7<String, String, GraphmlShapesGroup1, Color, Float, Shapes2D, Shapes3D> shapeLookup)
+   private static void setVertexPropertiesInteraction(Vertex vertex, Tuple7 shapeLookup)
    {
-        vertex.setVertex2DShape(shapeLookup.sixth);
-        vertex.setVertex3DShape(shapeLookup.seventh);
-        vertex.setVertexSize(shapeLookup.fifth);
-        vertex.setVertexColor(shapeLookup.fourth);
+        vertex.setVertex2DShape((Shapes2D)shapeLookup.sixth);
+        vertex.setVertex3DShape((Shapes3D)shapeLookup.seventh);
+        vertex.setVertexSize((Float)shapeLookup.fifth);
+        vertex.setVertexColor((Color)shapeLookup.fourth);
        
    }
 

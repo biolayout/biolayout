@@ -128,6 +128,9 @@ public final class GraphPopupComponent implements Runnable
                 PlotOrientation.VERTICAL, false, false, false);
 
         CategoryPlot plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
         plot.getRenderer().setSeriesPaint(0, graphNode.getColor());
 
         CategoryAxis axis = plot.getDomainAxis();
@@ -167,6 +170,9 @@ public final class GraphPopupComponent implements Runnable
                 PlotOrientation.VERTICAL, false, false, false);
 
         XYPlot plot = (XYPlot) simulationResultsJFreeChart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         ValueAxis axis = plot.getDomainAxis();
         axis.setLowerMargin(0.0);

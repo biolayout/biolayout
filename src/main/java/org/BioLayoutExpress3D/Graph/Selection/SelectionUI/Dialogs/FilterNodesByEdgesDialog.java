@@ -225,10 +225,11 @@ public final class FilterNodesByEdgesDialog extends JDialog implements ChangeLis
                 if (graphNode.getNodeEdges().size() >= checkCurrentSliderValue)
                     movedNodes.add(graphNode);
 
-            // enable the unhideAll action if a change has been detected
+            // enable the unhide all and delete hidden actions if a change has been detected
             boolean flag = ( visibleNodes.size() != movedNodes.size() );
             layoutFrame.getCoreSaver().getSaveVisibleAction().setEnabled(flag);
             layoutFrame.getGraph().getSelectionManager().getUnhideAllAction().setEnabled(flag);
+            layoutFrame.getGraph().getSelectionManager().getDeleteHiddenAction().setEnabled(flag);
 
             // better doing the inverse than doing it with < edgesField.getValue() and then visibleEdges.removeAll(movedEdges),
             // avoids an expensive loop and addAll() is using a fast System.arrayCopy()

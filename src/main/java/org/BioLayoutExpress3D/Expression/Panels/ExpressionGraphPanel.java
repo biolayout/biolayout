@@ -34,6 +34,10 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
 import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
+import org.jfree.chart.renderer.category.StatisticalBarRenderer;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.renderer.category.AbstractCategoryItemRenderer;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 
@@ -160,9 +164,15 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
     private enum StatisticType
     {
-        None,
-        Mean,
-        Standard_Deviation,
+        Individual_Lines,
+        Mean_Line,
+        Mean_Histogram,
+        Mean_With_Std_Dev,
+        Mean_Line_With_Std_Dev,
+        Mean_Histogram_With_Std_Dev,
+        Mean_With_Std_Err,
+        Mean_Line_With_Std_Err,
+        Mean_Histogram_With_Std_Err,
         IQR_Box_Plot
     }
 
@@ -193,7 +203,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             classStatComboBox.addItem(s);
         }
         classStatComboBox.setSelectedIndex(PLOT_CLASS_STATISTIC_TYPE.get());
-        classStatComboBox.setToolTipText("Class Statistic");
+        classStatComboBox.setToolTipText("Class Plot");
         classStatComboBox.addActionListener(this);
 
         selectionStatComboBox = new JComboBox<String>();
@@ -203,7 +213,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             selectionStatComboBox.addItem(s);
         }
         selectionStatComboBox.setSelectedIndex(PLOT_SELECTION_STATISTIC_TYPE.get());
-        selectionStatComboBox.setToolTipText("Selection Statistic");
+        selectionStatComboBox.setToolTipText("Selection Plot");
         selectionStatComboBox.addActionListener(this);
 
         transformComboBox = new JComboBox<String>();
@@ -226,9 +236,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
         plotOptionsLine1.add(hideSampleLabelsCheckBox);
-        plotOptionsLine2.add(new JLabel("Class Statistic:"));
+        plotOptionsLine2.add(new JLabel("Class Plot:"));
         plotOptionsLine2.add(classStatComboBox);
-        plotOptionsLine2.add(new JLabel("Selection Statistic:"));
+        plotOptionsLine2.add(new JLabel("Selection Plot:"));
         plotOptionsLine2.add(selectionStatComboBox);
         expressionGraphCheckBoxesPanel.setLayout(new BoxLayout(expressionGraphCheckBoxesPanel, BoxLayout.PAGE_AXIS));
         expressionGraphCheckBoxesPanel.add(plotOptionsLine1);
@@ -273,66 +283,164 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         public Color classColor;
     }
 
-    public int addStatisticalPlot(int datasetIndex, ArrayList<Integer> rows, Color color, String className,
+    private void addStatisticalPlot(int datasetIndex, int seriesIndex, ArrayList<Integer> rows, Color color, String className,
             StatisticType type)
     {
         float[] mean = expressionData.getMeanForRows(rows);
         float[] stddev = expressionData.getStddevForRows(rows);
+        float[] stderr = expressionData.getStderrForRows(rows);
 
         switch (type)
         {
-            case None:
+            case Individual_Lines:
                 break;
 
-            case Mean:
+            case Mean_Line:
             {
-                DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+                DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultCategoryDataset();
+                    r = new DefaultCategoryItemRenderer();
+                }
+
                 for (int column = 0; column < mean.length; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
-                    dataset.addValue(mean[column], className, columnName);
+                    dataset.addValue(mean[column], "Mean of " + className, columnName);
                 }
 
+                DefaultCategoryItemRenderer dcir = (DefaultCategoryItemRenderer)r;
                 plot.setDataset(datasetIndex, dataset);
-                DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
-                r.setSeriesPaint(0, color);
-                r.setSeriesShapesVisible(0, false);
-                r.setSeriesStroke(0, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
+                dcir.setSeriesPaint(seriesIndex, color);
+                dcir.setSeriesShapesVisible(seriesIndex, false);
+                dcir.setSeriesStroke(seriesIndex, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
                         {
                             9.0f, 4.0f
                         }, 0.0f));
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
-                r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
-                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                dcir.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
+                dcir.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
-                plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
+                plot.setRenderer(datasetIndex, dcir);
             }
             break;
 
-            case Standard_Deviation:
+            case Mean_Histogram:
             {
-                DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
+                DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultCategoryDataset();
+                    r = new BarRenderer();
+                }
+
                 for (int column = 0; column < mean.length; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
-                    dataset.add(mean[column], stddev[column], className, columnName);
+                    dataset.addValue(mean[column], "Mean of " + className, columnName);
+                }
+
+                BarRenderer br = (BarRenderer)r;
+                plot.setDataset(datasetIndex, dataset);
+                br.setSeriesPaint(seriesIndex, color);
+
+                // The shapes aren't shown, but this defines the tooltip hover zone
+                br.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
+                br.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                br.setShadowVisible(false);
+                br.setBarPainter(new StandardBarPainter());
+
+                plot.setRenderer(datasetIndex, br);
+            }
+            break;
+
+            case Mean_With_Std_Dev:
+            case Mean_Line_With_Std_Dev:
+            case Mean_Histogram_With_Std_Dev:
+            case Mean_With_Std_Err:
+            case Mean_Line_With_Std_Err:
+            case Mean_Histogram_With_Std_Err:
+            {
+                DefaultStatisticalCategoryDataset dataset = (DefaultStatisticalCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultStatisticalCategoryDataset();
+
+                    switch (type)
+                    {
+                        case Mean_Histogram_With_Std_Dev:
+                        case Mean_Histogram_With_Std_Err:
+                            StatisticalBarRenderer sbr = new StatisticalBarRenderer();
+                            sbr.setErrorIndicatorPaint(Color.black);
+                            r = sbr;
+                            break;
+
+                        case Mean_Line_With_Std_Dev:
+                        case Mean_Line_With_Std_Err:
+                        {
+                            StatisticalLineAndShapeRenderer slsr = new StatisticalLineAndShapeRenderer(true, true);
+                            slsr.setUseSeriesOffset(true);
+                            r = slsr;
+                            break;
+                        }
+
+                        default:
+                        {
+                            StatisticalLineAndShapeRenderer slsr = new StatisticalLineAndShapeRenderer(false, true);
+                            slsr.setUseSeriesOffset(true);
+                            r = slsr;
+                            break;
+                        }
+                    }
+                }
+
+                for (int column = 0; column < mean.length; column++)
+                {
+                    String columnName = expressionData.getColumnName(column);
+
+                    switch (type)
+                    {
+                        case Mean_With_Std_Dev:
+                        case Mean_Line_With_Std_Dev:
+                        case Mean_Histogram_With_Std_Dev:
+                            dataset.add(mean[column], stddev[column], className, columnName);
+                            break;
+
+                        case Mean_With_Std_Err:
+                        case Mean_Line_With_Std_Err:
+                        case Mean_Histogram_With_Std_Err:
+                            dataset.add(mean[column], stderr[column], className, columnName);
+                            break;
+                    }
                 }
 
                 plot.setDataset(datasetIndex, dataset);
-                StatisticalLineAndShapeRenderer r = new StatisticalLineAndShapeRenderer(false, true);
-                r.setSeriesPaint(0, color);
-                r.setSeriesShape(0, ShapeUtilities.createDiamond(3.0f));
+
+                r.setSeriesShape(seriesIndex, ShapeUtilities.createDiamond(3.0f));
+                r.setSeriesPaint(seriesIndex, color);
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
                 plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
             }
             break;
 
             case IQR_Box_Plot:
             {
-                DefaultBoxAndWhiskerCategoryDataset dataset = new DefaultBoxAndWhiskerCategoryDataset();
+                DefaultBoxAndWhiskerCategoryDataset dataset = (DefaultBoxAndWhiskerCategoryDataset)plot.getDataset(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+
+                if (dataset == null)
+                {
+                    dataset = new DefaultBoxAndWhiskerCategoryDataset();
+                    r = new BoxAndWhiskerRenderer();
+                }
 
                 ArrayList<float[]> data = new ArrayList<float[]>();
                 for (int rowIndex : rows)
@@ -352,26 +460,22 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     dataset.add(values, className, columnName);
                 }
 
+                BoxAndWhiskerRenderer bawr = (BoxAndWhiskerRenderer)r;
                 plot.setDataset(datasetIndex, dataset);
-                BoxAndWhiskerRenderer r = new BoxAndWhiskerRenderer();
-                r.setSeriesPaint(0, color);
-                r.setMeanVisible(false);
-                r.setMedianVisible(true);
-                r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
-                plot.setRenderer(datasetIndex, r);
-                datasetIndex++;
+                bawr.setSeriesPaint(seriesIndex, color);
+                bawr.setMedianVisible(true);
+                bawr.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                plot.setRenderer(datasetIndex, bawr);
             }
             break;
         }
-
-        return datasetIndex;
     }
 
     public void refreshPlot()
     {
         boolean drawGridLines = PLOT_GRID_LINES.get();
-        boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.None;
-        boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.None;
+        boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
+        boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
         boolean hideSampleLabels = PLOT_HIDE_SAMPLES.get();
 
@@ -456,25 +560,30 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
             }
 
+            plot.setDataset(datasetIndex, null);
             if (drawStatsOfSelection)
             {
                 Color color = new Color(meanR / numSelectedNodes, meanG / numSelectedNodes, meanB / numSelectedNodes);
 
-                datasetIndex = addStatisticalPlot(datasetIndex, meanOfSelection.rows, color, "Mean",
+                addStatisticalPlot(datasetIndex, 0, meanOfSelection.rows, color, "Mean",
                         StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()]);
+                datasetIndex++;
             }
 
+            plot.setDataset(datasetIndex, null);
             if (drawStatsOfClass)
             {
+                int seriesIndex = 0;
                 for (Map.Entry<VertexClass, RowData> entry : meanOfClassMap.entrySet())
                 {
                     VertexClass vertexClass = entry.getKey();
                     RowData data = entry.getValue();
                     Color color = entry.getValue().classColor;
 
-                    datasetIndex = addStatisticalPlot(datasetIndex, data.rows, color,  vertexClass.getName(),
+                    addStatisticalPlot(datasetIndex, seriesIndex++, data.rows, color, vertexClass.getName(),
                         StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()]);
                 }
+                datasetIndex++;
             }
         }
 
@@ -502,6 +611,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);
         plot.getDomainAxis().setTickLabelsVisible(!hideSampleLabels);
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
     }
@@ -513,6 +625,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 PlotOrientation.VERTICAL, false, true, false);
 
         plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         CategoryAxis axis = plot.getDomainAxis();
         axis.setLowerMargin(0.0);

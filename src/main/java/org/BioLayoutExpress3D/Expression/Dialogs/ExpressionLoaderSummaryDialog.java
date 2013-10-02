@@ -21,7 +21,7 @@ import org.BioLayoutExpress3D.Files.Parsers.ExpressionParser;
 *
 */
 
-public final class ExpressionLoaderSummaryDialog extends JDialog implements ChangeListener, CaretListener, DocumentListener
+public final class ExpressionLoaderSummaryDialog extends JDialog implements ChangeListener, CaretListener
 {
     /**
     *  Serial version UID variable for the ExpressionLoaderSummaryDialog class.
@@ -62,7 +62,7 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         initActions();
         initComponents();
 
-        this.setSize(850, 600);
+        this.setSize(950, 600);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
     }
@@ -90,10 +90,40 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         thresholdValueTextField = new FloatNumberField(0, 5);
         thresholdValueTextField.addCaretListener(this);
         thresholdValueTextField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
-        thresholdValueTextField.getDocument().addDocumentListener(this);
         thresholdValueTextField.setEditable(false);
         thresholdValueTextField.getCaret().setVisible(false);
         thresholdValueTextField.setText( createCorrelationTextValue( thresholdSlider.getValue() ) );
+        thresholdValueTextField.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                currentThresholdFloat = thresholdValueTextField.getValue();
+                if (currentThresholdFloat > 1.0f)
+                {
+                    JOptionPane.showMessageDialog(jframe, "The Correlation value cannot be bigger than 1" +
+                            DECIMAL_SEPARATOR_STRING + "00" + ".\nPlease try inserting a smaller Correlation value.",
+                            "Correlation value too large!", JOptionPane.INFORMATION_MESSAGE);
+                    currentThreshold = 100;
+                }
+                else if (currentThresholdFloat < STORED_CORRELATION_THRESHOLD)
+                {
+                    JOptionPane.showMessageDialog(jframe, "The Correlation value cannot be smaller than " +
+                            STORED_CORRELATION_THRESHOLD + ".\nPlease try inserting a bigger Correlation value.",
+                            "Correlation value too small!", JOptionPane.INFORMATION_MESSAGE);
+                    currentThreshold = minThreshold;
+                }
+                else
+                {
+                    currentThreshold = (int) rint(100.0f * currentThresholdFloat);
+                }
+
+                String text = createCorrelationTextValue(currentThreshold);
+                thresholdValueTextField.setText(text);
+                thresholdSlider.setValue(currentThreshold);
+                expressionDegreePlotsPanel.updatePlots(currentThreshold, text);
+            }
+        });
 
         JPanel topLine = new JPanel();
         filterValueCheckBox = new JCheckBox(new AbstractAction("FilterValueToggle")
@@ -109,10 +139,17 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         filterValueCheckBox.setText("Filter Rows With All Values Less Than");
         filterValueCheckBox.setSelected(false);
         filterValueField = new FloatNumberField(0, 5);
-        filterValueField.addCaretListener(this);
         filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
         filterValueField.setEnabled(false);
         filterValueField.setValue(0.0f);
+        filterValueField.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                refreshFilterSet();
+            }
+        });
         topLine.add(filterValueCheckBox);
         topLine.add(filterValueField);
 
@@ -129,12 +166,29 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
         filterCoefVarCheckBox.setText("Filter Rows With Coefficient of Variation Less Than");
         filterCoefVarCheckBox.setSelected(false);
         filterCoefVarField = new FloatNumberField(0, 5);
-        filterCoefVarField.addCaretListener(this);
         filterCoefVarField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
         filterCoefVarField.setEnabled(false);
         filterCoefVarField.setValue(0.0f);
+        filterCoefVarField.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                refreshFilterSet();
+            }
+        });
         topLine.add(filterCoefVarCheckBox);
         topLine.add(filterCoefVarField);
+
+        JButton applyButton = new JButton(new AbstractAction("Apply")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                refreshFilterSet();
+            }
+        });
+        topLine.add(applyButton);
 
         JPanel bottomLine = new JPanel();
         JButton okButton = new JButton(okAction);
@@ -231,87 +285,23 @@ public final class ExpressionLoaderSummaryDialog extends JDialog implements Chan
                 thresholdValueTextField.getCaret().setVisible(true);
             }
         }
-        else if (ce.getSource().equals(filterValueField))
-        {
-            float valueThreshold = filterValueField.getValue();
-            filteredValueRows = expressionData.filterMinValue(valueThreshold);
-            refreshFilterSet();
-        }
-        else if (ce.getSource().equals(filterCoefVarField))
-        {
-            float coefVarThreshold = filterCoefVarField.getValue();
-            filteredCoefVarRows = expressionData.filterMinCoefficientOfVariation(coefVarThreshold);
-            refreshFilterSet();
-        }
-    }
-
-    @Override
-    public void insertUpdate(DocumentEvent de)
-    {
-        if( de.getDocument().equals( thresholdValueTextField.getDocument() ) && thresholdValueTextField.isFocusOwner() )
-            thresholdValueTextFieldAndUpdateValuesAccordingly();
-    }
-
-    @Override
-    public void removeUpdate(DocumentEvent de)
-    {
-        if( de.getDocument().equals( thresholdValueTextField.getDocument() ) && thresholdValueTextField.isFocusOwner() )
-            thresholdValueTextFieldAndUpdateValuesAccordingly();
-    }
-
-    @Override
-    public void changedUpdate(DocumentEvent de) {}
-
-    private void thresholdValueTextFieldAndUpdateValuesAccordingly()
-    {
-        currentThresholdFloat = thresholdValueTextField.getValue();
-        if (currentThresholdFloat > 1.0f)
-        {
-            JOptionPane.showMessageDialog(jframe, "The Correlation value cannot be bigger than 1" + DECIMAL_SEPARATOR_STRING + "00" + ".\nPlease try inserting a smaller Correlation value.", "Correlation value too large!", JOptionPane.INFORMATION_MESSAGE);
-            currentThreshold = 100;
-            invokeLaterInEventQueue(true, "1" + DECIMAL_SEPARATOR_STRING + "00", 100);
-        }
-        else if (currentThresholdFloat < STORED_CORRELATION_THRESHOLD)
-        {
-            JOptionPane.showMessageDialog(jframe, "The Correlation value cannot be smaller than " + STORED_CORRELATION_THRESHOLD + ".\nPlease try inserting a bigger Correlation value.", "Correlation value too small!", JOptionPane.INFORMATION_MESSAGE);
-            currentThreshold = minThreshold;
-            invokeLaterInEventQueue(true, createCorrelationTextValue(minThreshold), minThreshold);
-        }
-        else
-        {
-            currentThreshold = (int)rint(100.0f * currentThresholdFloat);
-            invokeLaterInEventQueue(false, null, currentThreshold);
-        }
-    }
-
-    private void invokeLaterInEventQueue(final boolean thresholdValueTextFieldOrThresholdSlider, final String text, final int value)
-    {
-        EventQueue.invokeLater(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                if (thresholdValueTextFieldOrThresholdSlider)
-                {
-                    thresholdValueTextField.setText(text);
-                }
-                thresholdSlider.setValue(value);
-                expressionDegreePlotsPanel.updatePlots(value, createCorrelationTextValue(value));
-            }
-        });
     }
 
     public void refreshFilterSet()
     {
         CURRENT_FILTER_SET = new HashSet<Integer>();
 
-        if (filterValueCheckBox.isSelected() && filteredValueRows != null)
+        if (filterValueCheckBox.isSelected())
         {
+            float valueThreshold = filterValueField.getValue();
+            filteredValueRows = expressionData.filterMinValue(valueThreshold);
             CURRENT_FILTER_SET.addAll(filteredValueRows);
         }
 
-        if (filterCoefVarCheckBox.isSelected() && filteredCoefVarRows != null)
+        if (filterCoefVarCheckBox.isSelected())
         {
+            float coefVarThreshold = filterCoefVarField.getValue();
+            filteredCoefVarRows = expressionData.filterMinCoefficientOfVariation(coefVarThreshold);
             CURRENT_FILTER_SET.addAll(filteredCoefVarRows);
         }
 

@@ -297,6 +297,11 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
         editDeleteSelectionNode.setMnemonic(KeyEvent.VK_D);
     }
 
+    public void setEditMenuDeleteHiddenAction(AbstractAction deleteHiddenAction)
+    {
+        JMenuItem editDeleteHiddenNode = editMenu.add(deleteHiddenAction);
+    }
+
     public void setEditMenuDeleteUnselectedAction(AbstractAction deleteUnselectedAction)
     {
         JMenuItem editDeleteUnselectedNode = editMenu.add(deleteUnselectedAction);

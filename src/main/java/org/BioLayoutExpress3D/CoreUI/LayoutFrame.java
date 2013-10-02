@@ -657,6 +657,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setEditMenuUndoNodeDraggingOnSelectionAction( graph.getGraphRendererActions().getUndoNodeDraggingAction() );
         layoutMenuBar.setEditMenuRedoNodeDraggingOnSelectionAction( graph.getGraphRendererActions().getRedoNodeDraggingAction() );
         layoutMenuBar.setEditMenuDeleteSelectionAction( graph.getSelectionManager().getDeleteSelectionAction() );
+        layoutMenuBar.setEditMenuDeleteHiddenAction( graph.getSelectionManager().getDeleteHiddenAction() );
         layoutMenuBar.setEditMenuDeleteUnselectedAction( graph.getSelectionManager().getDeleteUnselectedAction() );
         layoutMenuBar.setEditMenuUndoLastDeleteAction( graph.getSelectionManager().getUndoLastDeleteAction() );
         layoutMenuBar.setEditMenuUndeleteAllNodesAction( graph.getSelectionManager().getUndeleteAllNodesAction() );
@@ -1268,6 +1269,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
         {
             parser = new OXLParser(nc, this);
             DATA_TYPE = DataTypes.ONDEX;
+        }
+        else if (fileExtension.equals(SupportedInputFileTypes.GML.toString()))
+        {
+            parser = new GmlFileParser(nc, this);
+            DATA_TYPE = DataTypes.GML;
         }
         else
         {

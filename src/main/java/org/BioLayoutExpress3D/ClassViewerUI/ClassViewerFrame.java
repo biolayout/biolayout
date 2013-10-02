@@ -864,6 +864,13 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 if (hideColumnsData == null && classViewerHideColumnsDialog != null)
                     classViewerHideColumnsDialog.updateClassViewerHideColumnsTable(this, enableHideColumnsAndExportButtons, updateExpressionGraphViewOnly, notUpdateTitleBar);
 
+                if (generalTable.getColumnCount() < NAME_COLUMN + 1)
+                {
+                    System.out.println("generalTable.getColumnCount() " + generalTable.getColumnCount() + " < NAME_COLUMN + 1 " + Thread.currentThread().getStackTrace());
+                    /*JOptionPane.showMessageDialog(this, "It is possible a crash is about to occur in relation to the number of columns in the class viewer (currently " +
+                            generalTable.getColumnCount() + "). Please note down what you were doing up until this point.",
+                            "Probable crash imminent", JOptionPane.INFORMATION_MESSAGE);*/
+                }
                 generalTable.sortTableByColumn(NAME_COLUMN, generalTableSorter);
             }
 
@@ -878,6 +885,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             else
             {
                 expressionGraphPanel.setVisible(false);
+                generalTable.repaint();
             }
 
             checkClassViewerNavigationButtons();

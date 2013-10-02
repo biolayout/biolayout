@@ -123,6 +123,7 @@ public final class ExpressionViewerFrame extends JFrame
                     setSize(650, 600);
                     setLocation( ( SCREEN_DIMENSION.width - getWidth() ) / 2, ( SCREEN_DIMENSION.height - getHeight() ) / 2);
                     setVisible(true);
+                    refreshExpressionViewer();
                 }
                 else
                 {
@@ -189,6 +190,7 @@ public final class ExpressionViewerFrame extends JFrame
 
     public void refreshExpressionViewer()
     {
+        expressionGraphPanel.refreshPlot();
         expressionGraphPanel.repaint();
     }
 

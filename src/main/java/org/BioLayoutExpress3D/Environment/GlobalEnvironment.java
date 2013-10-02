@@ -147,7 +147,7 @@ public final class GlobalEnvironment
     public static final int MAX_FILE_HISTORY = 10;
 
     // file input/output variables
-    public static enum SupportedInputFileTypes { BLAST, OWL, EXPRESSION, GRAPHML, MEPN, LAYOUT, SIF, TGF, TXT, MATRIX, XML }
+    public static enum SupportedInputFileTypes { BLAST, OWL, EXPRESSION, GRAPHML, MEPN, LAYOUT, SIF, TGF, TXT, MATRIX, XML, GML }
     public static enum SupportedOutputFileTypes { LAYOUT, TGF }
     public static enum SupportedImportExportFileTypes { CLASSSETS, TXT }
     public static enum SupportedSimulationFileTypes { SPN, TXT }
@@ -167,7 +167,7 @@ public final class GlobalEnvironment
     public static final PrefInt MAX_HTML_TIPS = new PrefInt(5, "max_html_tips", false);
     public static final PrefString FILE_CHOOSER_PATH = new PrefString("", "file_chooser_path", true);
 
-    public static enum DataTypes { BLAST, OWL, EXPRESSION, GRAPHML, LAYOUT, MATRIX, ONDEX, NONE };
+    public static enum DataTypes { BLAST, OWL, EXPRESSION, GRAPHML, LAYOUT, MATRIX, ONDEX, GML, NONE };
     public static DataTypes DATA_TYPE = DataTypes.NONE;
     public static final PrefBool RENDERER_MODE_START_3D = new PrefBool(true, "renderer_mode_start_3d", true);
     public static boolean RENDERER_MODE_3D = false;
@@ -183,7 +183,8 @@ public final class GlobalEnvironment
     public static boolean TEMPORARILY_DISABLE_ALL_GRAPH_RENDERING = false;
     public static final PrefColor BACKGROUND_COLOR = new PrefColor(Color.WHITE, "background_color", true);
     public static final PrefColor SELECTION_COLOR = new PrefColor(Color.GREEN, "selection_color", true);
-    public static final PrefColor PLOT_BACKGROUND_COLOR = new PrefColor(new Color(204, 204, 204), "plot_background_color", true);
+    public static final PrefColor PLOT_BACKGROUND_COLOR = new PrefColor(new Color(255, 255, 255), "plot_background_color", true);
+    public static final PrefColor PLOT_GRIDLINES_COLOR = new PrefColor(new Color(204, 204, 204), "plot_gridlines_color", true);
     public static final PrefBool TRIPPY_BACKGROUND = new PrefBool(false, "trippy_background", true);
     public static final PrefBool DIRECTIONAL_EDGES = new PrefBool(false, "directional_edges", true);
     public static final PrefBool SHOW_EDGES_WHEN_DRAGGING_NODES = new PrefBool(false, "show_edges_when_dragging_nodes", true);
@@ -467,8 +468,9 @@ public final class GlobalEnvironment
     public static final PrefBool CUSTOMIZE_NODE_NAMES_SHOW_FULL_NAME = new PrefBool(true, "customize_node_names_show_full_name", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefBool CUSTOMIZE_NODE_NAMES_SHOW_PARTIAL_NAME_LENGTH = new PrefBool(false, "customize_node_names_show_partial_name_length", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefInt CUSTOMIZE_NODE_NAMES_SHOW_PARTIAL_NAME_LENGTH_NUMBER_OF_CHARACTERS = new PrefInt(10, "customize_node_names_show_partial_name_length_number_of_characters", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
-    public static enum OpenGLFontTypes { BITMAP_9_BY_15, BITMAP_8_BY_13, BITMAP_TIMES_ROMAN_10, BITMAP_TIMES_ROMAN_24, BITMAP_HELVETICA_10, BITMAP_HELVETICA_12, BITMAP_HELVETICA_18 }
-    public static int[] OPENGL_FONT_SIZES =  {       10,              9,                     7,                    17,                   8,                   9,                  14 };
+    public static enum OpenGLFontTypes     { BITMAP_9_BY_15, BITMAP_8_BY_13, BITMAP_TIMES_ROMAN_10, BITMAP_TIMES_ROMAN_24, BITMAP_HELVETICA_10, BITMAP_HELVETICA_12, BITMAP_HELVETICA_18 }
+    public static int[] OPENGL_FONT_HEIGHTS =    {       16,             14,                    11,                    25,                  11,                  13,                  19 };
+    public static int[] OPENGL_FONT_DESCENDERS = {       4,               3,                     4,                    6,                    3,                   4,                  5  };
     public static OpenGLFontTypes NODE_NAMES_OPENGL_FONT_TYPE = OpenGLFontTypes.BITMAP_HELVETICA_12;
     public static final PrefString CUSTOMIZE_NODE_NAMES_OPENGL_NAME_FONT_TYPE = new PrefString(OpenGLFontTypes.BITMAP_HELVETICA_12.toString(), "customize_node_names_opengl_name_font_type", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);
     public static final PrefInt CUSTOMIZE_NODE_NAMES_NAME_RENDERING_TYPE = new PrefInt(0, "customize_node_names_name_rendering_type", SAVE_CUSTOMIZE_NODE_NAMES_OPTIONS);

@@ -5,6 +5,11 @@ BUILDS_DIR=`dirname ${SCRIPT_NAME}`
 SRC_DIR=`readlink -f ${BUILDS_DIR}/..`
 HTML_TEMPLATE="${BUILDS_DIR}/index.html.template"
 WEBSTART_TEMPLATE="${BUILDS_DIR}/WebStart.jnlp.template"
+BASE_URL="http://biolayout.org/internal"
+
+echo SCRIPT_NAME=${SCRIPT_NAME}
+echo BUILDS_DIR=${BUILDS_DIR}
+echo SRC_DIR=${SRC_DIR}
 
 cd ${SRC_DIR}
 VERSION=`${BUILDS_DIR}/version.sh`
@@ -12,6 +17,11 @@ VERSION=`${BUILDS_DIR}/version.sh`
 GIT_REV=`git rev-parse HEAD`
 BUILD_DIR=`readlink -f ${BUILDS_DIR}/${VERSION}`
 BUILD_URL="${BASE_URL}/${BUILD_NAME}"
+
+echo VERSION=${VERSION}
+echo GIT_REV=${GIT_REV}
+echo BUILD_DIR=${BUILD_DIR}
+echo BUILD_URL=${BUILD_URL}
 
 rm -r ${BUILD_DIR}
 mkdir -p ${BUILD_DIR}

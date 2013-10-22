@@ -15,7 +15,7 @@ cd ${SRC_DIR}
 VERSION=`${SCRIPT_DIR}/version.sh`
 
 GIT_REV=`git rev-parse HEAD`
-BUILD_DIR=`readlink -f ${SCRIPT_DIR}/builds/${VERSION}`
+BUILD_DIR="${SCRIPT_DIR}/builds/${VERSION}"
 BUILD_URL="${BASE_URL}/${BUILD_NAME}"
 
 echo VERSION=${VERSION}

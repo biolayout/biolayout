@@ -1,21 +1,22 @@
 #! /bin/bash
 
 SCRIPT_NAME=`readlink -f $0`
-BUILDS_DIR=`dirname ${SCRIPT_NAME}`
-SRC_DIR=`readlink -f ${BUILDS_DIR}/..`
-HTML_TEMPLATE="${BUILDS_DIR}/index.html.template"
-WEBSTART_TEMPLATE="${BUILDS_DIR}/WebStart.jnlp.template"
+SCRIPT_DIR=`dirname ${SCRIPT_NAME}`
+SRC_DIR=`readlink -f ${SCRIPT_DIR}/..`
+HTML_TEMPLATE="${SCRIPT_DIR}/index.html.template"
+WEBSTART_TEMPLATE="${SCRIPT_DIR}/WebStart.jnlp.template"
 BASE_URL="http://biolayout.org/internal"
 
 echo SCRIPT_NAME=${SCRIPT_NAME}
-echo BUILDS_DIR=${BUILDS_DIR}
+echo SCRIPT_DIR=${SCRIPT_DIR}
 echo SRC_DIR=${SRC_DIR}
 
 cd ${SRC_DIR}
-VERSION=`${BUILDS_DIR}/version.sh`
+VERSION=`${SCRIPT_DIR}/version.sh`
 
 GIT_REV=`git rev-parse HEAD`
-BUILD_DIR=`readlink -f ${BUILDS_DIR}/${VERSION}`
+BUILDS_DIR="${SCRIPT_DIR}/builds"
+BUILD_DIR="${BUILDS_DIR}/${VERSION}"
 BUILD_URL="${BASE_URL}/${BUILD_NAME}"
 
 echo VERSION=${VERSION}
@@ -33,7 +34,7 @@ cp ${SRC_DIR}/nsis-installer/BioLayoutExpress3D-${VERSION}-installer.exe ${BUILD
 
 # OS X
 cd ${SRC_DIR}/target
-zip -r9y ${BUILD_DIR}/BioLayout\ Express\ 3D.app.zip BioLayout\ Express\ 3D.app
+genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o ${BUILD_DIR}/BioLayoutExpress3D-${VERSION}.dmg dmg/
 
 # Everything else
 cp ${SRC_DIR}/target/BioLayoutExpress3D-${VERSION}.jar ${BUILD_DIR}
@@ -53,3 +54,6 @@ cat ${WEBSTART_TEMPLATE} | sed -e "s%_BUILD_URL_%${BUILD_URL}%g" \
     -e "s/_VERSION_/${VERSION}/g" -e "s/_HEAP_SIZE_/32000m/g" > ${BUILD_DIR}/WebStart64.jnlp
 cp ${SRC_DIR}/src/main/resources/Resources/Images/BioLayoutExpress3DLogo.png ${BUILD_DIR}
 cp ${SRC_DIR}/src/main/resources/Resources/Images/BioLayoutExpress3DIcon.png ${BUILD_DIR}
+
+rm ${BUILDS_DIR}/current
+ln -s ${BUILD_DIR} ${BUILDS_DIR}/current

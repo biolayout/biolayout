@@ -15,7 +15,8 @@ cd ${SRC_DIR}
 VERSION=`${SCRIPT_DIR}/version.sh`
 
 GIT_REV=`git rev-parse HEAD`
-BUILD_DIR="${SCRIPT_DIR}/builds/${VERSION}"
+BUILDS_DIR="${SCRIPT_DIR}/builds"
+BUILD_DIR="${BUILDS_DIR}/${VERSION}"
 BUILD_URL="${BASE_URL}/${BUILD_NAME}"
 
 echo VERSION=${VERSION}
@@ -33,7 +34,7 @@ cp ${SRC_DIR}/nsis-installer/BioLayoutExpress3D-${VERSION}-installer.exe ${BUILD
 
 # OS X
 cd ${SRC_DIR}/target
-genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o ${BUILD_DIR}\BioLayout\ Express\ 3D.dmg dmg/
+genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o ${BUILD_DIR}/BioLayout\ Express\ 3D.dmg dmg/
 
 # Everything else
 cp ${SRC_DIR}/target/BioLayoutExpress3D-${VERSION}.jar ${BUILD_DIR}
@@ -53,3 +54,6 @@ cat ${WEBSTART_TEMPLATE} | sed -e "s%_BUILD_URL_%${BUILD_URL}%g" \
     -e "s/_VERSION_/${VERSION}/g" -e "s/_HEAP_SIZE_/32000m/g" > ${BUILD_DIR}/WebStart64.jnlp
 cp ${SRC_DIR}/src/main/resources/Resources/Images/BioLayoutExpress3DLogo.png ${BUILD_DIR}
 cp ${SRC_DIR}/src/main/resources/Resources/Images/BioLayoutExpress3DIcon.png ${BUILD_DIR}
+
+rm ${BUILDS_DIR}/current
+ln -s ${BUILD_DIR} ${BUILDS_DIR}/current

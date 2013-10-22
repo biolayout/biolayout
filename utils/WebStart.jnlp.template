@@ -17,7 +17,7 @@
   </security>
   <resources>
     <j2se href="http://java.sun.com/products/autodl/j2se" version="1.6+" max-heap-size="_HEAP_SIZE_"/>
-    <jar href="BioLayoutExpress3D-_VERSION_.jar" download="eager"/>
+    <jar href="BLE3D-_VERSION_.jar" download="eager"/>
   </resources>
   <application-desc main-class="org.BioLayoutExpress3D.Layout">
   </application-desc>

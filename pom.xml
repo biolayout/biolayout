@@ -30,7 +30,7 @@
         <buildconfig.template.file>src/main/java/org/BioLayoutExpress3D/BuildConfig.template</buildconfig.template.file>
         <buildconfig.file>${generated.sources.dir}/org/BioLayoutExpress3D/BuildConfig.java</buildconfig.file>
 
-        <osx.app.dir>${project.build.directory}/${project.name}.app</osx.app.dir>
+        <osx.app.dir>${project.build.directory}/dmg/${project.name}.app</osx.app.dir>
 
         <debug.build>true</debug.build>
     </properties>

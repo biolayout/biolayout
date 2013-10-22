@@ -33,7 +33,7 @@ cp ${SRC_DIR}/nsis-installer/BioLayoutExpress3D-${VERSION}-installer.exe ${BUILD
 
 # OS X
 cd ${SRC_DIR}/target
-zip -r9y ${BUILD_DIR}/BioLayout\ Express\ 3D.app.zip BioLayout\ Express\ 3D.app
+genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o BioLayout\ Express\ 3D.dmg dmg/
 
 # Everything else
 cp ${SRC_DIR}/target/BioLayoutExpress3D-${VERSION}.jar ${BUILD_DIR}

@@ -14,6 +14,7 @@
         <versionNumber>development</versionNumber>
         <jarName>BioLayoutExpress3D</jarName>
         <outFilename>${jarName}-${versionNumber}</outFilename>
+        <l4jShortFilename>BLE3D-${versionNumber}</l4jShortFilename>
         <mainClass>org.BioLayoutExpress3D.Layout</mainClass>
         <manifestVersion>1.0.0.0</manifestVersion>
         <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2013</copyright>
@@ -226,7 +227,7 @@
                         </goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <outfile>${project.build.directory}/${outFilename}-32bit.exe</outfile>
+                            <outfile>${project.build.directory}/${l4jShortFilename}-32bit.exe</outfile>
                             <jar>${project.build.directory}/${outFilename}.jar</jar>
                             <icon>${icon}</icon>
                             <errTitle>${project.name}</errTitle>
@@ -255,7 +256,7 @@
                         </goals>
                         <configuration>
                             <headerType>gui</headerType>
-                            <outfile>${project.build.directory}/${outFilename}-64bit.exe</outfile>
+                            <outfile>${project.build.directory}/${l4jShortFilename}-64bit.exe</outfile>
                             <jar>${project.build.directory}/${outFilename}.jar</jar>
                             <icon>${icon}</icon>
                             <errTitle>${project.name}</errTitle>

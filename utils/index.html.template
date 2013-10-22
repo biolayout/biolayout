@@ -9,12 +9,12 @@
     </head>
     <body>
         <h2>BioLayout Express 3D _VERSION_ _BUILD_NAME_</h2>
-        <p><a href="BioLayoutExpress3D-_VERSION_-installer.exe">Windows installer</a></p>
-        <p><a href="BioLayoutExpress3D-_VERSION_.dmg">Mac OS X DMG</a></p>
-        <p><a href="BioLayoutExpress3D-_VERSION_.jar">Naked JAR file</a></p>
+        <p><a href="BLE3D-_VERSION_-installer.exe">Windows installer</a></p>
+        <p><a href="BLE3D-_VERSION_.dmg">Mac OS X DMG</a></p>
+        <p><a href="BLE3D-_VERSION_.jar">Naked JAR file</a></p>
         <p><a href="WebStart32.jnlp">Webstart 32bit</a></p>
         <p><a href="WebStart64.jnlp">Webstart 64bit</a></p>
-        <p><a href="BioLayoutExpress3D-_VERSION_-source.zip">Source code</a></p>
+        <p><a href="BLE3D-_VERSION_-source.zip">Source code</a></p>
         <p>Built from git revision _GIT_REV_</p>
     </body>
 </html>

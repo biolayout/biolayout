@@ -6,6 +6,7 @@ SRC_DIR=`readlink -f ${SCRIPT_DIR}/..`
 HTML_TEMPLATE="${SCRIPT_DIR}/index.html.template"
 WEBSTART_TEMPLATE="${SCRIPT_DIR}/WebStart.jnlp.template"
 BASE_URL="http://biolayout.org/internal"
+BASE_NAME="BLE3D"
 
 echo SCRIPT_NAME=${SCRIPT_NAME}
 echo SCRIPT_DIR=${SCRIPT_DIR}
@@ -30,18 +31,18 @@ mkdir -p ${BUILD_DIR}
 # Windows
 cd ${SRC_DIR}/nsis-installer
 cat installer.nsi | sed -e "s/_VERSION_/${VERSION}/g" | makensis -
-cp ${SRC_DIR}/nsis-installer/BioLayoutExpress3D-${VERSION}-installer.exe ${BUILD_DIR}
+cp ${SRC_DIR}/nsis-installer/${BASE_NAME}-${VERSION}-installer.exe ${BUILD_DIR}
 
 # OS X
 cd ${SRC_DIR}/target
-genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o ${BUILD_DIR}/BioLayoutExpress3D-${VERSION}.dmg dmg/
+genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o ${BUILD_DIR}/${BASE_NAME}-${VERSION}.dmg dmg/
 
 # Everything else
-cp ${SRC_DIR}/target/BioLayoutExpress3D-${VERSION}.jar ${BUILD_DIR}
+cp ${SRC_DIR}/target/${BASE_NAME}-${VERSION}.jar ${BUILD_DIR}
 
 # Source code
 cd ${SRC_DIR}
-git archive --format zip -9 --output ${BUILD_DIR}/BioLayoutExpress3D-${VERSION}-source.zip ${GIT_REV}
+git archive --format zip -9 --output ${BUILD_DIR}/${BASE_NAME}-${VERSION}-source.zip ${GIT_REV}
 
 cat ${HTML_TEMPLATE} | sed \
     -e "s/_BUILD_NAME_/${BUILD_NAME}/g" \

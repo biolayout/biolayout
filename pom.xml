@@ -4,7 +4,7 @@
 
     <groupId>org.BioLayoutExpress3D</groupId>
     <artifactId>Layout</artifactId>
-    <version>${versionNumber}</version>
+    <version>1.0</version>
     <packaging>jar</packaging>
 
     <name>BioLayout Express 3D</name>

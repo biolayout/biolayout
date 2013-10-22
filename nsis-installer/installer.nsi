@@ -12,6 +12,7 @@
 !define 32BIT_EXE_NAME "${BASE_NAME}-_VERSION_-32bit.exe"
 !define 64BIT_EXE_NAME "${BASE_NAME}-_VERSION_-64bit.exe"
 !define OUTPUT_EXE_NAME "${BASE_NAME}.exe"
+!define OLD_EXE_NAME "BioLayoutExpress3D.exe"
 
 ; General
 Name "${LONG_NAME}"
@@ -128,6 +129,7 @@ Section "-${LONG_NAME}"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${LONG_NAME}" "NoRepair" 1
 
     WriteUninstaller "$INSTDIR\Uninstall.exe"
+    Delete "$INSTDIR\${OLD_EXE_NAME}"
 
     !insertmacro MUI_STARTMENU_WRITE_BEGIN ${BASE_NAME}
 

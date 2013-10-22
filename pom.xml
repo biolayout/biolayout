@@ -4,18 +4,19 @@
 
     <groupId>org.BioLayoutExpress3D</groupId>
     <artifactId>Layout</artifactId>
-    <version>3.1</version>
+    <version>${versionNumber}</version>
     <packaging>jar</packaging>
 
     <name>BioLayout Express 3D</name>
     <url>http://biolayout.org</url>
 
     <properties>
+        <versionNumber>development</versionNumber>
         <jarName>BioLayoutExpress3D</jarName>
-        <outFilename>${jarName}-${project.version}</outFilename>
+        <outFilename>${jarName}-${versionNumber}</outFilename>
         <mainClass>org.BioLayoutExpress3D.Layout</mainClass>
-        <manifestVersion>${project.version}.0.0</manifestVersion>
-        <copyright>? The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2013</copyright>
+        <manifestVersion>1.0.0.0</manifestVersion>
+        <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2013</copyright>
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
@@ -173,7 +174,7 @@
 
     <build>
         <!-- The name for the jar that doesn't include the dependencies -->
-        <finalName>${jarName}-${project.version}-no-deps</finalName>
+        <finalName>${jarName}-${versionNumber}-no-deps</finalName>
 
         <plugins>
             <!-- This unpacks the jars we depend on into the final jar -->
@@ -487,7 +488,7 @@
                                     tofile="${osx.app.dir}/Contents/Info.plist">
                                     <filterset>
                                         <filter token="name" value="${project.name}"/>
-                                        <filter token="version" value="${project.version}"/>
+                                        <filter token="version" value="${versionNumber}"/>
                                         <filter token="mainClass" value="${mainClass}"/>
                                         <filter token="jarFilename" value="${outFilename}.jar"/>
                                     </filterset>
@@ -533,7 +534,7 @@
                                 </replacement>
                                 <replacement>
                                     <token>@version@</token>
-                                    <value>${project.version}</value>
+                                    <value>${versionNumber}</value>
                                 </replacement>
                                 <replacement>
                                     <token>@url@</token>
@@ -542,10 +543,6 @@
                                 <replacement>
                                     <token>@buildTime@</token>
                                     <value>${maven.build.timestamp}</value>
-                                </replacement>
-                                <replacement>
-                                    <token>@buildTag@</token>
-                                    <value>${build.tag}</value>
                                 </replacement>
                                 <replacement>
                                     <token>@debug@</token>

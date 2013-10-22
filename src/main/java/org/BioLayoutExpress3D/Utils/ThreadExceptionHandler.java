@@ -23,9 +23,7 @@ public class ThreadExceptionHandler implements
     @Override
     public void uncaughtException(Thread thread, Throwable e)
     {
-        String build = BuildConfig.VERSION +
-                (!BuildConfig.BUILD_TAG.isEmpty() ? " " + BuildConfig.BUILD_TAG : "") +
-                "(" + BuildConfig.BUILD_TIME + ")";
+        String build = BuildConfig.VERSION + "(" + BuildConfig.BUILD_TIME + ")";
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
         String exceptionText = "Exception \"" + e.toString() + "\" occurred in thread ID " +

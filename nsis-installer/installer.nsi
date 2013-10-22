@@ -6,11 +6,12 @@
 !define LONG_NAME "BioLayout Express 3D"
 !define VERSION "3.1"
 !define BASE_NAME "BioLayoutExpress3D"
+!define SHORT_NAME "BLE3D"
 !define BASE_DIR ".."
 
 !define INSTALLER_NAME "${BASE_NAME}-_VERSION_-installer.exe"
-!define 32BIT_EXE_NAME "${BASE_NAME}-_VERSION_-32bit.exe"
-!define 64BIT_EXE_NAME "${BASE_NAME}-_VERSION_-64bit.exe"
+!define 32BIT_EXE_NAME "${SHORT_NAME}-_VERSION_-32bit.exe"
+!define 64BIT_EXE_NAME "${SHORT_NAME}-_VERSION_-64bit.exe"
 !define OUTPUT_EXE_NAME "${BASE_NAME}.exe"
 
 ; General

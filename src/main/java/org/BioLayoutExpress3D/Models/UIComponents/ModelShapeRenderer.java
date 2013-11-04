@@ -925,6 +925,16 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
     */
     private void renderScene(GL2 gl)
     {
+        if (nodeTexture == null)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("ModelShapeRenderer.renderScene aborted because nodeTexture is null");
+            }
+
+            return;
+        }
+
         if (USE_SHADERS_PROCESS && usePhongNLightsShader)
         {
             gl.glUseProgram(SHADER_PROGRAM[0]);

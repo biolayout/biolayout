@@ -428,20 +428,9 @@ public final class CoreSaver
                 if (numberOfDescriptions == 3)
                     edgeDescription.add( currentEdgeDescription.get(2) );
 
-                // Lyceum thatre boring performance inspiration, only adds one pair of original & switched redundant pairs through the first !contains() check
+                // Only adds one pair of original & switched redundant pairs through the first !contains() check
                 if ( !allEdgeDescriptionsToRemove.contains(currentEdgeDescription) && allEdgeDescriptions.contains(edgeDescription) )
                     allEdgeDescriptionsToRemove.add(edgeDescription);
-
-                /* Elaine's Lyceum theatre boring performance inspiration, through tagging the line as a to-be-removed one, though void strings
-                if ( allEdgeDescriptions.contains(edgeDescription) )
-                {
-                    currentEdgeDescription.clear();
-                    currentEdgeDescription.add("");
-                    currentEdgeDescription.add("");
-                    if (numberOfDescriptions == 3)
-                        currentEdgeDescription.add("0.0");
-                }
-                */
             }
 
             // here are removed all reversed redundant lines
@@ -450,14 +439,11 @@ public final class CoreSaver
             for (ArrayList<String> currentEdgeDescription : allEdgeDescriptions)
             {
                 layoutProgressBarDialog.incrementProgress();
-                // Elaine's Lyceum theatre boring performance inspiration (second part), only untagged lines are written to the file
-                // if ( !( currentEdgeDescription.get(0).equals("") && currentEdgeDescription.get(1).equals("") ) )
-                // {
+
                 if (numberOfDescriptions == 3)
                     fileWriter.write("\"" + currentEdgeDescription.get(0) + "\"\t" + "\"" + currentEdgeDescription.get(1) + "\"\t" + currentEdgeDescription.get(2) + "\n");
                 else
                     fileWriter.write("\"" + currentEdgeDescription.get(0) + "\"\t" + "\"" + currentEdgeDescription.get(1) + "\"" + "\n");
-                // }
             }
         }
         else // normal uncollapsed mode

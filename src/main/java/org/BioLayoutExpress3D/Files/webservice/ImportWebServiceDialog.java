@@ -47,6 +47,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
@@ -101,7 +102,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private DefaultTableModel model; 
     private LayoutFrame frame;
     //private JRadioButton sifRadio, bioPAXRadio;
-    private JLabel numHitsLabel, retrievedLabel, pagesLabel;
+    private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
     private JEditorPane editorPane;
     private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox;
     
@@ -254,6 +255,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         currentPage = 0;
         pagesLabel = new JLabel("Page: " + currentPage);
+        
+        statusLabel = new JLabel("Ready");
+        //statusLabel.setHorizontalAlignment(SwingConstants.CENTER );
+        //statusLabel.setHorizontalAlignment(JLabel.CENTER);
+        //statusLabel.setVerticalAlignment(JLabel.CENTER);
 
         /**********add form fields******************/
         
@@ -274,7 +280,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(new JLabel(), "align label"); //dummy label for empty cell
         fieldPanel.add(organismField, "wrap, span");                
         
-        fieldPanel.add(networkTypeLabel, "newline, ,align label");
+        fieldPanel.add(networkTypeLabel, "newline, align label");
         fieldPanel.add(networkTypeCombo, "wrap");
 
         //datasource checkboxes
@@ -305,11 +311,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
         JPanel hitsPanel = new JPanel();
-        hitsPanel.setLayout(new MigLayout());
+        hitsPanel.setLayout(new MigLayout("debug"));
+        hitsPanel.add(statusLabel, "wrap, span, align center");
         hitsPanel.add(numHitsLabel, "w 33%, sizegroup hits");
         hitsPanel.add(retrievedLabel, "w 33%, sizegroup hits");
-        hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");
-        hitsPanel.setPreferredSize(new Dimension(888, 35));
+        hitsPanel.add(pagesLabel, "w 33%, sizegroup hits wrap");
+        
+        
+        hitsPanel.setPreferredSize(new Dimension(888, 70));
         getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
         
         /**********************************************/
@@ -449,7 +458,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     logger.info("URI is " + uriString);
                     
                     //download option - get format parameter from radio button actionPerformed
-                    JRadioButton formatRadio;
+                    //JRadioButton formatRadio;
                     
                     String fileExtension = ".owl";
                     /*
@@ -596,9 +605,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             //perform search and display search response
             try
             {
+                statusLabel.setText("Searching..."); //TODO timeout
                 ClientResponse<SearchResponse> res = req.get(SearchResponse.class); //TODO progress bar //TODO ErrorResponse
+                int statusCode = res.getStatus();
+                if(statusCode != 200) //search failed
+                {
+                    throw new PathwayCommonsException(statusCode);
+                }
+                
                 SearchResponse searchResponse = res.getEntity();
                 
+                statusLabel.setText("Search complete: success!");
                 totalHits = searchResponse.getNumHits();
                 numHitsLabel.setText("Hits: " + totalHits);
 
@@ -710,10 +727,20 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
                     }
                 }
-            }
-            catch(Exception exception) //TODO ClientResponseFailure - display error dialog
+            }        
+            catch(PathwayCommonsException exception)
             {
                 logger.warning(exception.getMessage());
+                statusLabel.setText("Search error: " + exception.getMessage());
+            }
+            catch(Exception exception)
+            {
+                logger.warning(exception.getMessage());
+                statusLabel.setText("Search failed: generic error");
+            }
+            finally
+            {
+                //TODO release connection
             }
         }
         else if(cancelButton == e.getSource()) {
@@ -725,31 +752,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             //enable/disable organism checkboxes and text field
             //enable/disable organism text field
             enableDisableOrganism(anyOrganismCheckBox.isSelected());
-            /*
-            for(JCheckBox checkBox: organismDisplayCommands.keySet())
-            {
-                if(anyOrganismCheckBox.isSelected())
-                {
-                    checkBox.setSelected(true);
-                    checkBox.setEnabled(false);
-                }
-                else
-                {
-                    checkBox.setSelected(false);
-                    checkBox.setEnabled(true);
-                }
-            }
-            
-            if(anyOrganismCheckBox.isSelected())
-            {
-                organismField.setText("");
-                organismField.setEnabled(false);
-            }
-            else
-            {
-                organismField.setEnabled(true);
-            }
-            * */
         }
         else if(allDatasourceCheckBox == e.getSource())
         {

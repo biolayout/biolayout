@@ -5,13 +5,14 @@
 
 !define LONG_NAME "BioLayout Express 3D"
 !define VERSION "3.1"
-!define BASE_NAME "BioLayoutExpress3D"
+!define BASE_NAME "BLE3D"
 !define BASE_DIR ".."
 
-!define INSTALLER_NAME "${BASE_NAME}-${VERSION}-installer.exe"
-!define 32BIT_EXE_NAME "${BASE_NAME}-${VERSION}-32bit.exe"
-!define 64BIT_EXE_NAME "${BASE_NAME}-${VERSION}-64bit.exe"
+!define INSTALLER_NAME "${BASE_NAME}-_VERSION_-installer.exe"
+!define 32BIT_EXE_NAME "${BASE_NAME}-_VERSION_-32bit.exe"
+!define 64BIT_EXE_NAME "${BASE_NAME}-_VERSION_-64bit.exe"
 !define OUTPUT_EXE_NAME "${BASE_NAME}.exe"
+!define OLD_EXE_NAME "BioLayoutExpress3D.exe"
 
 ; General
 Name "${LONG_NAME}"
@@ -20,14 +21,14 @@ InstallDir "$PROGRAMFILES\${LONG_NAME}"
 InstallDirRegKey HKCU "Software\${LONG_NAME}" ""
 
 ; Product & Version Information
-VIProductVersion "${VERSION}.0.0"
+VIProductVersion "1.0.0.0"
 
 VIAddVersionKey ProductName "${LONG_NAME}"
 VIAddVersionKey Comments "${LONG_NAME}"
 VIAddVersionKey LegalCopyright "© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2013"
 VIAddVersionKey FileDescription "${LONG_NAME}"
-VIAddVersionKey FileVersion "${VERSION}.0.0"
-VIAddVersionKey ProductVersion "${VERSION}.0.0"
+VIAddVersionKey FileVersion "1.0.0.0"
+VIAddVersionKey ProductVersion "1.0.0.0"
 
 ; Installer Icons
 !insertmacro MUI_DEFAULT MUI_ICON "${BASE_DIR}/src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico"
@@ -128,6 +129,7 @@ Section "-${LONG_NAME}"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${LONG_NAME}" "NoRepair" 1
 
     WriteUninstaller "$INSTDIR\Uninstall.exe"
+    Delete "$INSTDIR\${OLD_EXE_NAME}"
 
     !insertmacro MUI_STARTMENU_WRITE_BEGIN ${BASE_NAME}
 

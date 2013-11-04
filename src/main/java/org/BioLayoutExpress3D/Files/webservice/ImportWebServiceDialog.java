@@ -26,6 +26,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -99,7 +100,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JComboBox<String> networkTypeCombo;
     private DefaultTableModel model; 
     private LayoutFrame frame;
-    private JRadioButton sifRadio, bioPAXRadio;
+    //private JRadioButton sifRadio, bioPAXRadio;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel;
     private JEditorPane editorPane;
     private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox;
@@ -207,7 +208,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         organismDisplayCommands.put(new JCheckBox("S. cervisiae"), "4932");
         
         anyOrganismCheckBox = new JCheckBox("Any");
+        anyOrganismCheckBox.setSelected(true);
         anyOrganismCheckBox.addActionListener(this);
+        enableDisableOrganism(true);
         
         //Network Type Drop Down
         networkTypeCombo = new JComboBox<String>();
@@ -226,20 +229,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
         
         allDatasourceCheckBox = new JCheckBox("All");
+        allDatasourceCheckBox.setSelected(true);
         allDatasourceCheckBox.addActionListener(this);
+        enableDisableDatasource(true);
         
         //SIF/BioPax Radio Buttons
+        /*
         sifRadio = new JRadioButton("SIF");
         sifRadio.setActionCommand(FORMAT_SIF);
         bioPAXRadio = new JRadioButton("BioPAX");
         bioPAXRadio.setActionCommand(FORMAT_BIOPAX);
         bioPAXRadio.setSelected(true); //default selection BioPAX
         JLabel formatLabel = new JLabel("Format", JLabel.TRAILING);    
-        
+        */
+        /*
         final ButtonGroup downloadOptionGroup = new ButtonGroup();
         downloadOptionGroup.add(bioPAXRadio);
         downloadOptionGroup.add(sifRadio);
-
+        */
         totalHits = 0;
         numHitsLabel = new JLabel("Hits: " + totalHits);
 
@@ -280,7 +287,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
         datasourcePanel.add(allDatasourceCheckBox);
         fieldPanel.add(datasourcePanel, "wrap");
-       
+       /*
         fieldPanel.add(formatLabel, "align label");
         
         JPanel formatPanel = new JPanel();
@@ -288,7 +295,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         formatPanel.add(bioPAXRadio);
         formatPanel.add(sifRadio);
         fieldPanel.add(formatPanel, "wrap");
-        
+        */
         fieldPanel.add(this.searchButton, "tag ok, span, split 4, sizegroup bttn");
         fieldPanel.add(this.previousButton, "tag back, sizegroup bttn");
         fieldPanel.add(this.nextButton, "tag next, sizegroup bttn");
@@ -443,7 +450,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     
                     //download option - get format parameter from radio button actionPerformed
                     JRadioButton formatRadio;
-                    String fileExtension;
+                    
+                    String fileExtension = ".owl";
+                    /*
                     if(sifRadio.isSelected())
                     {
                         formatRadio = sifRadio;
@@ -455,7 +464,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         fileExtension = ".owl";
                     }
                     String formatParameter = formatRadio.getActionCommand();
-                    
+                    */
+                    String formatParameter  = FORMAT_BIOPAX;
+                                        
                     String hitName = target.getModel().getValueAt(modelRow, 0).toString(); //search hit name
                     String fileName = hitName + fileExtension; //name of .owl or .sif file to be created
 
@@ -627,7 +638,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 
                 model.setRowCount(0); //clear previous search results
                 
-                //map of database uri substrings to display names 
+                //map of search hit database names to display names for search results
                 Map<String, String> databaseUriDisplay = new HashMap<String, String>();
                 databaseUriDisplay.put("reactome", "Reactome");
                 databaseUriDisplay.put("pid", "NCI Nature");
@@ -711,7 +722,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
         else if(anyOrganismCheckBox == e.getSource()) //"Any" organism checkbox has been checked or unchecked
         {
-            //enable/disable organism checkboxes
+            //enable/disable organism checkboxes and text field
+            //enable/disable organism text field
+            enableDisableOrganism(anyOrganismCheckBox.isSelected());
+            /*
             for(JCheckBox checkBox: organismDisplayCommands.keySet())
             {
                 if(anyOrganismCheckBox.isSelected())
@@ -726,7 +740,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
             
-            //enable/disable organism text field
             if(anyOrganismCheckBox.isSelected())
             {
                 organismField.setText("");
@@ -736,23 +749,67 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             {
                 organismField.setEnabled(true);
             }
+            * */
         }
         else if(allDatasourceCheckBox == e.getSource())
         {
-            for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
+            enableDisableDatasource(allDatasourceCheckBox.isSelected());
+        }
+    }
+    
+    private void enableDisableOrganism(boolean anySelected)
+    {
+        //enable/disable organism checkboxes
+        for(JCheckBox checkBox: organismDisplayCommands.keySet())
+        {
+            if(anySelected)
             {
-                if(allDatasourceCheckBox.isSelected())
-                {
-                    checkBox.setSelected(true);
-                    checkBox.setEnabled(false);
-                }
-                else
-                {
-                    checkBox.setSelected(false);
-                    checkBox.setEnabled(true);
-                }
+                checkBox.setSelected(true);
+                checkBox.setEnabled(false);
+            }
+            else
+            {
+                checkBox.setSelected(false);
+                checkBox.setEnabled(true);
             }
         }
+
+        //enable/disable organism text field
+        if(anySelected)
+        {
+            organismField.setText("");
+            organismField.setEnabled(false);
+        }
+        else
+        {
+            organismField.setEnabled(true);
+        }
+    }
+    
+    private void enableDisableDatasource(boolean allSelected)
+    {
+        for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
+        {
+            if(allSelected)
+            {
+                checkBox.setSelected(true);
+                checkBox.setEnabled(false);
+            }
+            else
+            {
+                checkBox.setSelected(false);
+                checkBox.setEnabled(true);
+            }
+        }
+    }
+    
+    private static void selectAndDisableCheckBoxes(Collection<JCheckBox> checkBoxes)
+    {
+        for(JCheckBox checkBox: checkBoxes)
+        {
+            
+        }
+        
     }
     
     /**

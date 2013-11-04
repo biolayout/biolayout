@@ -4,7 +4,7 @@
 
     <groupId>org.BioLayoutExpress3D</groupId>
     <artifactId>Layout</artifactId>
-    <version>3.1</version>
+    <version>3.2</version>
     <packaging>jar</packaging>
 
     <name>BioLayout Express 3D</name>
@@ -603,7 +603,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skip>false</skip>
+                    <skip>true</skip>
                     <archive>${project.build.directory}/${outFilename}.jar</archive>
                     <keystore>keystore.jks</keystore>
                     <alias>selfsigned</alias>

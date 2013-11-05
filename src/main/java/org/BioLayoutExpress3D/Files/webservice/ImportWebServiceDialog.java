@@ -67,9 +67,11 @@ import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchHit;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchResponse;
 import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpEntity;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientRequestFactory;
 import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 
 /**
  * Dialogue for querying remote databases via web service
@@ -603,17 +605,18 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
 
             //perform search and display search response
+            ClientResponse<SearchResponse> searchClientResponse = null;
             try
             {
                 statusLabel.setText("Searching..."); //TODO timeout
-                ClientResponse<SearchResponse> res = req.get(SearchResponse.class); //TODO progress bar //TODO ErrorResponse
-                int statusCode = res.getStatus();
+                searchClientResponse = req.get(SearchResponse.class); //TODO progress bar //TODO ErrorResponse
+                int statusCode = searchClientResponse.getStatus();
                 if(statusCode != 200) //search failed
                 {
                     throw new PathwayCommonsException(statusCode);
                 }
                 
-                SearchResponse searchResponse = res.getEntity();
+                SearchResponse searchResponse = searchClientResponse.getEntity();
                 
                 statusLabel.setText("Search complete: success!");
                 totalHits = searchResponse.getNumHits();
@@ -727,11 +730,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
                     }
                 }
-            }        
+            } //end try        
             catch(PathwayCommonsException exception)
             {
                 logger.warning(exception.getMessage());
+                model.setRowCount(0); //clear previous search results
                 statusLabel.setText("Search error: " + exception.getMessage());
+            }
+            catch(IllegalStateException exception)
+            {
+                logger.warning(exception.getMessage());
+                statusLabel.setText("Search failed: connection not released");
             }
             catch(Exception exception)
             {
@@ -740,7 +749,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             finally
             {
-                //TODO release connection
+                //release connection and close socket to stop IllegalStateException being generated following 460 error
+                searchClientResponse.releaseConnection(); 
+
+                //TODO search button activated by return key
+                //TODO clear previous results on 460 error
             }
         }
         else if(cancelButton == e.getSource()) {

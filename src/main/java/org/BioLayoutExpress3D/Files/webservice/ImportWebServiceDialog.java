@@ -17,6 +17,7 @@ import gov.nih.nlm.ncbi.soap.eutils.efetch_taxonomy.TaxonType;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -26,6 +27,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -48,6 +51,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
@@ -107,7 +111,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
     private JEditorPane editorPane;
     private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox;
-    
+    private Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+    private Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+  
     private List<SearchHit> searchHits; //retrieved search hits
     private int currentPage;
     private int totalHits; //total number of search query matches
@@ -215,12 +221,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         anyOrganismCheckBox.addActionListener(this);
         enableDisableOrganism(true);
         
-        //Network Type Drop Down
-        networkTypeCombo = new JComboBox<String>();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "EntityReference", "Top Pathways" }));
-        JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
-        networkTypeLabel.setLabelFor(networkTypeCombo);
-        
         //Map checkboxes to web service commands
         datasourceDisplayCommands = new LinkedHashMap<JCheckBox, String>();
         datasourceDisplayCommands.put(new JCheckBox("Reactome"), "reactome");
@@ -236,6 +236,12 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         allDatasourceCheckBox.addActionListener(this);
         enableDisableDatasource(true);
         
+        //Network Type Drop Down
+        networkTypeCombo = new JComboBox<String>();
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "EntityReference", "Top Pathways" }));
+        JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
+        networkTypeLabel.setLabelFor(networkTypeCombo);
+
         //SIF/BioPax Radio Buttons
         /*
         sifRadio = new JRadioButton("SIF");
@@ -250,6 +256,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         downloadOptionGroup.add(bioPAXRadio);
         downloadOptionGroup.add(sifRadio);
         */
+        
+        //labels for search info
         totalHits = 0;
         numHitsLabel = new JLabel("Hits: " + totalHits);
 
@@ -259,9 +267,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         pagesLabel = new JLabel("Page: " + currentPage);
         
         statusLabel = new JLabel("Ready");
-        //statusLabel.setHorizontalAlignment(SwingConstants.CENTER );
-        //statusLabel.setHorizontalAlignment(JLabel.CENTER);
-        //statusLabel.setVerticalAlignment(JLabel.CENTER);
 
         /**********add form fields******************/
         
@@ -282,9 +287,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(new JLabel(), "align label"); //dummy label for empty cell
         fieldPanel.add(organismField, "wrap, span");                
         
-        fieldPanel.add(networkTypeLabel, "newline, align label");
-        fieldPanel.add(networkTypeCombo, "wrap");
-
         //datasource checkboxes
         fieldPanel.add(datasourceLabel);
         JPanel datasourcePanel = new JPanel();
@@ -295,7 +297,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
         datasourcePanel.add(allDatasourceCheckBox);
         fieldPanel.add(datasourcePanel, "wrap");
-       /*
+
+        //network type
+        fieldPanel.add(networkTypeLabel, "newline, align label");
+        fieldPanel.add(networkTypeCombo, "wrap");
+/*
         fieldPanel.add(formatLabel, "align label");
         
         JPanel formatPanel = new JPanel();
@@ -309,7 +315,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(this.nextButton, "tag next, sizegroup bttn");
         fieldPanel.add(this.cancelButton, "tag cancel, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(888, 250));
+        fieldPanel.setPreferredSize(new Dimension(888, 205));
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
         JPanel hitsPanel = new JPanel();
@@ -320,7 +326,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         hitsPanel.add(pagesLabel, "w 33%, sizegroup hits wrap");
         
         
-        hitsPanel.setPreferredSize(new Dimension(888, 70));
+        hitsPanel.setPreferredSize(new Dimension(888, 58));
         getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
         
         /**********************************************/
@@ -349,7 +355,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         }
                         catch(Exception exception)
                         {
-                            logger.warning("Cannot open web browser: " + exception.getMessage()); //TODO error alert
+                            logger.warning("Cannot open web browser: " + exception.getMessage()); //TODO error alert                            
                         }
                     }
                 }
@@ -382,7 +388,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         ListSelectionModel rowSelectionModel = table.getSelectionModel();
-        ListSelectionModel rowSM = table.getSelectionModel();
         rowSelectionModel.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
                 //Ignore extra messages.
@@ -441,7 +446,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         tc.setPreferredWidth(width);
 */
         
-        final LayoutFrame localFrame = frame; //local reference can be referenced from inner class
+        //final LayoutFrame localFrame = frame; //local reference can be referenced from inner class
         
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) 
@@ -459,63 +464,31 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     String uriString = hit.getUri();
                     logger.info("URI is " + uriString);
                     
-                    //download option - get format parameter from radio button actionPerformed
-                    //JRadioButton formatRadio;
-                    
                     String fileExtension = ".owl";
-                    /*
-                    if(sifRadio.isSelected())
-                    {
-                        formatRadio = sifRadio;
-                        fileExtension = ".sif";
-                    }
-                    else
-                    {
-                        formatRadio = bioPAXRadio;
-                        fileExtension = ".owl";
-                    }
-                    String formatParameter = formatRadio.getActionCommand();
-                    */
                     String formatParameter  = FORMAT_BIOPAX;
                                         
                     String hitName = target.getModel().getValueAt(modelRow, 0).toString(); //search hit name
-                    String fileName = hitName + fileExtension; //name of .owl or .sif file to be created
-
-                    ClientRequest req = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT);
-                    req
-                        .pathParameter("command", COMMAND_GET)
-                        .queryParameter("uri", uriString)
-                        .queryParameter("format", formatParameter);
+                    String fileName = hitName + fileExtension; //name of .owl file to be created
+                    
                     try
                     {
-                        ClientResponse<String> res = req.get(String.class);
-                        String responseString = res.getEntity();
-                        logger.info(res.getEntity());
-                        logger.info("DataFolder: " + DataFolder.get());
-                        
-                        //create directory to store downloaded file
-                        File importDir = new File(DataFolder.get(), DIRECTORY);
-                        if(!importDir.exists())
-                        {
-                            importDir.mkdir();
-                        }
-                        
-                        //create file and save web service data
-                        File importFile = new File(importDir, fileName);
-                        logger.info("Writing to file " + importFile);
-                        FileUtils.writeStringToFile(importFile, responseString);
-
-                        //display file
-                        logger.info("Opening file " + importFile);
-                        
-                        localFrame.requestFocus();
-                        localFrame.toFront();                        
-                        localFrame.loadDataSet(importFile);
+                        get(uriString, formatParameter, fileName);
+                        statusLabel.setText("Success: Downloaded file " + fileName + " from Pathway Commons");
+                    }
+                    catch(PathwayCommonsException exception)
+                    {
+                        logger.warning(exception.getMessage());
+                        statusLabel.setText("Fetch error: " + exception.getMessage());
+                    }
+                    catch(IOException exception) //can't save file or offline
+                    {
+                        logger.warning(exception.getMessage());
+                        statusLabel.setText("Fetch error: Unable to retrieve file: " + fileName + " from Pathway Commons");
                     }
                     catch(Exception exception)
                     {
-                        logger.warning("Could not retrieve " + fileName + " from Pathway Commons CPath2");
                         logger.warning(exception.getMessage());
+                        statusLabel.setText("Fetch error: Unable to get " + fileName + " from Pathway Commons"); 
                     }
                }
             }
@@ -532,19 +505,68 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         setLocationRelativeTo(frame);
         setVisible(true);
     }
+    
+    /**
+     * Performs a GET operation on Pathway Commons cPath2 REST web service.
+     * Downloads pathway file (OWL/SIF) to the download directory
+     * @param uriString
+     * @param formatParameter
+     * @param fileName 
+     * @throws PathwayCommonsException - when HTTP status code is not 200
+     * @throws IOException - if OWL file cannot be written
+     * @throws Exception - web service does not respond
+     */
+    private void get(String uriString, String formatParameter, String fileName) throws PathwayCommonsException, IOException, Exception
+    {
+        ClientRequest req = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT);
+        req
+            .pathParameter("command", COMMAND_GET)
+            .queryParameter("uri", uriString)
+            .queryParameter("format", formatParameter);
+        
+        ClientResponse<String> getClientResponse = req.get(String.class); //throws Exception
+        int statusCode = getClientResponse.getStatus();
+        if(statusCode != 200) //search failed
+        {
+            throw new PathwayCommonsException(statusCode);
+        }
 
+        String responseString = getClientResponse.getEntity();
+        logger.info(getClientResponse.getEntity());
+        logger.info("DataFolder: " + DataFolder.get());
+
+        //create directory to store downloaded file
+        File importDir = new File(DataFolder.get(), DIRECTORY);
+        if(!importDir.exists())
+        {
+            importDir.mkdir();
+        }
+
+        //create file and save web service data
+        File importFile = new File(importDir, fileName);
+        logger.info("Writing to file " + importFile);
+        FileUtils.writeStringToFile(importFile, responseString); //throws IOException
+
+        //display file
+        logger.info("Opening file " + importFile);
+
+        frame.requestFocus();
+        frame.toFront();                        
+        frame.loadDataSet(importFile);
+    }
+
+    @Override
     public void actionPerformed(ActionEvent e) 
     {
         if(searchButton == e.getSource() || nextButton == e.getSource() || previousButton == e.getSource()) 
         {
-            
-            //TODO previous/next should remember last search params in case user changes
+              //TODO previous/next should remember last search params in case user changes
             String networkType = this.networkTypeCombo.getSelectedItem().toString();
 
-            ClientRequest req = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
+            ClientRequest searchClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
             if(networkType.equals("Top Pathways"))
             {
-                req
+                searchClientRequest
                     .pathParameter("command", COMMAND_TOP_PATHWAYS)
                     .pathParameter("format", "xml");
             }
@@ -553,7 +575,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 String searchTerm = searchField.getText();
                 String organism = organismField.getText();
 
-                req
+                searchClientRequest
                     .pathParameter("command", COMMAND_SEARCH)
                     .pathParameter("format", "xml")
                     .queryParameter("q", searchTerm)
@@ -562,7 +584,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 //TODO muliple organisms with separator?
                 if(!organism.equals(""))
                 {
-                    req.queryParameter("organism", organism);
+                    searchClientRequest.queryParameter("organism", organism);
                 }
                 
                 //page to retrieve
@@ -575,7 +597,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 {
                     pageParameter--;
                 }
-                req.queryParameter("page", pageParameter);
+                searchClientRequest.queryParameter("page", pageParameter);
 
                 //add parameters for datasource checkboxes
                 if(!allDatasourceCheckBox.isSelected())
@@ -585,7 +607,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                          if(checkBox.isSelected())
                          {
                              String datasourceParameter = entry.getValue();
-                             req.queryParameter("datasource", datasourceParameter);                        
+                             searchClientRequest.queryParameter("datasource", datasourceParameter);                        
                          }
                     }            
                 }
@@ -598,163 +620,15 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                          if(checkBox.isSelected())
                          {
                              String organismParameter = entry.getValue();
-                             req.queryParameter("organism", organismParameter);                        
+                             searchClientRequest.queryParameter("organism", organismParameter);                        
                          }
                     }
                 }
             }
+          
+            
+            search(searchClientRequest);
 
-            //perform search and display search response
-            ClientResponse<SearchResponse> searchClientResponse = null;
-            try
-            {
-                statusLabel.setText("Searching..."); //TODO timeout
-                searchClientResponse = req.get(SearchResponse.class); //TODO progress bar //TODO ErrorResponse
-                int statusCode = searchClientResponse.getStatus();
-                if(statusCode != 200) //search failed
-                {
-                    throw new PathwayCommonsException(statusCode);
-                }
-                
-                SearchResponse searchResponse = searchClientResponse.getEntity();
-                
-                statusLabel.setText("Search complete: success!");
-                totalHits = searchResponse.getNumHits();
-                numHitsLabel.setText("Hits: " + totalHits);
-
-                searchHits = searchResponse.getSearchHit();
-                int numRetrieved = searchHits.size();
-                retrievedLabel.setText("Retrieved: " + numRetrieved);
-                
-                int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
-                
-                //display current page number
-                currentPage = searchResponse.getPageNo();
-                pagesLabel.setText("Page: " + currentPage);
-                
-                //INT[(numHits-1)/numHitsPerPage+1].
-                //totalPages = 
-                
-                //enable/disable previous button
-                if(currentPage > 0) //on first page, disable previous
-                {
-                    previousButton.setEnabled(true);
-                }
-                else
-                {
-                    previousButton.setEnabled(false);
-                }
-
-                //enable/disable next button
-                int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
-                if((currentPage + 1) < numPages) //pages indexed from zero
-                {
-                    nextButton.setEnabled(true);
-                }
-                else
-                {
-                    nextButton.setEnabled(false);
-                }
-                
-                model.setRowCount(0); //clear previous search results
-                
-                //map of search hit database names to display names for search results
-                Map<String, String> databaseUriDisplay = new HashMap<String, String>();
-                databaseUriDisplay.put("reactome", "Reactome");
-                databaseUriDisplay.put("pid", "NCI Nature");
-                databaseUriDisplay.put("psp", "PhosphoSitePlus");
-                databaseUriDisplay.put("humancyc", "HumanCyc");
-                databaseUriDisplay.put("hprd", "HPRD");
-                databaseUriDisplay.put("panther", "PANTHER");
-
-                Joiner joiner = Joiner.on(',').skipNulls();
-                
-                for(SearchHit hit : searchHits)
-                {
-                    List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
-                    
-                    //extract organism ID for each organism URI
-                    String[] organismArray = organismList.toArray(new String[0]);
-                    for (int i = 0; i < organismArray.length; i++)
-                    {
-                        String organismString = organismArray[i];
-                        organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-                        //add to NCBI ID/name map for later web service lookup if not already added
-                        if(!organismIdNameMap.containsKey(organismArray[i]))
-                        {
-                            organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
-                        }
-                    }
-                    
-                    //display comma-separated list of organisms
-                    String joinedOrganisms = joiner.join(organismArray);
-                    
-                    //display datasource
-                    List<String> databases = hit.getDataSource();
-                    String[] databaseArray = databases.toArray(new String[0]);
-                    for(int i = 0; i < databaseArray.length; i++)
-                    {
-                        String databaseUri = databaseArray[i];
-                        
-                        //replace with database real name if found in map
-                        for (Map.Entry<String, String> entry : databaseUriDisplay.entrySet()) 
-                        {
-                            String databaseString = entry.getKey();
-                            if(databaseUri.contains(databaseString))
-                            {
-                                databaseArray[i] = entry.getValue();
-                            }
-                        }
-                    }
-                    String joinedDatabases = joiner.join(databaseArray);
-                    
-                    //display BioPAX Class
-                    
-                    model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
-                }
-                
-                if(this.organismIdNameMap.size() > 0)
-                {
-                    //populate organism scientific names from NCBI web service
-                    EFetchTaxonService service = new EFetchTaxonService();
-                    EUtilsServiceSoap serviceSoap = service.getEUtilsServiceSoap();
-                    ObjectFactory objectFactory = new ObjectFactory();
-                    EFetchRequest requ = objectFactory.createEFetchRequest();
-                    String eFetchQuery = joiner.join(this.organismIdNameMap.keySet()); //comma-separated organism IDs
-                    requ.setId(eFetchQuery);
-                    EFetchResult resp = serviceSoap.runEFetch(requ);
-                    logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
-                    List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
-                    for(TaxonType taxonType : taxon)
-                    {
-                        organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
-                    }
-                }
-            } //end try        
-            catch(PathwayCommonsException exception)
-            {
-                logger.warning(exception.getMessage());
-                model.setRowCount(0); //clear previous search results
-                statusLabel.setText("Search error: " + exception.getMessage());
-            }
-            catch(IllegalStateException exception)
-            {
-                logger.warning(exception.getMessage());
-                statusLabel.setText("Search failed: connection not released");
-            }
-            catch(Exception exception)
-            {
-                logger.warning(exception.getMessage());
-                statusLabel.setText("Search failed: generic error");
-            }
-            finally
-            {
-                //release connection and close socket to stop IllegalStateException being generated following 460 error
-                searchClientResponse.releaseConnection(); 
-
-                //TODO search button activated by return key
-                //TODO clear previous results on 460 error
-            }
         }
         else if(cancelButton == e.getSource()) {
             logger.info("User cancelled.");
@@ -769,6 +643,187 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         else if(allDatasourceCheckBox == e.getSource())
         {
             enableDisableDatasource(allDatasourceCheckBox.isSelected());
+        }
+    }
+    
+    /**
+     * Runs Pathway Commons REST web service SEARCH
+     * @param searchClientRequest - contains search parameters
+     */
+    private void search(ClientRequest searchClientRequest)
+    {
+        //perform search and display search response
+
+        ClientResponse<SearchResponse> searchClientResponse = null;
+        try
+        {
+           statusLabel.setText("Searching..."); //TODO timeout
+           this.getRootPane().setCursor(waitCursor);
+           
+           /* TODO run search in thread
+           SwingWorker searchWorker = new SwingWorker<SearchResponse, Void>()
+           {
+               public SearchResponse doInBackground()
+               {
+                   
+               }
+               
+               public void done()
+               {
+                   
+               }
+            };
+           */
+           searchClientResponse = searchClientRequest.get(SearchResponse.class);
+           int statusCode = searchClientResponse.getStatus();
+           if(statusCode != 200) //search failed
+           {
+               throw new PathwayCommonsException(statusCode);
+           }
+           SearchResponse searchResponse = searchClientResponse.getEntity();
+
+           statusLabel.setText("Search complete: success!");
+           totalHits = searchResponse.getNumHits();
+           numHitsLabel.setText("Hits: " + totalHits);
+
+           searchHits = searchResponse.getSearchHit();
+           int numRetrieved = searchHits.size();
+           retrievedLabel.setText("Retrieved: " + numRetrieved);
+
+           int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
+
+           //display current page number
+           currentPage = searchResponse.getPageNo();
+           pagesLabel.setText("Page: " + currentPage);
+
+           //INT[(numHits-1)/numHitsPerPage+1].
+           //totalPages = 
+
+           //enable/disable previous button
+           if(currentPage > 0) //on first page, disable previous
+           {
+               previousButton.setEnabled(true);
+           }
+           else
+           {
+               previousButton.setEnabled(false);
+           }
+
+           //enable/disable next button
+           int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
+           if((currentPage + 1) < numPages) //pages indexed from zero
+           {
+               nextButton.setEnabled(true);
+           }
+           else
+           {
+               nextButton.setEnabled(false);
+           }
+
+           model.setRowCount(0); //clear previous search results
+
+           //map of search hit database names to display names for search results
+           Map<String, String> databaseUriDisplay = new HashMap<String, String>();
+           databaseUriDisplay.put("reactome", "Reactome");
+           databaseUriDisplay.put("pid", "NCI Nature");
+           databaseUriDisplay.put("psp", "PhosphoSitePlus");
+           databaseUriDisplay.put("humancyc", "HumanCyc");
+           databaseUriDisplay.put("hprd", "HPRD");
+           databaseUriDisplay.put("panther", "PANTHER");
+
+           Joiner joiner = Joiner.on(',').skipNulls();
+
+           for(SearchHit hit : searchHits)
+           {
+               List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
+
+               //extract organism ID for each organism URI
+               String[] organismArray = organismList.toArray(new String[0]);
+               for (int i = 0; i < organismArray.length; i++)
+               {
+                   String organismString = organismArray[i];
+                   organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+                   //add to NCBI ID/name map for later web service lookup if not already added
+                   if(!organismIdNameMap.containsKey(organismArray[i]))
+                   {
+                       organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
+                   }
+               }
+
+               //display comma-separated list of organisms
+               String joinedOrganisms = joiner.join(organismArray);
+
+               //display datasource
+               List<String> databases = hit.getDataSource();
+               String[] databaseArray = databases.toArray(new String[0]);
+               for(int i = 0; i < databaseArray.length; i++)
+               {
+                   String databaseUri = databaseArray[i];
+
+                   //replace with database real name if found in map
+                   for (Map.Entry<String, String> entry : databaseUriDisplay.entrySet()) 
+                   {
+                       String databaseString = entry.getKey();
+                       if(databaseUri.contains(databaseString))
+                       {
+                           databaseArray[i] = entry.getValue();
+                       }
+                   }
+               }
+               String joinedDatabases = joiner.join(databaseArray);
+
+               //display BioPAX Class
+
+               model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
+           }
+
+           if(this.organismIdNameMap.size() > 0)
+           {
+               //populate organism scientific names from NCBI web service
+               EFetchTaxonService service = new EFetchTaxonService();
+               EUtilsServiceSoap serviceSoap = service.getEUtilsServiceSoap();
+               ObjectFactory objectFactory = new ObjectFactory();
+               EFetchRequest requ = objectFactory.createEFetchRequest();
+               String eFetchQuery = joiner.join(this.organismIdNameMap.keySet()); //comma-separated organism IDs
+               requ.setId(eFetchQuery);
+               EFetchResult resp = serviceSoap.runEFetch(requ);
+               logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
+               List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
+               for(TaxonType taxonType : taxon)
+               {
+                   organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
+               }
+           }
+        } //end try        
+        catch(PathwayCommonsException exception)
+        {
+           logger.warning(exception.getMessage());
+           model.setRowCount(0); //clear previous search results
+           statusLabel.setText("Search error: " + exception.getMessage());
+        }
+        catch(IllegalStateException exception)
+        {
+           logger.warning(exception.getMessage());
+           statusLabel.setText("Search failed: connection not released");
+        }
+        catch(UnknownHostException exception) //offline or Pathway Commons server down
+        {
+           logger.warning(exception.getMessage());
+           statusLabel.setText("Search failed: unable to reach Pathway Commons");
+        }
+        catch(Exception exception)
+        {
+           logger.warning(exception.getMessage());
+           statusLabel.setText("Search failed: generic error");
+        }
+        finally
+        {
+           //release connection and close socket to stop IllegalStateException being generated following 460 error
+           if(searchClientResponse != null)
+           {
+               searchClientResponse.releaseConnection(); 
+           }
+           this.getRootPane().setCursor(defaultCursor);
         }
     }
     

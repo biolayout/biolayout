@@ -44,7 +44,11 @@ public class PathwayCommonsException extends IOException
                 
             case 452:
                 message = "Bad request (illegal or no arguments)";
-                break;                
+                break;       
+                
+            case 500:
+                message = "Internal server error";
+                break;       
 
             default:
                 message = "Unable to reach Pathway Commons";

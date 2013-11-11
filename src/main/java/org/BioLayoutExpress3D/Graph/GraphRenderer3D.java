@@ -3352,6 +3352,9 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
         {
             takeHighResScreenshot = false;
 
+            // Reset canvas size
+            this.reshape(graph, 0, 0, width, height);
+
             CENTER_VIEW_CAMERA.setProjection(gl);
         }
     }

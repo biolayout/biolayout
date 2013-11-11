@@ -744,6 +744,9 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
         {
             takeHighResScreenshot = false;
 
+            // Reset canvas size
+            this.reshape(graph, 0, 0, width, height);
+
             // set back project matrix
             gl.glMatrixMode(GL_PROJECTION);
             gl.glLoadIdentity();

@@ -369,7 +369,7 @@ public abstract class ModelShape
     */
     protected void drawModelShapeInImmediateMode(GL2 gl)
     {
-        gl.glBegin(modelSettings.usingPatches ? GL_PATCHES : GL_TRIANGLES);
+        gl.glBegin(GL_TRIANGLES);
         int texCoordIndex = 0;
         for (int vertexIndex = 0; vertexIndex < vertices.length; vertexIndex += 3)
         {
@@ -412,7 +412,7 @@ public abstract class ModelShape
         if (interleavedArrayCoordsBuffer != null)
         {
             gl.glInterleavedArrays(mode, 0, interleavedArrayCoordsBuffer);
-            gl.glDrawArrays(modelSettings.usingPatches ? GL_PATCHES : GL_TRIANGLES, 0, vertices.length / 3);
+            gl.glDrawArrays(GL_TRIANGLES, 0, vertices.length / 3);
         }
     }
 
@@ -430,7 +430,7 @@ public abstract class ModelShape
         if (allVertex3DCoordsBuffer != null)
         {
             gl.glVertexPointer(3, GL_FLOAT, 0, allVertex3DCoordsBuffer);
-            gl.glDrawArrays(modelSettings.usingPatches ? GL_PATCHES : GL_TRIANGLES, 0, vertices.length / 3);
+            gl.glDrawArrays(GL_TRIANGLES, 0, vertices.length / 3);
         }
     }
 
@@ -460,7 +460,7 @@ public abstract class ModelShape
         {
             gl.glBindBuffer( GL_ARRAY_BUFFER, VBOVerticesID.get(0) );
             gl.glVertexPointer(3, GL_FLOAT, 0, 0);
-            gl.glDrawArrays(modelSettings.usingPatches ? GL_PATCHES : GL_TRIANGLES, 0, vertices.length / 3);
+            gl.glDrawArrays(GL_TRIANGLES, 0, vertices.length / 3);
         }
 
         // unbind VBO to let other Vertex Arrays work ok throughout BL

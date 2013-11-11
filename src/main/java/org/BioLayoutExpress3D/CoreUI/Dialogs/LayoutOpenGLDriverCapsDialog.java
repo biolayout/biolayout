@@ -100,8 +100,6 @@ public final class LayoutOpenGLDriverCapsDialog extends JDialog implements Actio
                 dialogSizeY += 20;
             if (USE_GL_EXT_FRAMEBUFFER_OBJECT)
                 dialogSizeY += 20;
-            if (USE_GL_ARB_GEOMETRY_SHADER4)
-                dialogSizeY += 20;
         }
 
         this.getContentPane().add(topPanel);
@@ -133,8 +131,6 @@ public final class LayoutOpenGLDriverCapsDialog extends JDialog implements Actio
         textArea.append("GL_MAX_TEXTURE_SIZE:\t\t\t" + GL_MAX_TEXTURE_SIZE_INTEGER + "\n");
         if (USE_GL_EXT_FRAMEBUFFER_OBJECT)
             textArea.append("GL_MAX_RENDERBUFFER_SIZE_EXT:\t\t" + GL_MAX_RENDERBUFFER_SIZE_EXT_INTEGER + "\n");
-        if (USE_GL_ARB_GEOMETRY_SHADER4)
-            textArea.append("GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB:\t" + GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB_INTEGER + "\n");
         textArea.append("\n");
         textArea.append("GL GPU SHADER MODEL 4 SUPPORT:\t\t" + ( (USE_GL_EXT_GPU_SHADER4) ? "YES" : "NO" ) + "\n");
         textArea.append("GL GPU SHADER MODEL 5 SUPPORT:\t\t" + ( (USE_GL_ARB_GPU_SHADER5) ? "YES" : "NO" ) + "\n");

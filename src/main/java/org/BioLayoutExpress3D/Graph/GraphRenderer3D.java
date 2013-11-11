@@ -156,7 +156,7 @@ final class GraphRenderer3D implements GraphInterface // package access
             float px = checkForNodeTexturing() ? ( ( !SHOW_3D_ENVIRONMENT_MAPPING.get() ) ? nodeTexture.getImageWidth() : renderToTexture.getWidth() ) : 1.0f;
             float py = checkForNodeTexturing() ? ( ( !SHOW_3D_ENVIRONMENT_MAPPING.get() ) ? nodeTexture.getImageHeight() : renderToTexture.getHeight() ) : 1.0f;
 
-            shaderSFXsCurrentReference = (isNodesShading || !USE_GL_ARB_GEOMETRY_SHADER4) ? shaderLightingSFXsNodes : ( WIREFRAME_SELECTION_MODE.get() ) ? shaderLightingSFXsSelectedNodesNormalsGeometry : shaderLightingSFXsSelectedNodes;
+            shaderSFXsCurrentReference = shaderLightingSFXsNodes;
             if (!isAutoRendering)
             {
                 if ( MATERIAL_ANIMATED_SHADING.get() )
@@ -432,11 +432,6 @@ final class GraphRenderer3D implements GraphInterface // package access
     {
         // only instantiate them once in first switch
         if (shaderLightingSFXsNodes == null) shaderSFXsCurrentReference = shaderLightingSFXsNodes = new ShaderLightingSFXs(gl);
-        if (USE_GL_ARB_GEOMETRY_SHADER4)
-        {
-            if (shaderLightingSFXsSelectedNodes == null) shaderLightingSFXsSelectedNodes = new ShaderLightingSFXs(gl, true);
-            if (shaderLightingSFXsSelectedNodesNormalsGeometry == null) shaderLightingSFXsSelectedNodesNormalsGeometry = new ShaderLightingSFXs(gl, true, true);
-        }
     }
 
     /**
@@ -537,7 +532,7 @@ final class GraphRenderer3D implements GraphInterface // package access
         int shapeIndex = SPHERE.ordinal();
          // don't use a display list here, as it will create problems with the disposeAllModelShapeResources() method where the display list is being disposed and the last diplay list will take its place. Use Immediate Mode, Vertex Arrays or VBO instead
         ModelRenderingStates modelRenderingState = USE_SHADERS_PROCESS ? VBO : (USE_VERTEX_ARRAYS_FOR_OPENGL_RENDERER ? VERTEX_ARRAY : IMMEDIATE_MODE);
-        ModelSettings modelSettings = new ModelSettings(true, true, false, modelRenderingState);
+        ModelSettings modelSettings = new ModelSettings(true, true, modelRenderingState);
         for ( Shapes3D shape3D : Shapes3D.values() )
         {
             if ( shape3D.equals(SPHERE) && (changeAllShapes || changeTesselationRelatedShapes || changeSphericalCoordsRelatedShapes) )
@@ -560,26 +555,6 @@ final class GraphRenderer3D implements GraphInterface // package access
                 gl.glEndList();
 
                 superQuadricShape.disposeAllModelShapeResources(gl);
-            }
-            else if (shape3D.equals(POINT) && changeAllShapes)
-            {
-                if (!USE_GL_ARB_GEOMETRY_SHADER4)
-                {
-                    // point shape rendering does not need to use a display list
-                }
-                else
-                {
-                    shapeIndex = POINT.ordinal();
-                    gl.glDeleteLists(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], 1);
-                    gl.glNewList(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
-
-                    gl.glPushMatrix();
-                    gl.glScalef(1.0f, 1.0f, 0.005f);
-                    GLUT.glutSolidCube(0.2f);
-                    gl.glPopMatrix();
-
-                    gl.glEndList();
-                }
             }
             else if (shape3D.equals(CUBE) && changeAllShapes) // cube
             {
@@ -1021,8 +996,13 @@ final class GraphRenderer3D implements GraphInterface // package access
                 // no need to reload the model for calculating spherical coords, just use current geneShape.drawModelShape() geometry
                 if ( !( (geneShape != null) && !changeAllShapes && changeSphericalCoordsRelatedShapes ) )
                 {
-                    if (geneShape != null) geneShape.disposeAllModelShapeResources(gl);
-                    geneShape = new OBJModelLoader(gl, graph, MODEL_FILES_PATH, capitalizeFirstCharacter(OBJModelShapes.GENE) + ".obj", OBJ_MODEL_SHAPE_SIZES[OBJModelShapes.GENE.ordinal()], modelRenderingState, false, false, false);
+                    if (geneShape != null)
+                    {
+                        geneShape.disposeAllModelShapeResources(gl);
+                    }
+                    geneShape = new OBJModelLoader(gl, graph, MODEL_FILES_PATH,
+                            capitalizeFirstCharacter(OBJModelShapes.GENE) + ".obj",
+                            OBJ_MODEL_SHAPE_SIZES[OBJModelShapes.GENE.ordinal()], modelRenderingState, false, false);
                 }
 
                 shapeIndex = GENE_MODEL.ordinal();
@@ -1109,8 +1089,13 @@ final class GraphRenderer3D implements GraphInterface // package access
                 // no need to reload the model for calculating spherical coords, just use current objModelLoaderShape.drawModelShape() geometry
                 if ( !( (objModelLoaderShape != null) && !changeAllShapes && changeSphericalCoordsRelatedShapes ) )
                 {
-                    if (objModelLoaderShape != null) objModelLoaderShape.disposeAllModelShapeResources(gl);
-                    objModelLoaderShape = new OBJModelLoader(gl, graph, EXTERNAL_OBJ_MODEL_FILE_PATH, EXTERNAL_OBJ_MODEL_FILE_NAME + ".obj", OBJ_MODEL_LOADER_SHAPE_SIZE.get(), modelRenderingState, USE_EXTERNAL_OBJ_MODEL_FILE, false, false);
+                    if (objModelLoaderShape != null)
+                    {
+                        objModelLoaderShape.disposeAllModelShapeResources(gl);
+                    }
+                    objModelLoaderShape = new OBJModelLoader(gl, graph, EXTERNAL_OBJ_MODEL_FILE_PATH,
+                            EXTERNAL_OBJ_MODEL_FILE_NAME + ".obj", OBJ_MODEL_LOADER_SHAPE_SIZE.get(),
+                            modelRenderingState, USE_EXTERNAL_OBJ_MODEL_FILE, false);
                 }
 
                 shapeIndex = OBJ_MODEL_LOADER.ordinal();
@@ -1144,7 +1129,7 @@ final class GraphRenderer3D implements GraphInterface // package access
         int shapeIndex = SPHERE.ordinal();
         // don't use a display list here, as it will create problems with the disposeAllModelShapeResources() method where the display list is being disposed and the last diplay list will take its place. Use Immediate Mode, Vertex Arrays or VBO instead
         ModelRenderingStates modelRenderingState = USE_SHADERS_PROCESS ? VBO : (USE_VERTEX_ARRAYS_FOR_OPENGL_RENDERER ? VERTEX_ARRAY : IMMEDIATE_MODE);
-        ModelSettings modelSettings = new ModelSettings(false, false, false, modelRenderingState);
+        ModelSettings modelSettings = new ModelSettings(false, false, modelRenderingState);
         for ( Shapes3D shape3D : Shapes3D.values() )
         {
             if ( shape3D.equals(SPHERE) )
@@ -1164,26 +1149,6 @@ final class GraphRenderer3D implements GraphInterface // package access
                 gl.glEndList();
 
                 superQuadricShape.disposeAllModelShapeResources(gl);
-            }
-            else if (shape3D.equals(POINT) )
-            {
-                if (!USE_GL_ARB_GEOMETRY_SHADER4)
-                {
-                    // point shape rendering does not need to use a display list
-                }
-                else
-                {
-                    shapeIndex = POINT.ordinal();
-                    gl.glDeleteLists(ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS[shapeIndex], 1);
-                    gl.glNewList(ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
-
-                    gl.glPushMatrix();
-                    gl.glScalef(1.0f, 1.0f, 0.005f);
-                    GLUT.glutSolidCube(0.2f);
-                    gl.glPopMatrix();
-
-                    gl.glEndList();
-                }
             }
             else if (shape3D.equals(CUBE) ) // cube
             {
@@ -1572,7 +1537,9 @@ final class GraphRenderer3D implements GraphInterface // package access
                 if (geneShape == null)
                 {
                     // if (geneShape != null) geneShape.disposeAllModelShapeResources(gl);
-                    geneShape = new OBJModelLoader(gl, graph, MODEL_FILES_PATH, capitalizeFirstCharacter(OBJModelShapes.GENE) + ".obj", OBJ_MODEL_SHAPE_SIZES[OBJModelShapes.GENE.ordinal()], modelRenderingState, false, false, false);
+                    geneShape = new OBJModelLoader(gl, graph, MODEL_FILES_PATH,
+                            capitalizeFirstCharacter(OBJModelShapes.GENE) + ".obj",
+                            OBJ_MODEL_SHAPE_SIZES[OBJModelShapes.GENE.ordinal()], modelRenderingState, false, false);
                 }
 
                 shapeIndex = GENE_MODEL.ordinal();
@@ -1649,7 +1616,9 @@ final class GraphRenderer3D implements GraphInterface // package access
                 if (objModelLoaderShape == null)
                 {
                     // if (objModelLoaderShape != null) objModelLoaderShape.disposeAllModelShapeResources(gl);
-                    objModelLoaderShape = new OBJModelLoader(gl, graph, EXTERNAL_OBJ_MODEL_FILE_PATH, EXTERNAL_OBJ_MODEL_FILE_NAME + ".obj", OBJ_MODEL_LOADER_SHAPE_SIZE.get(), modelRenderingState, USE_EXTERNAL_OBJ_MODEL_FILE, false, false);
+                    objModelLoaderShape = new OBJModelLoader(gl, graph, EXTERNAL_OBJ_MODEL_FILE_PATH,
+                            EXTERNAL_OBJ_MODEL_FILE_NAME + ".obj", OBJ_MODEL_LOADER_SHAPE_SIZE.get(),
+                            modelRenderingState, USE_EXTERNAL_OBJ_MODEL_FILE, false);
                 }
 
                 shapeIndex = OBJ_MODEL_LOADER.ordinal();
@@ -2279,8 +2248,7 @@ final class GraphRenderer3D implements GraphInterface // package access
                 gl.glLineWidth(1.5f);
                 // gl.glPolygonOffset(-1.0f, -1.0f);
                 // gl.glEnable(GL_POLYGON_OFFSET_LINE);
-                if ( !USE_GL_ARB_GEOMETRY_SHADER4 || MATERIAL_NORMALS_SELECTION_MODE.get() )
-                    gl.glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                gl.glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
                 transparencyValue = 1.0f;
                 selectedNodeOffsetValue = 0.005f;
@@ -2414,16 +2382,10 @@ final class GraphRenderer3D implements GraphInterface // package access
                 break;
 
             case POINT:
-
-                if (!USE_GL_ARB_GEOMETRY_SHADER4)
-                {
-                    gl.glPointSize(200 * size);
-                    gl.glBegin(GL_POINTS);
-                    gl.glVertex3f(coordX, coordY, coordZ);
-                    gl.glEnd();
-                }
-                else
-                    draw3DShape(gl, coordX, coordY, coordZ, POINT, size, 0.6f, isFastSelectionNode);
+                gl.glPointSize(200 * size);
+                gl.glBegin(GL_POINTS);
+                gl.glVertex3f(coordX, coordY, coordZ);
+                gl.glEnd();
 
                 break;
 
@@ -3575,8 +3537,7 @@ final class GraphRenderer3D implements GraphInterface // package access
         prepareLighting(gl);
         if (USE_SHADERS_PROCESS)
         {
-            if (!USE_GL_ARB_GEOMETRY_SHADER4)
-                preparePointSprites(gl);
+            preparePointSprites(gl);
             prepareShaderLighting(gl);
         }
         if (USE_GL_EXT_FRAMEBUFFER_OBJECT) prepareEnvironmentMapping(gl);
@@ -4385,11 +4346,6 @@ final class GraphRenderer3D implements GraphInterface // package access
                 if ( MATERIAL_ANIMATED_SHADING.get() )
                 {
                     shaderLightingSFXsNodes.timerEffect( ALL_SHADING_SFXS[ShaderLightingSFXs.ShaderTypes.WATER.ordinal()].get() );
-                    if (USE_GL_ARB_GEOMETRY_SHADER4)
-                    {
-                        shaderLightingSFXsSelectedNodes.timerEffect( ALL_SHADING_SFXS[ShaderLightingSFXs.ShaderTypes.WATER.ordinal()].get() );
-                        shaderLightingSFXsSelectedNodesNormalsGeometry.timerEffect( ALL_SHADING_SFXS[ShaderLightingSFXs.ShaderTypes.WATER.ordinal()].get() );
-                    }
                 }
             }
         }

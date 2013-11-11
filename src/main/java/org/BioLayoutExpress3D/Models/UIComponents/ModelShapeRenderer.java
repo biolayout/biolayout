@@ -412,7 +412,7 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
         this.graph = graph;
 
         modelRenderingState = USE_SHADERS_PROCESS ? VBO : (USE_VERTEX_ARRAYS_FOR_OPENGL_RENDERER ? VERTEX_ARRAY : IMMEDIATE_MODE);
-        modelSettings = new ModelSettings(true, true, false, modelRenderingState);
+        modelSettings = new ModelSettings(true, true, modelRenderingState);
 
         createActions();
     }
@@ -748,34 +748,22 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
 
         if (USE_SHADERS_PROCESS)
         {
-            int NUMBER_OF_OUTPUT_GS_VERTICES = GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB_INTEGER;
-            if (USE_GL_ARB_GEOMETRY_SHADER4)
-                NUMBER_OF_OUTPUT_GS_VERTICES = 4 * 3;
             String versionString = (USE_330_SHADERS_PROCESS) ? MINIMUM_GLSL_VERSION_FOR_330_SHADERS + " " + GLSL_LANGUAGE_MODE : MINIMUM_GLSL_VERSION_FOR_120_SHADERS;
             String GLSLPreprocessorCommands = "#version " + versionString + "\n" +
                                               "#define GPU_SHADER4_COMPATIBILITY_CONDITION "          + ( USE_GL_EXT_GPU_SHADER4 ? 1 : 0 )                + "\n" +
-                                              "#define GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION " + ( USE_GL_ARB_GEOMETRY_SHADER4 ? 1 : 0 )           + "\n" +
-                                              "#define GPU_SHADER_FP64_COMPATIBILITY_CONDITION "      + ( USE_GL_ARB_GPU_SHADER_FP64 ? 1 : 0 )            + "\n" +
                                               "#define MAX_LIGHTS "                                   + MAX_LIGHTS                                        + "\n" +
                                               "#define USE_SPOT_LIGHTS "                              + ( (USE_SPOT_LIGHTS) ? 1 : 0 )                     + "\n" +
                                               "#define VS_VARYING "                                   + ( (USE_330_SHADERS_PROCESS) ? "out" : "varying" ) + "\n" +
                                               "#define GS_VARYING "                                   + ( (USE_330_SHADERS_PROCESS) ? ""    : "varying" ) + "\n" +
                                               "#define FS_VARYING "                                   + ( (USE_330_SHADERS_PROCESS) ? "in"  : "varying" ) + "\n" +
-                                              "#define VS_EYE_VECTOR "   + ( (USE_GL_ARB_GEOMETRY_SHADER4) ? "vs" : "" ) + "EyeVector" + "\n" +
-                                              "#define VS_NORMAL "       + ( (USE_GL_ARB_GEOMETRY_SHADER4) ? "vs" : "" ) + "Normal"    + "\n" +
-                                              ( (USE_GL_ARB_GEOMETRY_SHADER4) ?  "#define GS_VS_EYE_VECTOR " + "vsEyeVector" + "\n" : "") +
-                                              ( (USE_GL_ARB_GEOMETRY_SHADER4) ?  "#define GS_VS_NORMAL "     + "vsNormal"    + "\n" : "") +
-                                              ( (USE_GL_ARB_GEOMETRY_SHADER4) ?  "#define GS_FS_EYE_VECTOR " + "fsEyeVector" + "\n" : "") +
-                                              ( (USE_GL_ARB_GEOMETRY_SHADER4) ?  "#define GS_FS_NORMAL "     + "fsNormal"    + "\n" : "") +
-                                              ( (USE_GL_ARB_GEOMETRY_SHADER4) ?  "#define GS_FS_COLOR "      + "fsColor"     + "\n" : "") +
-                                              "#define FS_EYE_VECTOR " + ( (USE_GL_ARB_GEOMETRY_SHADER4) ? "fs" : "" ) + "EyeVector" + "\n" +
-                                              "#define FS_NORMAL "     + ( (USE_GL_ARB_GEOMETRY_SHADER4) ? "fs" : "" ) + "Normal"    + "\n" +
-                                              "#define FS_COLOR "      + ( (USE_GL_ARB_GEOMETRY_SHADER4) ? "fs" : "" ) + "Color"     + "\n"
+                                              "#define VS_EYE_VECTOR "                                + "EyeVector" + "\n" +
+                                              "#define VS_NORMAL "                                    + "Normal"    + "\n" +
+                                              "#define FS_EYE_VECTOR "                                + "EyeVector" + "\n" +
+                                              "#define FS_NORMAL "                                    + "Normal"    + "\n" +
+                                              "#define FS_COLOR "                                     + "Color"     + "\n"
                                               ;
-            if (USE_GL_ARB_GEOMETRY_SHADER4)
-                ShaderUtils.loadShaderFileCompileAndLinkProgram(gl, MODEL_SHAPE_SHADER_FILES_DIRECTORY, MODEL_SHAPE_SHADER_NAME, LOAD_SHADER_PROGRAMS_FROM_EXTERNAL_SOURCE, VERTEX_SHADER, GEOMETRY_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, GL_TRIANGLES, GL_TRIANGLE_STRIP, NUMBER_OF_OUTPUT_GS_VERTICES, 0, GLSLPreprocessorCommands, DEBUG_BUILD);
-            else
-                ShaderUtils.loadShaderFileCompileAndLinkProgram(gl, MODEL_SHAPE_SHADER_FILES_DIRECTORY, MODEL_SHAPE_SHADER_NAME, LOAD_SHADER_PROGRAMS_FROM_EXTERNAL_SOURCE, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, 0, GLSLPreprocessorCommands, DEBUG_BUILD);
+
+            ShaderUtils.loadShaderFileCompileAndLinkProgram(gl, MODEL_SHAPE_SHADER_FILES_DIRECTORY, MODEL_SHAPE_SHADER_NAME, LOAD_SHADER_PROGRAMS_FROM_EXTERNAL_SOURCE, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, 0, GLSLPreprocessorCommands, DEBUG_BUILD);
             SHADER_PROGRAM_USE_OREN_NAYAR_DIFFUSE_MODEL[0] = gl.glGetUniformLocation(SHADER_PROGRAM[0], SHADER_PROGRAM_USE_OREN_NAYAR_DIFFUSE_MODEL_NAME);
             SHADER_PROGRAM_SHRINK_TRIANGLES[0] = gl.glGetUniformLocation(SHADER_PROGRAM[0], SHADER_PROGRAM_SHRINK_TRIANGLES_NAME);
             SHADER_PROGRAM_NORMALS[0] = gl.glGetUniformLocation(SHADER_PROGRAM[0], SHADER_PROGRAM_NORMALS_NAME);
@@ -1385,12 +1373,6 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
                     gl.glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, OPENGL_INT_VALUE);
                     GL_MAX_RENDERBUFFER_SIZE_EXT_INTEGER = OPENGL_INT_VALUE.get(0);
                 }
-                // make sure GLSL 330 and above is present: Geometry Shaders need high-end hardware to efficiently execute. Tested to work ok on Nvidia hardware, AMD/ATI ones are creating color artifacts
-                if ( USE_330_SHADERS_PROCESS && GL_IS_NVIDIA && ( USE_GL_ARB_GEOMETRY_SHADER4 = gl.isExtensionAvailable("GL_ARB_geometry_shader4") ) )
-                {
-                    gl.glGetIntegerv(GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB, OPENGL_INT_VALUE);
-                    GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB_INTEGER = OPENGL_INT_VALUE.get(0);
-                }
                 USE_GL_EXT_GPU_SHADER4 = gl.isExtensionAvailable("GL_EXT_gpu_shader4");
                 USE_GL_ARB_GPU_SHADER5 = gl.isExtensionAvailable("GL_ARB_gpu_shader5");
                 USE_GL_ARB_GPU_SHADER_FP64 = gl.isExtensionAvailable("GL_ARB_gpu_shader_fp64");
@@ -1418,8 +1400,6 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
                     output.append("GL_MAX_TEXTURE_SIZE:\t\t\t").append(GL_MAX_TEXTURE_SIZE_INTEGER).append("\n");
                     if (USE_GL_EXT_FRAMEBUFFER_OBJECT)
                         output.append("GL_MAX_RENDERBUFFER_SIZE_EXT:\t\t").append(GL_MAX_RENDERBUFFER_SIZE_EXT_INTEGER).append("\n");
-                    if (USE_GL_ARB_GEOMETRY_SHADER4)
-                        output.append("GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB:\t").append(GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB_INTEGER).append("\n");
                     output.append("GL GPU SHADER MODEL 4 SUPPORT:\t\t").append(USE_GL_EXT_GPU_SHADER4 ? "YES" : "NO").append("\n");
                     output.append("GL GPU SHADER MODEL 5 SUPPORT:\t\t").append(USE_GL_ARB_GPU_SHADER5 ? "YES" : "NO").append("\n");
                     output.append("GL GPU SHADER FP64 SUPPORT:\t\t").append(USE_GL_ARB_GPU_SHADER_FP64 ? "YES" : "NO").append("\n\n");
@@ -1537,10 +1517,7 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
             deAllocOpenGLMemory = false;
             if (USE_SHADERS_PROCESS)
             {
-                if (USE_GL_ARB_GEOMETRY_SHADER4)
-                    ShaderUtils.detachAndDeleteShader(gl, VERTEX_SHADER, GEOMETRY_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, 0);
-                else
-                    ShaderUtils.detachAndDeleteShader(gl, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, 0);
+                ShaderUtils.detachAndDeleteShader(gl, VERTEX_SHADER, FRAGMENT_SHADER, SHADER_PROGRAM, 0);
             }
             nodeTexture = null;
             modelShape.disposeAllModelShapeResources(gl);

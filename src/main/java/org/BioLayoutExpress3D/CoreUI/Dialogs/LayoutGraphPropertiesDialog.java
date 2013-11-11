@@ -176,7 +176,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JCheckBox materialStateShading = null;
     private JCheckBox materialOldLCDStyleTransparencyShading = null;
     private JCheckBox materialErosionShading = null;
-    private JCheckBox materialNormalsSelectionMode = null;
+    private JCheckBox materialNormalsSelectionMode = null; //FIXME remove?
     private JCheckBox nodeSurfaceImageTextureCheckBox = null;
     private JComboBox nodeSurfaceImageTextureComboBox = null;
     private JTextField nodeSurfaceImageTextureFileTextField = null;
@@ -2471,7 +2471,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                     materialStateShading.setEnabled(flag); // disable all shadings if specular turned off
                     materialOldLCDStyleTransparencyShading.setEnabled(flag); // disable all shadings if specular turned off
                     materialErosionShading.setEnabled(flag); // disable all shadings if specular turned off
-                    materialNormalsSelectionMode.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4 && flag); // disable all shadings if specular turned off
+                    materialNormalsSelectionMode.setEnabled(false); // disable all shadings if specular turned off
                 }
             }
         }
@@ -2644,7 +2644,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         }
         else if ( e.getSource().equals(wireframeSelectionMode) )
         {
-            materialNormalsSelectionMode.setEnabled( USE_GL_ARB_GEOMETRY_SHADER4 && wireframeSelectionMode.isSelected() );
+            materialNormalsSelectionMode.setEnabled(false);
         }
         else if ( e.getSource().equals(materialSphericalMapping) )
         {
@@ -2722,7 +2722,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             materialStateShading.setEnabled(value);
             materialOldLCDStyleTransparencyShading.setEnabled(value);
             materialErosionShading.setEnabled(value);
-            materialNormalsSelectionMode.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4 && value);
+            materialNormalsSelectionMode.setEnabled(false);
         }
         else if ( e.getSource().equals(parallelismUseExpressionCorrelationCalculationNCoreParallelism) )
         {
@@ -3119,7 +3119,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         materialOldLCDStyleTransparencyShading.setSelected( MATERIAL_OLD_LCD_STYLE_TRANSPARENCY_SHADING.get() );
         materialErosionShading.setSelected( MATERIAL_EROSION_SHADING.get() );
         materialNormalsSelectionMode.setSelected( MATERIAL_NORMALS_SELECTION_MODE.get() );
-        materialNormalsSelectionMode.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4);
+        materialNormalsSelectionMode.setEnabled(false);
         lightingPositionXSlider.setValue( LIGHT_POSITION[0].get() );
         lightingPositionYSlider.setValue( LIGHT_POSITION[1].get() );
         lightingPositionZSlider.setValue( LIGHT_POSITION[2].get() );
@@ -3136,7 +3136,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         highResImageRenderScaleSlider.setValue( TILE_SCREEN_FACTOR.get() );
         fastSelectionMode.setSelected( FAST_SELECTION_MODE.get() );
         wireframeSelectionMode.setSelected( WIREFRAME_SELECTION_MODE.get() );
-        materialNormalsSelectionMode.setEnabled( USE_GL_ARB_GEOMETRY_SHADER4 && WIREFRAME_SELECTION_MODE.get() );
+        materialNormalsSelectionMode.setEnabled(false);
         advancedKeyboardRenderingControl.setSelected( ADVANCED_KEYBOARD_RENDERING_CONTROL.get() );
         anaglyphStereoscopic3DView.setSelected( ANAGLYPH_STEREOSCOPIC_3D_VIEW.get() );
         graphAnaglyphGlasses3DOptionsDialog.getGraphAnaglyphGlasses3DOptionsOpenDialogAction().setEnabled( ANAGLYPH_STEREOSCOPIC_3D_VIEW.get() );
@@ -3155,7 +3155,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             materialStateShading.setEnabled(value);
             materialOldLCDStyleTransparencyShading.setEnabled(value);
             materialErosionShading.setEnabled(value);
-            materialNormalsSelectionMode.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4 && value);
+            materialNormalsSelectionMode.setEnabled(false);
         }
         else
         {
@@ -3535,7 +3535,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                 materialStateShading.setEnabled(value);
                 materialOldLCDStyleTransparencyShading.setEnabled(value);
                 materialErosionShading.setEnabled(value);
-                materialNormalsSelectionMode.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4 && value);
+                materialNormalsSelectionMode.setEnabled(false);
             }
 
             TRANSPARENT.set( nodeTransparency.isSelected() );
@@ -3800,7 +3800,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             materialAnimatedShading.setEnabled(value);
             materialOldLCDStyleTransparencyShading.setEnabled(value);
             materialErosionShading.setEnabled(value);
-            materialNormalsSelectionMode.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4 && value);
+            materialNormalsSelectionMode.setEnabled(false);
         }
     }
 

@@ -33,7 +33,7 @@ public class ShaderLinesSFXs extends ShaderLightingSFXs
     */
     public ShaderLinesSFXs(GL2 gl)
     {
-        super(gl, 0.01f, false, false, false);
+        super(gl, 0.01f, false, false);
 
         initAllVariables();
         loadAndCompileAllShaderPrograms(gl);

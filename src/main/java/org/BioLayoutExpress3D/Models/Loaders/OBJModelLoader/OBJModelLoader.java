@@ -92,44 +92,44 @@ public class OBJModelLoader extends ModelShape
     /**
     *  The first OBJModelLoader class constructor.
     */
-    public OBJModelLoader(GL2 gl, Component component, String directoryFilename , String modelFilename, ModelRenderingStates modelRenderingState, boolean usingPatches)
+    public OBJModelLoader(GL2 gl, Component component, String directoryFilename , String modelFilename, ModelRenderingStates modelRenderingState)
     {
-        this(gl, component, directoryFilename, modelFilename, 1.0f, modelRenderingState, false, true, usingPatches);
+        this(gl, component, directoryFilename, modelFilename, 1.0f, modelRenderingState, false, true);
     }
 
     /**
     *  The second OBJModelLoader class constructor.
     */
-    public OBJModelLoader(GL2 gl, Component component, String directoryFilename , String modelFilename, float maxSize, ModelRenderingStates modelRenderingState, boolean usingPatches)
+    public OBJModelLoader(GL2 gl, Component component, String directoryFilename , String modelFilename, float maxSize, ModelRenderingStates modelRenderingState)
     {
-        this(gl, component, directoryFilename, modelFilename, maxSize, modelRenderingState, false, true, usingPatches);
+        this(gl, component, directoryFilename, modelFilename, maxSize, modelRenderingState, false, true);
     }
 
     /**
     *  The third OBJModelLoader class constructor.
     */
-    public OBJModelLoader(GL2 gl, Component component, String directoryFilename, String modelFilename, ModelRenderingStates modelRenderingState, boolean loadFromFileOrFromJar, boolean usingPatches)
+    public OBJModelLoader(GL2 gl, Component component, String directoryFilename, String modelFilename, ModelRenderingStates modelRenderingState, boolean loadFromFileOrFromJar)
     {
-        this(gl, component, directoryFilename, modelFilename, 1.0f, modelRenderingState, loadFromFileOrFromJar, true, usingPatches);
+        this(gl, component, directoryFilename, modelFilename, 1.0f, modelRenderingState, loadFromFileOrFromJar, true);
     }
 
     /**
     *  The fourth OBJModelLoader class constructor.
     */
-    public OBJModelLoader(GL2 gl, Component component, String directoryFilename, String modelFilename, float maxSize, ModelRenderingStates modelRenderingState, boolean loadFromFileOrFromJar, boolean usingPatches)
+    public OBJModelLoader(GL2 gl, Component component, String directoryFilename, String modelFilename, float maxSize, ModelRenderingStates modelRenderingState, boolean loadFromFileOrFromJar)
     {
-        this(gl, component, directoryFilename, modelFilename, maxSize, modelRenderingState, loadFromFileOrFromJar, true, usingPatches);
+        this(gl, component, directoryFilename, modelFilename, maxSize, modelRenderingState, loadFromFileOrFromJar, true);
     }
 
     /**
     *  The fifth OBJModelLoader class constructor.
     */
-    public OBJModelLoader(GL2 gl, Component component, String directoryFilename, String modelFilename, float maxSize, ModelRenderingStates modelRenderingState, boolean loadFromFileOrFromJar, boolean useMaterialColors, boolean usingPatches)
+    public OBJModelLoader(GL2 gl, Component component, String directoryFilename, String modelFilename, float maxSize, ModelRenderingStates modelRenderingState, boolean loadFromFileOrFromJar, boolean useMaterialColors)
     {
         super();
 
         this.useMaterialColors = useMaterialColors;
-        modelSettings = new ModelSettings(false, false, usingPatches, modelRenderingState, modelFilename.substring( 0, modelFilename.lastIndexOf(".") ), true);
+        modelSettings = new ModelSettings(false, false, modelRenderingState, modelFilename.substring( 0, modelFilename.lastIndexOf(".") ), true);
 
         initModelDataStructures();
         parseOBJModelFile(component, directoryFilename, modelFilename, loadFromFileOrFromJar);
@@ -147,7 +147,7 @@ public class OBJModelLoader extends ModelShape
         point3DNormals = new ArrayList<Point3D>();
         point3DTexCoords = new ArrayList<Point3D>();
 
-        faces = new Faces(point3DVertices, point3DNormals, point3DTexCoords, modelSettings.usingPatches);
+        faces = new Faces(point3DVertices, point3DNormals, point3DTexCoords);
         faceMaterials = new FaceMaterials();
         modelDimensions = new ModelDimensions(modelSettings.shapeName);
     }
@@ -866,7 +866,6 @@ public class OBJModelLoader extends ModelShape
             println("Loaded the OBJ/MTL geometry for " + this.toString() + " with shape settings:");
             println("UsingNormals: " + modelSettings.usingNormals);
             println("UsingTexCoords: " + modelSettings.usingTexCoords);
-            println("UsingPatches: " + modelSettings.usingPatches);
             println("ModelRenderingState: " + modelSettings.modelRenderingState);
             println("CenterModel: " + modelSettings.centerModel);
             println("HasTexture: " + modelSettings.hasTexture);

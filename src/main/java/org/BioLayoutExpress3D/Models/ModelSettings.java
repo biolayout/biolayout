@@ -43,16 +43,11 @@ public class ModelSettings
     public boolean hasTexture = false;
 
     /**
-    *  Whether the model uses OpenGL 4.0 GL_PATCHES or normal GL_TRIANGLES for shape creation.
-    */
-    public boolean usingPatches = false;
-
-    /**
     *  The ModelSettings class first constructor.
     */
     public ModelSettings(boolean usingNormals)
     {
-        this(usingNormals, false, false, ModelRenderingStates.IMMEDIATE_MODE, "");
+        this(usingNormals, false, ModelRenderingStates.IMMEDIATE_MODE, "");
     }
 
     /**
@@ -60,41 +55,32 @@ public class ModelSettings
     */
     public ModelSettings(boolean usingNormals, boolean usingTexCoords)
     {
-        this(usingNormals, usingTexCoords, false, ModelRenderingStates.IMMEDIATE_MODE, "");
-    }
-
-    /**
-    *  The ModelSettings class third constructor.
-    */
-    public ModelSettings(boolean usingNormals, boolean usingTexCoords, boolean usingPatches)
-    {
-        this(usingNormals, usingTexCoords, usingPatches, ModelRenderingStates.IMMEDIATE_MODE, "");
+        this(usingNormals, usingTexCoords, ModelRenderingStates.IMMEDIATE_MODE, "");
     }
 
     /**
     *  The ModelSettings class fourth constructor.
     */
-    public ModelSettings(boolean usingNormals, boolean usingTexCoords, boolean usingPatches, ModelRenderingStates modelRenderingState)
+    public ModelSettings(boolean usingNormals, boolean usingTexCoords, ModelRenderingStates modelRenderingState)
     {
-        this(usingNormals, usingTexCoords, usingPatches, modelRenderingState, "");
+        this(usingNormals, usingTexCoords, modelRenderingState, "");
     }
 
     /**
     *  The ModelSettings class fifth constructor.
     */
-    public ModelSettings(boolean usingNormals, boolean usingTexCoords, boolean usingPatches, ModelRenderingStates modelRenderingState, String shapeName)
+    public ModelSettings(boolean usingNormals, boolean usingTexCoords, ModelRenderingStates modelRenderingState, String shapeName)
     {
-        this(usingNormals, usingTexCoords, usingPatches, modelRenderingState, shapeName, false);
+        this(usingNormals, usingTexCoords, modelRenderingState, shapeName, false);
     }
 
     /**
     *  The ModelSettings class sixth constructor.
     */
-    public ModelSettings(boolean usingNormals, boolean usingTexCoords, boolean usingPatches, ModelRenderingStates modelRenderingState, String shapeName, boolean centerModel)
+    public ModelSettings(boolean usingNormals, boolean usingTexCoords, ModelRenderingStates modelRenderingState, String shapeName, boolean centerModel)
     {
         this.usingNormals = usingNormals;
         this.usingTexCoords = usingTexCoords;
-        this.usingPatches = usingPatches;
         this.modelRenderingState = modelRenderingState;
         this.shapeName = shapeName;
         this.centerModel = centerModel;

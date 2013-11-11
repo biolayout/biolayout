@@ -181,12 +181,12 @@ public final class NetworkRootContainer extends NetworkContainer
                         fmmm.fineTuningIterations(50);
                         break;
                     case MEDIUM_QUALITY_MEDIUM_SPEED:
-                        fmmm.fixedIterations(60);
-                        fmmm.fineTuningIterations(30);
+                        fmmm.fixedIterations(20);
+                        fmmm.fineTuningIterations(10);
                         break;
                     case LOW_QUALITY_HIGH_SPEED:
-                        fmmm.fixedIterations(15);
-                        fmmm.fineTuningIterations(10);
+                        fmmm.fixedIterations(3);
+                        fmmm.fineTuningIterations(1);
                         break;
                 }
 

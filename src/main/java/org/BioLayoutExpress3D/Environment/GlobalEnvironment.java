@@ -66,7 +66,6 @@ public final class GlobalEnvironment
     public static boolean USE_GL_ARB_TEXTURE_RECTANGLE = false;
     public static boolean USE_GL_EXT_FRAMEBUFFER_OBJECT = false;
     public static boolean USE_GL_EXT_GPU_SHADER4 = false;
-    public static boolean USE_GL_ARB_GEOMETRY_SHADER4 = false;
     public static boolean USE_GL_ARB_GPU_SHADER5 = false;
     public static boolean USE_GL_ARB_GPU_SHADER_FP64 = false;
     public static String GL_VENDOR_STRING = "";
@@ -92,7 +91,6 @@ public final class GlobalEnvironment
     public static int GL_MAX_RECTANGLE_TEXTURE_SIZE_ARB_INTEGER = 0;
     public static int GL_MAX_TEXTURE_SIZE_INTEGER = 0;
     public static int GL_MAX_RENDERBUFFER_SIZE_EXT_INTEGER = 0;
-    public static int GL_MAX_GEOMETRY_OUTPUT_VERTICES_ARB_INTEGER = 0;
 
     // OpenCL specific variables
     public static boolean OPENCL_GPU_COMPUTING_ENABLED = false;

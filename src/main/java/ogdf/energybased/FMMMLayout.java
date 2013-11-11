@@ -1985,15 +1985,7 @@ public class FMMMLayout
             }
         }
 
-        //helps to get good drawings for small graphs and graphs with few multilevels
-        if ((node_nr <= 500) && (iter < 100))
-        {
-            return 100;
-        }
-        else
-        {
-            return iter;
-        }
+        return iter;
     }
 
 //-------------------------- functions for force calculation ---------------------------

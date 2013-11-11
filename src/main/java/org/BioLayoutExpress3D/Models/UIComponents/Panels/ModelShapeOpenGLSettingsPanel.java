@@ -41,7 +41,7 @@ public class ModelShapeOpenGLSettingsPanel extends JPanel implements ActionListe
     private JSlider rotateZSlider = null;
 
     private JCheckBox wireframeViewCheckBox = null;
-    private JCheckBox normalsViewCheckBox = null;
+    private JCheckBox normalsViewCheckBox = null; //FIXME remove this
     private JCheckBox textureViewCheckBox = null;
     private JCheckBox sphericalMappingCheckBox = null;
     private JCheckBox autoRotateViewCheckBox = null;
@@ -332,7 +332,7 @@ public class ModelShapeOpenGLSettingsPanel extends JPanel implements ActionListe
         if ( e.getSource().equals(wireframeViewCheckBox) )
         {
             boolean flag = wireframeViewCheckBox.isSelected();
-            normalsViewCheckBox.setEnabled(USE_GL_ARB_GEOMETRY_SHADER4 && flag);
+            normalsViewCheckBox.setEnabled(false);
             modelShapeRenderer.setWireframeView(flag);
             modelShapeRenderer.refreshDisplay();
         }

@@ -46,17 +46,14 @@ public class Faces
     private ArrayList<int[]> facesTexCoordsIdices = null;
     private ArrayList<int[]> facesNormalsIdices = null;
 
-    private boolean usingPatches = false;
-
     /**
     *  The Faces class constructor.
     */
-    public Faces(ArrayList<Point3D> point3DVertices, ArrayList<Point3D> point3DNormals, ArrayList<Point3D> point3DTexCoords, boolean usingPatches)
+    public Faces(ArrayList<Point3D> point3DVertices, ArrayList<Point3D> point3DNormals, ArrayList<Point3D> point3DTexCoords)
     {
         this.point3DVertices = point3DVertices;
         this.point3DNormals = point3DNormals;
         this.point3DTexCoords = point3DTexCoords;
-        this.usingPatches = usingPatches;
 
         facesVerticesIdices = new ArrayList<int[]>();
         facesTexCoordsIdices = new ArrayList<int[]>();
@@ -294,7 +291,7 @@ public class Faces
         else if (verticesIndices.length == 4)
           polygonType = GL_QUADS;
 
-        return usingPatches ? GL_PATCHES : polygonType;
+        return polygonType;
     }
 
     /**

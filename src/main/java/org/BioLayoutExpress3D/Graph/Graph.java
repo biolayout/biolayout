@@ -15,7 +15,6 @@ import javax.media.opengl.*;
 import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.jogamp.opengl.util.texture.*;
-import com.jogamp.opengl.util.gl2.TileRenderer;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.awt.ImageUtil;
 import org.BioLayoutExpress3D.Utils.Path;

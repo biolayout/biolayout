@@ -10,6 +10,7 @@ import java.util.concurrent.*;
 import javax.swing.*;
 import javax.media.opengl.*;
 import com.jogamp.opengl.util.*;
+import com.jogamp.opengl.util.GLPixelBuffer.GLPixelAttributes;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.opengl.util.awt.ImageUtil;
 import com.jogamp.common.nio.Buffers;
@@ -58,7 +59,7 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 *
 */
 
-final class GraphRenderer2D implements GraphInterface // package access
+final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRendererListener // package access
 {
 
     /**
@@ -642,25 +643,43 @@ final class GraphRenderer2D implements GraphInterface // package access
             int tileWidth = width * TILE_SCREEN_FACTOR.get();
             int tileHeight = height * TILE_SCREEN_FACTOR.get();
 
-            TILE_RENDERER.setTileSize(256, 256, 0);
-            TILE_RENDERER.setImageSize(tileWidth, tileHeight);
-            TILE_RENDERER.trOrtho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
+            TileRenderer tr = new TileRenderer();
 
-            // read the BGR values directly into the screenshot image
-            screenshot = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_3BYTE_BGR);
-            ByteBuffer allPixelsBGR = ByteBuffer.wrap( ( (DataBufferByte)screenshot.getRaster().getDataBuffer() ).getData() );
-            TILE_RENDERER.setImageBuffer(GL_BGR, GL_UNSIGNED_BYTE, allPixelsBGR);
+            tr.setTileSize(256, 256, 0);
+            tr.setImageSize(tileWidth, tileHeight);
+            //tr.trOrtho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
+
+            final GLPixelBuffer.GLPixelBufferProvider pixelBufferProvider = GLPixelBuffer.defaultProviderWithRowStride;
+            final boolean[] flipVertically =
+            {
+                false
+            };
+
+            GLPixelAttributes pixelAttribs = pixelBufferProvider.getAttributes(gl, 3);
+            GLPixelBuffer pixelBuffer = pixelBufferProvider.allocate(gl, pixelAttribs, tileWidth, tileHeight, 1, true, 0);
+
+            tr.setImageBuffer(pixelBuffer);
 
             int tileCount = 0;
-            do
+            this.addTileRendererNotify(tr);
+            while(!tr.eot())
             {
-                TILE_RENDERER.beginTile(gl);
+                tr.beginTile(gl);
+                this.reshape(gl,
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_X_POS),
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_Y_POS),
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_WIDTH),
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_HEIGHT),
+                    tr.getParam(TileRendererBase.TR_IMAGE_WIDTH),
+                    tr.getParam(TileRendererBase.TR_IMAGE_HEIGHT));
+
                 clearScreen2D(gl);
                 buildAllDisplayListsAndRenderScene2D(gl);
 
                 layoutProgressBarDialog.incrementProgress(++tileCount);
+                tr.endTile(gl);
             }
-            while ( TILE_RENDERER.endTile(gl) );
+            this.removeTileRendererNotify(tr);
 
             if (DEBUG_BUILD) println(tileCount + " tiles drawn\n");
 
@@ -669,16 +688,20 @@ final class GraphRenderer2D implements GraphInterface // package access
 
             if (DEBUG_BUILD) println( "Now Writing High Res BufferedImage to File: " + saveScreenshotFile.getAbsolutePath() );
 
-            String format = saveScreenshotFile.getAbsolutePath().substring( saveScreenshotFile.getAbsolutePath().lastIndexOf(".") + 1, saveScreenshotFile.getAbsolutePath().length() );
-            // Must flip BufferedImage vertically for correct results
-            ImageUtil.flipImageVertically(screenshot);
-            writeBufferedImageToFile(screenshot, format, saveScreenshotFile);
+            final GLPixelBuffer imageBuffer = tr.getImageBuffer();
+            final TextureData textureData = new TextureData(
+                    GLProfile.getDefault(),
+                    0 /* internalFormat */,
+                    tileWidth, tileHeight,
+                    0,
+                    imageBuffer.pixelAttributes,
+                    false, false,
+                    flipVertically[0],
+                    imageBuffer.buffer,
+                    null /* Flusher */);
 
-            // try to force to clear all memory allocated for this task
-            screenshot.flush();
-            screenshot = null;
-            allPixelsBGR.clear();
-            allPixelsBGR = null;
+            TextureIO.write(textureData, saveScreenshotFile);
+
             System.gc();
 
             if (DEBUG_BUILD) println("Done Writing High Res BufferedImage to File");
@@ -729,6 +752,40 @@ final class GraphRenderer2D implements GraphInterface // package access
             // GLU.gluOrtho2D(0, origWidth, origHeight, 0);
             gl.glMatrixMode(GL_MODELVIEW);
         }
+    }
+
+    @Override
+    public void addTileRendererNotify(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void removeTileRendererNotify(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void startTileRendering(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void endTileRendering(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void reshapeTile(TileRendererBase tr,
+            int tileX, int tileY, int tileWidth, int tileHeight,
+            int imageWidth, int imageHeight)
+    {
+        final GL2 gl = tr.getAttachedDrawable().getGL().getGL2();
+        gl.setSwapInterval(0);
+        reshape(gl, tileX, tileY, tileWidth, tileHeight, imageWidth, imageHeight);
+    }
+
+    public void reshape(GL2 gl, int tileX, int tileY, int tileWidth, int tileHeight, int imageWidth, int imageHeight)
+    {
     }
 
     /**

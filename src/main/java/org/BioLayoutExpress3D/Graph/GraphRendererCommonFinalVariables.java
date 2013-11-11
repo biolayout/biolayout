@@ -6,7 +6,6 @@ import java.text.*;
 import java.util.concurrent.*;
 import javax.media.opengl.glu.*;
 import com.jogamp.opengl.util.*;
-import com.jogamp.opengl.util.gl2.TileRenderer;
 import org.BioLayoutExpress3D.Graph.Selection.SelectionUI.*;
 import static com.jogamp.opengl.util.gl2.GLUT.*;
 import com.jogamp.opengl.util.gl2.GLUT;
@@ -111,11 +110,6 @@ public final class GraphRendererCommonFinalVariables
     *  Constant value needed for the OpenGL renderer.
     */
     static final int COMPONENT_POPUP_DELAY_MILLISECONDS = 1000;
-
-    /**
-    *  Constant value needed for the OpenGL renderer.
-    */
-    static final TileRenderer TILE_RENDERER = new TileRenderer();
 
     /**
     *  Creates the Selection Buffer. Uses the Singleton Design Pattern along with the static variable, RENDER_PROFILE_MODE_BACKGROUND_IMAGE.

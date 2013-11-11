@@ -65,7 +65,7 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 *
 */
 
-final class GraphRenderer3D implements GraphInterface // package access
+final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRendererListener // package access
 {
 
     // Node texture related variables
@@ -3225,18 +3225,6 @@ final class GraphRenderer3D implements GraphInterface // package access
     {
         try
         {
-            int tileWidth = width * TILE_SCREEN_FACTOR.get();
-            int tileHeight = height * TILE_SCREEN_FACTOR.get();
-
-            TILE_RENDERER.setTileSize(256, 256, 0);
-            TILE_RENDERER.setImageSize(tileWidth, tileHeight);
-            TILE_RENDERER.trPerspective(FOV_Y, (double)width / (double)height, NEAR_DISTANCE, FAR_DISTANCE);
-
-            // read the BGR values directly into the screenshot image
-            screenshot = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_3BYTE_BGR);
-            ByteBuffer allPixelsBGR = ByteBuffer.wrap( ( (DataBufferByte)screenshot.getRaster().getDataBuffer() ).getData() );
-            TILE_RENDERER.setImageBuffer(GL_BGR, GL_UNSIGNED_BYTE, allPixelsBGR);
-
             // do the trick below so as to avoid tile rendering artifacts for every tile being rendered and then changed
             boolean tempShow3DEnvironmentMapping = SHOW_3D_ENVIRONMENT_MAPPING.get();
             if (tempShow3DEnvironmentMapping)
@@ -3251,19 +3239,67 @@ final class GraphRenderer3D implements GraphInterface // package access
                     MATERIAL_ANIMATED_SHADING.set(false);
             }
 
-            int tileCount = 0;
-            do
+            int tileWidth = width * TILE_SCREEN_FACTOR.get();
+            int tileHeight = height * TILE_SCREEN_FACTOR.get();
+
+            TileRenderer tr = new TileRenderer();
+
+            tr.setTileSize(256, 256, 0);
+            tr.setImageSize(tileWidth, tileHeight);
+            //tr.trPerspective(FOV_Y, (double)width / (double)height, NEAR_DISTANCE, FAR_DISTANCE);
+
+            final GLPixelBuffer.GLPixelBufferProvider pixelBufferProvider = GLPixelBuffer.defaultProviderWithRowStride;
+            final boolean[] flipVertically =
             {
-                TILE_RENDERER.beginTile(gl);
+                false
+            };
+
+            GLPixelBuffer.GLPixelAttributes pixelAttribs = pixelBufferProvider.getAttributes(gl, 3);
+            GLPixelBuffer pixelBuffer = pixelBufferProvider.allocate(gl, pixelAttribs, tileWidth, tileHeight, 1, true, 0);
+
+            tr.setImageBuffer(pixelBuffer);
+
+            int tileCount = 0;
+            this.addTileRendererNotify(tr);
+            while(!tr.eot())
+            {
+                tr.beginTile(gl);
+                this.reshape(gl,
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_X_POS),
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_Y_POS),
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_WIDTH),
+                    tr.getParam(TileRendererBase.TR_CURRENT_TILE_HEIGHT),
+                    tr.getParam(TileRendererBase.TR_IMAGE_WIDTH),
+                    tr.getParam(TileRendererBase.TR_IMAGE_HEIGHT));
+
                 clearScreen3D(gl);
                 renderScene3D(gl, true);
 
                 layoutProgressBarDialog.incrementProgress(++tileCount);
-                if (DEBUG_BUILD) println("Rendered Tile: " + tileCount);
+                tr.endTile(gl);
             }
-            while ( TILE_RENDERER.endTile(gl) );
+            this.removeTileRendererNotify(tr);
 
             if (DEBUG_BUILD) println(tileCount + " tiles drawn\n");
+
+            layoutProgressBarDialog.incrementProgress(100);
+            layoutProgressBarDialog.setText( "Writing image to: " + saveScreenshotFile.getAbsolutePath() );
+
+            if (DEBUG_BUILD) println( "Now Writing High Res BufferedImage to File: " + saveScreenshotFile.getAbsolutePath() );
+
+            final GLPixelBuffer imageBuffer = tr.getImageBuffer();
+            final TextureData textureData = new TextureData(
+                    GLProfile.getDefault(),
+                    0 /* internalFormat */,
+                    tileWidth, tileHeight,
+                    0,
+                    imageBuffer.pixelAttributes,
+                    false, false,
+                    flipVertically[0],
+                    imageBuffer.buffer,
+                    null /* Flusher */);
+
+            TextureIO.write(textureData, saveScreenshotFile);
 
             // do the trick below so as to avoid tile rendering artifacts for every tile being rendered and then changed
             if (tempShow3DEnvironmentMapping)
@@ -3274,21 +3310,6 @@ final class GraphRenderer3D implements GraphInterface // package access
                 if (tempMaterialAntiAliasShading)
                     MATERIAL_ANIMATED_SHADING.set(true);
 
-            layoutProgressBarDialog.incrementProgress(100);
-            layoutProgressBarDialog.setText( "Writing image to: " + saveScreenshotFile.getAbsolutePath() );
-
-            if (DEBUG_BUILD) println( "Now Writing High Res BufferedImage to File: " + saveScreenshotFile.getAbsolutePath() );
-
-            String format = saveScreenshotFile.getAbsolutePath().substring( saveScreenshotFile.getAbsolutePath().lastIndexOf(".") + 1, saveScreenshotFile.getAbsolutePath().length() );
-            // Must flip BufferedImage vertically for correct results
-            ImageUtil.flipImageVertically(screenshot);
-            writeBufferedImageToFile(screenshot, format, saveScreenshotFile);
-
-            // try to force to clear all memory allocated for this task
-            screenshot.flush();
-            screenshot = null;
-            allPixelsBGR.clear();
-            allPixelsBGR = null;
             System.gc();
 
             if (DEBUG_BUILD) println("Done Writing High Res BufferedImage to File");
@@ -3333,6 +3354,40 @@ final class GraphRenderer3D implements GraphInterface // package access
 
             CENTER_VIEW_CAMERA.setProjection(gl);
         }
+    }
+
+    @Override
+    public void addTileRendererNotify(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void removeTileRendererNotify(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void startTileRendering(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void endTileRendering(TileRendererBase tr)
+    {
+    }
+
+    @Override
+    public void reshapeTile(TileRendererBase tr,
+            int tileX, int tileY, int tileWidth, int tileHeight,
+            int imageWidth, int imageHeight)
+    {
+        final GL2 gl = tr.getAttachedDrawable().getGL().getGL2();
+        gl.setSwapInterval(0);
+        reshape(gl, tileX, tileY, tileWidth, tileHeight, imageWidth, imageHeight);
+    }
+
+    public void reshape(GL2 gl, int tileX, int tileY, int tileWidth, int tileHeight, int imageWidth, int imageHeight)
+    {
     }
 
     /**

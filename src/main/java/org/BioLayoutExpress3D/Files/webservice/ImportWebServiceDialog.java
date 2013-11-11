@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -120,6 +121,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
+    private ClientResponse<SearchResponse> searchClientResponse; //web service response
+    private Map<String, String> databaseUriDisplay; //map of database URI to display name
+
     
     /**
      * Name of directory where files are downloaded from the web service.
@@ -231,6 +235,15 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");        
         JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
         
+        //map of search hit database names to display names for search results - TODO static?
+        databaseUriDisplay = new HashMap<String, String>();
+        databaseUriDisplay.put("reactome", "Reactome");
+        databaseUriDisplay.put("pid", "NCI Nature");
+        databaseUriDisplay.put("psp", "PhosphoSitePlus");
+        databaseUriDisplay.put("humancyc", "HumanCyc");
+        databaseUriDisplay.put("hprd", "HPRD");
+        databaseUriDisplay.put("panther", "PANTHER");
+
         allDatasourceCheckBox = new JCheckBox("All");
         allDatasourceCheckBox.setSelected(true);
         allDatasourceCheckBox.addActionListener(this);
@@ -319,7 +332,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
 
         JPanel hitsPanel = new JPanel();
-        hitsPanel.setLayout(new MigLayout("debug"));
+        hitsPanel.setLayout(new MigLayout());
         hitsPanel.add(statusLabel, "wrap, span, align center");
         hitsPanel.add(numHitsLabel, "w 33%, sizegroup hits");
         hitsPanel.add(retrievedLabel, "w 33%, sizegroup hits");
@@ -554,7 +567,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         frame.toFront();                        
         frame.loadDataSet(importFile);
     }
-
+    
     @Override
     public void actionPerformed(ActionEvent e) 
     {
@@ -625,8 +638,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
                 }
             }
-          
-            
+
             search(searchClientRequest);
 
         }
@@ -647,183 +659,211 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     }
     
     /**
-     * Runs Pathway Commons REST web service SEARCH
+     * Runs Pathway Commons REST web service SEARCH and displays results
      * @param searchClientRequest - contains search parameters
      */
     private void search(ClientRequest searchClientRequest)
     {
         //perform search and display search response
 
-        ClientResponse<SearchResponse> searchClientResponse = null;
-        try
+        final ClientRequest localClientRequest = searchClientRequest;
+
+        //run search in thread
+        SwingWorker searchWorker = new SwingWorker<SearchResponse, Void>(){
+
+            /**
+             * Perform Pathway Commons search
+             */
+            @Override
+            public SearchResponse doInBackground() throws PathwayCommonsException, UnknownHostException, Exception
+            {
+                statusLabel.setText("Searching..."); //TODO timeout
+                ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
+                //TODO disable buttons
+                 searchClientResponse = localClientRequest.get(SearchResponse.class);
+                int statusCode = searchClientResponse.getStatus(); //TODO not null check
+                if(statusCode != 200) //search failed
+                {
+                    throw new PathwayCommonsException(statusCode);
+                }
+                return searchClientResponse.getEntity(); //marshall XML response into Java object 
+            }
+
+            /**
+             * Display search results
+             */
+            @Override
+            public void done()
+            {
+                try
+                {
+                    SearchResponse searchResponse = get(); //calls doInBackground() to perform search //TODO timeout //TODO cancel
+                    statusLabel.setText("Search complete: success!");
+                    totalHits = searchResponse.getNumHits();
+                    numHitsLabel.setText("Hits: " + totalHits);
+
+                    searchHits = searchResponse.getSearchHit();
+                    int numRetrieved = searchHits.size();
+                    retrievedLabel.setText("Retrieved: " + numRetrieved);
+
+                    int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
+
+                    //display current page number
+                    currentPage = searchResponse.getPageNo();
+                    pagesLabel.setText("Page: " + currentPage);
+
+                    //enable/disable previous button
+                    if(currentPage > 0) //on first page, disable previous
+                    {
+                        previousButton.setEnabled(true);
+                    }
+                    else
+                    {
+                        previousButton.setEnabled(false);
+                    }
+
+                    //enable/disable next button
+                    int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
+                    if((currentPage + 1) < numPages) //pages indexed from zero
+                    {
+                        nextButton.setEnabled(true);
+                    }
+                    else
+                    {
+                        nextButton.setEnabled(false);
+                    }
+
+                    displaySearchResults();
+
+                    if(organismIdNameMap.size() > 0)
+                    {
+                        fetchScientificNames(); //populate organismIdNameMap from NCBI SOAP web service
+                    }
+                }
+                catch(IllegalStateException exception) //runtime exception
+                {
+                   logger.warning(exception.getMessage());
+                   statusLabel.setText("Search failed: connection not released");
+                }
+                //TODO CancellationException
+                catch(InterruptedException exception)
+                {
+                    logger.warning(exception.getMessage());
+                     statusLabel.setText("Search failed: interrupted");
+                }
+                catch(ExecutionException exception)
+                {
+                     logger.warning(exception.getMessage());                     
+                     Throwable cause = exception.getCause(); //get wrapped exception - the culprit!
+                     if(cause != null)
+                     {
+                         if(cause instanceof PathwayCommonsException) //no search hits
+                         {
+                            logger.warning(cause.getMessage());
+                            model.setRowCount(0); //clear previous search results
+                            statusLabel.setText("Search error: " + cause.getMessage());
+                         }
+                         else if(cause instanceof UnknownHostException)
+                         {
+                            logger.warning(cause.getMessage());
+                            statusLabel.setText("Search failed: unable to reach Pathway Commons");
+                         }
+                         else
+                         {
+                             logger.warning(exception.getMessage());
+                             statusLabel.setText("Search failed: generic error");
+                         }
+                     }
+                     else
+                     {
+                        statusLabel.setText("Search failed: unable to reach Pathway Commons");
+                     }
+                }
+                finally
+                {
+                    //release connection and close socket to stop IllegalStateException being generated following 460 error
+                    if(searchClientResponse != null)
+                    {
+                        searchClientResponse.releaseConnection(); 
+                    }
+                    logger.info("setting cursor to default");
+                    ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);
+                    //TODO re-enable buttons
+                }
+
+            }
+         };
+        searchWorker.execute();
+  }
+    
+    private void displaySearchResults()
+    {
+        model.setRowCount(0); //clear previous search results
+        Joiner joiner = Joiner.on(',').skipNulls();
+
+        for(SearchHit hit : searchHits)
         {
-           statusLabel.setText("Searching..."); //TODO timeout
-           this.getRootPane().setCursor(waitCursor);
-           
-           /* TODO run search in thread
-           SwingWorker searchWorker = new SwingWorker<SearchResponse, Void>()
-           {
-               public SearchResponse doInBackground()
-               {
-                   
-               }
-               
-               public void done()
-               {
-                   
-               }
-            };
-           */
-           searchClientResponse = searchClientRequest.get(SearchResponse.class);
-           int statusCode = searchClientResponse.getStatus();
-           if(statusCode != 200) //search failed
-           {
-               throw new PathwayCommonsException(statusCode);
-           }
-           SearchResponse searchResponse = searchClientResponse.getEntity();
+            List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
 
-           statusLabel.setText("Search complete: success!");
-           totalHits = searchResponse.getNumHits();
-           numHitsLabel.setText("Hits: " + totalHits);
+            //extract organism ID for each organism URI
+            String[] organismArray = organismList.toArray(new String[0]);
+            for (int i = 0; i < organismArray.length; i++)
+            {
+                String organismString = organismArray[i];
+                organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+                //add to NCBI ID/name map for later web service lookup if not already added
+                if(!organismIdNameMap.containsKey(organismArray[i]))
+                {
+                    organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
+                }
+            }
+            
+            String joinedOrganisms = joiner.join(organismArray); //comma-separated string of organisms for display
 
-           searchHits = searchResponse.getSearchHit();
-           int numRetrieved = searchHits.size();
-           retrievedLabel.setText("Retrieved: " + numRetrieved);
+            //comma-separated string of datasources for display
+            List<String> databases = hit.getDataSource();
+            String[] databaseArray = databases.toArray(new String[0]);
+            for(int i = 0; i < databaseArray.length; i++)
+            {
+                String databaseUri = databaseArray[i];
 
-           int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
+                //replace with database real name if found in map
+                for (Map.Entry<String, String> entry : databaseUriDisplay.entrySet()) 
+                {
+                    String databaseString = entry.getKey();
+                    if(databaseUri.contains(databaseString))
+                    {
+                        databaseArray[i] = entry.getValue();
+                    }
+                }
+            }
+            String joinedDatabases = joiner.join(databaseArray);
 
-           //display current page number
-           currentPage = searchResponse.getPageNo();
-           pagesLabel.setText("Page: " + currentPage);
-
-           //INT[(numHits-1)/numHitsPerPage+1].
-           //totalPages = 
-
-           //enable/disable previous button
-           if(currentPage > 0) //on first page, disable previous
-           {
-               previousButton.setEnabled(true);
-           }
-           else
-           {
-               previousButton.setEnabled(false);
-           }
-
-           //enable/disable next button
-           int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
-           if((currentPage + 1) < numPages) //pages indexed from zero
-           {
-               nextButton.setEnabled(true);
-           }
-           else
-           {
-               nextButton.setEnabled(false);
-           }
-
-           model.setRowCount(0); //clear previous search results
-
-           //map of search hit database names to display names for search results
-           Map<String, String> databaseUriDisplay = new HashMap<String, String>();
-           databaseUriDisplay.put("reactome", "Reactome");
-           databaseUriDisplay.put("pid", "NCI Nature");
-           databaseUriDisplay.put("psp", "PhosphoSitePlus");
-           databaseUriDisplay.put("humancyc", "HumanCyc");
-           databaseUriDisplay.put("hprd", "HPRD");
-           databaseUriDisplay.put("panther", "PANTHER");
-
-           Joiner joiner = Joiner.on(',').skipNulls();
-
-           for(SearchHit hit : searchHits)
-           {
-               List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
-
-               //extract organism ID for each organism URI
-               String[] organismArray = organismList.toArray(new String[0]);
-               for (int i = 0; i < organismArray.length; i++)
-               {
-                   String organismString = organismArray[i];
-                   organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-                   //add to NCBI ID/name map for later web service lookup if not already added
-                   if(!organismIdNameMap.containsKey(organismArray[i]))
-                   {
-                       organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
-                   }
-               }
-
-               //display comma-separated list of organisms
-               String joinedOrganisms = joiner.join(organismArray);
-
-               //display datasource
-               List<String> databases = hit.getDataSource();
-               String[] databaseArray = databases.toArray(new String[0]);
-               for(int i = 0; i < databaseArray.length; i++)
-               {
-                   String databaseUri = databaseArray[i];
-
-                   //replace with database real name if found in map
-                   for (Map.Entry<String, String> entry : databaseUriDisplay.entrySet()) 
-                   {
-                       String databaseString = entry.getKey();
-                       if(databaseUri.contains(databaseString))
-                       {
-                           databaseArray[i] = entry.getValue();
-                       }
-                   }
-               }
-               String joinedDatabases = joiner.join(databaseArray);
-
-               //display BioPAX Class
-
-               model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
-           }
-
-           if(this.organismIdNameMap.size() > 0)
-           {
-               //populate organism scientific names from NCBI web service
-               EFetchTaxonService service = new EFetchTaxonService();
-               EUtilsServiceSoap serviceSoap = service.getEUtilsServiceSoap();
-               ObjectFactory objectFactory = new ObjectFactory();
-               EFetchRequest requ = objectFactory.createEFetchRequest();
-               String eFetchQuery = joiner.join(this.organismIdNameMap.keySet()); //comma-separated organism IDs
-               requ.setId(eFetchQuery);
-               EFetchResult resp = serviceSoap.runEFetch(requ);
-               logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
-               List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
-               for(TaxonType taxonType : taxon)
-               {
-                   organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
-               }
-           }
-        } //end try        
-        catch(PathwayCommonsException exception)
+            model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
+        }//end for
+    }
+    
+    /**
+    * Populate organism scientific names from NCBI web service
+    */
+    private void fetchScientificNames()
+    {
+        EFetchTaxonService service = new EFetchTaxonService();
+        EUtilsServiceSoap serviceSoap = service.getEUtilsServiceSoap();
+        ObjectFactory objectFactory = new ObjectFactory();
+        EFetchRequest requ = objectFactory.createEFetchRequest();
+         
+        //set comma-separated String of organism IDs as search parameter
+        Joiner joiner = Joiner.on(',').skipNulls();
+        String eFetchQuery = joiner.join(this.organismIdNameMap.keySet());
+        requ.setId(eFetchQuery);
+        
+        EFetchResult resp = serviceSoap.runEFetch(requ);
+        logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
+        List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
+        for(TaxonType taxonType : taxon)
         {
-           logger.warning(exception.getMessage());
-           model.setRowCount(0); //clear previous search results
-           statusLabel.setText("Search error: " + exception.getMessage());
-        }
-        catch(IllegalStateException exception)
-        {
-           logger.warning(exception.getMessage());
-           statusLabel.setText("Search failed: connection not released");
-        }
-        catch(UnknownHostException exception) //offline or Pathway Commons server down
-        {
-           logger.warning(exception.getMessage());
-           statusLabel.setText("Search failed: unable to reach Pathway Commons");
-        }
-        catch(Exception exception)
-        {
-           logger.warning(exception.getMessage());
-           statusLabel.setText("Search failed: generic error");
-        }
-        finally
-        {
-           //release connection and close socket to stop IllegalStateException being generated following 460 error
-           if(searchClientResponse != null)
-           {
-               searchClientResponse.releaseConnection(); 
-           }
-           this.getRootPane().setCursor(defaultCursor);
+            organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
         }
     }
     

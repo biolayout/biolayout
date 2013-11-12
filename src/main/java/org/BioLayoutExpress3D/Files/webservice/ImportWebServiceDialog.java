@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
@@ -121,10 +122,12 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
-    private ClientResponse<SearchResponse> searchClientResponse; //web service response
     private Map<String, String> databaseUriDisplay; //map of database URI to display name
 
-    
+    private ClientRequest searchClientRequest; //web service request
+    private ClientResponse<SearchResponse> searchClientResponse; //web service response
+    private SearchWorker searchWorker = null; //search concurrent task runner
+
     /**
      * Name of directory where files are downloaded from the web service.
      */
@@ -520,6 +523,140 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     }
     
     /**
+     * Performs Pathway Commons search concurrently
+     */
+    private class SearchWorker extends SwingWorker<SearchResponse, Void>
+    {
+        /**
+         * Perform Pathway Commons search
+         */
+        @Override
+        public SearchResponse doInBackground() throws PathwayCommonsException, UnknownHostException, Exception
+        {
+            //display message/cursor and disable buttons
+            statusLabel.setText("Searching..."); //TODO timeout
+            ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
+            previousButton.setEnabled(false);
+            nextButton.setEnabled(false);
+            searchButton.setEnabled(false);
+
+            //perform search
+            searchClientResponse = searchClientRequest.get(SearchResponse.class);
+            int statusCode = searchClientResponse.getStatus(); //TODO not null check
+            if(statusCode != 200) //search failed
+            {
+                throw new PathwayCommonsException(statusCode);
+            }
+            return searchClientResponse.getEntity(); //marshall XML response into Java object 
+        }
+
+        /**
+         * Display search results
+         */
+        @Override
+        public void done()
+        {
+            try
+            {
+                SearchResponse searchResponse = get(); //calls doInBackground() to perform search //TODO timeout
+                statusLabel.setText("Search complete: success!");
+                totalHits = searchResponse.getNumHits();
+                numHitsLabel.setText("Hits: " + totalHits);
+
+                searchHits = searchResponse.getSearchHit();
+                int numRetrieved = searchHits.size();
+                retrievedLabel.setText("Retrieved: " + numRetrieved);
+
+                int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
+
+                //display current page number
+                currentPage = searchResponse.getPageNo();
+                pagesLabel.setText("Page: " + currentPage);
+
+                displaySearchResults();
+
+                //enable/disable previous button
+                if(currentPage > 0) //on first page, disable previous
+                {
+                    previousButton.setEnabled(true);
+                }
+                else
+                {
+                    previousButton.setEnabled(false);
+                }
+
+                //enable/disable next button
+                int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
+                if((currentPage + 1) < numPages) //pages indexed from zero
+                {
+                    nextButton.setEnabled(true);
+                }
+                else
+                {
+                    nextButton.setEnabled(false);
+                }
+
+                searchButton.setEnabled(true);
+
+
+                if(organismIdNameMap.size() > 0)
+                {
+                    fetchScientificNames(); //populate organismIdNameMap from NCBI SOAP web service
+                }
+            }
+            catch(IllegalStateException exception) //runtime exception
+            {
+               logger.warning(exception.getMessage());
+               statusLabel.setText("Search failed: connection not released");
+            }
+            catch(InterruptedException exception)
+            {
+                logger.warning(exception.getMessage());
+                 statusLabel.setText("Search failed: interrupted");
+            }
+            catch(ExecutionException exception)
+            {
+                 logger.warning(exception.getMessage());                     
+                 Throwable cause = exception.getCause(); //get wrapped exception - the culprit!
+                 if(cause != null)
+                 {
+                     if(cause instanceof PathwayCommonsException) //no search hits
+                     {
+                        logger.warning(cause.getMessage());
+                        model.setRowCount(0); //clear previous search results
+                        statusLabel.setText("Search error: " + cause.getMessage());
+                     }
+                     else if(cause instanceof UnknownHostException)
+                     {
+                        logger.warning(cause.getMessage());
+                        statusLabel.setText("Search failed: unable to reach Pathway Commons");
+                     }
+                     else
+                     {
+                         logger.warning(exception.getMessage());
+                         statusLabel.setText("Search failed: generic error");
+                     }
+                 }
+                 else
+                 {
+                    statusLabel.setText("Search failed: unable to reach Pathway Commons");
+                 }
+            }
+            finally
+            {
+                //release connection and close socket to stop IllegalStateException being generated following 460 error
+                if(searchClientResponse != null)
+                {
+                    searchClientResponse.releaseConnection(); 
+                }
+                logger.info("setting cursor to default");
+                ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);
+                //TODO re-enable buttons
+            }
+        }
+    }
+    
+    /**
      * Performs a GET operation on Pathway Commons cPath2 REST web service.
      * Downloads pathway file (OWL/SIF) to the download directory
      * @param uriString
@@ -576,7 +713,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
               //TODO previous/next should remember last search params in case user changes
             String networkType = this.networkTypeCombo.getSelectedItem().toString();
 
-            ClientRequest searchClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
+            searchClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
             if(networkType.equals("Top Pathways"))
             {
                 searchClientRequest
@@ -639,22 +776,33 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
 
-            search(searchClientRequest);
+            search(); //perform search
 
         }
-        else if(cancelButton == e.getSource()) {
+        else if(cancelButton == e.getSource()) //close dialog
+        { 
             logger.info("User cancelled.");
-            setVisible(false);
+            if(searchWorker != null && !searchWorker.isDone()) //stop search process before closing
+            {
+                try
+                {
+                    boolean cancelled = searchWorker.cancel(true);
+                    logger.info("search SwingWorker cancel returned " + cancelled);
+                }
+                catch(CancellationException exception)
+                {
+                    logger.warning("Unable to cancel search SwingWorker: " + exception.getMessage());
+                }
+            }
+            setVisible(false); //hide dialog
         }
         else if(anyOrganismCheckBox == e.getSource()) //"Any" organism checkbox has been checked or unchecked
         {
-            //enable/disable organism checkboxes and text field
-            //enable/disable organism text field
-            enableDisableOrganism(anyOrganismCheckBox.isSelected());
+            enableDisableOrganism(anyOrganismCheckBox.isSelected()); //enable/disable organism checkboxes and text field
         }
         else if(allDatasourceCheckBox == e.getSource())
         {
-            enableDisableDatasource(allDatasourceCheckBox.isSelected());
+            enableDisableDatasource(allDatasourceCheckBox.isSelected()); //enable/disable datasource checkboxes and text field
         }
     }
     
@@ -662,139 +810,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
      * Runs Pathway Commons REST web service SEARCH and displays results
      * @param searchClientRequest - contains search parameters
      */
-    private void search(ClientRequest searchClientRequest)
+    private void search()
     {
-        //perform search and display search response
-
-        final ClientRequest localClientRequest = searchClientRequest;
-
-        //run search in thread
-        SwingWorker searchWorker = new SwingWorker<SearchResponse, Void>(){
-
-            /**
-             * Perform Pathway Commons search
-             */
-            @Override
-            public SearchResponse doInBackground() throws PathwayCommonsException, UnknownHostException, Exception
-            {
-                statusLabel.setText("Searching..."); //TODO timeout
-                ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
-                //TODO disable buttons
-                 searchClientResponse = localClientRequest.get(SearchResponse.class);
-                int statusCode = searchClientResponse.getStatus(); //TODO not null check
-                if(statusCode != 200) //search failed
-                {
-                    throw new PathwayCommonsException(statusCode);
-                }
-                return searchClientResponse.getEntity(); //marshall XML response into Java object 
-            }
-
-            /**
-             * Display search results
-             */
-            @Override
-            public void done()
-            {
-                try
-                {
-                    SearchResponse searchResponse = get(); //calls doInBackground() to perform search //TODO timeout //TODO cancel
-                    statusLabel.setText("Search complete: success!");
-                    totalHits = searchResponse.getNumHits();
-                    numHitsLabel.setText("Hits: " + totalHits);
-
-                    searchHits = searchResponse.getSearchHit();
-                    int numRetrieved = searchHits.size();
-                    retrievedLabel.setText("Retrieved: " + numRetrieved);
-
-                    int maxHitsPerPage = searchResponse.getMaxHitsPerPage();
-
-                    //display current page number
-                    currentPage = searchResponse.getPageNo();
-                    pagesLabel.setText("Page: " + currentPage);
-
-                    //enable/disable previous button
-                    if(currentPage > 0) //on first page, disable previous
-                    {
-                        previousButton.setEnabled(true);
-                    }
-                    else
-                    {
-                        previousButton.setEnabled(false);
-                    }
-
-                    //enable/disable next button
-                    int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
-                    if((currentPage + 1) < numPages) //pages indexed from zero
-                    {
-                        nextButton.setEnabled(true);
-                    }
-                    else
-                    {
-                        nextButton.setEnabled(false);
-                    }
-
-                    displaySearchResults();
-
-                    if(organismIdNameMap.size() > 0)
-                    {
-                        fetchScientificNames(); //populate organismIdNameMap from NCBI SOAP web service
-                    }
-                }
-                catch(IllegalStateException exception) //runtime exception
-                {
-                   logger.warning(exception.getMessage());
-                   statusLabel.setText("Search failed: connection not released");
-                }
-                //TODO CancellationException
-                catch(InterruptedException exception)
-                {
-                    logger.warning(exception.getMessage());
-                     statusLabel.setText("Search failed: interrupted");
-                }
-                catch(ExecutionException exception)
-                {
-                     logger.warning(exception.getMessage());                     
-                     Throwable cause = exception.getCause(); //get wrapped exception - the culprit!
-                     if(cause != null)
-                     {
-                         if(cause instanceof PathwayCommonsException) //no search hits
-                         {
-                            logger.warning(cause.getMessage());
-                            model.setRowCount(0); //clear previous search results
-                            statusLabel.setText("Search error: " + cause.getMessage());
-                         }
-                         else if(cause instanceof UnknownHostException)
-                         {
-                            logger.warning(cause.getMessage());
-                            statusLabel.setText("Search failed: unable to reach Pathway Commons");
-                         }
-                         else
-                         {
-                             logger.warning(exception.getMessage());
-                             statusLabel.setText("Search failed: generic error");
-                         }
-                     }
-                     else
-                     {
-                        statusLabel.setText("Search failed: unable to reach Pathway Commons");
-                     }
-                }
-                finally
-                {
-                    //release connection and close socket to stop IllegalStateException being generated following 460 error
-                    if(searchClientResponse != null)
-                    {
-                        searchClientResponse.releaseConnection(); 
-                    }
-                    logger.info("setting cursor to default");
-                    ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);
-                    //TODO re-enable buttons
-                }
-
-            }
-         };
+        searchWorker = new SearchWorker(); //concurrent threading for search process
         searchWorker.execute();
-  }
+    }
     
     private void displaySearchResults()
     {

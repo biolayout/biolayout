@@ -28,6 +28,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -553,25 +556,52 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          * Perform Pathway Commons search
          */
         @Override
-        public SearchResponse doInBackground() throws PathwayCommonsException, UnknownHostException, Exception
+        public SearchResponse doInBackground() throws Exception
         {
-            //display message/cursor and disable buttons
-            statusLabel.setText("Searching..."); //TODO timeout
-            ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
-            previousButton.setEnabled(false);
-            nextButton.setEnabled(false);
-            searchButton.setEnabled(false);
-            stopButton.setEnabled(true);
-            openButton.setEnabled(false);
-
-            //perform search
-            searchClientResponse = searchClientRequest.get(SearchResponse.class);
-            int statusCode = searchClientResponse.getStatus(); //TODO not null check
-            if(statusCode != 200) //search failed
+            //SearchResponse actualSearchResponse;
+            SwingWorker actualWorker = new SwingWorker<SearchResponse, Void>() //inner worker to handle timeout
             {
-                throw new PathwayCommonsException(statusCode);
+
+                    @Override
+                    public SearchResponse doInBackground() throws Exception {
+                        //display message/cursor and disable buttons
+                        statusLabel.setText("Searching..."); //TODO timeout
+                        ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
+                        previousButton.setEnabled(false);
+                        nextButton.setEnabled(false);
+                        searchButton.setEnabled(false);
+                        stopButton.setEnabled(true);
+                        openButton.setEnabled(false);
+
+                        //perform search
+                        searchClientResponse = searchClientRequest.get(SearchResponse.class);
+                        int statusCode = searchClientResponse.getStatus(); //TODO not null check
+                        if(statusCode != 200) //search failed
+                        {
+                            throw new PathwayCommonsException(statusCode);
+                        }
+
+                        return searchClientResponse.getEntity(); //marshall XML response into Java object 
+                    }
+            };
+
+            actualWorker.execute();
+            try 
+            {
+                SearchResponse sr = (SearchResponse)actualWorker.get(15, TimeUnit.SECONDS); //15 second timeout
+                return sr;
+            } 
+            catch (Exception exception) 
+            {
+                logger.warning(exception.getMessage());
+                actualWorker.cancel(true); //stop inner search thread
+                Exception cause = (Exception)exception.getCause(); //PathwayCommonsException is wrapped in ExecutionException
+                if(cause != null)
+                {
+                    exception = cause;
+                }
+                throw exception;
             }
-            return searchClientResponse.getEntity(); //marshall XML response into Java object 
         }
 
         /**
@@ -616,35 +646,43 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             catch(InterruptedException exception)
             {
                 logger.warning(exception.getMessage());
-                 statusLabel.setText("Search failed: interrupted");
+                statusLabel.setText("Search failed: interrupted");
             }
             catch(ExecutionException exception)
             {
                  logger.warning(exception.getMessage());                     
                  Throwable cause = exception.getCause(); //get wrapped exception - the culprit!
-                 if(cause != null)
+                 if(cause == null)
                  {
-                     if(cause instanceof PathwayCommonsException) //no search hits
-                     {
-                        logger.warning(cause.getMessage());
-                        clearSearchResults(); //clear previous search results
-                        statusLabel.setText("Search error: " + cause.getMessage());
-                     }
-                     else if(cause instanceof UnknownHostException)
-                     {
-                        logger.warning(cause.getMessage());
-                        statusLabel.setText("Search failed: unable to reach Pathway Commons");
-                     }
-                     else
-                     {
-                         logger.warning(exception.getMessage());
-                         statusLabel.setText("Search failed: generic error");
-                     }
+                     cause = exception;
                  }
-                 else
-                 {
-                    statusLabel.setText("Search failed: unable to reach Pathway Commons");
-                 }
+                     
+                if(cause instanceof PathwayCommonsException) //no search hits
+                {
+                   logger.warning(cause.getMessage());
+                   clearSearchResults(); //clear previous search results
+                   statusLabel.setText("Search error: " + cause.getMessage());
+                }
+                else if(cause instanceof UnknownHostException) //Pathway Commons down
+                {
+                   logger.warning(cause.getMessage());
+                   statusLabel.setText("Search failed: unable to reach Pathway Commons");
+                }
+                else if(cause instanceof SocketException) //computer offline
+                {
+                   logger.warning(cause.getMessage());
+                   statusLabel.setText("Search failed: offline");
+                }
+                else if(cause instanceof TimeoutException) //no response after set time
+                {
+                   logger.warning(cause.getMessage());
+                   statusLabel.setText("Search failed: timeout");
+                }
+                else
+                {
+                    logger.warning(exception.getMessage());
+                    statusLabel.setText("Search failed: generic error");
+                }
             }
             finally
             {
@@ -719,8 +757,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
 
         String responseString = getClientResponse.getEntity();
-        logger.info(getClientResponse.getEntity());
-        logger.info("DataFolder: " + DataFolder.get());
+        logger.info(responseString);
 
         //create directory to store downloaded file
         File importDir = new File(DataFolder.get(), DIRECTORY);

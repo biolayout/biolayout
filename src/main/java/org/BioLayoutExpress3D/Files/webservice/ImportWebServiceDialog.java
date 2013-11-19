@@ -126,9 +126,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
     private Map<String, String> databaseUriDisplay; //map of database URI to display name
 
-    private ClientRequest searchClientRequest; //web service request
-    private ClientResponse<SearchResponse> searchClientResponse; //web service response
-    private SearchWorker searchWorker = null; //search concurrent task runner
+    private ClientRequest searchClientRequest; //web service request containing search params
+    private ClientResponse<SearchResponse> searchClientResponse; //web service response containing search results
+    private SearchWorker searchWorker = null; //search operation concurrent task runner
+    
+    private ClientRequest getClientRequest; //web service request containing GET params
+    private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
+    private GetWorker getWorker = null; //GET operation concurrent task runner
 
     /**
      * Name of directory where files are downloaded from the web service.
@@ -503,34 +507,119 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         String hitName = table.getModel().getValueAt(modelRow, 0).toString(); //search hit name
         String fileName = hitName + fileExtension; //name of .owl file to be created
+        
+        getClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT);
+        getClientRequest
+            .pathParameter("command", COMMAND_GET)
+            .queryParameter("uri", uriString)
+            .queryParameter("format", formatParameter);
 
-        try
-        {
-            openButton.setEnabled(false);
-            get(uriString, formatParameter, fileName); //retrieve file from Pathway Commons and load file for display
-            statusLabel.setText("Success: Downloaded file " + fileName + " from Pathway Commons");
-        }
-        catch(PathwayCommonsException exception)
-        {
-            logger.warning(exception.getMessage());
-            statusLabel.setText("Fetch error: " + exception.getMessage());
-        }
-        catch(IOException exception) //can't save file or offline
-        {
-            logger.warning(exception.getMessage());
-            statusLabel.setText("Fetch error: Unable to retrieve file: " + fileName + " from Pathway Commons");
-        }
-        catch(Exception exception)
-        {
-            logger.warning(exception.getMessage());
-            statusLabel.setText("Fetch error: Unable to get " + fileName + " from Pathway Commons"); 
-        }
-        finally
-        {
-            openButton.setEnabled(true);
-        }
+        //retrieve file from Pathway Commons and load file for display
+        GetWorker getWorker = new GetWorker(fileName);
+        getWorker.execute();
     }
 
+    /**
+     * Performs a GET operation on Pathway Commons cPath2 REST web service.
+     * Downloads pathway file (OWL/SIF) to the download directory
+     * @param uriString
+     * @param formatParameter
+     * @param fileName 
+     * @throws PathwayCommonsException - when HTTP status code is not 200
+     * @throws IOException - if OWL file cannot be written
+     * @throws Exception - web service does not respond
+     */
+    private void get(String fileName) throws PathwayCommonsException, IOException, Exception
+    {
+        
+    }
+    
+    /*
+     * Performs Pathway Commons GET operation concurrently and displays graph
+     */
+    private class GetWorker extends SwingWorker<String, Void>
+    {
+        /**
+         * Constructor
+         * @param fileName - name of file to save BioPAX data in
+         */
+        public GetWorker(String fileName) 
+        {
+            super();
+            fName = fileName;
+        }
+        
+        private String fName;
+        
+        @Override
+        /**
+         * Perform GET operation on Pathway Commons web service to retrieve BioPAX file
+         * @return a BioPAX document as a String
+         */
+        protected String doInBackground() throws Exception  //TODO anonymous inner worker for timeout
+        {
+            openButton.setEnabled(false);
+            getClientResponse = getClientRequest.get(String.class); //throws Exception
+            int statusCode = getClientResponse.getStatus();
+            if(statusCode != 200) //search failed
+            {
+                throw new PathwayCommonsException(statusCode);
+            }
+
+            String responseString = getClientResponse.getEntity();
+            return responseString;
+        }
+       
+        @Override
+        protected void done() 
+        {
+            try
+            {
+                String responseString = get();
+                logger.info(responseString);
+
+                //create directory to store downloaded file
+                File importDir = new File(DataFolder.get(), DIRECTORY);
+                if(!importDir.exists())
+                {
+                    importDir.mkdir();
+                }
+
+                //create file and save web service data
+                File importFile = new File(importDir, fName);
+                logger.info("Writing to file " + importFile);
+                FileUtils.writeStringToFile(importFile, responseString); //throws IOException
+                statusLabel.setText("Success: Downloaded file " + fName + " from Pathway Commons");              
+
+                //display file
+                logger.info("Opening file " + importFile);
+                frame.requestFocus();
+                frame.toFront();                        
+                frame.loadDataSet(importFile);
+                
+            }
+            catch(PathwayCommonsException exception) //HTTP error code returned from GET request
+            {
+               logger.warning(exception.getMessage());
+               statusLabel.setText("Fetch error: " + exception.getMessage());
+            }
+            catch(IOException exception) //can't save file or offline or service down
+            {
+               logger.warning(exception.getMessage());
+               statusLabel.setText("Fetch error: Unable to retrieve file: " + fName + " from Pathway Commons");
+            }
+            catch(Exception exception)
+            {
+               logger.warning(exception.getMessage());
+               statusLabel.setText("Fetch error: Unable to get " + fName + " from Pathway Commons"); 
+            }
+            finally
+            {
+               openButton.setEnabled(true);
+            }
+        }
+    }
+    
     /**
      * Creates a JButton with an ActionListener for this dialog. Convenience method.
      * @param text
@@ -556,33 +645,32 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          * Perform Pathway Commons search
          */
         @Override
-        public SearchResponse doInBackground() throws Exception
+        protected SearchResponse doInBackground() throws Exception
         {
-            //SearchResponse actualSearchResponse;
-            SwingWorker actualWorker = new SwingWorker<SearchResponse, Void>() //inner worker to handle timeout
+            SwingWorker actualWorker = new SwingWorker<SearchResponse, Void>() //anonymous inner worker to handle timeout
             {
+                @Override
+                protected SearchResponse doInBackground() throws Exception 
+                {
+                    //display message/cursor and disable buttons
+                    statusLabel.setText("Searching...");
+                    ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
+                    previousButton.setEnabled(false);
+                    nextButton.setEnabled(false);
+                    searchButton.setEnabled(false);
+                    stopButton.setEnabled(true);
+                    openButton.setEnabled(false);
 
-                    @Override
-                    public SearchResponse doInBackground() throws Exception {
-                        //display message/cursor and disable buttons
-                        statusLabel.setText("Searching..."); //TODO timeout
-                        ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
-                        previousButton.setEnabled(false);
-                        nextButton.setEnabled(false);
-                        searchButton.setEnabled(false);
-                        stopButton.setEnabled(true);
-                        openButton.setEnabled(false);
-
-                        //perform search
-                        searchClientResponse = searchClientRequest.get(SearchResponse.class);
-                        int statusCode = searchClientResponse.getStatus(); //TODO not null check
-                        if(statusCode != 200) //search failed
-                        {
-                            throw new PathwayCommonsException(statusCode);
-                        }
-
-                        return searchClientResponse.getEntity(); //marshall XML response into Java object 
+                    //perform search
+                    searchClientResponse = searchClientRequest.get(SearchResponse.class);
+                    int statusCode = searchClientResponse.getStatus(); //TODO not null check
+                    if(statusCode != 200) //search failed
+                    {
+                        throw new PathwayCommonsException(statusCode);
                     }
+
+                    return searchClientResponse.getEntity(); //marshall XML response into Java object 
+                }
             };
 
             actualWorker.execute();
@@ -608,7 +696,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          * Display search results
          */
         @Override
-        public void done()
+        protected void done()
         {
             try
             {
@@ -729,54 +817,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         {
             previousButton.setEnabled(false);
         }
-    }
-    
-    /**
-     * Performs a GET operation on Pathway Commons cPath2 REST web service.
-     * Downloads pathway file (OWL/SIF) to the download directory
-     * @param uriString
-     * @param formatParameter
-     * @param fileName 
-     * @throws PathwayCommonsException - when HTTP status code is not 200
-     * @throws IOException - if OWL file cannot be written
-     * @throws Exception - web service does not respond
-     */
-    private void get(String uriString, String formatParameter, String fileName) throws PathwayCommonsException, IOException, Exception
-    {
-        ClientRequest req = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT);
-        req
-            .pathParameter("command", COMMAND_GET)
-            .queryParameter("uri", uriString)
-            .queryParameter("format", formatParameter);
-        
-        ClientResponse<String> getClientResponse = req.get(String.class); //throws Exception
-        int statusCode = getClientResponse.getStatus();
-        if(statusCode != 200) //search failed
-        {
-            throw new PathwayCommonsException(statusCode);
-        }
-
-        String responseString = getClientResponse.getEntity();
-        logger.info(responseString);
-
-        //create directory to store downloaded file
-        File importDir = new File(DataFolder.get(), DIRECTORY);
-        if(!importDir.exists())
-        {
-            importDir.mkdir();
-        }
-
-        //create file and save web service data
-        File importFile = new File(importDir, fileName);
-        logger.info("Writing to file " + importFile);
-        FileUtils.writeStringToFile(importFile, responseString); //throws IOException
-
-        //display file
-        logger.info("Opening file " + importFile);
-
-        frame.requestFocus();
-        frame.toFront();                        
-        frame.loadDataSet(importFile);
     }
     
     @Override

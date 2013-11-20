@@ -487,7 +487,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
      * Get a BioPAX OWL file from Pathway Commons and display network.
      * Gets URI of selected search hit in table
      * Sends GET request to Pathway Commons
-     * Downloads the file to the application directory.
+     * Downloads the file to a sub-directory of the application directory defined by DIRECTORY
      * Loads the network in BioLayout.
      * @throws IndexOutOfBoundsException - if table row not selected or not valid
      */
@@ -499,7 +499,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         logger.info("Selected table model row " + modelRow);
 
         SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
-        String uriString = hit.getUri();
+        String uriString = hit.getUri(); //URI for GET request
         logger.info("URI is " + uriString);
 
         String fileExtension = ".owl";
@@ -515,16 +515,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             .queryParameter("format", formatParameter);
 
         //retrieve file from Pathway Commons and load file for display
-        GetWorker getWorker = new GetWorker(fileName);
+        getWorker = new GetWorker(fileName);
         getWorker.execute();
     }
 
     /**
      * Performs a GET operation on Pathway Commons cPath2 REST web service.
      * Downloads pathway file (OWL/SIF) to the download directory
-     * @param uriString
-     * @param formatParameter
-     * @param fileName 
      * @throws PathwayCommonsException - when HTTP status code is not 200
      * @throws IOException - if OWL file cannot be written
      * @throws Exception - web service does not respond
@@ -535,9 +532,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     }
     
     /*
-     * Performs Pathway Commons GET operation concurrently and displays graph
+     * Performs Pathway Commons CPath2 web service GET operation concurrently and displays graph
      */
-    private class GetWorker extends SwingWorker<String, Void>
+    private class GetWorker extends SwingWorker<File, Void>
     {
         /**
          * Constructor
@@ -549,14 +546,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             fName = fileName;
         }
         
+        /**
+         * The name of the BioPAX OWL file to be saved in sub-directory DIRECTORY of the application directorY
+         */
         private String fName;
         
         @Override
         /**
          * Perform GET operation on Pathway Commons web service to retrieve BioPAX file
-         * @return a BioPAX document as a String
+         * @return a BioPAX OWL File
          */
-        protected String doInBackground() throws Exception  //TODO anonymous inner worker for timeout
+        protected File doInBackground() throws Exception  //TODO anonymous inner worker for timeout
         {
             openButton.setEnabled(false);
             getClientResponse = getClientRequest.get(String.class); //throws Exception
@@ -567,54 +567,90 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
 
             String responseString = getClientResponse.getEntity();
-            return responseString;
+            
+
+            statusLabel.setText("Downloading file " + fName + " from Pathway Commons");              
+            logger.info(responseString);
+
+            //create directory to store downloaded file
+            File importDir = new File(DataFolder.get(), DIRECTORY);
+            if(!importDir.exists())
+            {
+                importDir.mkdir();
+            }
+
+            //create file and save web service data
+            File importFile = new File(importDir, fName);
+            logger.info("Writing to file " + importFile);
+            FileUtils.writeStringToFile(importFile, responseString); //throws IOException
+            statusLabel.setText("Success: Downloaded file " + fName + " from Pathway Commons");      
+            return importFile;
         }
        
         @Override
+        /**
+         * Save OWL file, parse and display graph
+         */
         protected void done() 
         {
+            /*
+            * @throws PathwayCommonsException - when HTTP status code is not 200
+            * @throws IOException - if OWL file cannot be written
+            * @throws Exception - web service does not respond
+            */
             try
             {
-                String responseString = get();
-                logger.info(responseString);
-
-                //create directory to store downloaded file
-                File importDir = new File(DataFolder.get(), DIRECTORY);
-                if(!importDir.exists())
-                {
-                    importDir.mkdir();
-                }
-
-                //create file and save web service data
-                File importFile = new File(importDir, fName);
-                logger.info("Writing to file " + importFile);
-                FileUtils.writeStringToFile(importFile, responseString); //throws IOException
-                statusLabel.setText("Success: Downloaded file " + fName + " from Pathway Commons");              
-
-                //display file
+                File importFile = get(); //perform Pathway Commons GET in the background
+                //parse and display file
                 logger.info("Opening file " + importFile);
                 frame.requestFocus();
                 frame.toFront();                        
                 frame.loadDataSet(importFile);
                 
             }
-            catch(PathwayCommonsException exception) //HTTP error code returned from GET request
+            catch(IllegalStateException exception) //runtime exception
             {
                logger.warning(exception.getMessage());
-               statusLabel.setText("Fetch error: " + exception.getMessage());
+               statusLabel.setText("Search failed: connection not released");
             }
-            catch(IOException exception) //can't save file or offline or service down
+            catch(InterruptedException exception)
             {
-               logger.warning(exception.getMessage());
-               statusLabel.setText("Fetch error: Unable to retrieve file: " + fName + " from Pathway Commons");
+                logger.warning(exception.getMessage());
+                statusLabel.setText("Search failed: interrupted");
             }
             catch(Exception exception)
             {
-               logger.warning(exception.getMessage());
-               statusLabel.setText("Fetch error: Unable to get " + fName + " from Pathway Commons"); 
+                logger.warning(exception.getMessage());                     
+                Throwable cause = exception.getCause(); //get wrapped exception
+                if(cause == null)
+                {
+                    cause = exception;
+                }
+                     
+                if(cause instanceof PathwayCommonsException) //HTTP error code returned from GET request
+                {
+                    logger.warning(exception.getMessage());
+                    statusLabel.setText("Fetch error: " + exception.getMessage());
+                }
+                else if(cause instanceof UnknownHostException) //Pathway Commons down
+                {
+                   logger.warning(cause.getMessage());
+                   statusLabel.setText("Fetch error: unable to reach Pathway Commons");
+                }
+                else if(cause instanceof SocketException) //computer offline
+                {
+                   logger.warning(cause.getMessage());
+                   statusLabel.setText("Fetch error: offline");
+                }
+                else
+                {
+                    logger.warning(exception.getMessage());
+                    statusLabel.setText("Fetch error: unable to get " + fName + " from Pathway Commons"); 
+                }
             }
             finally
             {
+                //TODO release connection
                openButton.setEnabled(true);
             }
         }

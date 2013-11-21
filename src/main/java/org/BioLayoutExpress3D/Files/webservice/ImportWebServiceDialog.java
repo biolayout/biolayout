@@ -519,18 +519,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         getWorker.execute();
     }
 
-    /**
-     * Performs a GET operation on Pathway Commons cPath2 REST web service.
-     * Downloads pathway file (OWL/SIF) to the download directory
-     * @throws PathwayCommonsException - when HTTP status code is not 200
-     * @throws IOException - if OWL file cannot be written
-     * @throws Exception - web service does not respond
-     */
-    private void get(String fileName) throws PathwayCommonsException, IOException, Exception
-    {
-        
-    }
-    
     /*
      * Performs Pathway Commons CPath2 web service GET operation concurrently and displays graph
      */
@@ -558,20 +546,52 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          */
         protected File doInBackground() throws Exception  //TODO anonymous inner worker for timeout
         {
-            openButton.setEnabled(false);
-            getClientResponse = getClientRequest.get(String.class); //throws Exception
-            int statusCode = getClientResponse.getStatus();
-            if(statusCode != 200) //search failed
+            SwingWorker actualWorker = new SwingWorker<String, Void>() //anonymous inner worker to handle timeout for GET operation
             {
-                throw new PathwayCommonsException(statusCode);
+                 @Override
+                protected String doInBackground() throws Exception 
+                {
+                    statusLabel.setText("Downloading...");              
+                    ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
+
+                    previousButton.setEnabled(false);
+                    nextButton.setEnabled(false);
+                    searchButton.setEnabled(false);
+
+                    stopButton.setEnabled(true);
+                    openButton.setEnabled(false);
+
+                    getClientResponse = getClientRequest.get(String.class); //throws Exception
+                    int statusCode = getClientResponse.getStatus();
+                    if(statusCode != 200) //search failed
+                    {
+                        throw new PathwayCommonsException(statusCode);
+                    }
+                    
+                    statusLabel.setText("Extracting...");              
+                    String responseString = getClientResponse.getEntity();   
+                    return responseString;
+                }
+                
+            };
+            actualWorker.execute();
+            String responseString = "";
+            try
+            {
+                responseString = (String)actualWorker.get(10, TimeUnit.SECONDS); //TODO constant 
             }
-
-            String responseString = getClientResponse.getEntity();
+            catch(Exception exception)
+            {
+                logger.warning(exception.getMessage());
+                actualWorker.cancel(true); //stop inner search thread
+                Exception cause = (Exception)exception.getCause(); //PathwayCommonsException is wrapped in ExecutionException
+                if(cause != null)
+                {
+                    exception = cause;
+                }
+                throw exception;                
+            }
             
-
-            statusLabel.setText("Downloading file " + fName + " from Pathway Commons");              
-            logger.info(responseString);
-
             //create directory to store downloaded file
             File importDir = new File(DataFolder.get(), DIRECTORY);
             if(!importDir.exists())
@@ -583,7 +603,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             File importFile = new File(importDir, fName);
             logger.info("Writing to file " + importFile);
             FileUtils.writeStringToFile(importFile, responseString); //throws IOException
-            statusLabel.setText("Success: Downloaded file " + fName + " from Pathway Commons");      
+            statusLabel.setText("Success! Downloaded file: " + fName);      
             return importFile;
         }
        
@@ -601,12 +621,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             try
             {
                 File importFile = get(); //perform Pathway Commons GET in the background
+
                 //parse and display file
-                logger.info("Opening file " + importFile);
+                logger.info("Opening file: " + importFile);
                 frame.requestFocus();
                 frame.toFront();                        
                 frame.loadDataSet(importFile);
-                
+                statusLabel.setText("Opened file: " + fName);      
             }
             catch(IllegalStateException exception) //runtime exception
             {
@@ -642,6 +663,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                    logger.warning(cause.getMessage());
                    statusLabel.setText("Fetch error: offline");
                 }
+                else if(cause instanceof TimeoutException) //no response after set time
+                {
+                   logger.warning(cause.getMessage());
+                   statusLabel.setText("Fetch error: timeout");
+                }
                 else
                 {
                     logger.warning(exception.getMessage());
@@ -650,9 +676,66 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             finally
             {
-                //TODO release connection
-               openButton.setEnabled(true);
+                //release connection and close socket to stop IllegalStateException being generated following 460 error
+                if(getClientResponse != null)
+                {
+                    getClientResponse.releaseConnection(); 
+                }
+                
+                ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);                
+                restoreButtons();
             }
+        }
+    }
+    
+    /**
+     * Enable or disable dialog buttons when dialog is in resting state according to search results.
+     */
+    private void restoreButtons()
+    {
+        stopButton.setEnabled(false);
+        
+        if(table.getSelectedRow() != -1) //a row is selected
+        {
+            openButton.setEnabled(true);
+        }
+        
+        searchButton.setEnabled(true);
+        enableDisablePreviousButton(); //enable/disable previous button 
+        enableDisableNextButton(); //enable/disable next button
+    }
+    
+    /**
+     * Enable or disable the Next button according to whether more search hits exist following the current page
+     */
+    private void enableDisableNextButton()
+    {
+        if(maxHitsPerPage > 0 && totalHits > 0) //no hits - avoid division by zero
+        {    
+            int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
+            if((currentPage + 1) < numPages) //pages indexed from zero
+            {
+                nextButton.setEnabled(true);
+            }
+        }
+        else
+        {
+            nextButton.setEnabled(false);
+        }
+    }
+    
+    /**
+     * Enable or disable the Previous button according to whether more search hits exist before the current page
+     */
+    private void enableDisablePreviousButton()
+    {
+        if(currentPage > 0) //on first page, disable previous
+        {
+            previousButton.setEnabled(true);
+        }
+        else
+        {
+            previousButton.setEnabled(false);
         }
     }
     
@@ -754,9 +837,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
                 displaySearchResults();
                 
-                enableDisablePreviousButton(); //enable/disable previous button 
-                enableDisableNextButton(); //enable/disable next button
-
                 if(organismIdNameMap.size() > 0)
                 {
                     fetchScientificNames(); //populate organismIdNameMap from NCBI SOAP web service
@@ -815,43 +895,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 {
                     searchClientResponse.releaseConnection(); 
                 }
-                logger.info("setting cursor to default");
                 ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);                
-                openButton.setEnabled(false);
-                stopButton.setEnabled(false);
-                searchButton.setEnabled(true);
+                restoreButtons();
             }
-        }
-    }
-    
-    /**
-     * Enable or disable the Next button according to whether more search hits exist following the current page
-     */
-    private void enableDisableNextButton()
-    {
-        int numPages = (totalHits + maxHitsPerPage - 1) / maxHitsPerPage; //calculate number of pages, round up integer division
-        if((currentPage + 1) < numPages) //pages indexed from zero
-        {
-            nextButton.setEnabled(true);
-        }
-        else
-        {
-            nextButton.setEnabled(false);
-        }
-    }
-    
-    /**
-     * Enable or disable the Previous button according to whether more search hits exist before the current page
-     */
-    private void enableDisablePreviousButton()
-    {
-        if(currentPage > 0) //on first page, disable previous
-        {
-            previousButton.setEnabled(true);
-        }
-        else
-        {
-            previousButton.setEnabled(false);
         }
     }
     
@@ -927,9 +973,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             search(); //perform search
         }
-        else if(stopButton == e.getSource()) //close dialog
+        else if(stopButton == e.getSource()) //stop running process
         { 
-            if(searchWorker != null && !searchWorker.isDone()) //stop search process before closing
+            if(searchWorker != null && !searchWorker.isDone()) //stop search process
             {
                 try //stop search
                 {
@@ -949,28 +995,51 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 catch(CancellationException exception)
                 {
                     statusLabel.setText("Unable to stop search");
-                    logger.warning("Unable to cancel search SwingWorker: " + exception.getMessage());
-                }
-                finally
-                {
-                    searchButton.setEnabled(true);
-                    enableDisablePreviousButton();
-                    enableDisableNextButton();
+                    logger.warning("Unable to stop search SwingWorker: " + exception.getMessage());
                 }
             }
-            else
+            
+            if(getWorker != null && !getWorker.isDone()) //stop download process
             {
-                statusLabel.setText("Search is not running");
+                try //stop download
+                {
+                    statusLabel.setText("Stopping open...");
+                    boolean cancelled = getWorker.cancel(true);
+                    if(cancelled)
+                    {
+                        statusLabel.setText("Open stopped");
+                    }
+                    else
+                    {
+                        statusLabel.setText("Download has already completed");
+                    }
+                    stopButton.setEnabled(false);
+                    logger.info("Download SwingWorker cancel returned " + cancelled);
+                }
+                catch(CancellationException exception)
+                {
+                    statusLabel.setText("Unable to stop download");
+                    logger.warning("Unable to stop download SwingWorker: " + exception.getMessage());
+                }
             }
         }
         else if(cancelButton == e.getSource())
         {
+            //stop search threads
             if(searchWorker != null && !searchWorker.isDone()) //stop search process before closing
             {
                 boolean cancelled = searchWorker.cancel(true);
                 logger.info("search SwingWorker cancel returned " + cancelled);
             }
-            setVisible(false);
+            
+            //stop GET threads
+            if(getWorker != null && !getWorker.isDone())
+            {
+                boolean cancelled = getWorker.cancel(true);
+                logger.info("GET SwingWorker cancel returned " + cancelled);
+            }
+            
+            this.dispose(); //destroy the dialog to free up resources
         }
         else if(openButton == e.getSource()) //search hit selected in table then open button pressed
         {

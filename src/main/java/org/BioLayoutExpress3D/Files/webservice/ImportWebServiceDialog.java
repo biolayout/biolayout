@@ -133,6 +133,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private ClientRequest getClientRequest; //web service request containing GET params
     private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
     private GetWorker getWorker = null; //GET operation concurrent task runner
+    
+    private static final Joiner commaJoiner = Joiner.on(',').skipNulls(); //for creating comma-separated strings
 
     /**
      * Name of directory where files are downloaded from the web service.
@@ -157,9 +159,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         clientRequestFactory.setFollowRedirects(true);
         
         organismIdNameMap = new HashMap<String, String>();
-        
         this.frame = frame;
-        
         this.setTitle(myMessage);
         
         //search button
@@ -377,7 +377,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         String text = "<b>Excerpt:</b>";
         editorPane.setText(text);
         
-        String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class", "Pathways"};
+        //String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class", "Pathways"};
+        String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         int numRows = 0;
         
         model = new DefaultTableModel(numRows, colHeadings.length) 
@@ -392,11 +393,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         model.setColumnIdentifiers(colHeadings);
         
-        table = new JTable(model);
+        table = new ZebraJTable(model);
         table.setAutoCreateRowSorter(true);
-        table.setGridColor(Color.BLUE);
-        table.setShowVerticalLines(true);
-        table.setShowHorizontalLines(false);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         ListSelectionModel rowSelectionModel = table.getSelectionModel();
@@ -544,7 +542,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          * Perform GET operation on Pathway Commons web service to retrieve BioPAX file
          * @return a BioPAX OWL File
          */
-        protected File doInBackground() throws Exception  //TODO anonymous inner worker for timeout
+        protected File doInBackground() throws Exception
         {
             SwingWorker actualWorker = new SwingWorker<String, Void>() //anonymous inner worker to handle timeout for GET operation
             {
@@ -1070,32 +1068,38 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         model.setRowCount(0); //clear previous search results
         editorPane.setText(""); //clear excerpt pane
     }
+
+    /**
+     * Format organisms from search hit into comma-separated String
+     */
+    private String formatOrganisms(SearchHit hit)
+    {
+        List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
+
+        //extract organism ID for each organism URI
+        String[] organismArray = organismList.toArray(new String[0]);
+        for (int i = 0; i < organismArray.length; i++)
+        {
+            String organismString = organismArray[i];
+            organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+            //add to NCBI ID/name map for later web service lookup if not already added
+            if(!organismIdNameMap.containsKey(organismArray[i]))
+            {
+                organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
+            }
+        }
+
+        String joinedOrganisms = commaJoiner.join(organismArray); //comma-separated string of organisms for display
+        return joinedOrganisms;
+    }
     
     private void displaySearchResults()
     {
         clearSearchResults(); 
         
-        Joiner joiner = Joiner.on(',').skipNulls();
-
         for(SearchHit hit : searchHits)
         {
-            List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
-
-            //extract organism ID for each organism URI
-            String[] organismArray = organismList.toArray(new String[0]);
-            for (int i = 0; i < organismArray.length; i++)
-            {
-                String organismString = organismArray[i];
-                organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-                //add to NCBI ID/name map for later web service lookup if not already added
-                if(!organismIdNameMap.containsKey(organismArray[i]))
-                {
-                    organismIdNameMap.put(organismArray[i], organismArray[i]); //value also NCBI ID as placeholder - to be replaced with name from web service
-                }
-            }
-            
-            String joinedOrganisms = joiner.join(organismArray); //comma-separated string of organisms for display
-
+            //String joinedOrganisms = this.formatOrganisms(hit);
             //comma-separated string of datasources for display
             List<String> databases = hit.getDataSource();
             String[] databaseArray = databases.toArray(new String[0]);
@@ -1113,9 +1117,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
                 }
             }
-            String joinedDatabases = joiner.join(databaseArray);
+            String joinedDatabases = commaJoiner.join(databaseArray);
 
-            model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
+            //model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
+            model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
         }//end for
     }
     
@@ -1130,8 +1135,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         EFetchRequest requ = objectFactory.createEFetchRequest();
          
         //set comma-separated String of organism IDs as search parameter
-        Joiner joiner = Joiner.on(',').skipNulls();
-        String eFetchQuery = joiner.join(this.organismIdNameMap.keySet());
+        String eFetchQuery = commaJoiner.join(this.organismIdNameMap.keySet());
         requ.setId(eFetchQuery);
         
         EFetchResult resp = serviceSoap.runEFetch(requ);

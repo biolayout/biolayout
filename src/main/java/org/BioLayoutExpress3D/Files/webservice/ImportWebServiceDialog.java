@@ -27,10 +27,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -49,13 +46,11 @@ import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -76,11 +71,9 @@ import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchHit;
 import org.BioLayoutExpress3D.Files.webservice.schema.SearchResponse;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpEntity;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientRequestFactory;
 import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 
 /**
  * Dialogue for querying remote databases via web service
@@ -423,6 +416,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     
                     editorPane.setText("<b>Excerpt:</b><br />" 
                             + hit.getExcerpt() 
+                            
                             + "<br>" 
                             + organismHTML);
                 }

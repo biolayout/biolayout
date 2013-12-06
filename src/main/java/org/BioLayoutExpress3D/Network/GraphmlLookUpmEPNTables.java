@@ -256,6 +256,8 @@ public final class GraphmlLookUpmEPNTables
                                                                           // Other
                                                                           Tuples.tuple("trapezoid2",     ENERGY_MOLECULAR_TRANSFER, decode("#FFFFFF"), 10.0f, TRAPEZOID2,      TRAPEZOID_DOWN), //index 8
                                                                           Tuples.tuple("octagon",        CONDITIONAL_SWITCH,        decode("#FF0000"), 20.0f, OCTAGON,         ICOSAHEDRON) //index 9
+            
+            
                                                                        };
     
     /**
@@ -282,7 +284,7 @@ public final class GraphmlLookUpmEPNTables
         //physical entities
         entityNameMap.put("Complex", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[0]); //PROTEIN_COMPLEX
         entityNameMap.put("Dna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        entityNameMap.put("DnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("DnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[3]); //DNA_SEQUENCE
         entityNameMap.put("NucleicAcid", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
         entityNameMap.put("Protein", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[1]); //PROTEIN_PEPTIDE
         entityNameMap.put("Rna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE

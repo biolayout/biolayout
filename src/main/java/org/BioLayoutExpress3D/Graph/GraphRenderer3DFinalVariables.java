@@ -99,9 +99,9 @@ public final class GraphRenderer3DFinalVariables
     static final Shapes3D[] SHAPES_WITH_TESSELATION_AND_TEXTURE_COORDS = { SPHERE, CONE_LEFT, CONE_RIGHT, TRAPEZOID_UP, TRAPEZOID_DOWN, CYLINDER, TORUS,
                                                                            ROUND_CUBE_THIN, ROUND_CUBE_LARGE, PINEAPPLE_SLICE_TOROID, PINEAPPLE_SLICE_ELLIPSOID,
                                                                            DOUBLE_PYRAMID_LARGE, DOUBLE_PYRAMID_THIN, TORUS_8_PETALS, SAUCER_4_PETALS,
-                                                                           LATHE_3D, SUPER_QUADRIC };
+                                                                           LATHE_3D, SUPER_QUADRIC, GENE_MODEL };
     // OBJ Model Loader shape may have texture coords only, tesselation geometry is pre-loaded from the OBJ file format
-    static final Shapes3D[] SHAPES_WITH_TEXTURE_COORDS_ONLY = { GENE_MODEL, OBJ_MODEL_LOADER };
+    static final Shapes3D[] SHAPES_WITH_TEXTURE_COORDS_ONLY = {OBJ_MODEL_LOADER};
     static final int FAST_SELECTION_MODE_NODE_TESSELATION = 5;
 
     public static enum MouseModeTypes { ROTATE, SELECT, TRANSLATE, SCALE }

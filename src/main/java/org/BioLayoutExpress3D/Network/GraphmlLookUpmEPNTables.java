@@ -224,7 +224,7 @@ public final class GraphmlLookUpmEPNTables
                                              PROTEIN_COMPLEX,
                                              PROTEIN_PEPTIDE,
                                              GENE,
-                                             DNA_SEQUENCE,
+                                             DNA_SEQUENCE, //used for BioPAX DnaRegion
                                              SIMPLE_BIOCHEMICAL,
                                              GENERIC_ENTITY,
                                              DRUG,
@@ -233,6 +233,11 @@ public final class GraphmlLookUpmEPNTables
                                              // Other
                                              ENERGY_MOLECULAR_TRANSFER,
                                              CONDITIONAL_SWITCH,
+                                             
+                                             //BioPAX
+                                             DNA,
+                                             RNA,
+                                             RNA_REGION,
 
                                              // No mEPN Notation
                                              NONE
@@ -244,20 +249,23 @@ public final class GraphmlLookUpmEPNTables
     */
     public static final Tuple6[] GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3 = {
                                                                           // Components
-                                                                          Tuples.tuple("roundrectangle", PROTEIN_COMPLEX,           decode("#FFFF99"), 10.0f, ROUND_RECTANGLE, ROUND_CUBE_LARGE), //index 0
-                                                                          Tuples.tuple("roundrectangle", PROTEIN_PEPTIDE,           decode("#CCFFFF"),  7.0f, ROUND_RECTANGLE, ROUND_CUBE_THIN), // distinguish by using ':' in name //index 1
+                                                                          Tuples.tuple("roundrectangle", PROTEIN_COMPLEX,           decode("#FFFF99"), 10.0f, ROUND_RECTANGLE, Shapes3D.ROUND_CUBE_LARGE), //index 0
+                                                                          Tuples.tuple("roundrectangle", PROTEIN_PEPTIDE,           decode("#CCFFFF"),  7.0f, ROUND_RECTANGLE, Shapes3D.ROUND_CUBE_THIN), // distinguish by using ':' in name //index 1
                                                                           Tuples.tuple("rectangle",      GENE,                      decode("#CCCC00"), 25.0f, RECTANGLE,       Shapes3D.RECTANGLE_HORIZONTAL), //index 2
-                                                                          Tuples.tuple("parallelogram",  DNA_SEQUENCE,              decode("#CCCC00"),  6.0f, PARALLELOGRAM,   CONE_RIGHT), //index 3
-                                                                          Tuples.tuple("hexagon",        SIMPLE_BIOCHEMICAL,        decode("#FFA200"), 10.0f, HEXAGON,         PINEAPPLE_SLICE_TOROID), //index 4
-                                                                          Tuples.tuple("ellipse",        GENERIC_ENTITY,            decode("#CC99FF"), 15.5f, CIRCLE,          PINEAPPLE_SLICE_ELLIPSOID), //index 5
-                                                                          Tuples.tuple("trapezoid",      DRUG,                      decode("#FFFF00"),  5.0f, TRAPEZOID1,      DOUBLE_PYRAMID_THIN), //index 6
-                                                                          Tuples.tuple("diamond",        ION_SIMPLE_MOLECULE,       decode("#C0C0C0"),  5.0f, DIAMOND,         DOUBLE_PYRAMID_LARGE), //index 7
+                                                                          Tuples.tuple("parallelogram",  DNA_SEQUENCE,              decode("#CCCC00"),  6.0f, PARALLELOGRAM,   Shapes3D.CONE_RIGHT), //index 3
+                                                                          Tuples.tuple("hexagon",        SIMPLE_BIOCHEMICAL,        decode("#FFA200"), 10.0f, HEXAGON,         Shapes3D.PINEAPPLE_SLICE_TOROID), //index 4
+                                                                          Tuples.tuple("ellipse",        GENERIC_ENTITY,            decode("#CC99FF"), 15.5f, CIRCLE,          Shapes3D.PINEAPPLE_SLICE_ELLIPSOID), //index 5
+                                                                          Tuples.tuple("trapezoid",      DRUG,                      decode("#FFFF00"),  5.0f, TRAPEZOID1,      Shapes3D.DOUBLE_PYRAMID_THIN), //index 6
+                                                                          Tuples.tuple("diamond",        ION_SIMPLE_MOLECULE,       decode("#C0C0C0"),  5.0f, DIAMOND,         Shapes3D.DOUBLE_PYRAMID_LARGE), //index 7
 
                                                                           // Other
-                                                                          Tuples.tuple("trapezoid2",     ENERGY_MOLECULAR_TRANSFER, decode("#FFFFFF"), 10.0f, TRAPEZOID2,      TRAPEZOID_DOWN), //index 8
-                                                                          Tuples.tuple("octagon",        CONDITIONAL_SWITCH,        decode("#FF0000"), 20.0f, OCTAGON,         ICOSAHEDRON) //index 9
+                                                                          Tuples.tuple("trapezoid2",     ENERGY_MOLECULAR_TRANSFER, decode("#FFFFFF"), 10.0f, TRAPEZOID2,      Shapes3D.TRAPEZOID_DOWN), //index 8
+                                                                          Tuples.tuple("octagon",        CONDITIONAL_SWITCH,        decode("#FF0000"), 20.0f, OCTAGON,         Shapes3D.ICOSAHEDRON), //index 9
             
-            
+                                                                          //BioPAX
+                                                                          Tuples.tuple("rectangle",      DNA,                      decode("#CCCC00"), 25.0f, RECTANGLE,       Shapes3D.GENE_MODEL), //index 10
+                                                                          Tuples.tuple("parallelogram",  RNA,                      decode("#CCCC00"), 25.0f, PARALLELOGRAM,   Shapes3D.GENE_MODEL), //index 11 //TODO SINGLE HELIX
+                                                                          Tuples.tuple("parallelogram",  RNA_REGION,               decode("#CCCC00"), 25.0f, PARALLELOGRAM,   Shapes3D.DUMB_BELL) //index 12 //DUMBELL
                                                                        };
     
     /**
@@ -283,12 +291,12 @@ public final class GraphmlLookUpmEPNTables
         //TODO replace array index with method to search lookup table?
         //physical entities
         entityNameMap.put("Complex", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[0]); //PROTEIN_COMPLEX
-        entityNameMap.put("Dna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
+        entityNameMap.put("Dna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[10]); //DNA
         entityNameMap.put("DnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[3]); //DNA_SEQUENCE
+        entityNameMap.put("Rna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[11]); //RNA
+        entityNameMap.put("RnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[12]); //RNA_REGION
         entityNameMap.put("NucleicAcid", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
         entityNameMap.put("Protein", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[1]); //PROTEIN_PEPTIDE
-        entityNameMap.put("Rna", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        entityNameMap.put("RnaRegion", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
         entityNameMap.put("SimplePhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY
         entityNameMap.put("SmallMolecule", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[7]); //ION_SIMPLE_MOLECULE
         

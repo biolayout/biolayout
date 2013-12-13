@@ -351,14 +351,6 @@ public final class BioPaxParser extends CoreParser
             {
                 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("DnaRegion");                        
             }
-            else if(entity instanceof NucleicAcid)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("NucleicAcid");                                                
-            }
-            else if(entity instanceof Protein)
-            {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Protein");                        
-            }
             else if(entity instanceof Rna)
             {
                 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Rna");                        
@@ -366,6 +358,14 @@ public final class BioPaxParser extends CoreParser
             else if(entity instanceof RnaRegion)
             {
                 shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("RnaRegion");                        
+            }
+            else if(entity instanceof NucleicAcid)
+            {
+                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("NucleicAcid");                                                
+            }
+            else if(entity instanceof Protein)
+            {
+                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Protein");                        
             }
             else if(entity instanceof SmallMolecule)
             {

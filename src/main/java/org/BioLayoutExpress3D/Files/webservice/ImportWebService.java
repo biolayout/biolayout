@@ -80,7 +80,6 @@ public class ImportWebService {
                     logger.warning(e.getMessage());
                 }
             }
-        
         };  
     }
 }

@@ -166,7 +166,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         openButton = this.createJButton("Open", "Open network", false); //open button
 
         JPanel fieldPanel = new JPanel();
-        fieldPanel.setLayout(new MigLayout());
+        fieldPanel.setLayout(new MigLayout("debug"));
 
         //search term text field
         String fieldString = "Enter a search term...";
@@ -301,7 +301,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(datasourcePanel, "wrap");
 
         //network type
-        fieldPanel.add(networkTypeLabel, "newline, align label");
+        fieldPanel.add(networkTypeLabel, "align label");
         fieldPanel.add(networkTypeCombo, "wrap");
 /*
         fieldPanel.add(formatLabel, "align label");
@@ -312,25 +312,26 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         formatPanel.add(sifRadio);
         fieldPanel.add(formatPanel, "wrap");
         */
-        fieldPanel.add(searchButton, "tag ok, span, split 6, sizegroup bttn");
-        fieldPanel.add(previousButton, "tag back, sizegroup bttn");
-        fieldPanel.add(nextButton, "tag next, sizegroup bttn");
+        fieldPanel.add(searchButton, "tag ok, span, split 4, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag cancel, sizegroup bttn");
         fieldPanel.add(stopButton, "tag yes, sizegroup bttn");
         fieldPanel.add(openButton, "tag no, sizegroup bttn");
         
         fieldPanel.setPreferredSize(new Dimension(888, 205));
         getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
-
+        
         JPanel hitsPanel = new JPanel();
-        hitsPanel.setLayout(new MigLayout());
-        hitsPanel.add(statusLabel, "wrap, span, align center");
+        hitsPanel.setLayout(new MigLayout("debug"));
+        
+        hitsPanel.add(previousButton, "span, split 2, center, sizegroup hbttn");
+        hitsPanel.add(nextButton, "sizegroup hbttn, wrap");
+        
+        hitsPanel.add(statusLabel, "span, align center, wrap");
         hitsPanel.add(numHitsLabel, "w 33%, sizegroup hits");
         hitsPanel.add(retrievedLabel, "w 33%, sizegroup hits");
-        hitsPanel.add(pagesLabel, "w 33%, sizegroup hits wrap");
+        hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");        
         
-        
-        hitsPanel.setPreferredSize(new Dimension(888, 58));
+        hitsPanel.setPreferredSize(new Dimension(888, 88));
         getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
         
         /**********************************************/
@@ -389,6 +390,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         table = new ZebraJTable(model);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        //set column widths
+        table.getColumn("Name").setPreferredWidth(400);
+        table.getColumn("Database").setPreferredWidth(75);
+        table.getColumn("BioPAX Class").setPreferredWidth(125);
         
         ListSelectionModel rowSelectionModel = table.getSelectionModel();
         rowSelectionModel.addListSelectionListener(new ListSelectionListener() {

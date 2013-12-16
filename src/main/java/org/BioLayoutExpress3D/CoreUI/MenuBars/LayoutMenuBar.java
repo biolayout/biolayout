@@ -237,6 +237,7 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
 
     /**
      * Import Network from Public Database
+     * Mnemonic C
      * Keystroke Cmd+I
      * @param importClassSetsAction - Action for this submenu item
      */
@@ -250,6 +251,7 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
 
     /**
      * Import Network from Public Database
+     * Mnemonic N
      * Keystroke Cmd+Shift+I
      * @param importNetworkAction - Action for this submenu item
      */

@@ -642,6 +642,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setFileMenuSaveGraphSelectionAsAction( saver.getSaveSelectedAction() );
         layoutMenuBar.setFileMenuSaveVisibleGraphAsAction( saver.getSaveVisibleAction() );
         
+        //Import submenu
         layoutMenuBar.setFileSubMenuImportClassSetsAction(importClassSetsParser.getImportClassSetsAction() );
         layoutMenuBar.setFileSubMenuImportNetworkAction(importWebService.getImportWebServiceAction());
         

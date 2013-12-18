@@ -340,6 +340,4 @@ public class GraphNode implements Comparable<GraphNode>
     {
         return (Integer.parseInt( obj.getNodeName().substring( obj.getNodeName().lastIndexOf("n") + 1, obj.getNodeName().length() ) ) > Integer.parseInt( this.getNodeName().substring( obj.getNodeName().lastIndexOf("n") + 1, this.getNodeName().length() ) ) ) ? -1 : ( ( Integer.parseInt( obj.getNodeName().substring( obj.getNodeName().lastIndexOf("n") + 1, obj.getNodeName().length() ) ) == Integer.parseInt( this.getNodeName().substring( obj.getNodeName().lastIndexOf("n") + 1, this.getNodeName().length() ) ) ) ? 0 : 1);
     }
-
-
 }

@@ -347,6 +347,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
         return this;
     }
 
+    public ImportWebService getImportWebService() 
+    {
+        return importWebService;
+    }
+
     /**
     *  Detects the OpenCL support and extensions.
     */

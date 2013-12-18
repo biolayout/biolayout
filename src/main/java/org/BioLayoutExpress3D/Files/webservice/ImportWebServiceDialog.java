@@ -1227,5 +1227,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         // Set the width
         col.setPreferredWidth(width);
-    }    
+    }
+
+    /**
+     * Accessor for search field so search terms can be set externally e.g. from Class Viewer
+     * @return search field
+     */
+    public JTextField getSearchField() 
+    {
+        return searchField;
+    }
 }

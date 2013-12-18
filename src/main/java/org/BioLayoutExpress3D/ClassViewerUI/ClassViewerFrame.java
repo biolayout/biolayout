@@ -67,11 +67,13 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private FindClassDialog findClassDialog = null;
     private FindMultipleClassesDialog findMultipleClassesDialog = null;
     private JSplitPane splitPane = null;
+    
     private JButton findNameButton = null;
     private JButton findClassButton = null;
     private JButton findMultipleClassesButton = null;
     private JButton previousClassButton = null;
     private JButton nextClassButton = null;
+    
     private AbstractAction findNameAction = null;
     private AbstractAction findClassAction = null;
     private AbstractAction findMultipleClassesAction = null;
@@ -84,6 +86,10 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JButton exportTableAsButton = null;
     private AbstractAction chooseColumnsToHideAction = null;
     private AbstractAction exportTableToFileAction = null;
+    
+    //search database
+    private JButton searchDatabaseButton = null;
+    //private AbstractAction searchDatabaseAction = null;
 
     // entropy table
     private ClassViewerTable entropyTable = null;
@@ -613,12 +619,22 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         refreshSelectionInTableButton = new JButton(refreshSelectionInTableAction);
         refreshSelectionInTableButton.setEnabled(false);
         refreshSelectionInTableButton.setToolTipText("Hide Unselected Rows");
+        
         exportTableAsButton = new JButton(exportTableToFileAction);
         exportTableAsButton.setEnabled(false);
         exportTableAsButton.setToolTipText("Export Table As...");
+        
         chooseColumnsToHideButton = new JButton(chooseColumnsToHideAction);
         chooseColumnsToHideButton.setEnabled(false);
         chooseColumnsToHideButton.setToolTipText("Choose Columns To Hide");
+        
+        /* want to add the same Action as the Import Network menu but if try 
+        to add here causes NullPointerException as LayoutFrame not fully set up yet
+        so add Action later when button is enabled */
+        searchDatabaseButton = new JButton();
+        searchDatabaseButton.setEnabled(false);
+        searchDatabaseButton.setText("Search Database");
+        searchDatabaseButton.setToolTipText("Search Online Database");
 
         // topPanel, north
         generalTopPanel.add( new JLabel("Class Set:") );
@@ -632,6 +648,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // button panel, south
         generalButtonPanel.add(chooseColumnsToHideButton);
         generalButtonPanel.add(exportTableAsButton);
+        generalButtonPanel.add(searchDatabaseButton);
         JButton okButton = new JButton(okAction);
         okButton.setToolTipText("Close");
         generalButtonPanel.add(okButton);
@@ -853,7 +870,13 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 refreshSelectionInTableButton.setEnabled(enableHideColumnsAndExportButtons);
                 exportTableAsButton.setEnabled(enableHideColumnsAndExportButtons);
                 chooseColumnsToHideButton.setEnabled( enableHideColumnsAndExportButtons || classViewerHideColumnsDialog.isVisible() );
-
+                
+                //reuse the Action from the Import Network menu option
+                searchDatabaseButton.setAction(layoutFrame.getImportWebService().getImportWebServiceAction());
+                searchDatabaseButton.setText("Search Database"); //don't want to use same text as Action here
+                searchDatabaseButton.setToolTipText("Search Online Database");
+                searchDatabaseButton.setEnabled(enableHideColumnsAndExportButtons);
+                
                 boolean enableDetailsForAllButton = (entropyTable.getRowCount() > 0);
                 detailsForAllButton.setEnabled(enableDetailsForAllButton);
 
@@ -1310,9 +1333,5 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
             return this;
         }
-
-
     }
-
-
 }

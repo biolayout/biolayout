@@ -213,6 +213,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                     // make sure to clear all plot/tables if current selection is empty
                     if ( layoutFrame.getGraph().getSelectionManager().getSelectedNodes().isEmpty() )
                         populateClassViewer();
+
+                    expressionGraphPanel.onFirstShown();
                 }
                 else
                 {

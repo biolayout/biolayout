@@ -29,20 +29,6 @@ public class ImportWebService {
     public static final String CPATH2_ENDPOINT = "http://www.pathwaycommons.org/pc2/{command}"; //general command endpoint
     public static final String CPATH2_ENDPOINT_SEARCH = "http://www.pathwaycommons.org/pc2/{command}.{format}"; //endpoint to specify search results format (xml/json)
     
-    /*
-    public static final String CPATH2_ENDPOINT = "http://purl.org/pc2/current/{command}"; //general command endpoint
-    public static final String CPATH2_ENDPOINT_SEARCH = "http://purl.org/pc2/current/{command}.{format}"; //endpoint to specify search results format (xml/json)
-    */
-    
-    //public static final String CPATH2_ENDPOINT = "http://webservice.baderlab.org:48080/{command}"; //general command endpoint
-    //public static final String CPATH2_ENDPOINT_SEARCH = "http://webservice.baderlab.org:48080/{command}.{format}"; //endpoint to specify search results format (xml/json)
-    
-    //"http://purl.org/pc2/current/search.xml?q=Q06609" 
-    //http://www.pathwaycommons.org/pc2/search.xml?q=Q06609
-    //http://purl.org/pc2/current/
-    //http://webservice.baderlab.org:48080/search.xml?q=Q06609
-    //http://webservice.baderlab.org:48080
-    
     /**
      * Singleton instance of dialog.
      */

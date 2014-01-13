@@ -11,9 +11,12 @@ import cpath.client.util.CPathException;
 import cpath.query.CPathGetQuery;
 import cpath.query.CPathQuery;
 import cpath.query.CPathSearchQuery;
+import cpath.query.CPathTraverseQuery;
 import cpath.service.OutputFormat;
 import cpath.service.jaxb.SearchHit;
 import cpath.service.jaxb.SearchResponse;
+import cpath.service.jaxb.TraverseEntry;
+import cpath.service.jaxb.TraverseResponse;
 
 import gov.nih.nlm.ncbi.soap.eutils.EFetchTaxonService;
 import gov.nih.nlm.ncbi.soap.eutils.EUtilsServiceSoap;
@@ -37,6 +40,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -77,8 +81,6 @@ import javax.swing.text.html.StyleSheet;
 import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
-//import org.BioLayoutExpress3D.Files.webservice.schema.SearchHit;
-//import org.BioLayoutExpress3D.Files.webservice.schema.SearchResponse;
 import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientRequestFactory;
@@ -409,6 +411,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         table.getColumn("Database").setPreferredWidth(75);
         table.getColumn("BioPAX Class").setPreferredWidth(125);
         
+        //display search hit info when row selected
         ListSelectionModel rowSelectionModel = table.getSelectionModel();
         rowSelectionModel.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
@@ -433,10 +436,42 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                 + "<a href='" + organismString + "'>" + scientificName + "</a>";
                     }
                     
+                    //calculate interaction count using TRAVERSE query
+                    int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
+                    ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
+                    uriList.add(hit.getUri());
+                    uriList.addAll(hit.getPathway());
+                    
+                    //traverse all interactions for all pathways //TODO threading? //TODO cache size //TODO what happens with GO term URI?
+                    CPathClient client = CPathClient.newInstance();
+                    CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
+                    HashSet<String> uniqueUriSet = new HashSet(); //set of unique interaction URIs
+                    String interactionsHTML = "<b>Interactions: </b> ";
+                    try
+                    {
+                        TraverseResponse traverseResponse = traverseQuery.result(); //run query
+                        List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
+                        
+                        for (TraverseEntry traverseEntry : traverseEntryList) 
+                        {
+                            logger.info(traverseEntry.getUri());
+                            List<String> traverseEntryValues = traverseEntry.getValue();
+                            uniqueUriSet.addAll(traverseEntryValues);
+                        }
+                        interactionsHTML += uniqueUriSet.size();
+                    }
+                    catch(CPathException exception)
+                    {
+                        logger.warning(exception.getMessage());
+                        interactionsHTML += "unknown";
+                    }
+                    
+                    //display excerpt
                     editorPane.setText("<b>Excerpt:</b><br />" 
                             + hit.getExcerpt() 
-                            
-                            + "<br>" 
+                            + "<br />" 
+                            + interactionsHTML
+                            + "<br />"
                             + organismHTML);
                 }
             }

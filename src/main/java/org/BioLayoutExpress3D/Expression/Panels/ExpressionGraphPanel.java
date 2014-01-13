@@ -10,6 +10,8 @@ import java.util.*;
 import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import static java.lang.Math.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.DataStructures.*;
@@ -29,7 +31,10 @@ import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.category.SlidingCategoryDataset;
+import org.jfree.data.statistics.StatisticalCategoryDataset;
 import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
+import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
@@ -50,7 +55,7 @@ import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 *
 */
 
-public final class ExpressionGraphPanel extends JPanel implements ActionListener
+public final class ExpressionGraphPanel extends JPanel implements ActionListener, ChangeListener
 {
     /**
     *  Serial version UID variable for the ExpressionGraph class.
@@ -87,6 +92,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JCheckBox hideSampleLabelsCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
+
+    private JScrollBar zoomScrollBar = null;
+    private JSpinner maximumVisibleSamplesSpinner = null;
 
     private AbstractAction renderPlotImageToFileAction = null;
     private AbstractAction renderAllCurrentClassSetPlotImagesToFilesAction = null;
@@ -195,6 +203,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         gridLinesCheckBox.setSelected(PLOT_GRID_LINES.get());
         axesLegendCheckBox.setSelected(PLOT_AXES_LEGEND.get());
         hideSampleLabelsCheckBox.setSelected(PLOT_HIDE_SAMPLES.get());
+        maximumVisibleSamplesSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 999, 1));
+        maximumVisibleSamplesSpinner.getModel().addChangeListener(this);
 
         classStatComboBox = new JComboBox<String>();
         for (StatisticType type : StatisticType.values())
@@ -233,6 +243,8 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         JPanel plotOptionsLine2 = new JPanel();
         plotOptionsLine1.add(new JLabel("Scaling:"));
         plotOptionsLine1.add(transformComboBox);
+        plotOptionsLine1.add(new JLabel("Maximum Samples:"));
+        plotOptionsLine1.add(maximumVisibleSamplesSpinner);
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
         plotOptionsLine1.add(hideSampleLabelsCheckBox);
@@ -250,9 +262,16 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         JPanel expressionGraphButtonPanel = new JPanel(true);
         expressionGraphButtonPanel.add(exportPlotExpressionProfileAsButton);
 
+        JPanel scrollerPanel = new JPanel(new BorderLayout());
+        zoomScrollBar = new JScrollBar(JScrollBar.HORIZONTAL, 0, 0, 0, 1);
+        zoomScrollBar.getModel().addChangeListener(this);
+        scrollerPanel.add(zoomScrollBar, BorderLayout.CENTER);
+        scrollerPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+
         expressionGraphUpperPartPanel.setLayout( new BorderLayout() );
         expressionGraphUpperPartPanel.add(expressionGraphCheckBoxesPanel, BorderLayout.NORTH);
         expressionGraphUpperPartPanel.add(expressionGraphPlotPanel, BorderLayout.CENTER);
+        expressionGraphUpperPartPanel.add(scrollerPanel, BorderLayout.SOUTH);
 
         this.setLayout( new BoxLayout(this, BoxLayout.Y_AXIS) );
         this.add(expressionGraphUpperPartPanel);
@@ -283,12 +302,157 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         public Color classColor;
     }
 
+    class SlidingStatisticalCategoryDataset extends SlidingCategoryDataset implements StatisticalCategoryDataset
+    {
+        public SlidingStatisticalCategoryDataset(StatisticalCategoryDataset underlying,
+                int firstColumn, int maxColumns)
+        {
+            super(underlying, firstColumn, maxColumns);
+            this.underlying = underlying;
+        }
+
+        private StatisticalCategoryDataset underlying;
+
+        public @Override StatisticalCategoryDataset getUnderlyingDataset()
+        {
+            return underlying;
+        }
+
+        public @Override java.lang.Number getMeanValue(int row, int column)
+        {
+            return underlying.getMeanValue(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMeanValue(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMeanValue(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getStdDevValue(int row, int column)
+        {
+            return underlying.getStdDevValue(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getStdDevValue(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getStdDevValue(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+    }
+
+    class SlidingBoxAndWhiskerCategoryDataset extends SlidingCategoryDataset implements BoxAndWhiskerCategoryDataset
+    {
+        public SlidingBoxAndWhiskerCategoryDataset(BoxAndWhiskerCategoryDataset underlying,
+                int firstColumn, int maxColumns)
+        {
+            super(underlying, firstColumn, maxColumns);
+            this.underlying = underlying;
+        }
+
+        private BoxAndWhiskerCategoryDataset underlying;
+
+        public @Override BoxAndWhiskerCategoryDataset getUnderlyingDataset()
+        {
+            return underlying;
+        }
+
+        public @Override java.lang.Number getMeanValue(int row, int column)
+        {
+            return underlying.getMeanValue(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMeanValue(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMeanValue(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMedianValue(int row, int column)
+        {
+            return underlying.getMedianValue(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMedianValue(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMedianValue(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getQ1Value(int row, int column)
+        {
+            return underlying.getQ1Value(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getQ1Value(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getQ1Value(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getQ3Value(int row, int column)
+        {
+            return underlying.getQ3Value(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getQ3Value(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getQ3Value(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMinRegularValue(int row, int column)
+        {
+            return underlying.getMinRegularValue(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMinRegularValue(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMinRegularValue(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMaxRegularValue(int row, int column)
+        {
+            return underlying.getMaxRegularValue(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMaxRegularValue(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMaxRegularValue(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMinOutlier(int row, int column)
+        {
+            return underlying.getMinOutlier(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMinOutlier(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMinOutlier(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMaxOutlier(int row, int column)
+        {
+            return underlying.getMaxOutlier(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.lang.Number getMaxOutlier(Comparable rowKey, Comparable columnKey)
+        {
+            return underlying.getMaxOutlier(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+
+        public @Override java.util.List getOutliers(int row, int column)
+        {
+            return underlying.getOutliers(row, column + getFirstCategoryIndex());
+        }
+
+        public @Override java.util.List getOutliers(java.lang.Comparable rowKey, java.lang.Comparable columnKey)
+        {
+            return underlying.getOutliers(getRowIndex(rowKey), getColumnIndex(columnKey) + getFirstCategoryIndex());
+        }
+    }
+
     private void addStatisticalPlot(int datasetIndex, int seriesIndex, ArrayList<Integer> rows, Color color, String className,
             StatisticType type)
     {
-        float[] mean = expressionData.getMeanForRows(rows);
-        float[] stddev = expressionData.getStddevForRows(rows);
-        float[] stderr = expressionData.getStderrForRows(rows);
+        int numColumns = expressionData.getTotalColumns();
+        float[] mean;
+        float[] stddev;
+        float[] stderr;
 
         switch (type)
         {
@@ -297,23 +461,31 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
             case Mean_Line:
             {
-                DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
+                mean = expressionData.getMeanForRows(rows);
+
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset)plot.getDataset(datasetIndex);
+                DefaultCategoryDataset dataset;
                 AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
 
-                if (dataset == null)
+                if (slidingDataset == null)
                 {
                     dataset = new DefaultCategoryDataset();
+                    slidingDataset = new SlidingCategoryDataset(dataset, 0, maximumVisibleSamples());
                     r = new DefaultCategoryItemRenderer();
                 }
+                else
+                {
+                    dataset = (DefaultCategoryDataset)slidingDataset.getUnderlyingDataset();
+                }
 
-                for (int column = 0; column < mean.length; column++)
+                for (int column = 0; column < numColumns; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
                     dataset.addValue(mean[column], "Mean of " + className, columnName);
                 }
 
                 DefaultCategoryItemRenderer dcir = (DefaultCategoryItemRenderer)r;
-                plot.setDataset(datasetIndex, dataset);
+                plot.setDataset(datasetIndex, slidingDataset);
                 dcir.setSeriesPaint(seriesIndex, color);
                 dcir.setSeriesShapesVisible(seriesIndex, false);
                 dcir.setSeriesStroke(seriesIndex, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
@@ -331,13 +503,21 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
             case Mean_Histogram:
             {
-                DefaultCategoryDataset dataset = (DefaultCategoryDataset)plot.getDataset(datasetIndex);
+                mean = expressionData.getMeanForRows(rows);
+
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset)plot.getDataset(datasetIndex);
+                DefaultCategoryDataset dataset;
                 AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
 
-                if (dataset == null)
+                if (slidingDataset == null)
                 {
                     dataset = new DefaultCategoryDataset();
+                    slidingDataset = new SlidingCategoryDataset(dataset, 0, maximumVisibleSamples());
                     r = new BarRenderer();
+                }
+                else
+                {
+                    dataset = (DefaultCategoryDataset)slidingDataset.getUnderlyingDataset();
                 }
 
                 for (int column = 0; column < mean.length; column++)
@@ -347,7 +527,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
 
                 BarRenderer br = (BarRenderer)r;
-                plot.setDataset(datasetIndex, dataset);
+                plot.setDataset(datasetIndex, slidingDataset);
                 br.setSeriesPaint(seriesIndex, color);
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
@@ -367,12 +547,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             case Mean_Line_With_Std_Err:
             case Mean_Histogram_With_Std_Err:
             {
-                DefaultStatisticalCategoryDataset dataset = (DefaultStatisticalCategoryDataset)plot.getDataset(datasetIndex);
+                SlidingStatisticalCategoryDataset slidingDataset = (SlidingStatisticalCategoryDataset)plot.getDataset(datasetIndex);
+                DefaultStatisticalCategoryDataset dataset;
                 AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
 
-                if (dataset == null)
+                if (slidingDataset == null)
                 {
                     dataset = new DefaultStatisticalCategoryDataset();
+                    slidingDataset = new SlidingStatisticalCategoryDataset(dataset, 0, maximumVisibleSamples());
 
                     switch (type)
                     {
@@ -401,8 +583,12 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         }
                     }
                 }
+                else
+                {
+                    dataset = (DefaultStatisticalCategoryDataset)slidingDataset.getUnderlyingDataset();
+                }
 
-                for (int column = 0; column < mean.length; column++)
+                for (int column = 0; column < numColumns; column++)
                 {
                     String columnName = expressionData.getColumnName(column);
 
@@ -411,18 +597,22 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         case Mean_With_Std_Dev:
                         case Mean_Line_With_Std_Dev:
                         case Mean_Histogram_With_Std_Dev:
+                            mean = expressionData.getMeanForRows(rows);
+                            stddev = expressionData.getStddevForRows(rows);
                             dataset.add(mean[column], stddev[column], className, columnName);
                             break;
 
                         case Mean_With_Std_Err:
                         case Mean_Line_With_Std_Err:
                         case Mean_Histogram_With_Std_Err:
+                            mean = expressionData.getMeanForRows(rows);
+                            stderr = expressionData.getStderrForRows(rows);
                             dataset.add(mean[column], stderr[column], className, columnName);
                             break;
                     }
                 }
 
-                plot.setDataset(datasetIndex, dataset);
+                plot.setDataset(datasetIndex, slidingDataset);
 
                 r.setSeriesShape(seriesIndex, ShapeUtilities.createDiamond(3.0f));
                 r.setSeriesPaint(seriesIndex, color);
@@ -433,13 +623,19 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
             case IQR_Box_Plot:
             {
-                DefaultBoxAndWhiskerCategoryDataset dataset = (DefaultBoxAndWhiskerCategoryDataset)plot.getDataset(datasetIndex);
+                SlidingBoxAndWhiskerCategoryDataset slidingDataset = (SlidingBoxAndWhiskerCategoryDataset)plot.getDataset(datasetIndex);
+                DefaultBoxAndWhiskerCategoryDataset dataset;
                 AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
 
-                if (dataset == null)
+                if (slidingDataset == null)
                 {
                     dataset = new DefaultBoxAndWhiskerCategoryDataset();
+                    slidingDataset = new SlidingBoxAndWhiskerCategoryDataset(dataset, 0, maximumVisibleSamples());
                     r = new BoxAndWhiskerRenderer();
+                }
+                else
+                {
+                    dataset = (DefaultBoxAndWhiskerCategoryDataset)slidingDataset.getUnderlyingDataset();
                 }
 
                 ArrayList<float[]> data = new ArrayList<float[]>();
@@ -448,7 +644,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     data.add(expressionData.getTransformedRow(rowIndex));
                 }
 
-                for (int column = 0; column < mean.length; column++)
+                for (int column = 0; column < numColumns; column++)
                 {
                     ArrayList<Double> values = new ArrayList<Double>();
                     for (float[] row : data)
@@ -461,7 +657,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
 
                 BoxAndWhiskerRenderer bawr = (BoxAndWhiskerRenderer)r;
-                plot.setDataset(datasetIndex, dataset);
+                plot.setDataset(datasetIndex, slidingDataset);
                 bawr.setSeriesPaint(seriesIndex, color);
                 bawr.setMedianVisible(true);
                 bawr.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
@@ -487,6 +683,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         int datasetIndex = 0;
 
         plot.getRangeAxis().setAutoRange(false);
+        plot.setNotify(false);
 
         if (numSelectedNodes > 0 && totalColumns > 0)
         {
@@ -546,7 +743,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         dataset.addValue(transformedData[column], nodeName, columnName);
                     }
 
-                    plot.setDataset(datasetIndex, dataset);
+                    plot.setDataset(datasetIndex, new SlidingCategoryDataset(dataset, 0, maximumVisibleSamples()));
                     DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
                     r.setSeriesPaint(0, nodeColor);
                     r.setSeriesShapesVisible(0, false);
@@ -585,6 +782,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
                 datasetIndex++;
             }
+
+            refreshZoomScrollbar();
+
+            SpinnerNumberModel snm = (SpinnerNumberModel)maximumVisibleSamplesSpinner.getModel();
+            snm.setMaximum(totalColumns);
         }
 
         // Remove any datasets that shouldn't be displayed any more
@@ -606,7 +808,18 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             plot.getRangeAxis().setLabel(null);
         }
 
+        for (datasetIndex = 0; datasetIndex < plot.getDatasetCount(); datasetIndex++)
+        {
+            SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) plot.getDataset(datasetIndex);
+            if (slidingDataset != null)
+            {
+                slidingDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
+                slidingDataset.setMaximumCategoryCount(maximumVisibleSamples());
+            }
+        }
+
         plot.getRangeAxis().setAutoRange(true);
+        plot.setNotify(true);
 
         plot.setRangeGridlinesVisible(drawGridLines);
         plot.setDomainGridlinesVisible(drawGridLines);
@@ -918,5 +1131,61 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         this.repaint();
     }
 
+    private int maximumVisibleSamples()
+    {
+        Integer value = (Integer)maximumVisibleSamplesSpinner.getValue();
+        return value.intValue();
+    }
 
+    private void refreshZoomScrollbar()
+    {
+        int totalColumns = expressionData.getTotalColumns();
+
+        if (totalColumns > maximumVisibleSamples())
+        {
+            zoomScrollBar.setVisible(true);
+            int maxSamples = maximumVisibleSamples();
+            zoomScrollBar.setMaximum(totalColumns - maxSamples);
+
+        }
+        else
+        {
+            zoomScrollBar.setVisible(false);
+        }
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent ce)
+    {
+        if (ce.getSource().equals(zoomScrollBar.getModel()))
+        {
+            for (int datasetIndex = 0; datasetIndex < plot.getDatasetCount(); datasetIndex++)
+            {
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) plot.getDataset(datasetIndex);
+                if (slidingDataset != null)
+                {
+                    slidingDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
+                }
+            }
+        }
+        else if (ce.getSource().equals(maximumVisibleSamplesSpinner.getModel()))
+        {
+            for (int datasetIndex = 0; datasetIndex < plot.getDatasetCount(); datasetIndex++)
+            {
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) plot.getDataset(datasetIndex);
+                if (slidingDataset != null)
+                {
+                    slidingDataset.setMaximumCategoryCount(maximumVisibleSamples());
+                }
+            }
+
+            refreshZoomScrollbar();
+        }
+    }
+
+    public void onFirstShown()
+    {
+        SpinnerNumberModel snm = (SpinnerNumberModel) maximumVisibleSamplesSpinner.getModel();
+        snm.setValue(expressionData.getTotalColumns());
+    }
 }

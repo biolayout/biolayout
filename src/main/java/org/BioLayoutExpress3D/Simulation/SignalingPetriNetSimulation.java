@@ -688,8 +688,15 @@ public class SignalingPetriNetSimulation
         // 6) put the correct number of token in child
         // childrenIDs & childrenWeigths are the 2nd & the 3rd int & float arrays
         i = childIDs.length;
-        while (--i >= 0)
-            places[childIDs[i]] += (tokenMoving * childWeights[i * timeBlock + timeBlock]);
+        if (i > 0)
+        {
+            int sizeOfChildWeightsBlock = childWeights.length / childIDs.length;
+
+            while (--i >= 0)
+            {
+                places[childIDs[i]] += (tokenMoving * childWeights[(i * sizeOfChildWeightsBlock) + timeBlock]);
+            }
+        }
     }
 
     /**

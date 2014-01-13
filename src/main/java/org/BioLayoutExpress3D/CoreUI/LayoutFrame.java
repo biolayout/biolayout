@@ -1421,7 +1421,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
             INSTALL_DIR_FOR_SCREENSHOTS_HAS_CHANGED = !USE_INSTALL_DIR_FOR_SCREENSHOTS.get();
 
             classViewerFrame.getClassViewerAction().setEnabled(true);
-            classViewerFrame.populateClassViewer( null, false, DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed());
+            classViewerFrame.populateClassViewer( null, false, DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed(), true);
 
             if ( DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed() )
             {

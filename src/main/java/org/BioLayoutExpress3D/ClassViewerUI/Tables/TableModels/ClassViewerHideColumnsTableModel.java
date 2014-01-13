@@ -109,7 +109,7 @@ public final class ClassViewerHideColumnsTableModel extends AbstractTableModel
                     data[i][1] = prevAllColumnBooleanValues[i];
                 }
 
-                classViewerFrame.populateClassViewer(data, updateExpressionGraphViewOnly, notUpdateTitleBar);
+                classViewerFrame.populateClassViewer(data, updateExpressionGraphViewOnly, notUpdateTitleBar, false);
             }
         }
         else

@@ -91,6 +91,7 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
         layoutFrame.block();
         progressBar.setValue(0);
         progressBar.setString("0%");
+        this.pack();
     }
 
     public void endProgressBar()

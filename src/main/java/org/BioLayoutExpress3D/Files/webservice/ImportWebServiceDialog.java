@@ -87,7 +87,7 @@ import org.jboss.resteasy.client.ClientRequestFactory;
 import org.jboss.resteasy.client.ClientResponse;
 
 /**
- * Dialogue for querying remote databases via web service
+ * Dialogue for searchQuerying remote databases via web service
  * @author Derek Wright
  */
 public class ImportWebServiceDialog extends JDialog implements ActionListener{
@@ -99,21 +99,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
     public static final String DATASOURCE_REACTOME = "reactome";
     public static final String DATASOURCE_PID = "pid";
-    public static final String DATASOURCE_PHOSPHOSITEPLUS = "phosphosite"; //working???
+    public static final String DATASOURCE_PHOSPHOSITEPLUS = "phosphosite"; 
     public static final String DATASOURCE_HUMANCYC = "humancyc";
-    public static final String DATASOURCE_HPRD = "HPRD";//working???
+    public static final String DATASOURCE_HPRD = "HPRD";
     public static final String DATASOURCE_PANTHER = "panther";
     
     public static final String COMMAND_TOP_PATHWAYS = "top_pathways";
     public static final String COMMAND_SEARCH = "search";
     public static final String COMMAND_GET = "get";
     
+    //timeouts for web service operations in seconds
+    public static final int TIMEOUT_SEARCH = 30;
+    public static final int TIMEOUT_GET = 20;
+    
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
     private JTextField searchField, organismField;
     private JComboBox<String> networkTypeCombo;
     private DefaultTableModel model; 
     private LayoutFrame frame;
-    //private JRadioButton sifRadio, bioPAXRadio;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
     private JEditorPane editorPane;
     private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox;
@@ -124,23 +127,28 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private List<SearchHit> searchHits; //retrieved search hits
     private int currentPage;
     private int maxHitsPerPage;
-    private int totalHits; //total number of search query matches
+    private int totalHits; //total number of search searchQuery matches
     private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
-    private Map<String, String> databaseUriDisplay; //map of database URI to display name
-
-    //private ClientRequest searchClientRequest; //web service request containing search params
-    //private ClientResponse<SearchResponse> searchClientResponse; //web service response containing search results
-    private SearchWorker searchWorker = null; //search operation concurrent task runner
-    private CPathQuery<SearchResponse> query; //query for top pathways and search
-    //private SearchResponse searchClientResponse;
-    private CPathGetQuery getQuery;
-
+    private Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
     
-    private ClientRequest getClientRequest; //web service request containing GET params
-    private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
+    private static final Map<String, String> databaseUriDisplay = new HashMap<String, String>(); //map of database URI to display name for search results
+    static
+    {
+        databaseUriDisplay.put("reactome", "Reactome");
+        databaseUriDisplay.put("pid", "NCI Nature");
+        databaseUriDisplay.put("psp", "PhosphoSitePlus");
+        databaseUriDisplay.put("humancyc", "HumanCyc");
+        databaseUriDisplay.put("hprd", "HPRD");
+        databaseUriDisplay.put("panther", "PANTHER");
+    }
+
+    private SearchWorker searchWorker = null; //search operation concurrent task runner
     private GetWorker getWorker = null; //GET operation concurrent task runner
+    private CPathQuery<SearchResponse> searchQuery; //query for top pathways and search
+    private CPathGetQuery getQuery;
+    private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
     
     private static final Joiner commaJoiner = Joiner.on(',').skipNulls(); //for creating comma-separated strings
 
@@ -167,6 +175,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         clientRequestFactory.setFollowRedirects(true);
         
         organismIdNameMap = new HashMap<String, String>();
+        hitInteractionCountMap = new HashMap<SearchHit, Integer>();
+        
         this.frame = frame;
         this.setTitle(myMessage);
         
@@ -239,15 +249,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");        
         JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
         
-        //map of search hit database names to display names for search results - TODO static?
-        databaseUriDisplay = new HashMap<String, String>();
-        databaseUriDisplay.put("reactome", "Reactome");
-        databaseUriDisplay.put("pid", "NCI Nature");
-        databaseUriDisplay.put("psp", "PhosphoSitePlus");
-        databaseUriDisplay.put("humancyc", "HumanCyc");
-        databaseUriDisplay.put("hprd", "HPRD");
-        databaseUriDisplay.put("panther", "PANTHER");
-
         allDatasourceCheckBox = new JCheckBox("All");
         allDatasourceCheckBox.setSelected(true);
         allDatasourceCheckBox.addActionListener(this);
@@ -259,21 +260,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
         networkTypeLabel.setLabelFor(networkTypeCombo);
 
-        //SIF/BioPax Radio Buttons
-        /*
-        sifRadio = new JRadioButton("SIF");
-        sifRadio.setActionCommand(FORMAT_SIF);
-        bioPAXRadio = new JRadioButton("BioPAX");
-        bioPAXRadio.setActionCommand(FORMAT_BIOPAX);
-        bioPAXRadio.setSelected(true); //default selection BioPAX
-        JLabel formatLabel = new JLabel("Format", JLabel.TRAILING);    
-        */
-        /*
-        final ButtonGroup downloadOptionGroup = new ButtonGroup();
-        downloadOptionGroup.add(bioPAXRadio);
-        downloadOptionGroup.add(sifRadio);
-        */
-        
         //labels for search info
         totalHits = 0;
         numHitsLabel = new JLabel("Hits: " + totalHits);
@@ -411,6 +397,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         table.getColumn("Database").setPreferredWidth(75);
         table.getColumn("BioPAX Class").setPreferredWidth(125);
         
+        hitInteractionCountMap.clear();
+        
         //display search hit info when row selected
         ListSelectionModel rowSelectionModel = table.getSelectionModel();
         rowSelectionModel.addListSelectionListener(new ListSelectionListener() {
@@ -420,7 +408,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 openButton.setEnabled(true);
 
                 ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-                if (!lsm.isSelectionEmpty()) {
+                if (!lsm.isSelectionEmpty()) 
+                {
                     int selectedRow = lsm.getMinSelectionIndex();
                     SearchHit hit = searchHits.get(selectedRow);
                     
@@ -436,34 +425,47 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                 + "<a href='" + organismString + "'>" + scientificName + "</a>";
                     }
                     
-                    //calculate interaction count using TRAVERSE query
+                    //calculate interaction count using TRAVERSE searchQuery
                     int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
                     ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
                     uriList.add(hit.getUri());
                     uriList.addAll(hit.getPathway());
                     
-                    //traverse all interactions for all pathways //TODO threading? //TODO cache size //TODO what happens with GO term URI?
+                    //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI?
                     CPathClient client = CPathClient.newInstance();
                     CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
                     HashSet<String> uniqueUriSet = new HashSet(); //set of unique interaction URIs
                     String interactionsHTML = "<b>Interactions: </b> ";
-                    try
+                    
+                    //check if interaction count has been previously cached
+                    Integer interactionCount = hitInteractionCountMap.get(hit);
+                    if(interactionCount != null)
                     {
-                        TraverseResponse traverseResponse = traverseQuery.result(); //run query
-                        List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
-                        
-                        for (TraverseEntry traverseEntry : traverseEntryList) 
-                        {
-                            logger.info(traverseEntry.getUri());
-                            List<String> traverseEntryValues = traverseEntry.getValue();
-                            uniqueUriSet.addAll(traverseEntryValues);
-                        }
-                        interactionsHTML += uniqueUriSet.size();
+                        logger.info("Interaction count found: " + interactionCount);
+                        interactionsHTML += interactionCount;
                     }
-                    catch(CPathException exception)
+                    else //interactions have not been previously counted - do traverse searchQuery
                     {
-                        logger.warning(exception.getMessage());
-                        interactionsHTML += "unknown";
+                        try
+                        {
+                            TraverseResponse traverseResponse = traverseQuery.result(); //run searchQuery
+                            List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
+
+                            for (TraverseEntry traverseEntry : traverseEntryList) 
+                            {
+                                logger.info(traverseEntry.getUri());
+                                List<String> traverseEntryValues = traverseEntry.getValue();
+                                uniqueUriSet.addAll(traverseEntryValues);
+                            }
+                            interactionCount = uniqueUriSet.size();
+                            hitInteractionCountMap.put(hit, interactionCount);
+                            interactionsHTML += interactionCount;
+                        }
+                        catch(CPathException exception)
+                        {
+                            logger.warning(exception.getMessage());
+                            interactionsHTML += "unknown";
+                        }
                     }
                     
                     //display excerpt
@@ -635,7 +637,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             String responseString = "";
             try
             {
-                responseString = (String)actualWorker.get(10, TimeUnit.SECONDS); //TODO constant 
+                responseString = (String)actualWorker.get(TIMEOUT_GET, TimeUnit.SECONDS); //TODO constant 
             }
             catch(Exception exception)
             {
@@ -838,7 +840,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     openButton.setEnabled(false);
 
                     //perform search
-                    return query.result();
+                    return searchQuery.result();
                     /*
                     searchClientResponse = searchClientRequest.get(SearchResponse.class);
                     int statusCode = searchClientResponse.getStatus(); //TODO not null check
@@ -855,7 +857,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             actualWorker.execute();
             try 
             {
-                SearchResponse sr = (SearchResponse)actualWorker.get(15, TimeUnit.SECONDS); //15 second timeout
+                SearchResponse sr = (SearchResponse)actualWorker.get(TIMEOUT_SEARCH, TimeUnit.SECONDS); //15 second timeout
                 return sr;
             } 
             catch (Exception exception) 
@@ -978,14 +980,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
               //TODO previous/next should remember last search params in case user changes
             String networkType = this.networkTypeCombo.getSelectedItem().toString();
 
-            //TODO Use Pathway Commons client instead of RestEasy
             CPathClient client = CPathClient.newInstance();
-            //CPathQuery<SearchResponse> query;
+            //CPathQuery<SearchResponse> searchQuery;
             
             //searchClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
             if(networkType.equals("Top Pathways"))
             {
-                query = client.createTopPathwaysQuery();
+                searchQuery = client.createTopPathwaysQuery();
                 /*
                 searchClientRequest
                     .pathParameter("command", COMMAND_TOP_PATHWAYS)
@@ -1064,7 +1065,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     searchQuery.datasourceFilter(organismSet);
                 }
                 
-                query = (CPathQuery<SearchResponse>)searchQuery;
+                this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
                 
             }
             search(); //perform search

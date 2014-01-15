@@ -213,6 +213,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                     // make sure to clear all plot/tables if current selection is empty
                     if ( layoutFrame.getGraph().getSelectionManager().getSelectedNodes().isEmpty() )
                         populateClassViewer();
+
+                    expressionGraphPanel.onFirstShown();
                 }
                 else
                 {
@@ -794,20 +796,20 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
     public void populateClassViewer()
     {
-        populateClassViewer(null, false, false);
+        populateClassViewer(null, false, false, true);
     }
 
     public void populateClassViewer(Object[][] hideColumnsData)
     {
-        populateClassViewer(hideColumnsData, false, false);
+        populateClassViewer(hideColumnsData, false, false, true);
     }
 
     public void populateClassViewer(boolean updateExpressionGraphViewOnly, boolean notUpdateTitleBar)
     {
-        populateClassViewer(null, updateExpressionGraphViewOnly, notUpdateTitleBar);
+        populateClassViewer(null, updateExpressionGraphViewOnly, notUpdateTitleBar, true);
     }
 
-    public void populateClassViewer(Object[][] hideColumnsData, boolean updateExpressionGraphViewOnly, boolean notUpdateTitleBar)
+    public void populateClassViewer(Object[][] hideColumnsData, boolean updateExpressionGraphViewOnly, boolean notUpdateTitleBar, boolean refreshPlot)
     {
         NetworkContainer nc = layoutFrame.getNetworkRootContainer();
         if (nc != null)
@@ -868,7 +870,12 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             if (!layoutFrame.getExpressionData().isTransposed())
             {
                 expressionGraphPanel.setVisible(true);
-                expressionGraphPanel.refreshPlot();
+
+                if (refreshPlot)
+                {
+                    expressionGraphPanel.refreshPlot();
+                }
+
                 expressionGraphPanel.repaint();
                 generalTable.repaint();
             }

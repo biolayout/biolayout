@@ -85,6 +85,7 @@ import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientRequestFactory;
 import org.jboss.resteasy.client.ClientResponse;
+import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * Dialogue for searchQuerying remote databases via web service
@@ -110,7 +111,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     //timeouts for web service operations in seconds
     public static final int TIMEOUT_SEARCH = 30;
-    public static final int TIMEOUT_GET = 20;
+    public static final int TIMEOUT_GET = 60;
     
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
     private JTextField searchField, organismField;
@@ -616,18 +617,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     stopButton.setEnabled(true);
                     openButton.setEnabled(false);
                     
-                    /*
-
-                    getClientResponse = getClientRequest.get(String.class); //throws Exception
-                    int statusCode = getClientResponse.getStatus();
-                    if(statusCode != 200) //search failed
-                    {       
-                        throw new PathwayCommonsException(statusCode);
-                    }
-                    
-                    statusLabel.setText("Extracting...");              
-                    String responseString = getClientResponse.getEntity();   
-                    */
                     String responseString = getQuery.stringResult(OutputFormat.BIOPAX);
                     return responseString;
                 }
@@ -979,96 +968,87 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         {
               //TODO previous/next should remember last search params in case user changes
             String networkType = this.networkTypeCombo.getSelectedItem().toString();
-
-            CPathClient client = CPathClient.newInstance();
-            //CPathQuery<SearchResponse> searchQuery;
             
-            //searchClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT_SEARCH);
-            if(networkType.equals("Top Pathways"))
+            try
             {
-                searchQuery = client.createTopPathwaysQuery();
-                /*
-                searchClientRequest
-                    .pathParameter("command", COMMAND_TOP_PATHWAYS)
-                    .pathParameter("format", "xml");
-                */
-            }
-            else
-            {
-                String searchTerm = searchField.getText();
-                String organism = organismField.getText();
-                
-                CPathSearchQuery searchQuery = client.createSearchQuery().queryString(searchTerm).typeFilter(networkType);
-                
-                /*
-                searchClientRequest
-                    .pathParameter("command", COMMAND_SEARCH)
-                    .pathParameter("format", "xml")
-                    .queryParameter("q", searchTerm)
-                    .queryParameter("type", networkType);
-                */
-                
-                //TODO muliple organisms with separator?
-                HashSet<String> organismSet = new HashSet<String>();
-                if(!organism.equals(""))
+                CPathClient client = CPathClient.newInstance(); //TODO catch org.springframework.web.client.HttpClientErrorException
+                if(networkType.equals("Top Pathways"))
                 {
-                    //searchClientRequest.queryParameter("organism", organism);
-                    organismSet.add(organism); //TODO multiple organisms comma separated
-                    //searchQuery.organismFilter(organisms);
+                    searchQuery = client.createTopPathwaysQuery();
                 }
-                
-                //page to retrieve
-                int pageParameter = currentPage;
-                if(nextButton == e.getSource())
+                else
                 {
-                   pageParameter++;
-                }
-                else if(previousButton == e.getSource())
-                {
-                    pageParameter--;
-                }
-                //searchClientRequest.queryParameter("page", pageParameter);
-                searchQuery.page(pageParameter);                
+                    String searchTerm = searchField.getText();
+                    String organism = organismField.getText();
 
-                //add parameters for datasource checkboxes
-                if(!allDatasourceCheckBox.isSelected())
-                {
-                    HashSet<String> datasourceSet = new HashSet<String>();                    
-                    for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
-                         JCheckBox checkBox = entry.getKey();
-                         if(checkBox.isSelected())
-                         {
-                             String datasourceParameter = entry.getValue();
-                             //searchClientRequest.queryParameter("datasource", datasourceParameter);       
-                             datasourceSet.add(datasourceParameter);
-                         }
-                    }            
-                    searchQuery.datasourceFilter(datasourceSet);
-                }
+                    CPathSearchQuery searchQuery = client.createSearchQuery().queryString(searchTerm).typeFilter(networkType);
 
-                //add parameters for organism checkboxes
-                if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
-                {
-                    for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
-                         JCheckBox checkBox = entry.getKey();
-                         if(checkBox.isSelected())
-                         {
-                             String organismParameter = entry.getValue();
-                             //searchClientRequest.queryParameter("organism", organismParameter);                        
-                             organismSet.add(organismParameter);
-                         }
+                    //TODO muliple organisms with separator?
+                    HashSet<String> organismSet = new HashSet<String>();
+                    if(!organism.equals(""))
+                    {
+                        //searchClientRequest.queryParameter("organism", organism);
+                        organismSet.add(organism); //TODO multiple organisms comma separated
+                        //searchQuery.organismFilter(organisms);
                     }
+
+                    //page to retrieve
+                    int pageParameter = currentPage;
+                    if(nextButton == e.getSource())
+                    {
+                       pageParameter++;
+                    }
+                    else if(previousButton == e.getSource())
+                    {
+                        pageParameter--;
+                    }
+                    //searchClientRequest.queryParameter("page", pageParameter);
+                    searchQuery.page(pageParameter);                
+
+                    //add parameters for datasource checkboxes
+                    if(!allDatasourceCheckBox.isSelected())
+                    {
+                        HashSet<String> datasourceSet = new HashSet<String>();                    
+                        for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
+                             JCheckBox checkBox = entry.getKey();
+                             if(checkBox.isSelected())
+                             {
+                                 String datasourceParameter = entry.getValue();
+                                 //searchClientRequest.queryParameter("datasource", datasourceParameter);       
+                                 datasourceSet.add(datasourceParameter);
+                             }
+                        }            
+                        searchQuery.datasourceFilter(datasourceSet);
+                    }
+
+                    //add parameters for organism checkboxes
+                    if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
+                    {
+                        for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
+                             JCheckBox checkBox = entry.getKey();
+                             if(checkBox.isSelected())
+                             {
+                                 String organismParameter = entry.getValue();
+                                 organismSet.add(organismParameter);
+                             }
+                        }
+                    }
+
+                    if(!organismSet.isEmpty())
+                    {
+                        searchQuery.datasourceFilter(organismSet);
+                    }
+
+                    this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
+
                 }
-                
-                if(!organismSet.isEmpty())
-                {
-                    searchQuery.datasourceFilter(organismSet);
-                }
-                
-                this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
-                
+                search(); //perform search
             }
-            search(); //perform search
+            catch(HttpClientErrorException exception)
+            {
+                statusLabel.setText("Unable to connect to Pathway Commons");
+                logger.warning(exception.getMessage());
+            }
         }
         else if(stopButton == e.getSource()) //stop running process
         { 

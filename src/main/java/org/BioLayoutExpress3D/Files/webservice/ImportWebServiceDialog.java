@@ -120,7 +120,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private LayoutFrame frame;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
     private JEditorPane editorPane;
-    private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox;
+    private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox, nameCheckBox;
     private Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     private Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     private JTable table; //search results table
@@ -275,7 +275,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         /**********add form fields******************/
         
         fieldPanel.add(searchLabel, "align label");
-        fieldPanel.add(searchField, "wrap, span");
+        fieldPanel.add(searchField, "");
+        
+        nameCheckBox = new JCheckBox("Name", true);
+        nameCheckBox.setToolTipText("Restrict search to name field only");
+        fieldPanel.add(nameCheckBox, "wrap");
 
         fieldPanel.add(organismLabel, "align label");
         JPanel organismPanel = new JPanel();
@@ -435,7 +439,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI?
                     CPathClient client = CPathClient.newInstance();
                     CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
-                    HashSet<String> uniqueUriSet = new HashSet(); //set of unique interaction URIs
+                    HashSet<String> uniqueUriSet = new HashSet<String>(); //set of unique interaction URIs
                     String interactionsHTML = "<b>Interactions: </b> ";
                     
                     //check if interaction count has been previously cached
@@ -980,6 +984,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 {
                     String searchTerm = searchField.getText();
                     String organism = organismField.getText();
+                    
+                    //restrict search to name
+                    if(nameCheckBox.isSelected())
+                    {
+                        searchTerm = "name:'" + searchTerm + "'";
+                    }
+                    
+                    logger.info("Search term: " + searchTerm);
 
                     CPathSearchQuery searchQuery = client.createSearchQuery().queryString(searchTerm).typeFilter(networkType);
 
@@ -1205,7 +1217,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     /**
     * Populate organism scientific names from NCBI web service
     */
-    private void fetchScientificNames()
+    private boolean fetchScientificNames()
     {
         EFetchTaxonService service = new EFetchTaxonService();
         EUtilsServiceSoap serviceSoap = service.getEUtilsServiceSoap();
@@ -1214,14 +1226,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          
         //set comma-separated String of organism IDs as search parameter
         String eFetchQuery = commaJoiner.join(this.organismIdNameMap.keySet());
+        logger.info("eFetchQuery: " + eFetchQuery);
         requ.setId(eFetchQuery);
         
-        EFetchResult resp = serviceSoap.runEFetch(requ);
-        logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
-        List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
-        for(TaxonType taxonType : taxon)
+        try
         {
-            organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
+            EFetchResult resp = serviceSoap.runEFetch(requ);
+            logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
+            List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
+            for(TaxonType taxonType : taxon)
+            {
+                organismIdNameMap.put(taxonType.getTaxId(), taxonType.getScientificName());
+            }
+            return true;
+        }
+        catch(Exception exception) //com.sun.xml.internal.ws.client.ClientTransportException thrown if web service down - will display organism ID as name
+        {
+            logger.warning("runEFetch failed: " + exception);
+            return false;
         }
     }
     

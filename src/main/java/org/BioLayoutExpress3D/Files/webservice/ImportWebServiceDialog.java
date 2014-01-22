@@ -12,6 +12,7 @@ import cpath.query.CPathGetQuery;
 import cpath.query.CPathQuery;
 import cpath.query.CPathSearchQuery;
 import cpath.query.CPathTraverseQuery;
+import cpath.service.GraphType;
 import cpath.service.OutputFormat;
 import cpath.service.jaxb.SearchHit;
 import cpath.service.jaxb.SearchResponse;
@@ -116,6 +117,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
     private JTextField searchField, organismField;
     private JComboBox<String> networkTypeCombo;
+    private String networkType = ""; //stores selected value of networkTypeCombo when search is run
     private DefaultTableModel model; 
     private LayoutFrame frame;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
@@ -148,7 +150,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private SearchWorker searchWorker = null; //search operation concurrent task runner
     private GetWorker getWorker = null; //GET operation concurrent task runner
     private CPathQuery<SearchResponse> searchQuery; //query for top pathways and search
-    private CPathGetQuery getQuery;
+    private CPathQuery getQuery;
     private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
     
     private static final Joiner commaJoiner = Joiner.on(',').skipNulls(); //for creating comma-separated strings
@@ -309,15 +311,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         //network type
         fieldPanel.add(networkTypeLabel, "align label");
         fieldPanel.add(networkTypeCombo, "wrap");
-/*
-        fieldPanel.add(formatLabel, "align label");
-        
-        JPanel formatPanel = new JPanel();
-        formatPanel.setLayout(new BoxLayout(formatPanel, BoxLayout.LINE_AXIS));
-        formatPanel.add(bioPAXRadio);
-        formatPanel.add(sifRadio);
-        fieldPanel.add(formatPanel, "wrap");
-        */
+
         fieldPanel.add(searchButton, "tag ok, span, split 4, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag cancel, sizegroup bttn");
         fieldPanel.add(stopButton, "tag yes, sizegroup bttn");
@@ -430,46 +424,57 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                 + "<a href='" + organismString + "'>" + scientificName + "</a>";
                     }
                     
-                    //calculate interaction count using TRAVERSE searchQuery
-                    int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
-                    ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
-                    uriList.add(hit.getUri());
-                    uriList.addAll(hit.getPathway());
-                    
-                    //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI?
-                    CPathClient client = CPathClient.newInstance();
-                    CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
-                    HashSet<String> uniqueUriSet = new HashSet<String>(); //set of unique interaction URIs
-                    String interactionsHTML = "<b>Interactions: </b> ";
-                    
-                    //check if interaction count has been previously cached
-                    Integer interactionCount = hitInteractionCountMap.get(hit);
-                    if(interactionCount != null)
+                    //count number of interactions for a pathway
+                    String interactionsHTML = "";
+                   
+                    if(networkType.equals("Pathway"))
                     {
-                        logger.info("Interaction count found: " + interactionCount);
-                        interactionsHTML += interactionCount;
-                    }
-                    else //interactions have not been previously counted - do traverse searchQuery
-                    {
-                        try
-                        {
-                            TraverseResponse traverseResponse = traverseQuery.result(); //run searchQuery
-                            List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
+                        //calculate interaction count using TRAVERSE query
+                        int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
+                        ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
+                        uriList.add(hit.getUri());
+                        uriList.addAll(hit.getPathway());
 
-                            for (TraverseEntry traverseEntry : traverseEntryList) 
-                            {
-                                logger.info(traverseEntry.getUri());
-                                List<String> traverseEntryValues = traverseEntry.getValue();
-                                uniqueUriSet.addAll(traverseEntryValues);
-                            }
-                            interactionCount = uniqueUriSet.size();
-                            hitInteractionCountMap.put(hit, interactionCount);
-                            interactionsHTML += interactionCount;
-                        }
-                        catch(CPathException exception)
+                        //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI? //TODO what to count for interactions?
+                        CPathClient client = CPathClient.newInstance();
+                        CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
+                        HashSet<String> uniqueUriSet = new HashSet<String>(); //set of unique interaction URIs
+                        interactionsHTML = "<b>Interactions: </b> ";
+
+                        //check if interaction count has been previously cached
+                        Integer interactionCount = hitInteractionCountMap.get(hit);
+                        if(interactionCount != null)
                         {
-                            logger.warning(exception.getMessage());
-                            interactionsHTML += "unknown";
+                            logger.info("Interaction count found: " + interactionCount);
+                            interactionsHTML += interactionCount;
+                            interactionsHTML += "<br />";
+                        }
+                        else //interactions have not been previously counted - do traverse searchQuery
+                        {
+                            try
+                            {
+                                TraverseResponse traverseResponse = traverseQuery.result(); //run traverse query
+                                List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
+
+                                for (TraverseEntry traverseEntry : traverseEntryList) 
+                                {
+                                    logger.info(traverseEntry.getUri());
+                                    List<String> traverseEntryValues = traverseEntry.getValue();
+                                    uniqueUriSet.addAll(traverseEntryValues);
+                                }
+                                interactionCount = uniqueUriSet.size();
+                                hitInteractionCountMap.put(hit, interactionCount);
+                                interactionsHTML += interactionCount;
+                            }
+                            catch(CPathException exception)
+                            {
+                                logger.warning(exception.getMessage());
+                                interactionsHTML += "unknown";
+                            }
+                            finally
+                            {
+                                interactionsHTML += "<br />";
+                            }
                         }
                     }
                     
@@ -477,8 +482,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     editorPane.setText("<b>Excerpt:</b><br />" 
                             + hit.getExcerpt() 
                             + "<br />" 
+                            + "<b>URI:</b>"
+                            + "<a href='" + hit.getUri() + "'>" + hit.getUri() + "</a>"
+                            + "<br />" 
                             + interactionsHTML
-                            + "<br />"
                             + organismHTML);
                 }
             }
@@ -499,18 +506,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             tc.setCellRenderer(centerRenderer);        
         }
         
-        //size column width to fit biggest cell
-        /* 
-        int column = 3;
-        int width = 0;
-        for (int row = 0; row < table.getRowCount(); row++) {
-            TableCellRenderer renderer = table.getCellRenderer(row, column);
-            Component comp = table.prepareRenderer(renderer, row, column);
-            width = Math.max (comp.getPreferredSize().width, width);
-        }
-        TableColumn tc = table.getColumnModel().getColumn(column);
-        tc.setPreferredWidth(width);
-*/
         
         //final LayoutFrame localFrame = frame; //local reference can be referenced from inner class
         
@@ -553,10 +548,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
         String uriString = hit.getUri(); //URI for GET request
-        logger.info("URI is " + uriString);
 
         String fileExtension = ".owl";
-        String formatParameter  = FORMAT_BIOPAX;
 
         String hitName = table.getModel().getValueAt(modelRow, 0).toString(); //search hit name
         String fileName = hitName + fileExtension; //name of .owl file to be created
@@ -564,15 +557,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         CPathClient client = CPathClient.newInstance();
         String[] uriArray = {uriString};
         
-        getQuery = client.createGetQuery().sources(uriArray);
-
-        /*
-        getClientRequest = clientRequestFactory.createRequest(ImportWebService.CPATH2_ENDPOINT);
-        getClientRequest
-            .pathParameter("command", COMMAND_GET)
-            .queryParameter("uri", uriString)
-            .queryParameter("format", formatParameter);
-        */
+        if(networkType.equals("Pathway")) //just get the pathway itself
+        {
+            getQuery = client.createGetQuery().sources(uriArray);
+        }
+        else //Interaction etc - network neighbourhood graph query
+        {
+            getQuery = client.createGraphQuery().sources(uriArray).kind(GraphType.NEIGHBORHOOD);
+        }
 
         //retrieve file from Pathway Commons and load file for display
         getWorker = new GetWorker(fileName);
@@ -831,19 +823,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     searchButton.setEnabled(false);
                     stopButton.setEnabled(true);
                     openButton.setEnabled(false);
-
-                    //perform search
-                    return searchQuery.result();
-                    /*
-                    searchClientResponse = searchClientRequest.get(SearchResponse.class);
-                    int statusCode = searchClientResponse.getStatus(); //TODO not null check
-                    if(statusCode != 200) //search failed
-                    {
-                        throw new PathwayCommonsException(statusCode);
-                    }
-
-                    return searchClientResponse.getEntity(); //marshall XML response into Java object 
-                    */
+                    
+                    return searchQuery.result(); //perform search
                 }
             };
 
@@ -971,7 +952,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         if(searchButton == e.getSource() || nextButton == e.getSource() || previousButton == e.getSource()) 
         {
               //TODO previous/next should remember last search params in case user changes
-            String networkType = this.networkTypeCombo.getSelectedItem().toString();
+            networkType = this.networkTypeCombo.getSelectedItem().toString();
             
             try
             {
@@ -999,9 +980,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     HashSet<String> organismSet = new HashSet<String>();
                     if(!organism.equals(""))
                     {
-                        //searchClientRequest.queryParameter("organism", organism);
                         organismSet.add(organism); //TODO multiple organisms comma separated
-                        //searchQuery.organismFilter(organisms);
                     }
 
                     //page to retrieve
@@ -1026,7 +1005,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                              if(checkBox.isSelected())
                              {
                                  String datasourceParameter = entry.getValue();
-                                 //searchClientRequest.queryParameter("datasource", datasourceParameter);       
                                  datasourceSet.add(datasourceParameter);
                              }
                         }            
@@ -1052,7 +1030,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
 
                     this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
-
                 }
                 search(); //perform search
             }

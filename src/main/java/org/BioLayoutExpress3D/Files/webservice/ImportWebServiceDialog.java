@@ -32,6 +32,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -65,6 +66,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -259,7 +261,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //Network Type Drop Down
         networkTypeCombo = new JComboBox<String>();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "EntityReference", "Top Pathways" }));
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "PhysicalEntity", "EntityReference", "Top Pathways" }));
         JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
         networkTypeLabel.setLabelFor(networkTypeCombo);
 
@@ -267,12 +269,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         totalHits = 0;
         numHitsLabel = new JLabel("Hits: " + totalHits);
 
+        // same font but bold
+        Font font = numHitsLabel.getFont();
+        Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
+        numHitsLabel.setFont(boldFont);        
+        numHitsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         retrievedLabel = new JLabel("Retrieved: 0");
+        retrievedLabel.setFont(boldFont);
+        retrievedLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         
         currentPage = 0;
         pagesLabel = new JLabel("Page: " + currentPage);
+        pagesLabel.setFont(boldFont);
+        pagesLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         statusLabel = new JLabel("Ready");
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         /**********add form fields******************/
         
@@ -336,8 +350,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         /**********************************************/
  
+        Font defaultFont = this.getFont();
+        String fontFamily = defaultFont.getFamily();
         HTMLEditorKit hed = new HTMLEditorKit();
         StyleSheet ss = hed.getStyleSheet();
+        ss.addRule("body {font-family : " + fontFamily + "}");
         ss.addRule("b {color : blue;}");
         ss.addRule(".hitHL {color : green; font-weight : bold}");
         Document doc = hed.createDefaultDocument();
@@ -350,10 +367,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         editorPane.setDocument(doc);
         
         //open system web browser on hyperlink click
-        editorPane.addHyperlinkListener(new HyperlinkListener() {
-            public void hyperlinkUpdate(HyperlinkEvent e) {
-                if(e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
-                    if(Desktop.isDesktopSupported()) {
+        editorPane.addHyperlinkListener(new HyperlinkListener() 
+        {
+            public void hyperlinkUpdate(HyperlinkEvent e) 
+            {
+                if(e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) 
+                {
+                    if(Desktop.isDesktopSupported()) 
+                    {
                         try
                         {
                             Desktop.getDesktop().browse(e.getURL().toURI());                            
@@ -479,11 +500,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
                     
                     //display excerpt
+                    String uri = hit.getUri();
+                    String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
+
                     editorPane.setText("<b>Excerpt:</b><br />" 
                             + hit.getExcerpt() 
                             + "<br />" 
-                            + "<b>URI:</b>"
-                            + "<a href='" + hit.getUri() + "'>" + hit.getUri() + "</a>"
+                            + "<b>URI: </b>"
+                            + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
                             + "<br />" 
                             + interactionsHTML
                             + organismHTML);
@@ -520,8 +544,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
          });
         
         //split search results on left and highlighted search hit excerpt on right
-        JScrollPane scrollPane = new JScrollPane(table);
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPane, editorPane);
+        JScrollPane tableScrollPane = new JScrollPane(table);
+        JScrollPane editorScrollPane = new JScrollPane(editorPane);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
         getContentPane().add(splitPane ,BorderLayout.CENTER);
                 
         pack();
@@ -551,7 +576,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         String fileExtension = ".owl";
 
-        String hitName = table.getModel().getValueAt(modelRow, 0).toString(); //search hit name
+        
+        //String hitName = table.getModel().getValueAt(modelRow, 0).toString(); //search hit name
+        String hitName = hit.getName();
+        
+        
         String fileName = hitName + fileExtension; //name of .owl file to be created
         
         CPathClient client = CPathClient.newInstance();

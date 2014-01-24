@@ -5,6 +5,7 @@
 package org.BioLayoutExpress3D.Files.webservice;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 
 import cpath.client.CPathClient;
 import cpath.client.util.CPathException;
@@ -135,18 +136,44 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private int totalHits; //total number of search searchQuery matches
     private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
-    private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
+    //private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
     private Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
-    
-    private static final Map<String, String> databaseUriDisplay = new HashMap<String, String>(); //map of database URI to display name for search results
+    /*
+    private static final Map<String, String> DATABASE_URI_DISPLAY = new HashMap<String, String>(); //map of database URI to display name for search results
     static
     {
-        databaseUriDisplay.put("reactome", "Reactome");
-        databaseUriDisplay.put("pid", "NCI Nature");
-        databaseUriDisplay.put("psp", "PhosphoSitePlus");
-        databaseUriDisplay.put("humancyc", "HumanCyc");
-        databaseUriDisplay.put("hprd", "HPRD");
-        databaseUriDisplay.put("panther", "PANTHER");
+        DATABASE_URI_DISPLAY.put("reactome", "Reactome");
+        DATABASE_URI_DISPLAY.put("pid", "NCI Nature");
+        DATABASE_URI_DISPLAY.put("psp", "PhosphoSitePlus");
+        DATABASE_URI_DISPLAY.put("humancyc", "HumanCyc");
+        DATABASE_URI_DISPLAY.put("hprd", "HPRD");
+        DATABASE_URI_DISPLAY.put("panther", "PANTHER");
+    }
+    */
+    
+    /**
+     * Maps search hit URI of database to display name. Immutable.
+     */
+    public static final Map<String, String> DATABASE_URI_DISPLAY = ImmutableMap.<String, String>builder()
+        .put("reactome", "Reactome")
+        .put("pid", "NCI Nature")
+        .put("psp", "PhosphoSitePlus")
+        .put("humancyc", "HumanCyc")
+        .put("hprd", "HPRD")
+        .put("panther", "PANTHER")
+        .build();
+
+    /**
+     * Map of NCBI organism ID to species name. Not immutable so we can add new species from NCBI web service. 
+     * Common species hard coded to avoid unnecessary web service calls.
+     */
+    private static final Map<String, String> organismIdNameMap = new HashMap<String, String>();
+    static
+    {
+        organismIdNameMap.put("9606", "Homo sapiens");
+        organismIdNameMap.put("11676", "Human immunodeficiency virus 1");
+        organismIdNameMap.put("10090", "Mus musculus");
+        organismIdNameMap.put("10116", "Rattus norvegicus");
     }
 
     private SearchWorker searchWorker = null; //search operation concurrent task runner
@@ -179,7 +206,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         clientRequestFactory = new ClientRequestFactory();
         clientRequestFactory.setFollowRedirects(true);
         
-        organismIdNameMap = new HashMap<String, String>();
+        //organismIdNameMap = new HashMap<String, String>();
         hitInteractionCountMap = new HashMap<SearchHit, Integer>();
         
         this.frame = frame;
@@ -392,7 +419,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         String text = "<b>Excerpt:</b>";
         editorPane.setText(text);
         
-        //String[] colHeadings = {"Name", "Organism", "Database", "BioPAX Class", "Pathways"};
         String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         int numRows = 0;
         
@@ -568,25 +594,25 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     {
         int viewRow = table.getSelectedRow();
         int modelRow = table.convertRowIndexToModel(viewRow);
-        logger.info("Selected table view row " + viewRow);
-        logger.info("Selected table model row " + modelRow);
 
         SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
         String uriString = hit.getUri(); //URI for GET request
 
         String fileExtension = ".owl";
 
-        
-        //String hitName = table.getModel().getValueAt(modelRow, 0).toString(); //search hit name
+        //if search hit name is empty use BioPAX class as filename instead
         String hitName = hit.getName();
-        
+        if(hitName == null || hitName.isEmpty())
+        {
+            hitName = hit.getBiopaxClass();
+        }
         
         String fileName = hitName + fileExtension; //name of .owl file to be created
         
         CPathClient client = CPathClient.newInstance();
         String[] uriArray = {uriString};
         
-        if(networkType.equals("Pathway")) //just get the pathway itself
+        if(networkType.equals("Pathway") || networkType.equals("Top Pathways")) //just get the pathway itself
         {
             getQuery = client.createGetQuery().sources(uriArray);
         }
@@ -1203,7 +1229,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 String databaseUri = databaseArray[i];
 
                 //replace with database real name if found in map
-                for (Map.Entry<String, String> entry : databaseUriDisplay.entrySet()) 
+                for (Map.Entry<String, String> entry : DATABASE_URI_DISPLAY.entrySet()) 
                 {
                     String databaseString = entry.getKey();
                     if(databaseUri.contains(databaseString))

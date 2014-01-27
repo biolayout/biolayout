@@ -64,6 +64,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -152,7 +153,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     */
     
     /**
-     * Maps search hit URI of database to display name. Immutable.
+     * Maps search hit URI of database to display name. Map contents are immutable.
      */
     public static final Map<String, String> DATABASE_URI_DISPLAY = ImmutableMap.<String, String>builder()
         .put("reactome", "Reactome")
@@ -165,7 +166,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
     /**
      * Map of NCBI organism ID to species name. Not immutable so we can add new species from NCBI web service. 
-     * Common species hard coded to avoid unnecessary web service calls.
+     * Common species hard coded to avoid unnecessary web service calls. Map is final but contents are not!
      */
     private static final Map<String, String> organismIdNameMap = new HashMap<String, String>();
     static
@@ -359,7 +360,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(openButton, "tag no, sizegroup bttn");
         
         fieldPanel.setPreferredSize(new Dimension(888, 205));
-        getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
+        
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new BorderLayout());
+        searchPanel.add(fieldPanel, BorderLayout.PAGE_START);                
+        //getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
         
         JPanel hitsPanel = new JPanel();
         hitsPanel.setLayout(new MigLayout());
@@ -373,7 +378,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");        
         
         hitsPanel.setPreferredSize(new Dimension(888, 88));
-        getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
+        //getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
+        searchPanel.add(hitsPanel, BorderLayout.PAGE_END);
         
         /**********************************************/
  
@@ -573,7 +579,15 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JScrollPane tableScrollPane = new JScrollPane(table);
         JScrollPane editorScrollPane = new JScrollPane(editorPane);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
-        getContentPane().add(splitPane ,BorderLayout.CENTER);
+        //getContentPane().add(splitPane ,BorderLayout.CENTER);
+        searchPanel.add(splitPane ,BorderLayout.CENTER);
+        
+        JTabbedPane tabbedPane = new JTabbedPane();
+        //tabbedPane.setLayout(new BorderLayout());
+        tabbedPane.addTab("Search", searchPanel);
+        tabbedPane.addTab("Advanced", new JLabel("This is the Advanced tab!"));
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);  
+        
                 
         pack();
         splitPane.setDividerLocation(0.75);

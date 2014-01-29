@@ -364,7 +364,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BorderLayout());
         searchPanel.add(fieldPanel, BorderLayout.PAGE_START);                
-        //getContentPane().add(fieldPanel, BorderLayout.PAGE_START);
         
         JPanel hitsPanel = new JPanel();
         hitsPanel.setLayout(new MigLayout());
@@ -378,11 +377,153 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");        
         
         hitsPanel.setPreferredSize(new Dimension(888, 88));
-        //getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
         searchPanel.add(hitsPanel, BorderLayout.PAGE_END);
+                 
+        createEditorPane(); //create HTML editor pane
         
-        /**********************************************/
- 
+        String text = "<b>Excerpt:</b>";
+        editorPane.setText(text);
+        
+        //create table model
+        String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
+        int numRows = 0;       
+        model = new DefaultTableModel(numRows, colHeadings.length) 
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) 
+            {
+               //all cells false
+               return false;
+            }
+        };        
+        model.setColumnIdentifiers(colHeadings);
+        
+        hitInteractionCountMap.clear();
+
+        //create results table
+        table = new ZebraJTable(model);
+        table.setAutoCreateRowSorter(true);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        //set column widths
+        table.getColumn(colHeadings[0]).setPreferredWidth(400);
+        table.getColumn(colHeadings[1]).setPreferredWidth(75);
+        table.getColumn(colHeadings[2]).setPreferredWidth(125);
+        
+        //center align header and cell contents        
+        createTableHeaderRenderer();        
+        createTableContentsRenderer();
+        
+        //display search hit info when row selected
+        ListSelectionModel rowSelectionModel = table.getSelectionModel();
+        rowSelectionModel.addListSelectionListener(new ListSelectionListener() 
+        {
+            public void valueChanged(ListSelectionEvent e) 
+            {
+                if (e.getValueIsAdjusting()) return; //Ignore extra messages.
+
+                openButton.setEnabled(true);
+
+                ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+                if (!lsm.isSelectionEmpty()) 
+                {
+                    int selectedRow = lsm.getMinSelectionIndex();
+                    SearchHit hit = searchHits.get(selectedRow);
+                    
+                    //construct HTML snippet of organism scientific names
+                    List<String> organismIdList = hit.getOrganism();
+                    String organismHTML = "<b>Organism:</b>";
+                    for(String organismString : organismIdList)
+                    {
+                        String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+                        String scientificName = organismIdNameMap.get(ncbiId);
+                        organismHTML = organismHTML 
+                                + "<br />" 
+                                + "<a href='" + organismString + "'>" + scientificName + "</a>";
+                    }
+                    
+                    //count number of interactions for a pathway
+                    String interactionsHTML = "";                   
+                    if(networkType.equals("Pathway"))
+                    {
+                        //check if interaction count has been previously cached
+                        Integer interactionCount = hitInteractionCountMap.get(hit);
+                        
+                        interactionsHTML = "<b>Interactions: </b> ";
+                        if(interactionCount != null)
+                        {
+                            logger.info("Interaction count found: " + interactionCount);
+                            interactionsHTML += interactionCount;
+                        }
+                        else //interactions have not been previously counted - do traverse searchQuery
+                        {
+                            try
+                            {
+                                interactionCount = traverseInteractions(hit); //calculate interaction count using TRAVERSE query, autobox int to Integer
+                                
+                                hitInteractionCountMap.put(hit, interactionCount);
+                                interactionsHTML += interactionCount;
+                            }
+                            catch(CPathException exception)
+                            {
+                                logger.warning(exception.getMessage());
+                                interactionsHTML += "unknown";
+                            }
+                        }
+                        interactionsHTML += "<br />";
+                    }
+                    
+                    //display excerpt
+                    String uri = hit.getUri();
+                    String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
+                    
+                    String excerptHTML = "<b>Excerpt:</b><br />" 
+                            + hit.getExcerpt() 
+                            + "<br />" 
+                            + "<b>URI: </b>"
+                            + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
+                            + "<br />" 
+                            + interactionsHTML
+                            + organismHTML;
+
+                    editorPane.setText(excerptHTML);
+                }
+            } //end valueChanged
+        });        
+
+        
+        table.addMouseListener(new MouseAdapter() 
+        {
+            public void mouseClicked(MouseEvent e) 
+            {
+                if (e.getClickCount() == 2) //open network
+                {
+                    openNetwork(); //TODO add search hit to advanced instead of open
+                }
+            }
+         });
+        
+        //split search results on left and highlighted search hit excerpt on right
+        JScrollPane tableScrollPane = new JScrollPane(table);
+        JScrollPane editorScrollPane = new JScrollPane(editorPane);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
+        searchPanel.add(splitPane ,BorderLayout.CENTER);
+        
+        JPanel advancedPanel = new JPanel(); //advanced tab panel for graph search
+        
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("Search", searchPanel);
+        tabbedPane.addTab("Advanced", advancedPanel);
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);          
+                
+        pack();
+        splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
+        setLocationRelativeTo(frame);
+        setVisible(true);
+    }
+    
+    private void createEditorPane()
+    {
         Font defaultFont = this.getFont();
         String fontFamily = defaultFont.getFamily();
         HTMLEditorKit hed = new HTMLEditorKit();
@@ -421,139 +562,43 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
         });
-        
-        String text = "<b>Excerpt:</b>";
-        editorPane.setText(text);
-        
-        String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
-        int numRows = 0;
-        
-        model = new DefaultTableModel(numRows, colHeadings.length) 
+    }
+    
+    private int traverseInteractions(SearchHit hit) throws CPathException
+    {
+        int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
+        ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
+        uriList.add(hit.getUri());
+        uriList.addAll(hit.getPathway());
+
+        //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI? //TODO what to count for interactions?
+        CPathClient client = CPathClient.newInstance();
+        CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
+        HashSet<String> uniqueUriSet = new HashSet<String>(); //set of unique interaction URIs
+
+        TraverseResponse traverseResponse = traverseQuery.result(); //run traverse query
+        List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
+
+        for (TraverseEntry traverseEntry : traverseEntryList) 
         {
-            @Override
-            public boolean isCellEditable(int row, int column) 
-            {
-               //all cells false
-               return false;
-            }
-        };
-        
-        model.setColumnIdentifiers(colHeadings);
-        
-        table = new ZebraJTable(model);
-        table.setAutoCreateRowSorter(true);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
-        //set column widths
-        table.getColumn("Name").setPreferredWidth(400);
-        table.getColumn("Database").setPreferredWidth(75);
-        table.getColumn("BioPAX Class").setPreferredWidth(125);
-        
-        hitInteractionCountMap.clear();
-        
-        //display search hit info when row selected
-        ListSelectionModel rowSelectionModel = table.getSelectionModel();
-        rowSelectionModel.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) return; //Ignore extra messages.
-
-                openButton.setEnabled(true);
-
-                ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-                if (!lsm.isSelectionEmpty()) 
-                {
-                    int selectedRow = lsm.getMinSelectionIndex();
-                    SearchHit hit = searchHits.get(selectedRow);
-                    
-                    //construct HTML snippet of organism scientific names
-                    List<String> organismIdList = hit.getOrganism();
-                    String organismHTML = "<b>Organism:</b>";
-                    for(String organismString : organismIdList)
-                    {
-                        String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-                        String scientificName = organismIdNameMap.get(ncbiId);
-                        organismHTML = organismHTML 
-                                + "<br />" 
-                                + "<a href='" + organismString + "'>" + scientificName + "</a>";
-                    }
-                    
-                    //count number of interactions for a pathway
-                    String interactionsHTML = "";
-                   
-                    if(networkType.equals("Pathway"))
-                    {
-                        //calculate interaction count using TRAVERSE query
-                        int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
-                        ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
-                        uriList.add(hit.getUri());
-                        uriList.addAll(hit.getPathway());
-
-                        //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI? //TODO what to count for interactions?
-                        CPathClient client = CPathClient.newInstance();
-                        CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
-                        HashSet<String> uniqueUriSet = new HashSet<String>(); //set of unique interaction URIs
-                        interactionsHTML = "<b>Interactions: </b> ";
-
-                        //check if interaction count has been previously cached
-                        Integer interactionCount = hitInteractionCountMap.get(hit);
-                        if(interactionCount != null)
-                        {
-                            logger.info("Interaction count found: " + interactionCount);
-                            interactionsHTML += interactionCount;
-                            interactionsHTML += "<br />";
-                        }
-                        else //interactions have not been previously counted - do traverse searchQuery
-                        {
-                            try
-                            {
-                                TraverseResponse traverseResponse = traverseQuery.result(); //run traverse query
-                                List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
-
-                                for (TraverseEntry traverseEntry : traverseEntryList) 
-                                {
-                                    logger.info(traverseEntry.getUri());
-                                    List<String> traverseEntryValues = traverseEntry.getValue();
-                                    uniqueUriSet.addAll(traverseEntryValues);
-                                }
-                                interactionCount = uniqueUriSet.size();
-                                hitInteractionCountMap.put(hit, interactionCount);
-                                interactionsHTML += interactionCount;
-                            }
-                            catch(CPathException exception)
-                            {
-                                logger.warning(exception.getMessage());
-                                interactionsHTML += "unknown";
-                            }
-                            finally
-                            {
-                                interactionsHTML += "<br />";
-                            }
-                        }
-                    }
-                    
-                    //display excerpt
-                    String uri = hit.getUri();
-                    String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
-
-                    editorPane.setText("<b>Excerpt:</b><br />" 
-                            + hit.getExcerpt() 
-                            + "<br />" 
-                            + "<b>URI: </b>"
-                            + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
-                            + "<br />" 
-                            + interactionsHTML
-                            + organismHTML);
-                }
-            }
-        });        
-
-        //center align header and cell contents        
+            logger.info(traverseEntry.getUri());
+            List<String> traverseEntryValues = traverseEntry.getValue();
+            uniqueUriSet.addAll(traverseEntryValues);
+        }
+        return uniqueUriSet.size();       
+    }
+    
+    private void createTableHeaderRenderer()
+    {
         DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
         headerRenderer.setHorizontalAlignment( JLabel.CENTER );
         headerRenderer.setBackground(Color.LIGHT_GRAY);
         JTableHeader header = table.getTableHeader();
-        header.setDefaultRenderer(headerRenderer);
-        
+        header.setDefaultRenderer(headerRenderer);       
+    }
+    
+    private void createTableContentsRenderer()
+    {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment( JLabel.CENTER );
         for (int column = 1; column < table.getColumnCount(); ++column) //align columns 1-3
@@ -561,39 +606,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             TableColumn tc = table.getColumnModel().getColumn(column);
             tc.setCellRenderer(centerRenderer);        
         }
-        
-        
-        //final LayoutFrame localFrame = frame; //local reference can be referenced from inner class
-        
-        table.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) 
-            {
-                if (e.getClickCount() == 2) //open network
-                {
-                    openNetwork();
-                }
-            }
-         });
-        
-        //split search results on left and highlighted search hit excerpt on right
-        JScrollPane tableScrollPane = new JScrollPane(table);
-        JScrollPane editorScrollPane = new JScrollPane(editorPane);
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
-        //getContentPane().add(splitPane ,BorderLayout.CENTER);
-        searchPanel.add(splitPane ,BorderLayout.CENTER);
-        
-        JTabbedPane tabbedPane = new JTabbedPane();
-        //tabbedPane.setLayout(new BorderLayout());
-        tabbedPane.addTab("Search", searchPanel);
-        tabbedPane.addTab("Advanced", new JLabel("This is the Advanced tab!"));
-        getContentPane().add(tabbedPane, BorderLayout.CENTER);  
-        
-                
-        pack();
-        splitPane.setDividerLocation(0.75);
-        
-        setLocationRelativeTo(frame);
-        setVisible(true);
     }
     
     /**

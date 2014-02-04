@@ -87,9 +87,11 @@ import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.apache.commons.io.FileUtils;
+/*
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientRequestFactory;
 import org.jboss.resteasy.client.ClientResponse;
+*/
 import org.springframework.web.client.HttpClientErrorException;
 
 /**
@@ -135,7 +137,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private int currentPage;
     private int maxHitsPerPage;
     private int totalHits; //total number of search searchQuery matches
-    private ClientRequestFactory clientRequestFactory;
+    //private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     //private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
     private Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
@@ -181,7 +183,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private GetWorker getWorker = null; //GET operation concurrent task runner
     private CPathQuery<SearchResponse> searchQuery; //query for top pathways and search
     private CPathQuery getQuery;
-    private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
+//    private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
     
     private static final Joiner commaJoiner = Joiner.on(',').skipNulls(); //for creating comma-separated strings
 
@@ -203,10 +205,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         setModal(modal);
         
         setAlwaysOnTop(false);
-        
+        /*
         clientRequestFactory = new ClientRequestFactory();
         clientRequestFactory.setFollowRedirects(true);
-        
+        */
         //organismIdNameMap = new HashMap<String, String>();
         hitInteractionCountMap = new HashMap<SearchHit, Integer>();
         
@@ -215,13 +217,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //search button
         searchButton = this.createJButton("Search", "Search", true);
-        getRootPane().setDefaultButton(searchButton); //searches with enter key
-        
-        previousButton = this.createJButton("< Previous", "Return to previous page", false); //previous button
-        nextButton = this.createJButton("Next >", "Next page", false); //next button
         cancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
         stopButton = this.createJButton("Stop", "Stop Search", false); //stop button
         openButton = this.createJButton("Open", "Open network", false); //open button
+        getRootPane().setDefaultButton(searchButton); //searches with enter key
 
         JPanel fieldPanel = new JPanel();
         fieldPanel.setLayout(new MigLayout());
@@ -293,28 +292,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
         networkTypeLabel.setLabelFor(networkTypeCombo);
 
-        //labels for search info
-        totalHits = 0;
-        numHitsLabel = new JLabel("Hits: " + totalHits);
-
-        // same font but bold
-        Font font = numHitsLabel.getFont();
-        Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
-        numHitsLabel.setFont(boldFont);        
-        numHitsLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        retrievedLabel = new JLabel("Retrieved: 0");
-        retrievedLabel.setFont(boldFont);
-        retrievedLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        
-        currentPage = 0;
-        pagesLabel = new JLabel("Page: " + currentPage);
-        pagesLabel.setFont(boldFont);
-        pagesLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
-        statusLabel = new JLabel("Ready");
-        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         /**********add form fields******************/
         
@@ -326,6 +303,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(nameCheckBox, "wrap");
 
         fieldPanel.add(organismLabel, "align label");
+        
         JPanel organismPanel = new JPanel();
         organismPanel.setLayout(new BoxLayout(organismPanel, BoxLayout.LINE_AXIS));
         for(JCheckBox checkBox: organismDisplayCommands.keySet())
@@ -333,6 +311,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             organismPanel.add(checkBox);
         }        
         organismPanel.add(anyOrganismCheckBox);
+        
         fieldPanel.add(organismPanel, "wrap");
         
         //organism checkboxes
@@ -364,7 +343,68 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BorderLayout());
         searchPanel.add(fieldPanel, BorderLayout.PAGE_START);                
+                
+        searchPanel.add(createHitsPanel(), BorderLayout.PAGE_END);
+                 
+        createEditorPane("<b>Excerpt:</b>"); //create HTML editor pane
         
+        hitInteractionCountMap.clear();
+
+        //create results table //create table model
+        createHitsModelAndTable();
+        
+        //split search results on left and highlighted search hit excerpt on right
+        JScrollPane tableScrollPane = new JScrollPane(table);
+        JScrollPane editorScrollPane = new JScrollPane(editorPane);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
+        searchPanel.add(splitPane ,BorderLayout.CENTER);
+        
+        JPanel advancedPanel = new JPanel(); //advanced tab panel for graph search
+        
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("Search", searchPanel);
+        tabbedPane.addTab("Advanced", advancedPanel);
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);          
+                
+        pack();
+        splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
+        setLocationRelativeTo(frame);
+        setVisible(true);
+    }
+    
+    private JPanel createFieldPanel()
+    {
+       return null;  
+    }
+    
+    private JPanel createHitsPanel()
+    {
+        //create next and previous buttons
+        previousButton = this.createJButton("< Previous", "Return to previous page", false); //previous button
+        nextButton = this.createJButton("Next >", "Next page", false); //next button
+        
+        //labels for search info
+        totalHits = 0;
+        numHitsLabel = new JLabel("Hits: " + totalHits);
+
+        // same font but bold
+        Font font = numHitsLabel.getFont();
+        Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
+        numHitsLabel.setFont(boldFont);        
+        numHitsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        retrievedLabel = new JLabel("Retrieved: 0");
+        retrievedLabel.setFont(boldFont);
+        retrievedLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        currentPage = 0;
+        pagesLabel = new JLabel("Page: " + currentPage);
+        pagesLabel.setFont(boldFont);
+        pagesLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        
+        statusLabel = new JLabel("Ready");
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         JPanel hitsPanel = new JPanel();
         hitsPanel.setLayout(new MigLayout());
         
@@ -377,14 +417,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");        
         
         hitsPanel.setPreferredSize(new Dimension(888, 88));
-        searchPanel.add(hitsPanel, BorderLayout.PAGE_END);
-                 
-        createEditorPane(); //create HTML editor pane
-        
-        String text = "<b>Excerpt:</b>";
-        editorPane.setText(text);
-        
-        //create table model
+        return hitsPanel;
+    }
+    
+    private void createHitsModelAndTable()
+    {
         String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         int numRows = 0;       
         model = new DefaultTableModel(numRows, colHeadings.length) 
@@ -397,10 +434,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
         };        
         model.setColumnIdentifiers(colHeadings);
-        
-        hitInteractionCountMap.clear();
 
-        //create results table
         table = new ZebraJTable(model);
         table.setAutoCreateRowSorter(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -429,63 +463,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 {
                     int selectedRow = lsm.getMinSelectionIndex();
                     SearchHit hit = searchHits.get(selectedRow);
-                    
-                    //construct HTML snippet of organism scientific names
-                    List<String> organismIdList = hit.getOrganism();
-                    String organismHTML = "<b>Organism:</b>";
-                    for(String organismString : organismIdList)
-                    {
-                        String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-                        String scientificName = organismIdNameMap.get(ncbiId);
-                        organismHTML = organismHTML 
-                                + "<br />" 
-                                + "<a href='" + organismString + "'>" + scientificName + "</a>";
-                    }
-                    
-                    //count number of interactions for a pathway
-                    String interactionsHTML = "";                   
-                    if(networkType.equals("Pathway"))
-                    {
-                        //check if interaction count has been previously cached
-                        Integer interactionCount = hitInteractionCountMap.get(hit);
-                        
-                        interactionsHTML = "<b>Interactions: </b> ";
-                        if(interactionCount != null)
-                        {
-                            logger.info("Interaction count found: " + interactionCount);
-                            interactionsHTML += interactionCount;
-                        }
-                        else //interactions have not been previously counted - do traverse searchQuery
-                        {
-                            try
-                            {
-                                interactionCount = traverseInteractions(hit); //calculate interaction count using TRAVERSE query, autobox int to Integer
-                                
-                                hitInteractionCountMap.put(hit, interactionCount);
-                                interactionsHTML += interactionCount;
-                            }
-                            catch(CPathException exception)
-                            {
-                                logger.warning(exception.getMessage());
-                                interactionsHTML += "unknown";
-                            }
-                        }
-                        interactionsHTML += "<br />";
-                    }
-                    
-                    //display excerpt
-                    String uri = hit.getUri();
-                    String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
-                    
-                    String excerptHTML = "<b>Excerpt:</b><br />" 
-                            + hit.getExcerpt() 
-                            + "<br />" 
-                            + "<b>URI: </b>"
-                            + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
-                            + "<br />" 
-                            + interactionsHTML
-                            + organismHTML;
-
+                    String excerptHTML = generateExcerptHTML(hit);
                     editorPane.setText(excerptHTML);
                 }
             } //end valueChanged
@@ -502,27 +480,69 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
          });
-        
-        //split search results on left and highlighted search hit excerpt on right
-        JScrollPane tableScrollPane = new JScrollPane(table);
-        JScrollPane editorScrollPane = new JScrollPane(editorPane);
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
-        searchPanel.add(splitPane ,BorderLayout.CENTER);
-        
-        JPanel advancedPanel = new JPanel(); //advanced tab panel for graph search
-        
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Search", searchPanel);
-        tabbedPane.addTab("Advanced", advancedPanel);
-        getContentPane().add(tabbedPane, BorderLayout.CENTER);          
-                
-        pack();
-        splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
-        setLocationRelativeTo(frame);
-        setVisible(true);
     }
     
-    private void createEditorPane()
+    private String generateExcerptHTML(SearchHit hit)
+    {
+        //construct HTML snippet of organism scientific names
+        List<String> organismIdList = hit.getOrganism();
+        String organismHTML = "<b>Organism:</b>";
+        for(String organismString : organismIdList)
+        {
+            String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+            String scientificName = organismIdNameMap.get(ncbiId);
+            organismHTML = organismHTML 
+                    + "<br />" 
+                    + "<a href='" + organismString + "'>" + scientificName + "</a>";
+        }
+
+        //count number of interactions for a pathway
+        String interactionsHTML = "";                   
+        if(networkType.equals("Pathway"))
+        {
+            //check if interaction count has been previously cached
+            Integer interactionCount = hitInteractionCountMap.get(hit);
+
+            interactionsHTML = "<b>Interactions: </b>";
+            if(interactionCount != null)
+            {
+                logger.info("Interaction count found: " + interactionCount);
+                interactionsHTML += interactionCount;
+            }
+            else //interactions have not been previously counted - do traverse searchQuery
+            {
+                try
+                {
+                    interactionCount = traverseInteractions(hit); //calculate interaction count using TRAVERSE query, autobox int to Integer
+
+                    hitInteractionCountMap.put(hit, interactionCount);
+                    interactionsHTML += interactionCount;
+                }
+                catch(CPathException exception)
+                {
+                    logger.warning(exception.getMessage());
+                    interactionsHTML += "unknown";
+                }
+            }
+            interactionsHTML += "<br />";
+        }
+
+        //display excerpt
+        String uri = hit.getUri();
+        String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
+
+        String excerptHTML = "<b>Excerpt:</b><br />" 
+                + hit.getExcerpt() 
+                + "<br />" 
+                + "<b>URI: </b>"
+                + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
+                + "<br />" 
+                + interactionsHTML
+                + organismHTML;
+        return excerptHTML;        
+    }
+    
+    private void createEditorPane(String text)
     {
         Font defaultFont = this.getFont();
         String fontFamily = defaultFont.getFamily();
@@ -562,6 +582,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
         });
+        
+        editorPane.setText(text);
     }
     
     private int traverseInteractions(SearchHit hit) throws CPathException
@@ -802,11 +824,12 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             finally
             {
                 //release connection and close socket to stop IllegalStateException being generated following 460 error
+                /*
                 if(getClientResponse != null)
                 {
                     getClientResponse.releaseConnection(); 
                 }
-                
+                */
                 ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);                
                 restoreButtons();
             }

@@ -81,7 +81,7 @@
             <artifactId>sbgn</artifactId>
             <version>${sbgnVersion}</version>
         </dependency>
-
+<!--
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jaxrs</artifactId>
@@ -93,6 +93,7 @@
             <artifactId>resteasy-jaxb-provider</artifactId>
             <version>2.3.6.Final</version>
         </dependency>
+-->
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>

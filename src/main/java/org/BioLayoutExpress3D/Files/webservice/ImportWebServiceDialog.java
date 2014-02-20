@@ -87,11 +87,6 @@ import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.apache.commons.io.FileUtils;
-/*
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientRequestFactory;
-import org.jboss.resteasy.client.ClientResponse;
-*/
 import org.springframework.web.client.HttpClientErrorException;
 
 /**
@@ -133,26 +128,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     private JTable table; //search results table
   
-    private List<SearchHit> searchHits; //retrieved search hits
+    private List<SearchHit> searchHits; //retrieved search hits for current page
+    //private List<SearchHit> allSearchHits; //list of all hits for a search, to be populated page by page
+    
+    private List<List<SearchHit>> allPages; //list of lists to cache pages
+    
     private int currentPage;
     private int maxHitsPerPage;
     private int totalHits; //total number of search searchQuery matches
-    //private ClientRequestFactory clientRequestFactory;
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
-    //private Map<String, String> organismIdNameMap; //map of NCBI name keys and scientific name values
     private Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
-    /*
-    private static final Map<String, String> DATABASE_URI_DISPLAY = new HashMap<String, String>(); //map of database URI to display name for search results
-    static
-    {
-        DATABASE_URI_DISPLAY.put("reactome", "Reactome");
-        DATABASE_URI_DISPLAY.put("pid", "NCI Nature");
-        DATABASE_URI_DISPLAY.put("psp", "PhosphoSitePlus");
-        DATABASE_URI_DISPLAY.put("humancyc", "HumanCyc");
-        DATABASE_URI_DISPLAY.put("hprd", "HPRD");
-        DATABASE_URI_DISPLAY.put("panther", "PANTHER");
-    }
-    */
     
     /**
      * Maps search hit URI of database to display name. Map contents are immutable.
@@ -183,7 +168,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private GetWorker getWorker = null; //GET operation concurrent task runner
     private CPathQuery<SearchResponse> searchQuery; //query for top pathways and search
     private CPathQuery getQuery;
-//    private ClientResponse<String> getClientResponse; //web service response containing GET results (BioPAX document)
     
     private static final Joiner commaJoiner = Joiner.on(',').skipNulls(); //for creating comma-separated strings
 
@@ -205,11 +189,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         setModal(modal);
         
         setAlwaysOnTop(false);
-        /*
-        clientRequestFactory = new ClientRequestFactory();
-        clientRequestFactory.setFollowRedirects(true);
-        */
-        //organismIdNameMap = new HashMap<String, String>();
+
         hitInteractionCountMap = new HashMap<SearchHit, Integer>();
         
         this.frame = frame;
@@ -222,8 +202,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         openButton = this.createJButton("Open", "Open network", false); //open button
         getRootPane().setDefaultButton(searchButton); //searches with enter key
 
-        JPanel fieldPanel = new JPanel();
-        fieldPanel.setLayout(new MigLayout());
 
         //search term text field
         String fieldString = "Enter a search term...";
@@ -238,9 +216,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
         });   	
         
-        //search term label
-        JLabel searchLabel = new JLabel("Keywords", JLabel.TRAILING);    
-        searchLabel.setLabelFor(searchField);  
                 
         //organism text field
         String organismString = ""; //default message
@@ -254,9 +229,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
         });   	
         
-        //organism text field
-        JLabel organismLabel = new JLabel("Organism", JLabel.TRAILING);
-        organismLabel.setLabelFor(organismField);  
         
         organismDisplayCommands = new LinkedHashMap<JCheckBox, String>();
         organismDisplayCommands.put(new JCheckBox("Human"), "9606");
@@ -279,7 +251,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         datasourceDisplayCommands.put(new JCheckBox("HumanCyc"), "humancyc");
         datasourceDisplayCommands.put(new JCheckBox("HPRD"), "hprd");
         datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");        
-        JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
         
         allDatasourceCheckBox = new JCheckBox("All");
         allDatasourceCheckBox.setSelected(true);
@@ -289,60 +260,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         //Network Type Drop Down
         networkTypeCombo = new JComboBox<String>();
         networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "PhysicalEntity", "EntityReference", "Top Pathways" }));
-        JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
-        networkTypeLabel.setLabelFor(networkTypeCombo);
 
+        nameCheckBox = new JCheckBox("Name", true);
+        nameCheckBox.setToolTipText("Restrict search to name field only");
 
         /**********add form fields******************/
         
-        fieldPanel.add(searchLabel, "align label");
-        fieldPanel.add(searchField, "");
-        
-        nameCheckBox = new JCheckBox("Name", true);
-        nameCheckBox.setToolTipText("Restrict search to name field only");
-        fieldPanel.add(nameCheckBox, "wrap");
-
-        fieldPanel.add(organismLabel, "align label");
-        
-        JPanel organismPanel = new JPanel();
-        organismPanel.setLayout(new BoxLayout(organismPanel, BoxLayout.LINE_AXIS));
-        for(JCheckBox checkBox: organismDisplayCommands.keySet())
-        {
-            organismPanel.add(checkBox);
-        }        
-        organismPanel.add(anyOrganismCheckBox);
-        
-        fieldPanel.add(organismPanel, "wrap");
-        
-        //organism checkboxes
-        fieldPanel.add(new JLabel(), "align label"); //dummy label for empty cell
-        fieldPanel.add(organismField, "wrap, span");                
-        
-        //datasource checkboxes
-        fieldPanel.add(datasourceLabel);
-        JPanel datasourcePanel = new JPanel();
-        datasourcePanel.setLayout(new BoxLayout(datasourcePanel, BoxLayout.LINE_AXIS));
-        for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
-        {
-           datasourcePanel.add(checkBox);
-        }
-        datasourcePanel.add(allDatasourceCheckBox);
-        fieldPanel.add(datasourcePanel, "wrap");
-
-        //network type
-        fieldPanel.add(networkTypeLabel, "align label");
-        fieldPanel.add(networkTypeCombo, "wrap");
-
-        fieldPanel.add(searchButton, "tag ok, span, split 4, sizegroup bttn");
-        fieldPanel.add(cancelButton, "tag cancel, sizegroup bttn");
-        fieldPanel.add(stopButton, "tag yes, sizegroup bttn");
-        fieldPanel.add(openButton, "tag no, sizegroup bttn");
-        
-        fieldPanel.setPreferredSize(new Dimension(888, 205));
         
         JPanel searchPanel = new JPanel();
         searchPanel.setLayout(new BorderLayout());
-        searchPanel.add(fieldPanel, BorderLayout.PAGE_START);                
+        searchPanel.add(createFieldPanel(), BorderLayout.PAGE_START);                
                 
         searchPanel.add(createHitsPanel(), BorderLayout.PAGE_END);
                  
@@ -374,7 +301,62 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     private JPanel createFieldPanel()
     {
-       return null;  
+        //search term label
+        JLabel searchLabel = new JLabel("Keywords", JLabel.TRAILING);    
+        searchLabel.setLabelFor(searchField);  
+
+        JLabel organismLabel = new JLabel("Organism", JLabel.TRAILING);
+        organismLabel.setLabelFor(organismField);  
+        
+        JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
+
+        JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
+        networkTypeLabel.setLabelFor(networkTypeCombo);
+
+        JPanel fieldPanel = new JPanel();
+        fieldPanel.setLayout(new MigLayout());
+        fieldPanel.add(searchLabel, "align label");
+        fieldPanel.add(searchField, "");
+        
+        fieldPanel.add(nameCheckBox, "wrap");
+
+        fieldPanel.add(organismLabel, "align label");
+        
+        JPanel organismPanel = new JPanel();
+        organismPanel.setLayout(new BoxLayout(organismPanel, BoxLayout.LINE_AXIS));
+        for(JCheckBox checkBox: organismDisplayCommands.keySet())
+        {
+            organismPanel.add(checkBox);
+        }        
+        organismPanel.add(anyOrganismCheckBox);        
+        fieldPanel.add(organismPanel, "wrap");
+        
+        //organism checkboxes
+        fieldPanel.add(new JLabel(), "align label"); //dummy label for empty cell
+        fieldPanel.add(organismField, "wrap, span");                
+        
+        //datasource checkboxes
+        fieldPanel.add(datasourceLabel);
+        JPanel datasourcePanel = new JPanel();
+        datasourcePanel.setLayout(new BoxLayout(datasourcePanel, BoxLayout.LINE_AXIS));
+        for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
+        {
+           datasourcePanel.add(checkBox);
+        }
+        datasourcePanel.add(allDatasourceCheckBox);
+        fieldPanel.add(datasourcePanel, "wrap");
+
+        //network type
+        fieldPanel.add(networkTypeLabel, "align label");
+        fieldPanel.add(networkTypeCombo, "wrap");
+
+        fieldPanel.add(searchButton, "tag ok, span, split 4, sizegroup bttn");
+        fieldPanel.add(cancelButton, "tag cancel, sizegroup bttn");
+        fieldPanel.add(stopButton, "tag yes, sizegroup bttn");
+        fieldPanel.add(openButton, "tag no, sizegroup bttn");
+        
+        fieldPanel.setPreferredSize(new Dimension(888, 205));
+        return fieldPanel;
     }
     
     private JPanel createHitsPanel()
@@ -471,7 +453,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         
         table.addMouseListener(new MouseAdapter() 
-        {
+        { 
             public void mouseClicked(MouseEvent e) 
             {
                 if (e.getClickCount() == 2) //open network
@@ -823,13 +805,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             finally
             {
-                //release connection and close socket to stop IllegalStateException being generated following 460 error
-                /*
-                if(getClientResponse != null)
-                {
-                    getClientResponse.releaseConnection(); 
-                }
-                */
                 ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);                
                 restoreButtons();
             }
@@ -908,6 +883,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
      */
     private class SearchWorker extends SwingWorker<SearchResponse, Void>
     {
+        private boolean newSearch;
+        
+        SearchWorker(boolean newSearch)
+        {
+            this.newSearch = newSearch;
+        }
+        
         /**
          * Perform Pathway Commons search
          */
@@ -962,21 +944,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 SearchResponse searchResponse = get(); //calls doInBackground() to perform search
                 if(searchResponse != null)
                 {
+                    searchHits = searchResponse.getSearchHit();            
+                    maxHitsPerPage = searchResponse.getMaxHitsPerPage(); //maximum number of search hits per page
+                    totalHits = searchResponse.getNumHits();
+                    currentPage = searchResponse.getPageNo();
+
+                    //disable stop button and update labels
                     stopButton.setEnabled(false);
                     statusLabel.setText("Search complete: success!");
-                    totalHits = searchResponse.getNumHits();
-                    numHitsLabel.setText("Hits: " + totalHits);
-
-                    searchHits = searchResponse.getSearchHit();            
-                    int numRetrieved = searchHits.size();
-                    retrievedLabel.setText("Retrieved: " + numRetrieved);
-
-                    maxHitsPerPage = searchResponse.getMaxHitsPerPage(); //maximum number of search hits per page
-
-                    //display current page number
-                    currentPage = searchResponse.getPageNo();
-                    pagesLabel.setText("Page: " + currentPage);
-
+                                        
+                    cacheSearchHits(); //store search hits in allSearchHits List
+                    
                     displaySearchResults();
 
                     if(organismIdNameMap.size() > 0)
@@ -1037,15 +1015,29 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             finally
             {
-                //release connection and close socket to stop IllegalStateException being generated following 460 error
-                /*
-                if(searchClientResponse != null)
-                {
-                    searchClientResponse.releaseConnection(); 
-                }
-                */
                 ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);                
                 restoreButtons();
+            }
+        }
+        
+        private void cacheSearchHits()
+        {
+            if(newSearch) //search button pressed - create new page cache
+            {
+                allPages = new ArrayList<List<SearchHit>>();
+                allPages.add(searchHits);
+            }
+            else //next or previous button pressed
+            {
+                if(currentPage > allPages.size()) //page not added yet
+                {
+                    allPages.add(currentPage, searchHits);
+                }
+                else if(allPages.get(currentPage) == null) //placeholder for this page empty - set page
+                {
+                    allPages.set(currentPage, searchHits);
+                }
+                //else this page has already been cached - do nothing
             }
         }
     }
@@ -1061,9 +1053,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             try
             {
                 CPathClient client = CPathClient.newInstance(); //TODO catch org.springframework.web.client.HttpClientErrorException
-                if(networkType.equals("Top Pathways"))
+                if(networkType.equals("Top Pathways") && searchButton == e.getSource())
                 {
                     searchQuery = client.createTopPathwaysQuery();
+                    search(searchButton == e.getSource()); //perform search - reset search results if search button clicked
                 }
                 else
                 {
@@ -1076,9 +1069,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         searchTerm = "name:'" + searchTerm + "'";
                     }
                     
-                    logger.info("Search term: " + searchTerm);
-
-                    CPathSearchQuery searchQuery = client.createSearchQuery().queryString(searchTerm).typeFilter(networkType);
 
                     //TODO muliple organisms with separator?
                     HashSet<String> organismSet = new HashSet<String>();
@@ -1097,45 +1087,57 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     {
                         pageParameter--;
                     }
-                    //searchClientRequest.queryParameter("page", pageParameter);
-                    searchQuery.page(pageParameter);                
-
-                    //add parameters for datasource checkboxes
-                    if(!allDatasourceCheckBox.isSelected())
+                    
+                    //check if page already exists in cache
+                    if(allPages != null && pageParameter < allPages.size() && allPages.get(pageParameter) != null)
                     {
-                        HashSet<String> datasourceSet = new HashSet<String>();                    
-                        for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
-                             JCheckBox checkBox = entry.getKey();
-                             if(checkBox.isSelected())
-                             {
-                                 String datasourceParameter = entry.getValue();
-                                 datasourceSet.add(datasourceParameter);
-                             }
-                        }            
-                        searchQuery.datasourceFilter(datasourceSet);
+                        searchHits = allPages.get(pageParameter);
+                        currentPage = pageParameter;
+                        statusLabel.setText("Displaying cached search results");
+                        displaySearchResults();
                     }
-
-                    //add parameters for organism checkboxes
-                    if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
+                    else //run the search
                     {
-                        for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
-                             JCheckBox checkBox = entry.getKey();
-                             if(checkBox.isSelected())
-                             {
-                                 String organismParameter = entry.getValue();
-                                 organismSet.add(organismParameter);
-                             }
+                        CPathSearchQuery searchQuery = client.createSearchQuery().queryString(searchTerm).typeFilter(networkType);
+                        searchQuery.page(pageParameter);                
+
+                        //add parameters for datasource checkboxes
+                        if(!allDatasourceCheckBox.isSelected())
+                        {
+                            HashSet<String> datasourceSet = new HashSet<String>();                    
+                            for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
+                                 JCheckBox checkBox = entry.getKey();
+                                 if(checkBox.isSelected())
+                                 {
+                                     String datasourceParameter = entry.getValue();
+                                     datasourceSet.add(datasourceParameter);
+                                 }
+                            }            
+                            searchQuery.datasourceFilter(datasourceSet);
                         }
-                    }
 
-                    if(!organismSet.isEmpty())
-                    {
-                        searchQuery.datasourceFilter(organismSet);
-                    }
+                        //add parameters for organism checkboxes
+                        if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
+                        {
+                            for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
+                                 JCheckBox checkBox = entry.getKey();
+                                 if(checkBox.isSelected())
+                                 {
+                                     String organismParameter = entry.getValue();
+                                     organismSet.add(organismParameter);
+                                 }
+                            }
+                        }
 
-                    this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
+                        if(!organismSet.isEmpty())
+                        {
+                            searchQuery.datasourceFilter(organismSet);
+                        }
+
+                        this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
+                        search(searchButton == e.getSource()); //perform search - reset search results if search button clicked
+                    }
                 }
-                search(); //perform search
             }
             catch(HttpClientErrorException exception)
             {
@@ -1228,10 +1230,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
      /**
      * Runs Pathway Commons REST web service SEARCH and displays results
      * @param searchClientRequest - contains search parameters
+     * @param newSearch - new search being executed (as opposed to previous/next page)
      */
-    private void search()
+    private void search(boolean newSearch)
     {
-        searchWorker = new SearchWorker(); //concurrent threading for search process
+        searchWorker = new SearchWorker(newSearch); //concurrent threading for search process
         searchWorker.execute();
     }
     
@@ -1264,7 +1267,12 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     private void displaySearchResults()
     {
-        clearSearchResults(); 
+        //update statistics
+        numHitsLabel.setText("Hits: " + totalHits); //display total hits
+        pagesLabel.setText("Page: " + currentPage); //display current page number
+        retrievedLabel.setText("Retrieved: " + searchHits.size());
+
+        clearSearchResults(); //clear results table
         
         for(SearchHit hit : searchHits)
         {
@@ -1289,7 +1297,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             String joinedDatabases = commaJoiner.join(databaseArray);
 
-            //model.addRow(new Object[]{hit.getName(), joinedOrganisms, joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
             model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
 
         }//end for

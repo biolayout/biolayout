@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -140,6 +141,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private String networkType = ""; //stores selected value of networkTypeCombo when search is run
     private String searchTerm = "";
     private String organism = "";
+    private Set<String> organismSet, datasourceSet;
     
     /**
      * Maps search hit URI of database to display name. Map contents are immutable.
@@ -1046,6 +1048,20 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
     }
     
+    public static HashSet<String> createFilterSet(Map <JCheckBox, String> displayCommands)
+    {
+        HashSet<String> filterSet = new HashSet<String>();                    
+        for (Map.Entry<JCheckBox, String> entry : displayCommands.entrySet()) {
+             JCheckBox checkBox = entry.getKey();
+             if(checkBox.isSelected())
+             {
+                 String filterParameter = entry.getValue();
+                 filterSet.add(filterParameter);
+             }
+        }
+        return filterSet;
+    }
+    
     @Override
     public void actionPerformed(ActionEvent e) 
     {
@@ -1064,6 +1080,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
     
                 networkType = this.networkTypeCombo.getSelectedItem().toString();
+
+                //add parameters for datasource checkboxes
+                datasourceSet = null;
+                if(!allDatasourceCheckBox.isSelected())
+                {
+                    datasourceSet = createFilterSet(datasourceDisplayCommands);
+                }
+
+                //add parameters for organism checkboxes
+                organismSet = null;
+                if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
+                {
+                    organismSet = createFilterSet(organismDisplayCommands);
+                    if(!organism.equals(""))
+                    {
+                        organismSet.add(organism); //TODO multiple organisms comma separated?
+                    }
+                }
             }
 
             
@@ -1102,50 +1136,15 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         CPathSearchQuery searchQuery = client.createSearchQuery().queryString(searchTerm).typeFilter(networkType);
                         searchQuery.page(pageParameter);                
 
-                        //add parameters for datasource checkboxes
-                        if(!allDatasourceCheckBox.isSelected())
+                        if(datasourceSet != null && !datasourceSet.isEmpty())
                         {
-                            HashSet<String> datasourceSet = new HashSet<String>();                    
-                            for (Map.Entry<JCheckBox, String> entry : datasourceDisplayCommands.entrySet()) {
-                                 JCheckBox checkBox = entry.getKey();
-                                 if(checkBox.isSelected())
-                                 {
-                                     String datasourceParameter = entry.getValue();
-                                     datasourceSet.add(datasourceParameter);
-                                 }
-                            }
-                            if(!datasourceSet.isEmpty())
-                            {
-                                searchQuery.datasourceFilter(datasourceSet);
-                            }
+                            searchQuery.datasourceFilter(datasourceSet);
                         }
 
-
-                        //add parameters for organism checkboxes
-                        if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
+                        if(organismSet != null && !organismSet.isEmpty())                            
                         {
-                            //TODO muliple organisms with separator?
-                            HashSet<String> organismSet = new HashSet<String>();
-                            if(!organism.equals(""))
-                            {
-                                organismSet.add(organism); //TODO multiple organisms comma separated
-                            }
-
-                            for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
-                                 JCheckBox checkBox = entry.getKey();
-                                 if(checkBox.isSelected())
-                                 {
-                                     String organismParameter = entry.getValue();
-                                     organismSet.add(organismParameter);
-                                 }
-                            }
-                            
-                            if(!organismSet.isEmpty())                            
-                            {
-                                searchQuery.datasourceFilter(organismSet);
-                            }
+                            searchQuery.organismFilter(organismSet);
                         }
-
 
                         this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
                         search(searchButton == e.getSource()); //perform search - reset search results if search button clicked

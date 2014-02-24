@@ -118,7 +118,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
     private JTextField searchField, organismField;
     private JComboBox<String> networkTypeCombo;
-    private String networkType = ""; //stores selected value of networkTypeCombo when search is run
     private DefaultTableModel model; 
     private LayoutFrame frame;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
@@ -129,8 +128,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JTable table; //search results table
   
     private List<SearchHit> searchHits; //retrieved search hits for current page
-    //private List<SearchHit> allSearchHits; //list of all hits for a search, to be populated page by page
-    
     private List<List<SearchHit>> allPages; //list of lists to cache pages
     
     private int currentPage;
@@ -138,6 +135,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private int totalHits; //total number of search searchQuery matches
     private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
     private Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
+    
+    //search form values entered by user
+    private String networkType = ""; //stores selected value of networkTypeCombo when search is run
+    private String searchTerm = "";
+    private String organism = "";
     
     /**
      * Maps search hit URI of database to display name. Map contents are immutable.
@@ -840,6 +842,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             {
                 nextButton.setEnabled(true);
             }
+            else
+            {
+                nextButton.setEnabled(false); //last page
+            }
         }
         else
         {
@@ -949,8 +955,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     totalHits = searchResponse.getNumHits();
                     currentPage = searchResponse.getPageNo();
 
-                    //disable stop button and update labels
-                    stopButton.setEnabled(false);
                     statusLabel.setText("Search complete: success!");
                                         
                     cacheSearchHits(); //store search hits in allSearchHits List
@@ -1029,7 +1033,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             else //next or previous button pressed
             {
-                if(currentPage > allPages.size()) //page not added yet
+                if(currentPage >= allPages.size()) //page not added yet
                 {
                     allPages.add(currentPage, searchHits);
                 }
@@ -1047,8 +1051,21 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     {
         if(searchButton == e.getSource() || nextButton == e.getSource() || previousButton == e.getSource()) 
         {
-              //TODO previous/next should remember last search params in case user changes
-            networkType = this.networkTypeCombo.getSelectedItem().toString();
+            if(searchButton == e.getSource())
+            {
+                currentPage = 0;
+                searchTerm = searchField.getText();
+                organism = organismField.getText();
+
+                //restrict search to name
+                if(nameCheckBox.isSelected())
+                {
+                    searchTerm = "name:'" + searchTerm + "'";
+                }
+    
+                networkType = this.networkTypeCombo.getSelectedItem().toString();
+            }
+
             
             try
             {
@@ -1060,23 +1077,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
                 else
                 {
-                    String searchTerm = searchField.getText();
-                    String organism = organismField.getText();
-                    
-                    //restrict search to name
-                    if(nameCheckBox.isSelected())
-                    {
-                        searchTerm = "name:'" + searchTerm + "'";
-                    }
-                    
-
-                    //TODO muliple organisms with separator?
-                    HashSet<String> organismSet = new HashSet<String>();
-                    if(!organism.equals(""))
-                    {
-                        organismSet.add(organism); //TODO multiple organisms comma separated
-                    }
-
                     //page to retrieve
                     int pageParameter = currentPage;
                     if(nextButton == e.getSource())
@@ -1089,12 +1089,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
                     
                     //check if page already exists in cache
-                    if(allPages != null && pageParameter < allPages.size() && allPages.get(pageParameter) != null)
+                    if(searchButton != e.getSource() && allPages != null && pageParameter < allPages.size() && allPages.get(pageParameter) != null)
                     {
                         searchHits = allPages.get(pageParameter);
                         currentPage = pageParameter;
                         statusLabel.setText("Displaying cached search results");
                         displaySearchResults();
+                        restoreButtons();
                     }
                     else //run the search
                     {
@@ -1112,13 +1113,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                      String datasourceParameter = entry.getValue();
                                      datasourceSet.add(datasourceParameter);
                                  }
-                            }            
-                            searchQuery.datasourceFilter(datasourceSet);
+                            }
+                            if(!datasourceSet.isEmpty())
+                            {
+                                searchQuery.datasourceFilter(datasourceSet);
+                            }
                         }
+
 
                         //add parameters for organism checkboxes
                         if(!anyOrganismCheckBox.isSelected()) //don't add organism parameters if Any is selected
                         {
+                            //TODO muliple organisms with separator?
+                            HashSet<String> organismSet = new HashSet<String>();
+                            if(!organism.equals(""))
+                            {
+                                organismSet.add(organism); //TODO multiple organisms comma separated
+                            }
+
                             for (Map.Entry<JCheckBox, String> entry : organismDisplayCommands.entrySet()) {
                                  JCheckBox checkBox = entry.getKey();
                                  if(checkBox.isSelected())
@@ -1127,12 +1139,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                      organismSet.add(organismParameter);
                                  }
                             }
+                            
+                            if(!organismSet.isEmpty())                            
+                            {
+                                searchQuery.datasourceFilter(organismSet);
+                            }
                         }
 
-                        if(!organismSet.isEmpty())
-                        {
-                            searchQuery.datasourceFilter(organismSet);
-                        }
 
                         this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
                         search(searchButton == e.getSource()); //perform search - reset search results if search button clicked
@@ -1298,7 +1311,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             String joinedDatabases = commaJoiner.join(databaseArray);
 
             model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
-
         }//end for
     }
     

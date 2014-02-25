@@ -1048,6 +1048,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
     }
     
+    /**
+     * Creates a HashSet of command strings associated with checked JCheckBoxes.
+     * @param displayCommands - Map of JCheckBoxes and associated commands
+     * @return a new HashSet of command Strings corresponding to checked JCheckBoxes
+     */
     public static HashSet<String> createFilterSet(Map <JCheckBox, String> displayCommands)
     {
         HashSet<String> filterSet = new HashSet<String>();                    

@@ -108,8 +108,7 @@ public class GraphAttributes
                     (float)((p.getZ() + yOffset) * scale) +
                         NetworkContainer.CANVAS_Z_SIZE * 0.5f);
 
-            // Seems like a sensible default
-            vertex.setVertexSize(15.0f * (float)scale);
+            vertex.setVertexSize(vertex.getVertexSize() * (float)scale);
         }
     }
 

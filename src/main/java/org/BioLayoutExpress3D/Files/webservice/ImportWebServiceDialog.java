@@ -55,7 +55,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -63,6 +65,7 @@ import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -271,8 +274,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         /**********add form fields******************/
         
         
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new BorderLayout());
+        SearchHitsPanel searchPanel = new SearchHitsPanel();
+        
         searchPanel.add(createFieldPanel(), BorderLayout.PAGE_START);                
                 
         searchPanel.add(createHitsPanel(), BorderLayout.PAGE_END);
@@ -290,7 +293,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
         searchPanel.add(splitPane ,BorderLayout.CENTER);
         
-        JPanel advancedPanel = new JPanel(); //advanced tab panel for graph search
+        JPanel advancedPanel = new SearchHitsPanel(); //advanced tab panel for graph search
+        advancedPanel.add(createAdvancedFieldPanel(), BorderLayout.PAGE_START);
         
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Search", searchPanel);
@@ -301,6 +305,52 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
         setLocationRelativeTo(frame);
         setVisible(true);
+    }
+    
+    //TODO this in a more OOP way :)
+    private JPanel createAdvancedFieldPanel()
+    {
+        ButtonGroup queryTypeGroup = new ButtonGroup();
+        ButtonGroup directionGroup = new ButtonGroup();
+        
+        JRadioButton getRadio = new JRadioButton("Get");
+        JRadioButton nearestNeighborhoodRadio = new JRadioButton("Nearest Neighborhood");
+        JRadioButton commonStreamRadio = new JRadioButton("Common Stream");
+        JRadioButton pathsBetweenRadio = new JRadioButton("Paths Between");
+        JRadioButton pathsFromToRadio = new JRadioButton("Paths From To");
+        
+        JRadioButton downstreamRadio  = new JRadioButton("Downstream");
+        JRadioButton upstreamRadio = new JRadioButton("Upstream");
+        JRadioButton bothRadio = new JRadioButton("Both");
+        
+        queryTypeGroup.add(getRadio);
+        queryTypeGroup.add(nearestNeighborhoodRadio);
+        queryTypeGroup.add(commonStreamRadio);
+        queryTypeGroup.add(pathsBetweenRadio);
+        queryTypeGroup.add(pathsFromToRadio);
+        
+        directionGroup.add(downstreamRadio);
+        directionGroup.add(upstreamRadio);
+        directionGroup.add(bothRadio);
+        
+        JPanel queryTypePanel = new JPanel();
+        queryTypePanel.setBorder(BorderFactory.createTitledBorder("BioPAX Query Type"));
+        queryTypePanel.add(getRadio);
+        queryTypePanel.add(nearestNeighborhoodRadio);
+        queryTypePanel.add(commonStreamRadio);
+        queryTypePanel.add(pathsBetweenRadio);
+        queryTypePanel.add(pathsFromToRadio);
+        
+        JPanel directionPanel = new JPanel();
+        directionPanel.add(downstreamRadio);
+        directionPanel.add(upstreamRadio);
+        directionPanel.add(bothRadio);
+        directionPanel.setBorder(BorderFactory.createTitledBorder("Direction"));
+        
+        JPanel advancedFieldPanel = new JPanel();
+        advancedFieldPanel.add(queryTypePanel);
+        advancedFieldPanel.add(directionPanel);
+        return advancedFieldPanel;
     }
     
     private JPanel createFieldPanel()

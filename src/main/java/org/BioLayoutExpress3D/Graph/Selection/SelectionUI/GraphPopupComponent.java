@@ -3,11 +3,14 @@ package org.BioLayoutExpress3D.Graph.Selection.SelectionUI;
 import java.awt.*;
 import java.awt.geom.*;
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.HashSet;
 import static java.lang.Math.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.Expression.*;
 import org.BioLayoutExpress3D.Graph.GraphElements.*;
 import org.BioLayoutExpress3D.StaticLibraries.*;
+import org.BioLayoutExpress3D.Network.*;
 import static org.BioLayoutExpress3D.Expression.Panels.ExpressionGraphPanel.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
@@ -15,6 +18,7 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
 import org.jfree.chart.plot.*;
+import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
 import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.category.*;
 import org.jfree.data.xy.*;
@@ -40,10 +44,10 @@ public final class GraphPopupComponent implements Runnable
     private static final String NAME_TAIL = "...";
 
     private Component component = null;
+    private String popupNodeName = "";
     private int popupX = 0;
     private int popupY = 0;
-    private String popupNodeName = "";
-    private GraphNode graphNode = null;
+    private ArrayList<GraphNode> graphNodes = null;
     private boolean isPetriNet = false;
     private LayoutFrame layoutFrame = null;
 
@@ -86,15 +90,59 @@ public final class GraphPopupComponent implements Runnable
     /**
     *  Sets the GraphPopupComponent object.
     */
-    public void setPopupComponent(Component component, int popupX, int popupY, String popupNodeName, GraphNode graphNode, boolean isPetriNet, LayoutFrame layoutFrame)
+    public void setPopupComponent(Component component, int popupX, int popupY,
+            GraphNode graphNode, NetworkContainer nc, LayoutFrame layoutFrame)
+    {
+        ArrayList<GraphNode> localGraphNodes = new ArrayList<GraphNode>();
+        localGraphNodes.add(graphNode);
+
+        setPopupComponent(component, popupX, popupY, localGraphNodes, nc, layoutFrame);
+    }
+
+    /**
+    *  Sets the GraphPopupComponent object.
+    */
+    public void setPopupComponent(Component component, int popupX, int popupY,
+            HashSet<GraphNode> graphNodes, NetworkContainer nc, LayoutFrame layoutFrame)
+    {
+        ArrayList<GraphNode> localGraphNodes = new ArrayList<GraphNode>(graphNodes);
+        setPopupComponent(component, popupX, popupY, localGraphNodes, nc, layoutFrame);
+    }
+
+    /**
+    *  Sets the GraphPopupComponent object.
+    */
+    public void setPopupComponent(Component component, int popupX, int popupY,
+                ArrayList<GraphNode> graphNodes, NetworkContainer nc, LayoutFrame layoutFrame)
     {
         this.component = component;
         this.popupX = popupX;
         this.popupY = popupY;
-        this.popupNodeName = popupNodeName;
-        this.graphNode = graphNode;
-        this.isPetriNet = isPetriNet;
+        this.graphNodes = graphNodes;
+        this.isPetriNet = nc.getIsPetriNet();
         this.layoutFrame = layoutFrame;
+
+        popupNodeName = "";
+        for(GraphNode graphNode : graphNodes)
+        {
+            if(popupNodeName.length() > 64)
+            {
+                popupNodeName += ", ...";
+                break;
+            }
+
+            String name = nc.getNodeName(graphNode.getNodeName());
+            if(!name.isEmpty())
+            {
+                popupNodeName += ", " + name;
+            }
+        }
+
+        // Strip off first ", "
+        if(popupNodeName.length() >= 2)
+        {
+            popupNodeName = popupNodeName.substring(2);
+        }
 
         expressionData = layoutFrame.getExpressionData();
         drawGridLines = PLOT_GRID_LINES.get();
@@ -104,34 +152,51 @@ public final class GraphPopupComponent implements Runnable
 
     private JPanel createExpressionPlot()
     {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
         int totalColumns = expressionData.getTotalColumns();
-        Integer index = expressionData.getIdentityMap(graphNode.getNodeName());
-
-        if ((totalColumns == 0) || (index == null))
+        if (totalColumns == 0)
         {
             return null;
         }
 
-        expressionData.setTransformType(transformType);
-        float[] transformedData = expressionData.getTransformedRow(index);
+        JFreeChart expressionGraphJFreeChart = ChartFactory.createLineChart(
+                null, null, null, null,
+                PlotOrientation.VERTICAL, false, false, false);
+        CategoryPlot plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
+        int datasetIndex = 0;
 
-        for (int column = 0; column < totalColumns; column++)
+        expressionData.setTransformType(transformType);
+
+        for (GraphNode graphNode : this.graphNodes)
         {
-            String columnName = expressionData.getColumnName(column);
-            dataset.addValue(transformedData[column], "Value", columnName);
+            Integer index = expressionData.getIdentityMap(graphNode.getNodeName());
+
+            if (index == null)
+            {
+                continue;
+            }
+
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+            float[] transformedData = expressionData.getTransformedRow(index);
+
+            for (int column = 0; column < totalColumns; column++)
+            {
+                String columnName = expressionData.getColumnName(column);
+                dataset.addValue(transformedData[column], "Value", columnName);
+            }
+
+            plot.setDataset(datasetIndex, dataset);
+            DefaultCategoryItemRenderer dcir = new DefaultCategoryItemRenderer();
+            dcir.setSeriesPaint(0, graphNode.getColor());
+            dcir.setSeriesShapesVisible(0, false);
+            plot.setRenderer(datasetIndex, dcir);
+
+            datasetIndex++;
         }
 
-        JFreeChart expressionGraphJFreeChart = ChartFactory.createLineChart(
-                null, null, null, dataset,
-                PlotOrientation.VERTICAL, false, false, false);
-
-        CategoryPlot plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
         plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
         plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
         plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
-        plot.getRenderer().setSeriesPaint(0, graphNode.getColor());
 
         CategoryAxis axis = plot.getDomainAxis();
         axis.setLowerMargin(0.0);
@@ -145,25 +210,36 @@ public final class GraphPopupComponent implements Runnable
 
     private JPanel createSimulationResultsPlot()
     {
-        YIntervalSeries dataset = new YIntervalSeries("Simulation results");
-
         int totalTimeBlocks = layoutFrame.getSignalingPetriNetSimulationDialog().getTimeBlocks();
-        int nodeID = graphNode.getNodeID();
 
         if (totalTimeBlocks == 0)
         {
             return null;
         }
 
-        for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
-        {
-            double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);
-            double halfError = ANIMATION_SIMULATION_RESULTS.getError(nodeID, timeBlock) * 0.5;
-            dataset.add(timeBlock, value, value - halfError, value + halfError);
-        }
-
         YIntervalSeriesCollection datasetCollection = new YIntervalSeriesCollection();
-        datasetCollection.addSeries(dataset);
+        DeviationRenderer dr = new DeviationRenderer(true, false);
+
+        for(GraphNode graphNode : this.graphNodes)
+        {
+            if(graphNode.ismEPNTransition())
+            {
+                continue;
+            }
+
+            int nodeID = graphNode.getNodeID();
+            YIntervalSeries dataset = new YIntervalSeries("Simulation results " + graphNode.getNodeName());
+            for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
+            {
+                double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);
+                double halfError = ANIMATION_SIMULATION_RESULTS.getError(nodeID, timeBlock) * 0.5;
+                dataset.add(timeBlock, value, value - halfError, value + halfError);
+            }
+
+            datasetCollection.addSeries(dataset);
+            dr.setSeriesPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
+            dr.setSeriesFillPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
+        }
 
         JFreeChart simulationResultsJFreeChart = ChartFactory.createXYLineChart(
                 null, null, null, datasetCollection,
@@ -178,10 +254,7 @@ public final class GraphPopupComponent implements Runnable
         axis.setLowerMargin(0.0);
         axis.setUpperMargin(0.0);
 
-        DeviationRenderer dr = new DeviationRenderer(true, false);
         dr.setSeriesStroke(0, new BasicStroke(2.0f, 1, 1));
-        dr.setSeriesPaint(0, graphNode.getColor());
-        dr.setSeriesFillPaint(0, graphNode.getColor());
         dr.setAlpha(0.333f);
         plot.setRenderer(dr);
 
@@ -198,6 +271,15 @@ public final class GraphPopupComponent implements Runnable
     {
         try
         {
+            boolean notmEPNTransitions = false;
+            for(GraphNode graphNode : graphNodes)
+            {
+                if(!graphNode.ismEPNTransition())
+                {
+                    notmEPNTransitions = true;
+                }
+            }
+
             if ( component.hasFocus() )
             {
                 JPanel plot = null;
@@ -207,13 +289,15 @@ public final class GraphPopupComponent implements Runnable
                     initPopupMenuItem("Node Name & Expression Profile: " + popupNodeName);
                     plot = createExpressionPlot();
                 }
-                else if ( SHOW_POPUP_OVERLAY_PLOT.get() && isPetriNet && !graphNode.ismEPNTransition() && (ANIMATION_SIMULATION_RESULTS != null) )
+                else if ( SHOW_POPUP_OVERLAY_PLOT.get() && isPetriNet && notmEPNTransitions && (ANIMATION_SIMULATION_RESULTS != null) )
                 {
                     initPopupMenuItem("Node Name & Simulation Profile: " + popupNodeName);
                     plot = createSimulationResultsPlot();
                 }
                 else
+                {
                     initPopupMenuItem(popupNodeName);
+                }
 
                 if (plot != null)
                 {

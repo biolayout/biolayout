@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -286,13 +287,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         //create HTML editor panes
         editorPane = createEditorPane(); 
         advancedEditorPane = createEditorPane();
+        advancedSearchHits = new LinkedList<SearchHit>();
         
         hitInteractionCountMap.clear();
 
         //create results table //create table model
         String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         model = createHitsModel(colHeadings);
-        table = createHitsTable(colHeadings);
+        table = createHitsTable(model, colHeadings);
         table.addMouseListener(new MouseAdapter() 
         { 
             public void mouseClicked(MouseEvent e) 
@@ -303,6 +305,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     int modelRow = table.convertRowIndexToModel(viewRow);
                     SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
                     advancedSearchHits.add(hit);
+                    advancedModel.addRow(new Object[]{hit.getName(), joinDatabases(hit), hit.getBiopaxClass(), hit.getPathway().size()});  
+                    statusLabel.setText("Added " + hit.getName() + " to Advanced");
                 }
             }
          });
@@ -318,7 +322,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedPanel.add(createAdvancedFieldPanel(), BorderLayout.PAGE_START);
         
         advancedModel = createHitsModel(colHeadings);
-        advancedTable = createHitsTable(colHeadings);
+        advancedTable = createHitsTable(advancedModel, colHeadings);
 
         JScrollPane advancedTableScrollPane = new JScrollPane(advancedTable);
         JScrollPane advancedEditorScrollPane = new JScrollPane(advancedEditorPane);
@@ -656,7 +660,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         } 
     }
     
-    private ZebraJTable createHitsTable(String[] colHeadings)
+    private ZebraJTable createHitsTable(DefaultTableModel model, String[] colHeadings)
     {
 
         ZebraJTable table = new ZebraJTable(model, colHeadings);
@@ -675,6 +679,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         advancedModel.setRowCount(0); //clear previous search results
         advancedEditorPane.setText(""); //clear excerpt pane
+        advancedSearchHits.clear(); //empty the list of added search hits
     }
     
     /**
@@ -1350,8 +1355,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         for(SearchHit hit : searchHits)
         {
             this.mapOrganisms(hit);
-            
-            //comma-separated string of datasources for display
+            String joinedDatabases = joinDatabases(hit); //comma-separated string of datasources for display
+            model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
+        }//end for
+    }
+    
+    /**
+     * Creates a comma-separated String of databases in a SearchHit.
+     */
+    public static String joinDatabases(SearchHit hit)
+    {
             List<String> databases = hit.getDataSource();
             String[] databaseArray = databases.toArray(new String[0]);
             for(int i = 0; i < databaseArray.length; i++)
@@ -1369,9 +1382,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
             String joinedDatabases = commaJoiner.join(databaseArray);
-
-            model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
-        }//end for
+            return joinedDatabases;
     }
     
     /**

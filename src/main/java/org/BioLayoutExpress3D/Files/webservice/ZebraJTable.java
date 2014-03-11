@@ -4,6 +4,15 @@
  */
 package org.BioLayoutExpress3D.Files.webservice;
 
+import java.awt.Color;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+
 /**
  * JTable that draws a zebra striped background.
  * http://nadeausoftware.com/articles/2008/01/java_tip_how_add_zebra_background_stripes_jtable
@@ -14,26 +23,62 @@ public class ZebraJTable
 {
     private java.awt.Color rowColors[] = new java.awt.Color[2];
     private boolean drawStripes = false;
- 
+ /*
     public ZebraJTable()
     {
     }
-    
+   
     public ZebraJTable( int numRows, int numColumns )
     {
         super( numRows, numColumns );
     }
     
+    
+    
     public ZebraJTable( Object[][] rowData, Object[] columnNames )
     {
         super( rowData, columnNames );
     }
+    */
     
-    public ZebraJTable( javax.swing.table.TableModel dataModel )
+    public ZebraJTable(TableModel dataModel, String[] colHeadings)
     {
         super( dataModel );
+
+        setAutoCreateRowSorter(true);
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        //set column widths
+        getColumn(colHeadings[0]).setPreferredWidth(400);
+        getColumn(colHeadings[1]).setPreferredWidth(75);
+        getColumn(colHeadings[2]).setPreferredWidth(125);
+
+        //center align header and cell contents        
+        createTableHeaderRenderer();        
+        createTableContentsRenderer();
     }
     
+    private void createTableHeaderRenderer()
+    {
+        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
+        headerRenderer.setHorizontalAlignment( JLabel.CENTER );
+        headerRenderer.setBackground(Color.LIGHT_GRAY);
+        JTableHeader header = getTableHeader();
+        header.setDefaultRenderer(headerRenderer);       
+    }
+    
+    private void createTableContentsRenderer()
+    {
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+        for (int column = 1; column < getColumnCount(); ++column) //align columns 1-3
+        {
+            TableColumn tc = getColumnModel().getColumn(column);
+            tc.setCellRenderer(centerRenderer);        
+        }
+    }
+    
+    /*
     public ZebraJTable( javax.swing.table.TableModel dataModel,
         javax.swing.table.TableColumnModel columnModel )
     {
@@ -52,6 +97,7 @@ public class ZebraJTable
     {
         super( rowData, columnNames );
     }
+    */
  
     /** Add stripes between cells and behind non-opaque cells. */
     public void paintComponent( java.awt.Graphics g )

@@ -122,17 +122,22 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
     private JTextField searchField, organismField;
     private JComboBox<String> networkTypeCombo;
-    private DefaultTableModel model; 
     private LayoutFrame frame;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
-    private JEditorPane editorPane;
     private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox, nameCheckBox;
     private Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
     private Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+    
+    private JEditorPane editorPane;
+    private JEditorPane advancedEditorPane;
     private JTable table; //search results table
+    private JTable advancedTable;
+    private DefaultTableModel model; 
+    private DefaultTableModel advancedModel; 
   
     private List<SearchHit> searchHits; //retrieved search hits for current page
-    private List<List<SearchHit>> allPages; //list of lists to cache pages
+    private List<SearchHit> advancedSearchHits; //search hits added to advanced tab
+    private List<List<SearchHit>> allPages; //list of lists to cache search pages
     
     private int currentPage;
     private int maxHitsPerPage;
@@ -273,19 +278,34 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         /**********add form fields******************/
         
-        
+        //create Search panel
         SearchHitsPanel searchPanel = new SearchHitsPanel();
-        
         searchPanel.add(createFieldPanel(), BorderLayout.PAGE_START);                
-                
         searchPanel.add(createHitsPanel(), BorderLayout.PAGE_END);
-                 
-        createEditorPane("<b>Excerpt:</b>"); //create HTML editor pane
+        
+        //create HTML editor panes
+        editorPane = createEditorPane(); 
+        advancedEditorPane = createEditorPane();
         
         hitInteractionCountMap.clear();
 
         //create results table //create table model
-        createHitsModelAndTable();
+        String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
+        model = createHitsModel(colHeadings);
+        table = createHitsTable(colHeadings);
+        table.addMouseListener(new MouseAdapter() 
+        { 
+            public void mouseClicked(MouseEvent e) 
+            {
+                if (e.getClickCount() == 2) //open network
+                {
+                    int viewRow = table.getSelectedRow();
+                    int modelRow = table.convertRowIndexToModel(viewRow);
+                    SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
+                    advancedSearchHits.add(hit);
+                }
+            }
+         });
         
         //split search results on left and highlighted search hit excerpt on right
         JScrollPane tableScrollPane = new JScrollPane(table);
@@ -293,8 +313,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tableScrollPane, editorScrollPane);
         searchPanel.add(splitPane ,BorderLayout.CENTER);
         
+        //create Advanced panel
         JPanel advancedPanel = new SearchHitsPanel(); //advanced tab panel for graph search
         advancedPanel.add(createAdvancedFieldPanel(), BorderLayout.PAGE_START);
+        
+        advancedModel = createHitsModel(colHeadings);
+        advancedTable = createHitsTable(colHeadings);
+
+        JScrollPane advancedTableScrollPane = new JScrollPane(advancedTable);
+        JScrollPane advancedEditorScrollPane = new JScrollPane(advancedEditorPane);
+        JSplitPane advancedSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, advancedTableScrollPane, advancedEditorScrollPane);
+        advancedPanel.add(advancedSplitPane, BorderLayout.CENTER);       
         
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Search", searchPanel);
@@ -303,11 +332,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 
         pack();
         splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
+        advancedSplitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
         setLocationRelativeTo(frame);
         setVisible(true);
     }
     
-    //TODO this in a more OOP way :)
     private JPanel createAdvancedFieldPanel()
     {
         ButtonGroup queryTypeGroup = new ButtonGroup();
@@ -456,67 +485,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         return hitsPanel;
     }
     
-    private void createHitsModelAndTable()
-    {
-        String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
-        int numRows = 0;       
-        model = new DefaultTableModel(numRows, colHeadings.length) 
-        {
-            @Override
-            public boolean isCellEditable(int row, int column) 
-            {
-               //all cells false
-               return false;
-            }
-        };        
-        model.setColumnIdentifiers(colHeadings);
-
-        table = new ZebraJTable(model);
-        table.setAutoCreateRowSorter(true);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        
-        //set column widths
-        table.getColumn(colHeadings[0]).setPreferredWidth(400);
-        table.getColumn(colHeadings[1]).setPreferredWidth(75);
-        table.getColumn(colHeadings[2]).setPreferredWidth(125);
-        
-        //center align header and cell contents        
-        createTableHeaderRenderer();        
-        createTableContentsRenderer();
-        
-        //display search hit info when row selected
-        ListSelectionModel rowSelectionModel = table.getSelectionModel();
-        rowSelectionModel.addListSelectionListener(new ListSelectionListener() 
-        {
-            public void valueChanged(ListSelectionEvent e) 
-            {
-                if (e.getValueIsAdjusting()) return; //Ignore extra messages.
-
-                openButton.setEnabled(true);
-
-                ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-                if (!lsm.isSelectionEmpty()) 
-                {
-                    int selectedRow = lsm.getMinSelectionIndex();
-                    SearchHit hit = searchHits.get(selectedRow);
-                    String excerptHTML = generateExcerptHTML(hit);
-                    editorPane.setText(excerptHTML);
-                }
-            } //end valueChanged
-        });        
-
-        
-        table.addMouseListener(new MouseAdapter() 
-        { 
-            public void mouseClicked(MouseEvent e) 
-            {
-                if (e.getClickCount() == 2) //open network
-                {
-                    openNetwork(); //TODO add search hit to advanced instead of open
-                }
-            }
-         });
-    }
     
     private String generateExcerptHTML(SearchHit hit)
     {
@@ -578,23 +546,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         return excerptHTML;        
     }
     
-    private void createEditorPane(String text)
+    private ExcerptPane createEditorPane()
     {
-        Font defaultFont = this.getFont();
-        String fontFamily = defaultFont.getFamily();
-        HTMLEditorKit hed = new HTMLEditorKit();
-        StyleSheet ss = hed.getStyleSheet();
-        ss.addRule("body {font-family : " + fontFamily + "}");
-        ss.addRule("b {color : blue;}");
-        ss.addRule(".hitHL {color : green; font-weight : bold}");
-        Document doc = hed.createDefaultDocument();
-        
-        //Search hit excerpt
-        editorPane = new JEditorPane();
-        editorPane.setEditable(false);
-        editorPane.setContentType("text/html");
-        editorPane.setEditorKit(hed);
-        editorPane.setDocument(doc);
+        ExcerptPane editorPane = new ExcerptPane();
+        editorPane.setText("<b>Excerpt:</b>");
         
         //open system web browser on hyperlink click
         editorPane.addHyperlinkListener(new HyperlinkListener() 
@@ -619,7 +574,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
         });
         
-        editorPane.setText(text);
+        return editorPane;
+        
     }
     
     private int traverseInteractions(SearchHit hit) throws CPathException
@@ -646,24 +602,79 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         return uniqueUriSet.size();       
     }
     
-    private void createTableHeaderRenderer()
+    private static DefaultTableModel createHitsModel(String[] colHeadings)
     {
-        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer();
-        headerRenderer.setHorizontalAlignment( JLabel.CENTER );
-        headerRenderer.setBackground(Color.LIGHT_GRAY);
-        JTableHeader header = table.getTableHeader();
-        header.setDefaultRenderer(headerRenderer);       
+        int numRows = 0;       
+        DefaultTableModel model = new DefaultTableModel(numRows, colHeadings.length) 
+        {
+            @Override
+            public boolean isCellEditable(int row, int column) 
+            {
+               //all cells false
+               return false;
+            }
+        };        
+        model.setColumnIdentifiers(colHeadings);
+        return model;
     }
     
-    private void createTableContentsRenderer()
+    private class HitListSelectionListener implements ListSelectionListener
     {
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
-        for (int column = 1; column < table.getColumnCount(); ++column) //align columns 1-3
+            public void valueChanged(ListSelectionEvent e) 
+            {
+                if (e.getValueIsAdjusting()) return; //Ignore extra messages.
+
+                openButton.setEnabled(true);
+
+                ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+                if (!lsm.isSelectionEmpty()) 
+                {
+                    int selectedRow = lsm.getMinSelectionIndex();
+                    SearchHit hit = searchHits.get(selectedRow);
+                    String excerptHTML = generateExcerptHTML(hit);
+                    editorPane.setText(excerptHTML);
+                }
+            }
+    }
+    
+    private class AdvancedHitListSelectionListener implements ListSelectionListener
+    {
+        public void valueChanged(ListSelectionEvent e) 
         {
-            TableColumn tc = table.getColumnModel().getColumn(column);
-            tc.setCellRenderer(centerRenderer);        
-        }
+            if (e.getValueIsAdjusting()) return; //Ignore extra messages.
+
+            //TODO enable buttons
+
+            ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+            if (!lsm.isSelectionEmpty()) 
+            {
+                int selectedRow = lsm.getMinSelectionIndex();
+                SearchHit hit = advancedSearchHits.get(selectedRow);
+                String excerptHTML = generateExcerptHTML(hit);
+                advancedEditorPane.setText(excerptHTML);
+            }
+        } 
+    }
+    
+    private ZebraJTable createHitsTable(String[] colHeadings)
+    {
+
+        ZebraJTable table = new ZebraJTable(model, colHeadings);
+        
+        //display search hit info when row selected
+        ListSelectionModel rowSelectionModel = table.getSelectionModel();
+        rowSelectionModel.addListSelectionListener(new HitListSelectionListener());        
+
+        return table;
+    }
+    
+    private void clearSearchResults()
+    {
+        model.setRowCount(0); //clear previous search results
+        editorPane.setText(""); //clear excerpt pane
+        
+        advancedModel.setRowCount(0); //clear previous search results
+        advancedEditorPane.setText(""); //clear excerpt pane
     }
     
     /**
@@ -1305,11 +1316,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         searchWorker.execute();
     }
     
-    private void clearSearchResults()
-    {
-        model.setRowCount(0); //clear previous search results
-        editorPane.setText(""); //clear excerpt pane
-    }
 
     /**
      * Adds organism NCBI IDs as key to organismIdNameMap so that values may be populated later from NCBI Taxonomy SOAP service

@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import cpath.client.CPathClient;
 import cpath.client.util.CPathException;
 import cpath.query.CPathGetQuery;
+import cpath.query.CPathGraphQuery;
 import cpath.query.CPathQuery;
 import cpath.query.CPathSearchQuery;
 import cpath.query.CPathTraverseQuery;
@@ -120,7 +121,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public static final int TIMEOUT_SEARCH = 30;
     public static final int TIMEOUT_GET = 60;
     
+    public static final String BIOPAX_FILE_EXTENSION = ".owl";
+    
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
+    private JButton advancedExecuteButton, advancedStopButton, advancedCancelButton;
     private JTextField searchField, organismField;
     private JComboBox<String> networkTypeCombo;
     private LayoutFrame frame;
@@ -135,6 +139,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JTable advancedTable;
     private DefaultTableModel model; 
     private DefaultTableModel advancedModel; 
+    
+    private JRadioButton getRadio = new JRadioButton("Get");
+    private JRadioButton nearestNeighborhoodRadio = new JRadioButton("Nearest Neighborhood");
+    private JRadioButton commonStreamRadio = new JRadioButton("Common Stream");
+    private JRadioButton pathsBetweenRadio = new JRadioButton("Paths Between");
+    private JRadioButton pathsFromToRadio = new JRadioButton("Paths From To");
+        
+    private JRadioButton downstreamRadio  = new JRadioButton("Downstream");
+    private JRadioButton upstreamRadio = new JRadioButton("Upstream");
+    private JRadioButton bothRadio = new JRadioButton("Both");
   
     private List<SearchHit> searchHits; //retrieved search hits for current page
     private List<SearchHit> advancedSearchHits; //search hits added to advanced tab
@@ -180,7 +194,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private SearchWorker searchWorker = null; //search operation concurrent task runner
     private GetWorker getWorker = null; //GET operation concurrent task runner
     private CPathQuery<SearchResponse> searchQuery; //query for top pathways and search
-    private CPathQuery getQuery;
+    private CPathQuery cPathQuery;
     
     private static final Joiner commaJoiner = Joiner.on(',').skipNulls(); //for creating comma-separated strings
 
@@ -208,13 +222,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         this.frame = frame;
         this.setTitle(myMessage);
         
-        //search button
-        searchButton = this.createJButton("Search", "Search", true);
+        //search panel buttons
+        searchButton = this.createJButton("Search", "Search Pathway Commons", true);
         cancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
         stopButton = this.createJButton("Stop", "Stop Search", false); //stop button
         openButton = this.createJButton("Open", "Open network", false); //open button
         getRootPane().setDefaultButton(searchButton); //searches with enter key
-
+        
+        //advanced panel buttons
+        advancedExecuteButton = this.createJButton("Execute", "Execute query", true);
+        advancedCancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
+        advancedStopButton = this.createJButton("Stop", "Stop query", false); //stop button
 
         //search term text field
         String fieldString = "Enter a search term...";
@@ -281,8 +299,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //create Search panel
         SearchHitsPanel searchPanel = new SearchHitsPanel();
-        searchPanel.add(createFieldPanel(), BorderLayout.PAGE_START);                
-        searchPanel.add(createHitsPanel(), BorderLayout.PAGE_END);
+        searchPanel.add(createFieldPanel(), BorderLayout.PAGE_START);   
+        
+        JPanel hitsPanel = createHitsPanel();
+        searchPanel.add(hitsPanel, BorderLayout.PAGE_END);
         
         //create HTML editor panes
         editorPane = createEditorPane(); 
@@ -295,7 +315,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         model = createHitsModel(colHeadings);
         table = createHitsTable(model, colHeadings);
-        table.addMouseListener(new MouseAdapter() 
+        table.addMouseListener(new MouseAdapter() //double click adds search hit to Advanced
         { 
             public void mouseClicked(MouseEvent e) 
             {
@@ -332,8 +352,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Search", searchPanel);
         tabbedPane.addTab("Advanced", advancedPanel);
-        getContentPane().add(tabbedPane, BorderLayout.CENTER);          
-                
+        getContentPane().add(tabbedPane, BorderLayout.CENTER);    
+        
         pack();
         splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
         advancedSplitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
@@ -345,16 +365,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     {
         ButtonGroup queryTypeGroup = new ButtonGroup();
         ButtonGroup directionGroup = new ButtonGroup();
-        
-        JRadioButton getRadio = new JRadioButton("Get");
-        JRadioButton nearestNeighborhoodRadio = new JRadioButton("Nearest Neighborhood");
-        JRadioButton commonStreamRadio = new JRadioButton("Common Stream");
-        JRadioButton pathsBetweenRadio = new JRadioButton("Paths Between");
-        JRadioButton pathsFromToRadio = new JRadioButton("Paths From To");
-        
-        JRadioButton downstreamRadio  = new JRadioButton("Downstream");
-        JRadioButton upstreamRadio = new JRadioButton("Upstream");
-        JRadioButton bothRadio = new JRadioButton("Both");
         
         queryTypeGroup.add(getRadio);
         queryTypeGroup.add(nearestNeighborhoodRadio);
@@ -373,16 +383,24 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         queryTypePanel.add(commonStreamRadio);
         queryTypePanel.add(pathsBetweenRadio);
         queryTypePanel.add(pathsFromToRadio);
+        getRadio.setSelected(true); //get is default option
         
         JPanel directionPanel = new JPanel();
         directionPanel.add(downstreamRadio);
         directionPanel.add(upstreamRadio);
         directionPanel.add(bothRadio);
         directionPanel.setBorder(BorderFactory.createTitledBorder("Direction"));
+        bothRadio.setSelected(true); //both directions is default option
         
         JPanel advancedFieldPanel = new JPanel();
+        advancedFieldPanel.setLayout(new MigLayout());
         advancedFieldPanel.add(queryTypePanel);
         advancedFieldPanel.add(directionPanel);
+                
+        advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 3, sizegroup bttn");
+        advancedFieldPanel.add(advancedCancelButton, "tag cancel, sizegroup bttn");
+        advancedFieldPanel.add(advancedStopButton, "tag yes, sizegroup bttn");
+
         return advancedFieldPanel;
     }
     
@@ -448,10 +466,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     private JPanel createHitsPanel()
     {
-        //create next and previous buttons
-        previousButton = this.createJButton("< Previous", "Return to previous page", false); //previous button
-        nextButton = this.createJButton("Next >", "Next page", false); //next button
-        
         //labels for search info
         totalHits = 0;
         numHitsLabel = new JLabel("Hits: " + totalHits);
@@ -477,6 +491,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         JPanel hitsPanel = new JPanel();
         hitsPanel.setLayout(new MigLayout());
         
+        //create next and previous buttons
+        previousButton = this.createJButton("< Previous", "Return to previous page", false); //previous button
+        nextButton = this.createJButton("Next >", "Next page", false); //next button
         hitsPanel.add(previousButton, "span, split 2, center, sizegroup hbttn");
         hitsPanel.add(nextButton, "sizegroup hbttn, wrap");
         
@@ -698,8 +715,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
         String uriString = hit.getUri(); //URI for GET request
 
-        String fileExtension = ".owl";
-
         //if search hit name is empty use BioPAX class as filename instead
         String hitName = hit.getName();
         if(hitName == null || hitName.isEmpty())
@@ -707,23 +722,86 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             hitName = hit.getBiopaxClass();
         }
         
-        String fileName = hitName + fileExtension; //name of .owl file to be created
+        String fileName = hitName + BIOPAX_FILE_EXTENSION; //name of .owl file to be created
         
         CPathClient client = CPathClient.newInstance();
         String[] uriArray = {uriString};
         
         if(networkType.equals("Pathway") || networkType.equals("Top Pathways")) //just get the pathway itself
         {
-            getQuery = client.createGetQuery().sources(uriArray);
+            cPathQuery = client.createGetQuery().sources(uriArray);
         }
         else //Interaction etc - network neighbourhood graph query
         {
-            getQuery = client.createGraphQuery().sources(uriArray).kind(GraphType.NEIGHBORHOOD);
+            cPathQuery = client.createGraphQuery().sources(uriArray).kind(GraphType.NEIGHBORHOOD);
         }
 
         //retrieve file from Pathway Commons and load file for display
         getWorker = new GetWorker(fileName);
         getWorker.execute();
+    }
+    
+    private void openAdvancedNetwork()
+    {
+        String fileName = "GRAPH" + BIOPAX_FILE_EXTENSION; //name of .owl file to be created //TEST
+        
+        CPathClient client = CPathClient.newInstance();
+        
+        String[] uriArray = new String[advancedSearchHits.size()];
+        int i = 0;
+        for(SearchHit hit: advancedSearchHits)
+        {
+            uriArray[i] = hit.getUri();
+            i++;
+        }
+        
+        //set up the get or graph query
+        if(getRadio.isSelected())
+        {
+           cPathQuery = client.createGetQuery().sources(uriArray); //get multiple sub-graphs
+           getWorker = new GetWorker(fileName);
+           getWorker.execute();
+        }
+        else //create a graph query
+        {   
+            CPathGraphQuery graphQuery = client.createGraphQuery().sources(uriArray);
+            
+            //add kind parameter
+            if(nearestNeighborhoodRadio.isSelected())
+            {
+                graphQuery = graphQuery.kind(GraphType.NEIGHBORHOOD);
+            }
+            else if(commonStreamRadio.isSelected())
+            {
+                graphQuery = graphQuery.kind(GraphType.COMMONSTREAM);            
+            }
+            else if(pathsBetweenRadio.isSelected())
+            {
+                graphQuery = graphQuery.kind(GraphType.PATHSBETWEEN);            
+            }
+            else if(pathsFromToRadio.isSelected())
+            {
+                graphQuery = graphQuery.kind(GraphType.PATHSFROMTO);            
+            }
+            
+            //add direction parameter
+            if(downstreamRadio.isSelected())
+            {
+                graphQuery = graphQuery.direction(CPathClient.Direction.DOWNSTREAM);
+            }
+            else if(upstreamRadio.isSelected())
+            {
+                graphQuery = graphQuery.direction(CPathClient.Direction.UPSTREAM);
+            }
+            else //default is both directions
+            {
+                graphQuery = graphQuery.direction(CPathClient.Direction.BOTHSTREAM);
+            }
+
+            cPathQuery = graphQuery; //use the generic query interface so we can run get or graph queries the same way
+            getWorker = new GetWorker(fileName);
+            getWorker.execute();
+        }
     }
 
     /*
@@ -768,7 +846,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     stopButton.setEnabled(true);
                     openButton.setEnabled(false);
                     
-                    String responseString = getQuery.stringResult(OutputFormat.BIOPAX);
+                    String responseString = cPathQuery.stringResult(OutputFormat.BIOPAX);
                     return responseString;
                 }
                 
@@ -896,6 +974,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         searchButton.setEnabled(true);
         enableDisablePreviousButton(); //enable/disable previous button 
         enableDisableNextButton(); //enable/disable next button
+        
+        //advanced tab
+        advancedStopButton.setEnabled(false);
+        advancedExecuteButton.setEnabled(true);
     }
     
     /**
@@ -1278,7 +1360,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
         }
-        else if(cancelButton == e.getSource())
+        else if(cancelButton == e.getSource() || advancedCancelButton == e.getSource())
         {
             //stop search threads
             if(searchWorker != null && !searchWorker.isDone()) //stop search process before closing
@@ -1307,6 +1389,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         else if(allDatasourceCheckBox == e.getSource())
         {
             enableDisableDatasource(allDatasourceCheckBox.isSelected()); //enable/disable datasource checkboxes and text field
+        }
+        else if(advancedExecuteButton == e.getSource())
+        {
+            openAdvancedNetwork();
         }
     }
 

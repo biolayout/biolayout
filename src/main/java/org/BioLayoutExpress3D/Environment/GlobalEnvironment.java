@@ -457,7 +457,7 @@ public final class GlobalEnvironment
     public static final PrefInt PLOT_CLASS_STATISTIC_TYPE = new PrefInt(0, "plot_class_statistic_type", true);
     public static final PrefInt PLOT_SELECTION_STATISTIC_TYPE = new PrefInt(0, "plot_selection_statistic_type", true);
     public static final PrefBool PLOT_AXES_LEGEND = new PrefBool(false, "plot_axes", true);
-    public static final PrefBool PLOT_HIDE_SAMPLES = new PrefBool(false, "plot_hide_samples", true);
+    public static final PrefInt PLOT_COLUMN_INFO_TYPE = new PrefInt(1, "plot_column_info_type", true);
     public static final PrefInt PLOT_TRANSFORM = new PrefInt(0, "plot_transform", true);
 
     public static final PrefBool CV_AUTO_SIZE_COLUMNS = new PrefBool(true, "cv_auto_size_columns", true);

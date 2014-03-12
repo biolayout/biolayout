@@ -29,6 +29,48 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
 public final class ExpressionData
 {
+    public class ColumnAnnotation
+    {
+        private int index;
+        private String name;
+        private ArrayList<String> annotations;
+        private int[] values; // An index into annotations list
+
+        public ColumnAnnotation(int index, String name, int numColumns)
+        {
+            this.index = index;
+            this.name = name;
+            this.annotations = new ArrayList<String>();
+            this.values = new int[numColumns];
+        }
+
+        public void setValue(int column, String value)
+        {
+            if(!annotations.contains(value))
+            {
+                annotations.add(value);
+            }
+
+            int annotationIndex = annotations.indexOf(value);
+            values[column] = annotationIndex;
+        }
+
+        public String getValue(int column)
+        {
+            return annotations.get(values[column]);
+        }
+
+        public String getFullyQualifiedValue(int column)
+        {
+            return getName() + " " + getValue(column);
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+    }
+
     /**
     *  Constant used defining the amount of RAM to be used in the N-Core Parallelization algorithm.
     *  Here, 128Mb (2^27) RAM will be allocated for the float results array.
@@ -53,7 +95,6 @@ public final class ExpressionData
 
     private int totalRows = 0;
     private int totalColumns = 0;
-    private int totalAnnotationColunms = 0;
     private boolean transpose = false;
     private String[] columnNamesArray = null;
     private String[] rowIDsArray = null;
@@ -85,6 +126,8 @@ public final class ExpressionData
     private float[] meanCache = null;
     private boolean meanCached = false;
 
+    private HashMap<Integer, ColumnAnnotation> columnAnnotations;
+
     // variables needed for N-CP
     private final CyclicBarrierTimer cyclicBarrierTimer = (USE_MULTICORE_PROCESS) ? new CyclicBarrierTimer() : null;
     private final CyclicBarrier threadBarrier = (USE_MULTICORE_PROCESS) ? new CyclicBarrier(NUMBER_OF_AVAILABLE_PROCESSORS + 1, cyclicBarrierTimer) : null;
@@ -98,16 +141,16 @@ public final class ExpressionData
 
         identityMap = new HashMap<String, Integer>();
         columnNameMap = new HashMap<String, Integer>();
+        columnAnnotations = new HashMap<Integer, ColumnAnnotation>();
     }
 
     /**
     *  Initalizes all the data structures.
     */
-    public void initialize(int totalRows, int totalColumns, int totalAnnotationColunms, boolean transpose)
+    public void initialize(int totalRows, int totalColumns, boolean transpose)
     {
         this.totalRows = totalRows;
         this.totalColumns = totalColumns;
-        this.totalAnnotationColunms = totalAnnotationColunms;
         this.transpose = transpose;
 
         columnNamesArray = new String[totalColumns];
@@ -124,6 +167,7 @@ public final class ExpressionData
 
         identityMap.clear();
         columnNameMap.clear();
+        columnAnnotations.clear();
         clearCounts();
 
         minValueCache = null;
@@ -138,6 +182,27 @@ public final class ExpressionData
         maxStddev = Float.MIN_VALUE;
         meanCache = null;
         meanCached = false;
+    }
+
+    public void addColumnAnnotation(int index, String name)
+    {
+        ColumnAnnotation columnAnnotation = new ColumnAnnotation(index, name, totalColumns);
+        columnAnnotations.put(index, columnAnnotation);
+    }
+
+    public ColumnAnnotation getColumnAnnotationByIndex(int index)
+    {
+        if(columnAnnotations.containsKey(index))
+        {
+            return columnAnnotations.get(index);
+        }
+
+        return null;
+    }
+
+    public Collection<ColumnAnnotation> getColumnAnnotations()
+    {
+        return columnAnnotations.values();
     }
 
     /**
@@ -970,14 +1035,6 @@ public final class ExpressionData
     public boolean isTransposed()
     {
         return transpose;
-    }
-
-    /**
-    *  Gets the total annotation columns.
-    */
-    public int getTotalAnnotationColumns()
-    {
-        return totalAnnotationColunms;
     }
 
     public float getMaxValueForRow(int row)

@@ -22,7 +22,7 @@ public final class ExpressionLoader
     private File file = null;
     private ExpressionData expressionData = null;
     private LayoutClassSetsManager layoutClassSetsManager = null;
-    private String[] annotationColumnLabels = null;
+    private String[] rowAnnotationLabels = null;
     private int firstDataColumn = 0;
     private int firstDataRow = 0;
     private boolean transpose = false;
@@ -88,13 +88,12 @@ public final class ExpressionLoader
             int numRows = tdm.numRows();
 
             // - 1 because the first column is always the row ID
-            int totalAnnotationColumns = firstDataColumn - 1;
+            rowAnnotationLabels = new String[firstDataColumn - 1];
 
-            annotationColumnLabels = new String[totalAnnotationColumns];
             expressionData.initialize(
                     numRows - firstDataRow,
                     numColumns - firstDataColumn,
-                    totalAnnotationColumns, transpose);
+                    transpose);
 
             layoutProgressBarDialog.setText("Loading data");
 
@@ -121,7 +120,25 @@ public final class ExpressionLoader
                             // Annotation classes
                             String annotation = cleanString(value);
                             layoutClassSetsManager.createNewClassSet(annotation);
-                            annotationColumnLabels[column - 1] = annotation;
+                            rowAnnotationLabels[column - 1] = annotation;
+                        }
+                    }
+                    else if (row < firstDataRow)
+                    {
+                        if (column == 0)
+                        {
+                            // Column annotation name
+                            String annotation = cleanString(value);
+                            expressionData.addColumnAnnotation(row - 1, annotation);
+                        }
+                        else if (column >= firstDataColumn)
+                        {
+                            // Column annotation
+                            ExpressionData.ColumnAnnotation columnAnnotation =
+                                    expressionData.getColumnAnnotationByIndex(row - 1);
+
+                            columnAnnotation.setValue(dataColumn, value);
+
                         }
                     }
                     else if (row >= firstDataRow)
@@ -221,7 +238,7 @@ public final class ExpressionLoader
                         chipGeneCount++;
                         String annotation = cleanString(value);
                         LayoutClasses layoutClasses =
-                                layoutClassSetsManager.getClassSetByName(annotationColumnLabels[column - 1]);
+                                layoutClassSetsManager.getClassSetByName(rowAnnotationLabels[column - 1]);
 
                         if (annotation.isEmpty())
                         {

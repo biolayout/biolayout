@@ -61,7 +61,7 @@ public final class ExpressionDegreePlotsPanel extends JPanel
 
         this.totalRows = totalRows;
         this.minThreshold = minThreshold;
-        this.threshold = threshold;
+        this.threshold = Math.max(minThreshold, threshold);
         this.thresholdString = thresholdString;
 
         updateCounts(counts);

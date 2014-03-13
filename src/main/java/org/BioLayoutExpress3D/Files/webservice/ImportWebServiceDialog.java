@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableMap;
 
 import cpath.client.CPathClient;
 import cpath.client.util.CPathException;
-import cpath.query.CPathGetQuery;
 import cpath.query.CPathGraphQuery;
 import cpath.query.CPathQuery;
 import cpath.query.CPathSearchQuery;
@@ -30,7 +29,6 @@ import gov.nih.nlm.ncbi.soap.eutils.efetch_taxonomy.TaxonType;
 
 //import gov.nih.nlm.ncbi.www.soap.eutils.EFetchTaxonServiceStub; //Apache Axis2 stub
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -48,6 +46,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -80,15 +79,10 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-import javax.swing.text.Document;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
@@ -134,11 +128,12 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     
     private JEditorPane editorPane;
-    private JEditorPane advancedEditorPane;
+    //private JEditorPane advancedEditorPane;
     private JTable table; //search results table
     private JTable advancedTable;
     private DefaultTableModel model; 
     private DefaultTableModel advancedModel; 
+    private JTabbedPane tabbedPane;
     
     private JRadioButton getRadio = new JRadioButton("Get");
     private JRadioButton nearestNeighborhoodRadio = new JRadioButton("Nearest Neighborhood");
@@ -151,7 +146,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JRadioButton bothRadio = new JRadioButton("Both");
   
     private List<SearchHit> searchHits; //retrieved search hits for current page
-    private List<SearchHit> advancedSearchHits; //search hits added to advanced tab
+    private LinkedHashSet<SearchHit> advancedSearchHits; //search hits added to advanced tab, Set stops adding duplicates
     private List<List<SearchHit>> allPages; //list of lists to cache search pages
     
     private int currentPage;
@@ -301,13 +296,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         SearchHitsPanel searchPanel = new SearchHitsPanel();
         searchPanel.add(createFieldPanel(), BorderLayout.PAGE_START);   
         
+        //create panel for status message and stats
         JPanel hitsPanel = createHitsPanel();
-        searchPanel.add(hitsPanel, BorderLayout.PAGE_END);
+        getContentPane().add(hitsPanel, BorderLayout.PAGE_END);
         
         //create HTML editor panes
         editorPane = createEditorPane(); 
-        advancedEditorPane = createEditorPane();
-        advancedSearchHits = new LinkedList<SearchHit>();
+        //advancedEditorPane = createEditorPane();
+        advancedSearchHits = new LinkedHashSet<SearchHit>();
         
         hitInteractionCountMap.clear();
 
@@ -315,6 +311,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         model = createHitsModel(colHeadings);
         table = createHitsTable(model, colHeadings);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new MouseAdapter() //double click adds search hit to Advanced
         { 
             public void mouseClicked(MouseEvent e) 
@@ -324,9 +321,15 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     int viewRow = table.getSelectedRow();
                     int modelRow = table.convertRowIndexToModel(viewRow);
                     SearchHit hit = searchHits.get(modelRow); //get SearchHit that relates to values in table model row (converted from sorted view row index)
-                    advancedSearchHits.add(hit);
-                    advancedModel.addRow(new Object[]{hit.getName(), joinDatabases(hit), hit.getBiopaxClass(), hit.getPathway().size()});  
-                    statusLabel.setText("Added " + hit.getName() + " to Advanced");
+                    if(advancedSearchHits.add(hit))
+                    {
+                        advancedModel.addRow(new Object[]{hit.getName(), joinDatabases(hit), hit.getBiopaxClass(), hit.getPathway().size()});  
+                        statusLabel.setText("Added " + hit.getName() + " to Advanced");
+                    }
+                    else
+                    {
+                        statusLabel.setText(hit.getName() + " already added");
+                    }
                 }
             }
          });
@@ -343,20 +346,23 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         advancedModel = createHitsModel(colHeadings);
         advancedTable = createHitsTable(advancedModel, colHeadings);
+        advancedTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
+        /*
         JScrollPane advancedTableScrollPane = new JScrollPane(advancedTable);
         JScrollPane advancedEditorScrollPane = new JScrollPane(advancedEditorPane);
         JSplitPane advancedSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, advancedTableScrollPane, advancedEditorScrollPane);
-        advancedPanel.add(advancedSplitPane, BorderLayout.CENTER);       
+        */
+        advancedPanel.add(advancedTable, BorderLayout.CENTER);       
         
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Search", searchPanel);
         tabbedPane.addTab("Advanced", advancedPanel);
         getContentPane().add(tabbedPane, BorderLayout.CENTER);    
         
         pack();
         splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
-        advancedSplitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
+        //advancedSplitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
         setLocationRelativeTo(frame);
         setVisible(true);
     }
@@ -657,7 +663,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
     }
-    
+    /*
     private class AdvancedHitListSelectionListener implements ListSelectionListener
     {
         public void valueChanged(ListSelectionEvent e) 
@@ -676,10 +682,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
         } 
     }
-    
+    */
     private ZebraJTable createHitsTable(DefaultTableModel model, String[] colHeadings)
     {
-
         ZebraJTable table = new ZebraJTable(model, colHeadings);
         
         //display search hit info when row selected
@@ -689,14 +694,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         return table;
     }
     
-    private void clearSearchResults()
+    private void clearSearchResults(boolean clearAdvanced)
     {
         model.setRowCount(0); //clear previous search results
         editorPane.setText(""); //clear excerpt pane
         
-        advancedModel.setRowCount(0); //clear previous search results
-        advancedEditorPane.setText(""); //clear excerpt pane
-        advancedSearchHits.clear(); //empty the list of added search hits
+        if(clearAdvanced)
+        {
+            advancedModel.setRowCount(0); //clear previous search results
+            // advancedEditorPane.setText(""); //clear excerpt pane
+            advancedSearchHits.clear(); //empty the list of added search hits
+        }
     }
     
     /**
@@ -743,62 +751,107 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     private void openAdvancedNetwork()
     {
-        String fileName = "GRAPH" + BIOPAX_FILE_EXTENSION; //name of .owl file to be created //TEST
-        
         CPathClient client = CPathClient.newInstance();
         
-        String[] uriArray = new String[advancedSearchHits.size()];
+        //String[] allUri = new String[advancedSearchHits.size()]; //array of all search hit URIs in advanced table
+        
+        HashSet<String> allUri = new HashSet<String>(advancedSearchHits.size()); //all selected search hit URIs
+        
+        //PATHSFROMTO query parameters
+        HashSet<String> from = new HashSet<String>(); //all selected search hit URIs
+        HashSet<String> to = new HashSet<String>(); //all unselected search hit URIs        
+        
         int i = 0;
         for(SearchHit hit: advancedSearchHits)
         {
-            uriArray[i] = hit.getUri();
+            allUri.add(hit.getUri());
+            if(advancedTable.isRowSelected(i))
+            {
+                from.add(hit.getUri());
+            }
+            else
+            {
+                to.add(hit.getUri());
+            }
             i++;
         }
         
+        String fileName = "Advanced" + BIOPAX_FILE_EXTENSION; //default name of .owl file to be created
+
         //set up the get or graph query
         if(getRadio.isSelected())
         {
-           cPathQuery = client.createGetQuery().sources(uriArray); //get multiple sub-graphs
+           cPathQuery = client.createGetQuery().sources(allUri); //get multiple sub-graphs
+           fileName = "GET" + BIOPAX_FILE_EXTENSION;
            getWorker = new GetWorker(fileName);
            getWorker.execute();
         }
         else //create a graph query
         {   
-            CPathGraphQuery graphQuery = client.createGraphQuery().sources(uriArray);
-            
+            CPathGraphQuery graphQuery = client.createGraphQuery();
             //add kind parameter
             if(nearestNeighborhoodRadio.isSelected())
-            {
-                graphQuery = graphQuery.kind(GraphType.NEIGHBORHOOD);
+            {                
+                /* Searches the neighborhood of given source set of nodes. Any direction. */
+                graphQuery = graphQuery.sources(allUri).kind(GraphType.NEIGHBORHOOD);
+                fileName = GraphType.NEIGHBORHOOD.toString();
+
+                //add direction parameter
+                if(downstreamRadio.isSelected())
+                {
+                    graphQuery = graphQuery.direction(CPathClient.Direction.DOWNSTREAM);
+                    fileName = fileName + "_" + CPathClient.Direction.DOWNSTREAM.toString();
+                }
+                else if(upstreamRadio.isSelected())
+                {
+                    graphQuery = graphQuery.direction(CPathClient.Direction.UPSTREAM);
+                    fileName = fileName + "_" + CPathClient.Direction.UPSTREAM.toString();
+                }
+                else //default is both directions
+                {
+                    graphQuery = graphQuery.direction(CPathClient.Direction.BOTHSTREAM);
+                    fileName = fileName + "_" + CPathClient.Direction.BOTHSTREAM.toString();
+                }
+            
             }
             else if(commonStreamRadio.isSelected())
             {
-                graphQuery = graphQuery.kind(GraphType.COMMONSTREAM);            
+                /* Searches common downstream or common upstream of a specified set of entities
+                based on the given direction within the boundaries of a specified length limit. 
+                Direction may be either upstream or downstream.
+                */
+                graphQuery = graphQuery.sources(allUri).kind(GraphType.COMMONSTREAM);            
+                fileName = GraphType.COMMONSTREAM.toString();
+            
+                //add direction parameter
+                if(upstreamRadio.isSelected())
+                {
+                    graphQuery = graphQuery.direction(CPathClient.Direction.UPSTREAM);
+                    fileName = fileName + "_" + CPathClient.Direction.UPSTREAM.toString();
+                }
+                else //downstream
+                {
+                    graphQuery = graphQuery.direction(CPathClient.Direction.DOWNSTREAM);
+                    fileName = fileName + "_" + CPathClient.Direction.DOWNSTREAM.toString();
+                }
             }
             else if(pathsBetweenRadio.isSelected())
             {
-                graphQuery = graphQuery.kind(GraphType.PATHSBETWEEN);            
+                /* Finds the paths between the specified source set of states within the boundaries of a specified length limit.
+                Direction not applicable. */
+                graphQuery = graphQuery.sources(allUri).kind(GraphType.PATHSBETWEEN);            
+                fileName = GraphType.PATHSBETWEEN.toString();
             }
             else if(pathsFromToRadio.isSelected())
             {
-                graphQuery = graphQuery.kind(GraphType.PATHSFROMTO);            
-            }
-            
-            //add direction parameter
-            if(downstreamRadio.isSelected())
-            {
-                graphQuery = graphQuery.direction(CPathClient.Direction.DOWNSTREAM);
-            }
-            else if(upstreamRadio.isSelected())
-            {
-                graphQuery = graphQuery.direction(CPathClient.Direction.UPSTREAM);
-            }
-            else //default is both directions
-            {
-                graphQuery = graphQuery.direction(CPathClient.Direction.BOTHSTREAM);
+                /* Finds the paths between the specified source set of states within the boundaries of a specified length limit.
+                    Direction not applicable.   */
+                graphQuery = graphQuery.sources(from).targets(to).kind(GraphType.PATHSFROMTO);   
+                fileName = GraphType.PATHSFROMTO.toString();
             }
 
             cPathQuery = graphQuery; //use the generic query interface so we can run get or graph queries the same way
+            fileName += BIOPAX_FILE_EXTENSION;
             getWorker = new GetWorker(fileName);
             getWorker.execute();
         }
@@ -869,6 +922,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 throw exception;                
             }
             
+            if(responseString == null || responseString.isEmpty()) //no data returned for query - do not create a file
+            {
+                throw new PathwayCommonsException("Empty query results returned from Pathway Commons");
+            }
+            
             //create directory to store downloaded file
             File importDir = new File(DataFolder.get(), DIRECTORY);
             if(!importDir.exists())
@@ -928,7 +986,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 if(cause instanceof PathwayCommonsException || cause instanceof CPathException) //HTTP error code returned from GET request
                 {
                     logger.warning(exception.getMessage());
-                    statusLabel.setText("Fetch error: " + exception.getMessage());
+                    statusLabel.setText(cause.getMessage());
                 }
                 else if(cause instanceof UnknownHostException) //Pathway Commons down
                 {
@@ -1109,7 +1167,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                         
                     cacheSearchHits(); //store search hits in allSearchHits List
                     
-                    displaySearchResults();
+                    displaySearchResults(newSearch);
 
                     if(organismIdNameMap.size() > 0)
                     {
@@ -1143,7 +1201,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 if(cause instanceof PathwayCommonsException) //no search hits
                 {
                    logger.warning(cause.getMessage());
-                   clearSearchResults(); //clear previous search results
+                   clearSearchResults(true); //clear previous search results
                    statusLabel.setText("Search error: " + cause.getMessage());
                 }
                 else if(cause instanceof UnknownHostException) //Pathway Commons down
@@ -1281,7 +1339,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         searchHits = allPages.get(pageParameter);
                         currentPage = pageParameter;
                         statusLabel.setText("Displaying cached search results");
-                        displaySearchResults();
+                        displaySearchResults(false);
                         restoreButtons();
                     }
                     else //run the search
@@ -1310,7 +1368,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 logger.warning(exception.getMessage());
             }
         }
-        else if(stopButton == e.getSource()) //stop running process
+        else if(stopButton == e.getSource() || advancedStopButton == e.getSource()) //stop running process
         { 
             if(searchWorker != null && !searchWorker.isDone()) //stop search process
             {
@@ -1429,14 +1487,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
     }
     
-    private void displaySearchResults()
+    private void displaySearchResults(boolean clearAdvanced)
     {
         //update statistics
         numHitsLabel.setText("Hits: " + totalHits); //display total hits
         pagesLabel.setText("Page: " + currentPage); //display current page number
         retrievedLabel.setText("Retrieved: " + searchHits.size());
 
-        clearSearchResults(); //clear results table
+        clearSearchResults(clearAdvanced); //clear results tables
         
         for(SearchHit hit : searchHits)
         {
@@ -1444,6 +1502,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             String joinedDatabases = joinDatabases(hit); //comma-separated string of datasources for display
             model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
         }//end for
+        tabbedPane.setSelectedIndex(0); //reselect the Search tab
     }
     
     /**

@@ -8,12 +8,21 @@ import java.io.IOException;
 
 /**
  * Signals that an error has occurred in the Pathway Commons search or communication with the cPath2 web service
- * May be used when the web service returns a HTTP status code with a value other than 200
+ * May be used when the web service returns a HTTP status code with a value other than 200.
+ * May also be used without a status code and passing a custom message.
  * @author Derek Wright
  */
 public class PathwayCommonsException extends IOException
 {
-    private int statusCode;
+    /**
+     * HTTP status code returned from server
+     */
+    private int statusCode = 0;
+    
+    /**
+     * Exception message
+     */
+    private String message = "";
 
     /**
      * Constructor
@@ -22,6 +31,15 @@ public class PathwayCommonsException extends IOException
     public PathwayCommonsException(int statusCode)
     {
         this.statusCode = statusCode;
+    }
+    
+    /**
+     * Constructor
+     * @param message - custom error message
+     */
+    public PathwayCommonsException(String message)
+    {
+        this.message = message;
     }
     
     /*
@@ -36,7 +54,6 @@ public class PathwayCommonsException extends IOException
     @Override
     public String getMessage() 
     {
-        String message = "";
         switch(statusCode){
             case 460:
                 message = "No results found";
@@ -48,7 +65,10 @@ public class PathwayCommonsException extends IOException
                 
             case 500:
                 message = "Internal server error";
-                break;       
+                break;
+            
+            case 0:     //just use message passed in constructor in this case
+                return message;
 
             default:
                 message = "Unable to reach Pathway Commons";

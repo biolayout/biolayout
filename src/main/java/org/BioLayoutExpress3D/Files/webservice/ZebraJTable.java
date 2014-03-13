@@ -46,7 +46,6 @@ public class ZebraJTable
         super( dataModel );
 
         setAutoCreateRowSorter(true);
-        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         //set column widths
         getColumn(colHeadings[0]).setPreferredWidth(400);

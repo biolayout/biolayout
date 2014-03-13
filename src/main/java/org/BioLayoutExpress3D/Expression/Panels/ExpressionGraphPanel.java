@@ -98,7 +98,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JComboBox<String> classStatComboBox = null;
     private JComboBox<String> selectionStatComboBox = null;
     private JCheckBox axesLegendCheckBox = null;
-    private JComboBox<String> columnInfoComboBox = null;
+    private JButton columnInfoButton = null;
+    private JPopupMenu columnInfoPopupMenu = null;
+    private JCheckBoxMenuItem sampleNameCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
 
@@ -114,13 +116,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
     private ChartPanel expressionGraphPlotPanel = null;
     private ExpressionChooseClassesToRenderPlotImagesFromDialog expressionChooseClassesToRenderPlotImagesFromDialog = null;
-
-    public static enum ColumnInfoType
-    {
-        NONE,
-        NAMES,
-        ANNOTATIONS,
-    }
 
     public ExpressionGraphPanel(JFrame jframe, LayoutFrame layoutFrame, ExpressionData expressionData)
     {
@@ -248,15 +243,19 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         transformComboBox.setToolTipText("Transform");
         transformComboBox.addActionListener(this);
 
-        columnInfoComboBox = new JComboBox<String>();
-        for (ColumnInfoType type : ColumnInfoType.values())
+        columnInfoPopupMenu = new JPopupMenu();
+        columnInfoButton = new JButton();
+        columnInfoButton.setAction(new AbstractAction("Column Info")
         {
-            String s = Utils.titleCaseOf(type.toString());
-            columnInfoComboBox.addItem(s);
-        }
-        columnInfoComboBox.setSelectedIndex(PLOT_COLUMN_INFO_TYPE.get());
-        columnInfoComboBox.setToolTipText("Column Information");
-        columnInfoComboBox.addActionListener(this);
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                columnInfoPopupMenu.show(columnInfoButton, 0, columnInfoButton.getHeight());
+            }
+        });
+
+        sampleNameCheckBox = new JCheckBoxMenuItem("Sample names");
+        sampleNameCheckBox.addActionListener(this);
 
         JPanel expressionGraphUpperPartPanel = new JPanel(true);
 
@@ -267,8 +266,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plotOptionsLine1.add(transformComboBox);
         plotOptionsLine1.add(new JLabel("Maximum Samples:"));
         plotOptionsLine1.add(maximumVisibleSamplesSpinner);
-        plotOptionsLine1.add(new JLabel("Column Info:"));
-        plotOptionsLine1.add(columnInfoComboBox);
+        plotOptionsLine1.add(columnInfoButton);
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
         plotOptionsLine2.add(new JLabel("Class Plot:"));
@@ -754,7 +752,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
         boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
-        ColumnInfoType columnInfoType = ColumnInfoType.values()[PLOT_COLUMN_INFO_TYPE.get()];
 
         HashSet<GraphNode> expandedSelectedNodes =
                 layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
@@ -915,12 +912,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         mainPlot.setRangeGridlinesVisible(drawGridLines);
         mainPlot.setDomainGridlinesVisible(drawGridLines);
-        mainPlot.getDomainAxis().setTickLabelsVisible(columnInfoType == ColumnInfoType.NAMES);
+        mainPlot.getDomainAxis().setTickLabelsVisible(sampleNameCheckBox.isSelected());
         mainPlot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
         mainPlot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
         mainPlot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
-        if (columnInfoType == ColumnInfoType.ANNOTATIONS && !expressionData.getColumnAnnotations().isEmpty())
+        CategoryDataset dataset = createColumnAnnotationDataset();
+
+        if (dataset.getRowCount() > 0)
         {
             // What is actually happening here is a StackedBarRenderer is being used with each datapoint
             // equal to 1, so that all the stacks line up. Essentially this is a way of getting something
@@ -930,10 +929,16 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             sbr.setShadowVisible(false);
             sbr.setDrawBarOutline(false);
             sbr.setBarPainter(new StandardBarPainter());
+
+            for (int seriesIndex = 0; seriesIndex < dataset.getRowKeys().size(); seriesIndex++)
+            {
+                sbr.setSeriesVisibleInLegend(seriesIndex, false); // Hide the legend, always; it's "too confusing"
+            }
+
             columnAnnotationPlot = new CategoryPlotReversedLegend(null, new CategoryAxis(), new NumberAxis(), sbr);
 
             SlidingCategoryDataset columnAnnotationDataset = new SlidingCategoryDataset(
-                    createColumnAnnotationDataset(), 0, maximumVisibleSamples());
+                    dataset, 0, maximumVisibleSamples());
             columnAnnotationDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
             columnAnnotationDataset.setMaximumCategoryCount(maximumVisibleSamples());
             columnAnnotationPlot.setDataset(columnAnnotationDataset);
@@ -961,9 +966,25 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 new ArrayList<ExpressionData.ColumnAnnotation>(expressionData.getColumnAnnotations());
         Collections.reverse(annotations); // So the rows appear in the same order as the source file
 
+        ArrayList<String> selectedAnnotations = new ArrayList<String>();
+        for (Component component : columnInfoPopupMenu.getComponents())
+        {
+            JCheckBoxMenuItem cbmi = (JCheckBoxMenuItem) component;
+
+            if (cbmi.isSelected())
+            {
+                selectedAnnotations.add(cbmi.getText());
+            }
+        }
+
         for (ExpressionData.ColumnAnnotation annotation : annotations)
         {
             String annotationName = annotation.getName();
+
+            if(!selectedAnnotations.contains(annotationName))
+            {
+                continue;
+            }
 
             for (int column = 0; column < totalColumns; column++)
             {
@@ -1267,10 +1288,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         {
             PLOT_AXES_LEGEND.set(axesLegendCheckBox.isSelected());
         }
-        else if (e.getSource().equals(columnInfoComboBox))
-        {
-            PLOT_COLUMN_INFO_TYPE.set(columnInfoComboBox.getSelectedIndex());
-        }
         else if (e.getSource().equals(transformComboBox))
         {
             PLOT_TRANSFORM.set(transformComboBox.getSelectedIndex());
@@ -1296,7 +1313,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             zoomScrollBar.setVisible(true);
             int maxSamples = maximumVisibleSamples();
             zoomScrollBar.setMaximum(totalColumns - maxSamples);
-
         }
         else
         {
@@ -1355,5 +1371,18 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         SpinnerNumberModel snm = (SpinnerNumberModel) maximumVisibleSamplesSpinner.getModel();
         snm.setValue(expressionData.getTotalColumns());
+
+        columnInfoPopupMenu.removeAll();
+        columnInfoPopupMenu.add(sampleNameCheckBox);
+        sampleNameCheckBox.setSelected(true);
+        for (ExpressionData.ColumnAnnotation annotation : expressionData.getColumnAnnotations())
+        {
+            String annotationName = annotation.getName();
+            JCheckBoxMenuItem checkBox = new JCheckBoxMenuItem(annotationName);
+            checkBox.addActionListener(this);
+            columnInfoPopupMenu.add(checkBox);
+        }
+
+        refreshPlot();
     }
 }

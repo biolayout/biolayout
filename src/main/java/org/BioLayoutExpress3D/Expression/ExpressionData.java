@@ -33,31 +33,23 @@ public final class ExpressionData
     {
         private int index;
         private String name;
-        private ArrayList<String> annotations;
-        private int[] values; // An index into annotations list
+        private String[] values;
 
         public ColumnAnnotation(int index, String name, int numColumns)
         {
             this.index = index;
             this.name = name;
-            this.annotations = new ArrayList<String>();
-            this.values = new int[numColumns];
+            this.values = new String[numColumns];
         }
 
         public void setValue(int column, String value)
         {
-            if(!annotations.contains(value))
-            {
-                annotations.add(value);
-            }
-
-            int annotationIndex = annotations.indexOf(value);
-            values[column] = annotationIndex;
+            values[column] = value;
         }
 
         public String getValue(int column)
         {
-            return annotations.get(values[column]);
+            return values[column];
         }
 
         public String getFullyQualifiedValue(int column)

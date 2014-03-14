@@ -15,7 +15,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import static java.lang.Math.*;
 import java.text.NumberFormat;
-import javax.swing.plaf.synth.SynthCheckBoxMenuItemUI;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.DataStructures.*;
 import org.BioLayoutExpress3D.Expression.*;
@@ -258,7 +257,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         sampleNameCheckBox = new JCheckBoxMenuItem("Sample names");
         sampleNameCheckBox.addActionListener(this);
-        sampleNameCheckBox.setUI(new StayOpenCheckBoxMenuItemUI());
 
         JPanel expressionGraphUpperPartPanel = new JPanel(true);
 
@@ -521,17 +519,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             }
 
             return reversedLegendItems;
-        }
-    }
-
-    // This little shim prevents the JPopupMenu from closing when items are selected
-    public class StayOpenCheckBoxMenuItemUI extends SynthCheckBoxMenuItemUI
-    {
-        @Override
-        protected void doClick(MenuSelectionManager msm)
-        {
-            menuItem.doClick(0);
-            //msm.clearSelectedPath(); // What super.doClick would do
         }
     }
 
@@ -1317,6 +1304,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         {
             PLOT_TRANSFORM.set(transformComboBox.getSelectedIndex());
         }
+        else if(Arrays.asList(columnInfoPopupMenu.getComponents()).contains((Component)e.getSource()))
+        {
+            // Reopen the popup menu when an item is selected
+            columnInfoPopupMenu.setVisible(true);
+        }
 
         layoutFrame.getLayoutGraphPropertiesDialog().setHasNewPreferencesBeenApplied(true);
         refreshPlot();
@@ -1404,7 +1396,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         {
             String annotationName = annotation.getName();
             JCheckBoxMenuItem checkBox = new JCheckBoxMenuItem(annotationName);
-            checkBox.setUI(new StayOpenCheckBoxMenuItemUI());
             checkBox.addActionListener(this);
             columnInfoPopupMenu.add(checkBox);
         }

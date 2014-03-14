@@ -6,6 +6,7 @@ import java.awt.font.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.io.*;
+import java.lang.Math;
 import java.util.*;
 import javax.imageio.*;
 import javax.swing.*;
@@ -961,12 +962,34 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             columnAnnotationPlot.getRangeAxis().setTickMarksVisible(false);
             columnAnnotationPlot.getRangeAxis().setTickLabelsVisible(false);
 
-            combinedDomainCategoryPlot.add(columnAnnotationPlot, 1);
+            combinedDomainCategoryPlot.add(columnAnnotationPlot);
+            int numAnnotations = selectedAnnotations().size();
+            int totalWeight = 40;
+            int annotationsWeight = Math.min(numAnnotations, totalWeight / 2);
+            mainPlot.setWeight(totalWeight - annotationsWeight);
+            columnAnnotationPlot.setWeight(annotationsWeight);
+
             // This keeps the colours consistent
             combinedDomainCategoryPlot.setDrawingSupplier(new DefaultDrawingSupplier());
         }
 
         exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
+    }
+
+    private ArrayList<String> selectedAnnotations()
+    {
+        ArrayList<String> selectedAnnotations = new ArrayList<String>();
+        for (Component component : columnInfoPopupMenu.getComponents())
+        {
+            JCheckBoxMenuItem cbmi = (JCheckBoxMenuItem) component;
+
+            if (cbmi.isSelected())
+            {
+                selectedAnnotations.add(cbmi.getText());
+            }
+        }
+
+        return selectedAnnotations;
     }
 
     private CategoryDataset createColumnAnnotationDataset()
@@ -979,22 +1002,11 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 new ArrayList<ExpressionData.ColumnAnnotation>(expressionData.getColumnAnnotations());
         Collections.reverse(annotations); // So the rows appear in the same order as the source file
 
-        ArrayList<String> selectedAnnotations = new ArrayList<String>();
-        for (Component component : columnInfoPopupMenu.getComponents())
-        {
-            JCheckBoxMenuItem cbmi = (JCheckBoxMenuItem) component;
-
-            if (cbmi.isSelected())
-            {
-                selectedAnnotations.add(cbmi.getText());
-            }
-        }
-
         for (ExpressionData.ColumnAnnotation annotation : annotations)
         {
             String annotationName = annotation.getName();
 
-            if(!selectedAnnotations.contains(annotationName))
+            if(!selectedAnnotations().contains(annotationName))
             {
                 continue;
             }
@@ -1026,7 +1038,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         mainPlot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
 
         combinedDomainCategoryPlot = new CombinedDomainCategoryPlot(categoryAxis);
-        combinedDomainCategoryPlot.add(mainPlot, 4);
+        combinedDomainCategoryPlot.add(mainPlot);
         combinedDomainCategoryPlot.setGap(0.0);
         combinedDomainCategoryPlot.setDomainGridlinesVisible(false);
 

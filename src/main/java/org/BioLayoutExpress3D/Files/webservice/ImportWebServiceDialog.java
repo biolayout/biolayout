@@ -37,12 +37,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -56,6 +59,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -79,6 +83,8 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -145,6 +151,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private JRadioButton upstreamRadio = new JRadioButton("Upstream");
     private JRadioButton bothRadio = new JRadioButton("Both");
   
+    ButtonGroup queryTypeGroup = new ButtonGroup();
+    ButtonGroup directionGroup = new ButtonGroup();
+        
     private List<SearchHit> searchHits; //retrieved search hits for current page
     private LinkedHashSet<SearchHit> advancedSearchHits; //search hits added to advanced tab, Set stops adding duplicates
     private List<List<SearchHit>> allPages; //list of lists to cache search pages
@@ -225,7 +234,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         getRootPane().setDefaultButton(searchButton); //searches with enter key
         
         //advanced panel buttons
-        advancedExecuteButton = this.createJButton("Execute", "Execute query", true);
+        advancedExecuteButton = this.createJButton("Execute", "Execute query", false);
         advancedCancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
         advancedStopButton = this.createJButton("Stop", "Stop query", false); //stop button
 
@@ -347,6 +356,34 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedModel = createHitsModel(colHeadings);
         advancedTable = createHitsTable(advancedModel, colHeadings);
         advancedTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        
+        //listener to disable radio buttons in advanced table if no data
+        advancedModel.addTableModelListener(new TableModelListener() 
+        {
+            public void tableChanged(TableModelEvent e) {
+                if (e.getType() == TableModelEvent.INSERT) 
+                {
+                    if(advancedModel.getRowCount() == 1) //first row, set up for get query
+                    {
+                        enableAll(queryTypeGroup, true);
+                        getRadio.setSelected(true);
+                        enableAll(directionGroup, false);
+                        advancedExecuteButton.setEnabled(true);
+                        advancedStopButton.setEnabled(false);
+                    }
+                }
+                else if (e.getType() == TableModelEvent.DELETE)
+                {
+                    if(advancedModel.getRowCount() == 0) //no data, disable all radio buttons and execute/stop button
+                    {
+                        enableAll(queryTypeGroup, false);
+                        enableAll(directionGroup, false);
+                        advancedExecuteButton.setEnabled(false);
+                        advancedStopButton.setEnabled(false);
+                    }
+                }
+            }
+        });        
 
         /*
         JScrollPane advancedTableScrollPane = new JScrollPane(advancedTable);
@@ -369,9 +406,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     private JPanel createAdvancedFieldPanel()
     {
-        ButtonGroup queryTypeGroup = new ButtonGroup();
-        ButtonGroup directionGroup = new ButtonGroup();
-        
         queryTypeGroup.add(getRadio);
         queryTypeGroup.add(nearestNeighborhoodRadio);
         queryTypeGroup.add(commonStreamRadio);
@@ -389,14 +423,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         queryTypePanel.add(commonStreamRadio);
         queryTypePanel.add(pathsBetweenRadio);
         queryTypePanel.add(pathsFromToRadio);
-        getRadio.setSelected(true); //get is default option
+
+        //set initial state for radio buttons - all disabled until search hits added
+        enableAll(queryTypeGroup, false);
+        enableAll(directionGroup, false);
         
         JPanel directionPanel = new JPanel();
         directionPanel.add(downstreamRadio);
         directionPanel.add(upstreamRadio);
         directionPanel.add(bothRadio);
         directionPanel.setBorder(BorderFactory.createTitledBorder("Direction"));
-        bothRadio.setSelected(true); //both directions is default option
         
         JPanel advancedFieldPanel = new JPanel();
         advancedFieldPanel.setLayout(new MigLayout());
@@ -406,8 +442,66 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 3, sizegroup bttn");
         advancedFieldPanel.add(advancedCancelButton, "tag cancel, sizegroup bttn");
         advancedFieldPanel.add(advancedStopButton, "tag yes, sizegroup bttn");
-
+        
+        ItemListener itemListener = new ItemListener() //listener for get, pathsbetween, pathsfromto
+        {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    directionGroup.clearSelection();
+                    enableAll(directionGroup, false);
+                }
+                else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    enableAll(directionGroup, true);
+                }
+            }            
+        };
+        
+        //create listeners to conditionally enable radio buttons
+        getRadio.addItemListener(itemListener);
+        pathsBetweenRadio.addItemListener(itemListener);        
+        pathsFromToRadio.addItemListener(itemListener);
+        
+        nearestNeighborhoodRadio.addItemListener(new ItemListener()
+        {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    bothRadio.setSelected(true);
+                }
+            }            
+        });
+        
+        commonStreamRadio.addItemListener(new ItemListener()
+        {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    downstreamRadio.setSelected(true);
+                    bothRadio.setEnabled(false);
+                }
+                else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    enableAll(directionGroup, true);
+                }
+            }            
+        });        
+        
         return advancedFieldPanel;
+    }
+    
+    /**
+     * Utility method to enable/disable all buttons in a ButtonGroup.
+     * @param group
+     * @param enabled 
+     */
+    public static void enableAll(ButtonGroup group, boolean enabled)
+    {
+        Enumeration<AbstractButton> elements = group.getElements();
+        while (elements.hasMoreElements()) 
+        {
+          AbstractButton button = elements.nextElement();
+          button.setEnabled(enabled);
+        }
     }
     
     private JPanel createFieldPanel()
@@ -636,9 +730,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         {
             @Override
             public boolean isCellEditable(int row, int column) 
-            {
-               //all cells false
-               return false;
+            {               
+               return false; //all cells false
             }
         };        
         model.setColumnIdentifiers(colHeadings);
@@ -1652,5 +1745,5 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public JTextField getSearchField() 
     {
         return searchField;
-    }
+    }   
 }

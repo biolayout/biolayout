@@ -54,8 +54,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -79,6 +83,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.event.ListSelectionEvent;
@@ -249,7 +255,29 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     searchField.setText("");
                 }
             }
-        });   	
+        });
+
+        //disable search button if search field has no text
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+              changed();
+            }
+            public void removeUpdate(DocumentEvent e) {
+              changed();
+            }
+            public void insertUpdate(DocumentEvent e) {
+              changed();
+            }
+
+            public void changed() {
+               if (searchField.getText().equals("")){
+                 searchButton.setEnabled(false);
+               }
+               else {
+                 searchButton.setEnabled(true);
+              }
+            }
+          });
         
                 
         //organism text field
@@ -436,8 +464,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         JPanel advancedFieldPanel = new JPanel();
         advancedFieldPanel.setLayout(new MigLayout());
-        advancedFieldPanel.add(queryTypePanel);
-        advancedFieldPanel.add(directionPanel);
+        advancedFieldPanel.add(queryTypePanel, "wrap");
+        advancedFieldPanel.add(directionPanel, "Wrap");
                 
         advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 3, sizegroup bttn");
         advancedFieldPanel.add(advancedCancelButton, "tag cancel, sizegroup bttn");
@@ -1127,8 +1155,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         enableDisableNextButton(); //enable/disable next button
         
         //advanced tab
-        advancedStopButton.setEnabled(false);
-        advancedExecuteButton.setEnabled(true);
+        advancedStopButton.setEnabled(false);        
+        if(advancedModel.getRowCount() > 0)
+        {
+            advancedExecuteButton.setEnabled(true);
+        }
     }
     
     /**
@@ -1404,10 +1435,20 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
 
-            
+            //CPathClient.newInstance() will block execution if Pathway Commons is down - set a timeout
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            Callable<CPathClient> task = new Callable<CPathClient>() {
+               public CPathClient call() {
+                  return CPathClient.newInstance();
+               }
+            };
+            Future<CPathClient> future = executor.submit(task);
             try
             {
-                CPathClient client = CPathClient.newInstance(); //TODO catch org.springframework.web.client.HttpClientErrorException
+                ImportWebServiceDialog.this.getRootPane().setCursor(waitCursor);
+                CPathClient client = future.get(10, TimeUnit.SECONDS); 
+              
+                //CPathClient client = CPathClient.newInstance(); 
                 if(networkType.equals("Top Pathways") && searchButton == e.getSource())
                 {
                     searchQuery = client.createTopPathwaysQuery();
@@ -1460,6 +1501,19 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 statusLabel.setText("Unable to connect to Pathway Commons");
                 logger.warning(exception.getMessage());
             }
+            catch (TimeoutException exception) {
+                statusLabel.setText("Unable to connect to Pathway Commons: timed out");
+                logger.warning(exception.getMessage());
+            } catch (InterruptedException exception) {
+                statusLabel.setText("Unable to connect to Pathway Commons");
+                logger.warning(exception.getMessage());
+            } catch (ExecutionException exception) {
+                statusLabel.setText("Unable to connect to Pathway Commons");
+                logger.warning(exception.getMessage());
+            } finally {
+                future.cancel(true); 
+                ImportWebServiceDialog.this.getRootPane().setCursor(defaultCursor);
+            }           
         }
         else if(stopButton == e.getSource() || advancedStopButton == e.getSource()) //stop running process
         { 

@@ -443,8 +443,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         directionPanel.setBorder(BorderFactory.createTitledBorder("Direction"));
         
         JPanel advancedFieldPanel = new JPanel();
-        advancedFieldPanel.setLayout(new MigLayout());
-        advancedFieldPanel.add(queryTypePanel, "wrap");
+        advancedFieldPanel.setLayout(new MigLayout("fill"));
+        advancedFieldPanel.add(queryTypePanel, "wrap, span");
         advancedFieldPanel.add(directionPanel, "Wrap");
                 
         advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 3, sizegroup bttn");

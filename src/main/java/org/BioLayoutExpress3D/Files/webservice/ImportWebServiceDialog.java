@@ -50,7 +50,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -126,6 +125,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     //timeouts for web service operations in seconds
     public static final int TIMEOUT_SEARCH = 30;
     public static final int TIMEOUT_GET = 60;
+    
+    /**
+     * Preferred width in pixels.
+     */
+    public static final int WIDTH = 888;
     
     public static final String BIOPAX_FILE_EXTENSION = ".owl";
     
@@ -244,55 +248,23 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedCancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
         advancedStopButton = this.createJButton("Stop", "Stop query", false); //stop button
 
-        //search term text field
-        String fieldString = "Enter a search term...";
-        searchField = new JTextField(fieldString, 70);
+        searchField = new JTextField(70);
+        organismField = new JTextField(35); //organism text field
         
-        searchField.addFocusListener(new FocusAdapter() {
-            public void focusGained(FocusEvent focusEvent) {
-                if (searchField.getText() != null
-                        && searchField.getText().startsWith("Enter")) {
-                    searchField.setText("");
-                }
-            }
-        });
-
         //disable search button if search field has no text
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
+        searchField.getDocument().addDocumentListener(new DocumentListener() 
+        {
             public void changedUpdate(DocumentEvent e) {
-              changed();
+              searchFieldChanged();
             }
             public void removeUpdate(DocumentEvent e) {
-              changed();
+              searchFieldChanged();
             }
             public void insertUpdate(DocumentEvent e) {
-              changed();
+              searchFieldChanged();
             }
-
-            public void changed() {
-               if (searchField.getText().equals("")){
-                 searchButton.setEnabled(false);
-               }
-               else {
-                 searchButton.setEnabled(true);
-              }
-            }
-          });
-        
+          });        
                 
-        //organism text field
-        String organismString = ""; //default message
-        organismField = new JTextField(organismString, 35);
-        organismField.addFocusListener(new FocusAdapter() {
-            public void focusGained(FocusEvent focusEvent) {
-                if (organismField.getText() != null
-                        && organismField.getText().startsWith("Enter")) {
-                    organismField.setText("");
-                }
-            }
-        });   	
-        
-        
         organismDisplayCommands = new LinkedHashMap<JCheckBox, String>();
         organismDisplayCommands.put(new JCheckBox("Human"), "9606");
         organismDisplayCommands.put(new JCheckBox("Mouse"), "10090");
@@ -371,6 +343,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
          });
         
+        //set column widths
+        table.getColumn(colHeadings[0]).setPreferredWidth(400);
+        table.getColumn(colHeadings[1]).setPreferredWidth(75);
+        table.getColumn(colHeadings[2]).setPreferredWidth(125);
+
         //split search results on left and highlighted search hit excerpt on right
         JScrollPane tableScrollPane = new JScrollPane(table);
         JScrollPane editorScrollPane = new JScrollPane(editorPane);
@@ -384,6 +361,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedModel = createHitsModel(colHeadings);
         advancedTable = createHitsTable(advancedModel, colHeadings);
         advancedTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        advancedTable.getColumn(colHeadings[0]).setPreferredWidth(WIDTH - 275);
+        advancedTable.getColumn(colHeadings[1]).setPreferredWidth(75);
+        advancedTable.getColumn(colHeadings[2]).setPreferredWidth(125);
         
         //listener to disable radio buttons in advanced table if no data
         advancedModel.addTableModelListener(new TableModelListener() 
@@ -413,12 +393,12 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
         });        
 
-        /*
         JScrollPane advancedTableScrollPane = new JScrollPane(advancedTable);
+        /*
         JScrollPane advancedEditorScrollPane = new JScrollPane(advancedEditorPane);
         JSplitPane advancedSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, advancedTableScrollPane, advancedEditorScrollPane);
         */
-        advancedPanel.add(advancedTable, BorderLayout.CENTER);       
+        advancedPanel.add(advancedTableScrollPane, BorderLayout.CENTER);       
         
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Search", searchPanel);
@@ -517,7 +497,19 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         return advancedFieldPanel;
     }
     
-    /**
+    private void searchFieldChanged() 
+    {
+       if (searchField.getText().equals(""))
+       {
+         searchButton.setEnabled(false);
+       }
+       else 
+       {
+         searchButton.setEnabled(true);
+      }
+    }
+
+            /**
      * Utility method to enable/disable all buttons in a ButtonGroup.
      * @param group
      * @param enabled 
@@ -588,7 +580,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(stopButton, "tag yes, sizegroup bttn");
         fieldPanel.add(openButton, "tag no, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(888, 205));
+        fieldPanel.setPreferredSize(new Dimension(WIDTH, 205));
         return fieldPanel;
     }
     
@@ -630,7 +622,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         hitsPanel.add(retrievedLabel, "w 33%, sizegroup hits");
         hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");        
         
-        hitsPanel.setPreferredSize(new Dimension(888, 88));
+        hitsPanel.setPreferredSize(new Dimension(WIDTH, 88));
         return hitsPanel;
     }
     
@@ -1020,6 +1012,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     stopButton.setEnabled(true);
                     openButton.setEnabled(false);
                     
+                    advancedExecuteButton.setEnabled(false);
+                    advancedStopButton.setEnabled(true);
+                    
                     String responseString = cPathQuery.stringResult(OutputFormat.BIOPAX);
                     return responseString;
                 }
@@ -1150,7 +1145,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             openButton.setEnabled(true);
         }
         
-        searchButton.setEnabled(true);
+        searchFieldChanged(); //enable search button if text in search field
         enableDisablePreviousButton(); //enable/disable previous button 
         enableDisableNextButton(); //enable/disable next button
         
@@ -1221,11 +1216,13 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
      */
     private class SearchWorker extends SwingWorker<SearchResponse, Void>
     {
+        private boolean clearAdvanced;
         private boolean newSearch;
         
-        SearchWorker(boolean newSearch)
+        SearchWorker(boolean newSearch, boolean clearAdvanced)
         {
             this.newSearch = newSearch;
+            this.clearAdvanced = clearAdvanced;
         }
         
         /**
@@ -1247,6 +1244,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     searchButton.setEnabled(false);
                     stopButton.setEnabled(true);
                     openButton.setEnabled(false);
+                    
+                    advancedExecuteButton.setEnabled(false);
+                    advancedStopButton.setEnabled(true);
                     
                     return searchQuery.result(); //perform search
                 }
@@ -1291,7 +1291,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                                         
                     cacheSearchHits(); //store search hits in allSearchHits List
                     
-                    displaySearchResults(newSearch);
+                    displaySearchResults(clearAdvanced);
 
                     if(organismIdNameMap.size() > 0)
                     {
@@ -1325,7 +1325,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 if(cause instanceof PathwayCommonsException) //no search hits
                 {
                    logger.warning(cause.getMessage());
-                   clearSearchResults(true); //clear previous search results
+                   clearSearchResults(false); //clear previous search results
                    statusLabel.setText("Search error: " + cause.getMessage());
                 }
                 else if(cause instanceof UnknownHostException) //Pathway Commons down
@@ -1452,7 +1452,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 if(networkType.equals("Top Pathways") && searchButton == e.getSource())
                 {
                     searchQuery = client.createTopPathwaysQuery();
-                    search(searchButton == e.getSource()); //perform search - reset search results if search button clicked
+                    search(true, false); //perform search but do not clear advanced table
                 }
                 else
                 {
@@ -1492,7 +1492,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         }
 
                         this.searchQuery = (CPathQuery<SearchResponse>)searchQuery;
-                        search(searchButton == e.getSource()); //perform search - reset search results if search button clicked
+                        search(searchButton == e.getSource(), false); //perform search but do not clear advanced table
                     }
                 }
             }
@@ -1529,9 +1529,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     }
                     else
                     {
-                        statusLabel.setText("Search has already completed");
+                        statusLabel.setText("Operation has already completed");
                     }
                     stopButton.setEnabled(false);
+                    advancedStopButton.setEnabled(false);
                     logger.info("search SwingWorker cancel returned " + cancelled);
                 }
                 catch(CancellationException exception)
@@ -1545,17 +1546,18 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             {
                 try //stop download
                 {
-                    statusLabel.setText("Stopping open...");
+                    statusLabel.setText("Stopping import...");
                     boolean cancelled = getWorker.cancel(true);
                     if(cancelled)
                     {
-                        statusLabel.setText("Open stopped");
+                        statusLabel.setText("Import stopped");
                     }
                     else
                     {
-                        statusLabel.setText("Download has already completed");
+                        statusLabel.setText("Import has already completed");
                     }
                     stopButton.setEnabled(false);
+                    advancedStopButton.setEnabled(false);
                     logger.info("Download SwingWorker cancel returned " + cancelled);
                 }
                 catch(CancellationException exception)
@@ -1604,11 +1606,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
      /**
      * Runs Pathway Commons REST web service SEARCH and displays results
      * @param searchClientRequest - contains search parameters
-     * @param newSearch - new search being executed (as opposed to previous/next page)
+     * @param clearAdvanced - clear advanced search hits
      */
-    private void search(boolean newSearch)
+    private void search(boolean newSearch, boolean clearAdvanced)
     {
-        searchWorker = new SearchWorker(newSearch); //concurrent threading for search process
+        searchWorker = new SearchWorker(newSearch, clearAdvanced); //concurrent threading for search process
         searchWorker.execute();
     }
     

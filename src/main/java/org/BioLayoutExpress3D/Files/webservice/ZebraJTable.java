@@ -15,7 +15,7 @@ import javax.swing.table.TableModel;
 
 /**
  * JTable that draws a zebra striped background.
- * http://nadeausoftware.com/articles/2008/01/java_tip_how_add_zebra_background_stripes_jtable
+ * Derived from http://nadeausoftware.com/articles/2008/01/java_tip_how_add_zebra_background_stripes_jtable
  * @author Derek Wright
  */
 public class ZebraJTable
@@ -23,23 +23,6 @@ public class ZebraJTable
 {
     private java.awt.Color rowColors[] = new java.awt.Color[2];
     private boolean drawStripes = false;
- /*
-    public ZebraJTable()
-    {
-    }
-   
-    public ZebraJTable( int numRows, int numColumns )
-    {
-        super( numRows, numColumns );
-    }
-    
-    
-    
-    public ZebraJTable( Object[][] rowData, Object[] columnNames )
-    {
-        super( rowData, columnNames );
-    }
-    */
     
     public ZebraJTable(TableModel dataModel, String[] colHeadings)
     {
@@ -47,11 +30,6 @@ public class ZebraJTable
 
         setAutoCreateRowSorter(true);
         
-        //set column widths
-        getColumn(colHeadings[0]).setPreferredWidth(400);
-        getColumn(colHeadings[1]).setPreferredWidth(75);
-        getColumn(colHeadings[2]).setPreferredWidth(125);
-
         //center align header and cell contents        
         createTableHeaderRenderer();        
         createTableContentsRenderer();
@@ -77,27 +55,6 @@ public class ZebraJTable
         }
     }
     
-    /*
-    public ZebraJTable( javax.swing.table.TableModel dataModel,
-        javax.swing.table.TableColumnModel columnModel )
-    {
-        super( dataModel, columnModel );
-    }
-    
-    public ZebraJTable( javax.swing.table.TableModel dataModel,
-        javax.swing.table.TableColumnModel columnModel,
-        javax.swing.ListSelectionModel selectionModel )
-    {
-        super( dataModel, columnModel, selectionModel );
-    }
-    
-    public ZebraJTable( java.util.Vector<?> rowData,
-        java.util.Vector<?> columnNames )
-    {
-        super( rowData, columnNames );
-    }
-    */
- 
     /** Add stripes between cells and behind non-opaque cells. */
     public void paintComponent( java.awt.Graphics g )
     {

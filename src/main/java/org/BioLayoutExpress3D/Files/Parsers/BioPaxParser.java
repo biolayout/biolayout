@@ -148,7 +148,7 @@ public final class BioPaxParser extends CoreParser
                }
                 else
                 {
-                    Tuple6 entityShape = BioPaxParser.lookupEntityShape(entity);
+                    Tuple6 entityShape = lookupEntityShape(entity);
                     if(entityShape.second instanceof GraphmlShapesGroup2) //Pathway
                     {
                         setVertexPropertiesPathway(vertex, entityShape);

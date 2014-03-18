@@ -102,6 +102,7 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
     private JCheckBox axesLegendCheckBox = null;
     private JButton columnInfoButton = null;
     private JPopupMenu columnInfoPopupMenu = null;
+    private JComboBox<String> sortColumnAnnotationComboBox = null;
     private JCheckBoxMenuItem sampleNameCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
@@ -256,6 +257,15 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
             }
         });
 
+        sortColumnAnnotationComboBox = new JComboBox<String>();
+        sortColumnAnnotationComboBox.addItem("No Column Sort");
+        for (ExpressionData.ColumnAnnotation columnAnnotation : expressionData.getColumnAnnotations())
+        {
+            sortColumnAnnotationComboBox.addItem(columnAnnotation.getName());
+        }
+        sortColumnAnnotationComboBox.setToolTipText("Sort Column Annotation");
+        sortColumnAnnotationComboBox.addActionListener(this);
+
         sampleNameCheckBox = new JCheckBoxMenuItem("Sample names");
         sampleNameCheckBox.addActionListener(this);
 
@@ -269,6 +279,7 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
         plotOptionsLine1.add(new JLabel("Maximum Samples:"));
         plotOptionsLine1.add(maximumVisibleSamplesSpinner);
         plotOptionsLine1.add(columnInfoButton);
+        plotOptionsLine1.add(sortColumnAnnotationComboBox);
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
         plotOptionsLine2.add(new JLabel("Class Plot:"));
@@ -748,6 +759,7 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
         }
     }
 
+    @Override
     public void refreshPlot()
     {
         boolean drawGridLines = PLOT_GRID_LINES.get();
@@ -776,6 +788,15 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
             ExpressionEnvironment.TransformType transformType =
                     ExpressionEnvironment.TransformType.values()[PLOT_TRANSFORM.get()];
             expressionData.setTransformType(transformType);
+
+            if (sortColumnAnnotationComboBox.getSelectedIndex() > 0)
+            {
+                expressionData.setSortColumnAnnotation((String) sortColumnAnnotationComboBox.getSelectedItem());
+            }
+            else
+            {
+                expressionData.setSortColumnAnnotation(null);
+            }
 
             // Mean of selection
             RowData meanOfSelection = new RowData(totalColumns, new Color(0));
@@ -982,6 +1003,15 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
 
     private CategoryDataset createColumnAnnotationDataset()
     {
+        ExpressionData.ColumnAnnotation sortColumnAnnotation =
+                expressionData.getColumnAnnotationByName((String)sortColumnAnnotationComboBox.getSelectedItem());
+        int[] sortedColumnMap = null;
+
+        if (sortColumnAnnotation != null)
+        {
+            sortedColumnMap = sortColumnAnnotation.getSortedColumnMap();
+        }
+
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
         int totalColumns = expressionData.getTotalColumns();
@@ -1001,8 +1031,14 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
 
             for (int column = 0; column < totalColumns; column++)
             {
-                String annotationValue = annotation.getFullyQualifiedValue(column);
-                String columnName = expressionData.getColumnName(column);
+                int mappedColumn = column;
+                if (sortedColumnMap != null)
+                {
+                    mappedColumn = sortedColumnMap[column];
+                }
+
+                String annotationValue = annotation.getFullyQualifiedValue(mappedColumn);
+                String columnName = expressionData.getColumnName(mappedColumn);
                 dataset.addValue(1.0, annotationValue, columnName);
             }
         }
@@ -1400,6 +1436,8 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
             checkBox.addActionListener(this);
             columnInfoPopupMenu.add(checkBox);
         }
+
+        sortColumnAnnotationComboBox.setVisible(expressionData.getColumnAnnotations().size() > 0);
 
         refreshPlot();
     }

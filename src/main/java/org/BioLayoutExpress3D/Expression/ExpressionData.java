@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import javax.swing.*;
 import static java.lang.Math.*;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.CPUParallelism.*;
@@ -35,16 +37,21 @@ public final class ExpressionData
         private String name;
         private String[] values;
 
+        private int[] sortedColumnMap;
+
         public ColumnAnnotation(int index, String name, int numColumns)
         {
             this.index = index;
             this.name = name;
             this.values = new String[numColumns];
+
+            sortedColumnMap = null;
         }
 
         public void setValue(int column, String value)
         {
             values[column] = value;
+            sortedColumnMap = null;
         }
 
         public String getValue(int column)
@@ -60,6 +67,56 @@ public final class ExpressionData
         public String getName()
         {
             return name;
+        }
+
+        class StringValueComparator implements Comparator<Integer>
+        {
+            Map<Integer, String> base;
+
+            public StringValueComparator(Map<Integer, String> base)
+            {
+                this.base = base;
+            }
+
+            @Override
+            public int compare(Integer a, Integer b)
+            {
+                int stringDiff = base.get(a).compareTo(base.get(b));
+
+                if (stringDiff == 0)
+                {
+                    return a - b;
+                }
+
+                return stringDiff;
+            }
+        }
+
+        public int[] getSortedColumnMap()
+        {
+            if (sortedColumnMap == null)
+            {
+                HashMap<Integer, String> map = new HashMap<Integer, String>();
+
+                for (int i = 0; i < values.length; i++)
+                {
+                    map.put(i, values[i]);
+                }
+
+                StringValueComparator svc = new StringValueComparator(map);
+                TreeMap<Integer, String> sortedMap = new TreeMap<Integer, String>(svc);
+                sortedMap.putAll(map);
+
+                sortedColumnMap = new int[values.length];
+
+                int i = 0;
+                for (Entry<Integer, String> entry : sortedMap.entrySet())
+                {
+                    sortedColumnMap[i++] = entry.getKey();
+                }
+            }
+
+            return sortedColumnMap;
         }
     }
 
@@ -187,6 +244,19 @@ public final class ExpressionData
         if(columnAnnotations.containsKey(index))
         {
             return columnAnnotations.get(index);
+        }
+
+        return null;
+    }
+
+    public ColumnAnnotation getColumnAnnotationByName(String name)
+    {
+        for(ColumnAnnotation columnAnnotation : columnAnnotations.values())
+        {
+            if (columnAnnotation.getName().equals(name))
+            {
+                return columnAnnotation;
+            }
         }
 
         return null;
@@ -1123,6 +1193,19 @@ public final class ExpressionData
         this.transformType = transformType;
     }
 
+    private ColumnAnnotation sortColumnAnnotation;
+    public void setSortColumnAnnotation(String sortColumnAnnotationName)
+    {
+        if (sortColumnAnnotationName != null)
+        {
+            sortColumnAnnotation = getColumnAnnotationByName(sortColumnAnnotationName);
+        }
+        else
+        {
+            sortColumnAnnotation = null;
+        }
+    }
+
     public float getIQRForRow(int row)
     {
         float[] values = new float[totalColumns];
@@ -1260,9 +1343,25 @@ public final class ExpressionData
         float stddev = (float)sqrt(variance);
         float pareto = (float)sqrt(stddev);
 
+        int[] sortedColumnMap = null;
+
+        if (sortColumnAnnotation != null)
+        {
+            sortedColumnMap = sortColumnAnnotation.getSortedColumnMap();
+        }
+
         for (int column = 0; column < totalColumns; column++)
         {
-            float value = getExpressionDataValue(row, column);
+            float value;
+
+            if (sortedColumnMap != null)
+            {
+                value = getExpressionDataValue(row, sortedColumnMap[column]);
+            }
+            else
+            {
+                value = getExpressionDataValue(row, column);
+            }
 
             switch (transformType)
             {

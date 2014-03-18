@@ -3350,9 +3350,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
 
         if (refreshClassViewer)
         {
-            if ( layoutFrame.getExpressionViewerFrame() != null && layoutFrame.getExpressionViewerFrame().isVisible() )
-                layoutFrame.getExpressionViewerFrame().refreshExpressionViewer();
-
             if ( layoutFrame.getClassViewerFrame().isVisible() )
                 layoutFrame.getClassViewerFrame().populateClassViewer(false, true);
         }

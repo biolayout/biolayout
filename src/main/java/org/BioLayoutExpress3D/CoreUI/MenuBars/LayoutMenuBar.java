@@ -616,14 +616,6 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
         toolsStatistics.setMnemonic(KeyEvent.VK_S);
     }
 
-    public void setToolsMenuExpressionViewerAction(AbstractAction expressionViewerAction)
-    {
-        addSeparator(toolsMenu);
-        JMenuItem editExpressionViewer = toolsMenu.add(expressionViewerAction);
-        editExpressionViewer.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, mask));
-        editExpressionViewer.setMnemonic(KeyEvent.VK_E);
-    }
-
     public void setToolsMenuClassViewerAction(AbstractAction classViewerAction)
     {
         JMenuItem editClassViewer = toolsMenu.add(classViewerAction);

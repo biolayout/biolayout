@@ -86,7 +86,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
     private LayoutGraphPropertiesDialog layoutGraphPropertiesDialog = null;
     private LayoutGraphStatisticsDialog layoutGraphStatisticsDialog = null;
     private ExpressionData expressionData = null;
-    private ExpressionViewerFrame expressionViewerFrame;
     private ClassViewerFrame classViewerFrame = null;
     private LayoutAnimationControlDialog layoutAnimationControlDialog = null;
     private LayoutClusterMCL layoutClusterMCL = null;
@@ -217,7 +216,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutClusterMCL = new LayoutClusterMCL(this, graph);
         layoutGraphStatisticsDialog = new LayoutGraphStatisticsDialog(this, graph);
         expressionData = new ExpressionData(this);
-        expressionViewerFrame = new ExpressionViewerFrame(this, expressionData);
         classViewerFrame = new ClassViewerFrame(this);
         SPNSimulationDialog = new SignalingPetriNetSimulationDialog(nc, this);
         layoutAnimationControlDialog = new LayoutAnimationControlDialog(this);
@@ -692,7 +690,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setToolsMenuSavePreferences(toolsMenuSavePreferencesAction);
         layoutMenuBar.setToolsMenuRevertToDefaultPreferences(toolsMenuRevertToDefaultPreferencesAction);
         layoutMenuBar.setToolsMenuGraphStatisticsAction( layoutGraphStatisticsDialog.getGraphStatisticsDialogAction() );
-        layoutMenuBar.setToolsMenuExpressionViewerAction( expressionViewerFrame.getExpressionViewerAction() );
         layoutMenuBar.setToolsMenuClassViewerAction( classViewerFrame.getClassViewerAction() );
         layoutMenuBar.setToolsMenuAnimationControlDialogAction( layoutAnimationControlDialog.getAnimationControlDialogAction() );
         layoutMenuBar.setToolsMenuClusterUsingMCL( layoutClusterMCL.getClusterMCLAction() );
@@ -1402,18 +1399,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
             classViewerFrame.getClassViewerAction().setEnabled(true);
             classViewerFrame.populateClassViewer( null, false, DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed(), true);
-
-            if ( DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed() )
-            {
-                expressionViewerFrame.getExpressionViewerAction().setEnabled(true);
-                classViewerFrame.refreshCurrentClassSetSelection();
-                classViewerFrame.restoreSplitPaneDividerLocation();
-            }
-            else
-            {
-                expressionViewerFrame.getExpressionViewerAction().setEnabled(false);
-                classViewerFrame.setSplitPaneDividerLocationForNoExpressionData();
-            }
+            classViewerFrame.refreshCurrentClassSetSelection();
 
             filterNodesByEdgesDialog.getFilterNodesByEdgesAction().setEnabled(true);
             filterEdgesByWeightDialog.getFilterEdgesByWeightAction().setEnabled(WEIGHTED_EDGES); // enable weight filter dialog action only when weights have been parsed
@@ -1774,9 +1760,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
 
         // disable all the events below as well
-        if ( expressionViewerFrame.getExpressionViewerAction().isEnabled() )
-            expressionViewerFrame.getExpressionViewerAction().setEnabled(false);
-
         if ( classViewerFrame.getClassViewerAction().isEnabled() )
             classViewerFrame.getClassViewerAction().setEnabled(false);
 
@@ -1993,11 +1976,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
     public ExpressionData getExpressionData()
     {
         return expressionData;
-    }
-
-    public ExpressionViewerFrame getExpressionViewerFrame()
-    {
-        return expressionViewerFrame;
     }
 
     public ClassViewerFrame getClassViewerFrame()

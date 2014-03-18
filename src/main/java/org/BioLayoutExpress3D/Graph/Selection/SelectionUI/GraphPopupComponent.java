@@ -1,27 +1,22 @@
 package org.BioLayoutExpress3D.Graph.Selection.SelectionUI;
 
 import java.awt.*;
-import java.awt.geom.*;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.HashSet;
-import static java.lang.Math.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.Expression.*;
 import org.BioLayoutExpress3D.Graph.GraphElements.*;
-import org.BioLayoutExpress3D.StaticLibraries.*;
 import org.BioLayoutExpress3D.Network.*;
-import static org.BioLayoutExpress3D.Expression.Panels.ExpressionGraphPanel.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Simulation.Panels.SimulationResultsPanel;
 import org.jfree.chart.*;
 import org.jfree.chart.axis.*;
 import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.category.DefaultCategoryItemRenderer;
-import org.jfree.chart.renderer.xy.*;
 import org.jfree.data.category.*;
-import org.jfree.data.xy.*;
 
 /**
 *
@@ -208,61 +203,6 @@ public final class GraphPopupComponent implements Runnable
         return chartPanel;
     }
 
-    private JPanel createSimulationResultsPlot()
-    {
-        int totalTimeBlocks = layoutFrame.getSignalingPetriNetSimulationDialog().getTimeBlocks();
-
-        if (totalTimeBlocks == 0)
-        {
-            return null;
-        }
-
-        YIntervalSeriesCollection datasetCollection = new YIntervalSeriesCollection();
-        DeviationRenderer dr = new DeviationRenderer(true, false);
-
-        for(GraphNode graphNode : this.graphNodes)
-        {
-            if(graphNode.ismEPNTransition())
-            {
-                continue;
-            }
-
-            int nodeID = graphNode.getNodeID();
-            YIntervalSeries dataset = new YIntervalSeries("Simulation results " + graphNode.getNodeName());
-            for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
-            {
-                double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);
-                double halfError = ANIMATION_SIMULATION_RESULTS.getError(nodeID, timeBlock) * 0.5;
-                dataset.add(timeBlock, value, value - halfError, value + halfError);
-            }
-
-            datasetCollection.addSeries(dataset);
-            dr.setSeriesPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
-            dr.setSeriesFillPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
-        }
-
-        JFreeChart simulationResultsJFreeChart = ChartFactory.createXYLineChart(
-                null, null, null, datasetCollection,
-                PlotOrientation.VERTICAL, false, false, false);
-
-        XYPlot plot = (XYPlot) simulationResultsJFreeChart.getPlot();
-        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
-        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
-        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
-
-        ValueAxis axis = plot.getDomainAxis();
-        axis.setLowerMargin(0.0);
-        axis.setUpperMargin(0.0);
-
-        dr.setSeriesStroke(0, new BasicStroke(2.0f, 1, 1));
-        dr.setAlpha(0.333f);
-        plot.setRenderer(dr);
-
-        ChartPanel chartPanel = new ChartPanel(simulationResultsJFreeChart);
-
-        return chartPanel;
-    }
-
     @Override
     /**
     *  Overrides the run() method.
@@ -292,7 +232,7 @@ public final class GraphPopupComponent implements Runnable
                 else if ( SHOW_POPUP_OVERLAY_PLOT.get() && isPetriNet && notmEPNTransitions && (ANIMATION_SIMULATION_RESULTS != null) )
                 {
                     initPopupMenuItem("Node Name & Simulation Profile: " + popupNodeName);
-                    plot = createSimulationResultsPlot();
+                    plot = SimulationResultsPanel.createSimulationResultsPlot(layoutFrame, graphNodes);
                 }
                 else
                 {

@@ -15,6 +15,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import static java.lang.Math.*;
 import java.text.NumberFormat;
+import org.BioLayoutExpress3D.ClassViewerUI.ClassViewerPlotPanel;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.DataStructures.*;
 import org.BioLayoutExpress3D.Expression.*;
@@ -65,7 +66,7 @@ import org.jfree.data.category.CategoryDataset;
 *
 */
 
-public final class ExpressionGraphPanel extends JPanel implements ActionListener, ChangeListener
+public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements ActionListener, ChangeListener
 {
     /**
     *  Serial version UID variable for the ExpressionGraph class.
@@ -120,7 +121,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
     public ExpressionGraphPanel(JFrame jframe, LayoutFrame layoutFrame, ExpressionData expressionData)
     {
-        super(true);
+        super();
 
         this.jframe = jframe;
         this.layoutFrame = layoutFrame;

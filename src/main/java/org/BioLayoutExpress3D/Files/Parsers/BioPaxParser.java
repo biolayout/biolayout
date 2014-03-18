@@ -57,6 +57,11 @@ public final class BioPaxParser extends CoreParser
      */
     public static final double NODE_RESIZE_FACTOR = 0.5d;
     
+    /**
+     * Name of Class Set
+     */
+    public static final String CLASS_SET = "BioPAX"; 
+    
     private BioPAXIOHandler handler;
     private HashMap<Entity, Vertex> entityVertexMap = null; //created during parsing
 
@@ -127,7 +132,6 @@ public final class BioPaxParser extends CoreParser
                 logger.finer("Entity RDFId: " + entity.getRDFId());
                 logger.finer("Entity displayName: " + entity.getDisplayName());
                 
-                
                 String xrefs = Arrays.toString(entity.getXref().toArray());
                 logger.finer("Entity Xrefs: " + xrefs);
                 
@@ -138,20 +142,20 @@ public final class BioPaxParser extends CoreParser
                 {
                     Interaction interaction = (Interaction)entity;
                     Tuple7 interactionShape;
-                    interactionShape = BioPaxParser.lookupInteractionShape(interaction);
+                    interactionShape = lookupInteractionShape(interaction);
                     
-                    BioPaxParser.setVertexPropertiesInteraction(vertex, interactionShape);
+                    setVertexPropertiesInteraction(vertex, interactionShape);
                }
                 else
                 {
                     Tuple6 entityShape = BioPaxParser.lookupEntityShape(entity);
                     if(entityShape.second instanceof GraphmlShapesGroup2) //Pathway
                     {
-                        BioPaxParser.setVertexPropertiesPathway(vertex, entityShape);
+                        setVertexPropertiesPathway(vertex, entityShape);
                     }
                     else //PhysicalEntity, Gene
                     {
-                        BioPaxParser.setVertexPropertiesEntity(vertex, entityShape);
+                        setVertexPropertiesEntity(vertex, entityShape);
                     }
                }
                 nc.getVerticesMap().put(vertex.getVertexName() + "#" + setIndex, vertex); //create a unique name by numbering the vertices
@@ -159,9 +163,8 @@ public final class BioPaxParser extends CoreParser
                 entityVertexMap.put(entity, vertex);
                 
                 //create class set
-                String classSetName = "BioPAX";
-                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().createNewClassSet(classSetName);
-                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().switchClassSet(classSetName);
+                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().createNewClassSet(CLASS_SET);
+                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().switchClassSet(CLASS_SET);
             
                 //convert PaxTools Java class name to something human readable and use as class viewer class name
                 String className = entity.getClass().getSimpleName();
@@ -378,15 +381,15 @@ public final class BioPaxParser extends CoreParser
         }
         else if(entity instanceof Pathway || entity instanceof Process) //superinterface of Pathway
         {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Pathway");                                 
+            shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Pathway");                                 
         }
         else if (entity instanceof Gene)
         {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Gene");
+            shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_MAP.get("Gene");
         }
         else
         {
-                shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("PhysicalEntity");                                                    
+            shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("PhysicalEntity");                                                    
         }        
         return shape;
    }

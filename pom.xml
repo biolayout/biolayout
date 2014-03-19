@@ -83,6 +83,46 @@
         </dependency>
 
         <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.biopax.paxtools</groupId>
+            <artifactId>paxtools-core</artifactId>
+            <version>4.2.1</version>
+        </dependency>        
+
+        <dependency>
+            <groupId>pathwaycommons.cpath</groupId>
+            <artifactId>cpath-client</artifactId>
+            <version>4.1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>14.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout</artifactId>
+            <version>3.7.4</version>
+        </dependency>
+            
+        <dependency>
+            <groupId>org.swinglabs</groupId>
+            <artifactId>swing-layout</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
             <version>1.0.17</version>
@@ -103,6 +143,43 @@
            <url>http://www.jogamp.org/deployment/maven/</url>
            <layout>default</layout>
          </repository>
+                 
+        <!-- BioPAX release repository -->
+        <!--
+         <repository>
+            <id>biopax.releases</id>
+            <name>BioPAX Repository at Sourceforge</name>
+            <url>http://biopax.sourceforge.net/m2repo/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        --> 
+        <repository>
+                <id>pathway-commons</id>
+                <name>Pathway Commons Repository at Google Code</name>
+                <url>http://repo.pathway-commons.googlecode.com/hg/</url>
+                <snapshots>
+                    <enabled>true</enabled>
+                </snapshots>
+        </repository> 
+        <repository>
+                <id>biopax.releases</id>
+                <name>BioPAX Repository</name>
+                <url>http://www.biopax.org/m2repo/releases/</url>
+                <snapshots>
+                    <enabled>false</enabled>
+                </snapshots>
+        </repository>
+        <repository>
+                <id>biopax.snapshots</id>
+                <name>BioPAX Snapshots Repository</name>
+                <url>http://www.biopax.org/m2repo/snapshots/</url>
+                <snapshots>
+                    <enabled>false</enabled>
+                </snapshots>
+        </repository>        
+        
         <!-- This allows us to treat local jars (e.g. libsbgn) as
              normal dependencies -->
         <repository>
@@ -546,6 +623,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skip>false</skip>
                     <archive>${project.build.directory}/${outFilename}.jar</archive>
                     <keystore>keystore.jks</keystore>
                     <alias>selfsigned</alias>

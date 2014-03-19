@@ -114,7 +114,7 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
 
         fileImportSubMenu = new JMenu("Import");
         fileImportSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
-        fileImportSubMenu.setEnabled(false);
+        fileImportSubMenu.setEnabled(true);
 
         fileExportSubMenu = new JMenu("Export");
         fileExportSubMenu.getPopupMenu().setLightWeightPopupEnabled(false);
@@ -235,11 +235,34 @@ public final class LayoutMenuBar extends JMenuBar implements ActionListener
         fileExportSubMenu.add(fileExportSubMenuClassSetsAsFileSubMenu).setIcon(null);
     }
 
-    public void setFileMenuImportAction(AbstractAction importAction)
+    /**
+     * Import Network from Public Database
+     * Mnemonic C
+     * Keystroke Cmd+I
+     * @param importClassSetsAction - Action for this submenu item
+     */
+    public void setFileSubMenuImportClassSetsAction(AbstractAction importClassSetsAction)
     {
-        fileImportSubMenu.add(importAction).setIcon(null);
+        JMenuItem item = fileImportSubMenu.add(importClassSetsAction);
+        item.setIcon(null);
+        item.setMnemonic(KeyEvent.VK_C);
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, mask));
     }
 
+    /**
+     * Import Network from Public Database
+     * Mnemonic N
+     * Keystroke Cmd+Shift+I
+     * @param importNetworkAction - Action for this submenu item
+     */
+    public void setFileSubMenuImportNetworkAction(AbstractAction importNetworkAction)
+    {
+        JMenuItem item = fileImportSubMenu.add(importNetworkAction);
+        item.setIcon(null);        
+        item.setMnemonic(KeyEvent.VK_N);
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, mask + ActionEvent.SHIFT_MASK));
+    }
+    
     public void setFileMenuExportAction(AbstractAction exportAction)
     {
         fileExportSubMenu.add(exportAction).setIcon(null);

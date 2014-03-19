@@ -20,5 +20,12 @@
       </unpackOptions> 
     </dependencySet>
   </dependencySets>
+  <!-- This concatenates all the META-INF/services/* files into one where
+       otherwise they would clobber each other -->
+  <containerDescriptorHandlers>
+      <containerDescriptorHandler>
+          <handlerName>metaInf-services</handlerName>
+      </containerDescriptorHandler>
+  </containerDescriptorHandlers>
 </assembly>
 

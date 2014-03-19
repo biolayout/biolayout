@@ -71,7 +71,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JPanel tabGeneralPanel = null;
     private JPanel generalTablePanel = null;
     private JSplitPane splitPane = null;
-   
+
     private JButton renderAllCurrentClassSetPlotImagesToFilesButton = null;
     private JButton renderPlotImageToFileButton = null;
 
@@ -80,7 +80,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JButton findMultipleClassesButton = null;
     private JButton previousClassButton = null;
     private JButton nextClassButton = null;
-    
+
     private AbstractAction findNameAction = null;
     private AbstractAction findClassAction = null;
     private AbstractAction findMultipleClassesAction = null;
@@ -93,7 +93,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JButton exportTableAsButton = null;
     private AbstractAction chooseColumnsToHideAction = null;
     private AbstractAction exportTableToFileAction = null;
-    
+
     //search database
     private JButton searchDatabaseButton = null;
     //private AbstractAction searchDatabaseAction = null;
@@ -186,7 +186,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             }
         } );
     }
-    
+
     /**
      * Displays the Class Viewer. May be called by an Action or programmatically.
      * Initializes the Class Viewer if not already visible.
@@ -461,7 +461,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         else if (DATA_TYPE.equals(DataTypes.GRAPHML) && layoutFrame.getNetworkRootContainer().getIsPetriNet())
         {
             // SPN simulation data
-            plotPanel = new SimulationResultsPanel(layoutFrame);
+            plotPanel = new SimulationResultsPanel(this, layoutFrame);
         }
         else
         {
@@ -692,16 +692,16 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         refreshSelectionInTableButton = new JButton(refreshSelectionInTableAction);
         refreshSelectionInTableButton.setEnabled(false);
         refreshSelectionInTableButton.setToolTipText("Hide Unselected Rows");
-        
+
         exportTableAsButton = new JButton(exportTableToFileAction);
         exportTableAsButton.setEnabled(false);
         exportTableAsButton.setToolTipText("Export Table As...");
-        
+
         chooseColumnsToHideButton = new JButton(chooseColumnsToHideAction);
         chooseColumnsToHideButton.setEnabled(false);
         chooseColumnsToHideButton.setToolTipText("Choose Columns To Hide");
-        
-        /* want to add the same Action as the Import Network menu but if try 
+
+        /* want to add the same Action as the Import Network menu but if try
         to add here causes NullPointerException as LayoutFrame not fully set up yet
         so add Action later when button is enabled */
         searchDatabaseButton = new JButton();
@@ -943,13 +943,13 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 refreshSelectionInTableButton.setEnabled(enableHideColumnsAndExportButtons);
                 exportTableAsButton.setEnabled(enableHideColumnsAndExportButtons);
                 chooseColumnsToHideButton.setEnabled( enableHideColumnsAndExportButtons || classViewerHideColumnsDialog.isVisible() );
-                
+
                 //reuse the Action from the Import Network menu option
                 searchDatabaseButton.setAction(layoutFrame.getImportWebService().getImportWebServiceAction());
                 searchDatabaseButton.setText("Search Database"); //don't want to use same text as Action here
                 searchDatabaseButton.setToolTipText("Search Online Database");
                 searchDatabaseButton.setEnabled(enableHideColumnsAndExportButtons);
-                
+
                 boolean enableDetailsForAllButton = (entropyTable.getRowCount() > 0);
                 detailsForAllButton.setEnabled(enableDetailsForAllButton);
 

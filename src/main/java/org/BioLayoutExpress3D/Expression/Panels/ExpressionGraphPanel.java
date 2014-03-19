@@ -1078,7 +1078,15 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
     {
         File saveScreenshotFile = layoutFrame.getGraph().saveImageToFile(jframe, "Render Plot Image To File As", "plot");
         if (saveScreenshotFile != null)
-            savePlotToImageFile(saveScreenshotFile, true, "");
+        {
+            if (!savePlotToImageFile(expressionGraphPlotPanel, saveScreenshotFile, true, ""))
+            {
+                JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" +
+                        "Please try again with a different file name/path/drive.",
+                        "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
+                initiateTakeSingleScreenShotProcess();
+            }
+        }
     }
 
     public void initiateTakeMultipleClassesScreenShotsProcess()
@@ -1112,7 +1120,19 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
                     currentVertexClassName = currentVertexClass.getName();
                     numberOfSelectedNodes = layoutFrame.getGraph().getSelectionManager().getSelectedNodes().size();
                     tuple2 = addCurrentClassNameToSaveScreenshotFile(initialSaveScreenshotFile, currentVertexClassName, numberOfSelectedNodes);
-                    savedOk = savePlotToImageFile(tuple2.first, false, (numberOfSelectedNodes > 0) ? currentVertexClassName + " (" + numberOfSelectedNodes + " nodes)" : currentVertexClassName);
+                    savedOk = savePlotToImageFile(expressionGraphPlotPanel, tuple2.first, false,
+                            (numberOfSelectedNodes > 0) ? currentVertexClassName +
+                            " (" + numberOfSelectedNodes + " nodes)" : currentVertexClassName);
+
+                    if (!savedOk)
+                    {
+                        layoutFrame.getClassViewerFrame().setTitle("Class Viewer");
+                        JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" +
+                                "Please try again with a different file name/path/drive.",
+                                "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
+                        initiateTakeMultipleClassesScreenShotsProcess();
+                    }
+
                     layoutFrame.getClassViewerFrame().setTitle("Class Viewer (Now Rendering Plot Image To File " + ++currentClassIndex + " of " + endingClassIndex + " for Class: " + tuple2.second + ( (numberOfSelectedNodes > 0) ? " with " + numberOfSelectedNodes + " nodes" : "") + ")");
                 }
                 while ( ( currentVertexClass = layoutFrame.getClassViewerFrame().navigateToNextClass(false) ) != null && (currentClassIndex < endingClassIndex) && savedOk );
@@ -1144,67 +1164,7 @@ public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements 
 
         return Tuples.tuple(new File(saveScreenshotFileName + " for Class " + ( (numberOfSelectedNodes > 0) ? currentVertexClassName + " (" + numberOfSelectedNodes + " nodes)" : currentVertexClassName ) + "." + format), currentVertexClassName);
     }
-
-    private boolean savePlotToImageFile(File saveScreenshotFile, boolean initiateTakeSingleScreenShotProcess, String className)
-    {
-        try
-        {
-            BufferedImage upperBorderScreenshotImage = null;
-            Graphics g = null;
-
-            upperBorderScreenshotImage = new BufferedImage(expressionGraphPlotPanel.getWidth(), ( ( !className.isEmpty() ) ? 1 : 2 ) * PAD_BORDER, Transparency.OPAQUE);
-            g = upperBorderScreenshotImage.createGraphics();
-            g.setColor( expressionGraphPlotPanel.getBackground() );
-            g.fillRect(0, 0, upperBorderScreenshotImage.getWidth(), upperBorderScreenshotImage.getHeight());
-
-            if ( !className.isEmpty() )
-            {
-                BufferedImage upperBorderClassNameScreenshotImage = createCenteredTextImage(className, expressionGraphPlotPanel.getFont().deriveFont(AXIS_FONT_STYLE, AXIS_FONT_SIZE), DESCRIPTIONS_COLOR, true, false, expressionGraphPlotPanel.getBackground(), expressionGraphPlotPanel.getWidth());
-                upperBorderScreenshotImage = ImageSFXs.createCollatedImage(upperBorderScreenshotImage, upperBorderClassNameScreenshotImage, ImageSFXsCollateStates.COLLATE_SOUTH, true);
-
-                BufferedImage upperBorderBottomScreenshotImage = new BufferedImage(expressionGraphPlotPanel.getWidth(), PAD_BORDER, Transparency.OPAQUE);
-                g = upperBorderBottomScreenshotImage.createGraphics();
-                g.setColor( expressionGraphPlotPanel.getBackground() );
-                g.fillRect(0, 0, upperBorderBottomScreenshotImage.getWidth(), upperBorderBottomScreenshotImage.getHeight());
-
-                upperBorderScreenshotImage = ImageSFXs.createCollatedImage(upperBorderScreenshotImage, upperBorderBottomScreenshotImage, ImageSFXsCollateStates.COLLATE_SOUTH, true);
-            }
-
-            BufferedImage rightBorderScreenshotImage = new BufferedImage(PAD_BORDER / 2, expressionGraphPlotPanel.getHeight() + upperBorderScreenshotImage.getHeight(), Transparency.OPAQUE);
-            g = rightBorderScreenshotImage.createGraphics();
-            g.setColor( expressionGraphPlotPanel.getBackground() );
-            g.fillRect(0, 0, rightBorderScreenshotImage.getWidth(), rightBorderScreenshotImage.getHeight());
-
-            BufferedImage plotScreenshotImage = new BufferedImage(expressionGraphPlotPanel.getWidth(), expressionGraphPlotPanel.getHeight(), Transparency.OPAQUE);
-            expressionGraphPlotPanel.paintComponent( plotScreenshotImage.createGraphics() );
-
-            plotScreenshotImage = ImageSFXs.createCollatedImage(upperBorderScreenshotImage, plotScreenshotImage, ImageSFXsCollateStates.COLLATE_SOUTH, true);
-            plotScreenshotImage = ImageSFXs.createCollatedImage(rightBorderScreenshotImage, plotScreenshotImage, ImageSFXsCollateStates.COLLATE_WEST, true);
-
-            String format = saveScreenshotFile.getAbsolutePath().substring( saveScreenshotFile.getAbsolutePath().lastIndexOf(".") + 1, saveScreenshotFile.getAbsolutePath().length() );
-            ImageIO.write(plotScreenshotImage, format, saveScreenshotFile);
-            if (initiateTakeSingleScreenShotProcess)
-                InitDesktop.open(saveScreenshotFile);
-
-            return true;
-        }
-        catch (Exception exc)
-        {
-            if (!initiateTakeSingleScreenShotProcess) layoutFrame.getClassViewerFrame().setTitle("Class Viewer");
-
-            if (DEBUG_BUILD) println("Exception in ExpressionGraphPlotPanel.savePlotToImageFile():\n" + exc.getMessage());
-
-            JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" + exc.getMessage() + "\nPlease try again with a different file name/path/drive.", "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
-
-            if (initiateTakeSingleScreenShotProcess)
-                initiateTakeSingleScreenShotProcess();
-            else
-                initiateTakeMultipleClassesScreenShotsProcess();
-
-            return false;
-        }
-    }
-
+    
     private BufferedImage createCenteredTextImage(String text, Font font, Color fontColor, boolean isAntiAliased, boolean usesFractionalMetrics, Color backGroundColor, int imageWidth)
     {
         FontRenderContext frc = new FontRenderContext(null, isAntiAliased, usesFractionalMetrics);

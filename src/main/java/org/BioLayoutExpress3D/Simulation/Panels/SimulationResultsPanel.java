@@ -2,9 +2,13 @@ package org.BioLayoutExpress3D.Simulation.Panels;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.geom.Rectangle2D;
+import java.io.File;
 import java.util.ArrayList;
 import javax.swing.AbstractAction;
-import javax.swing.JPanel;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import org.BioLayoutExpress3D.ClassViewerUI.ClassViewerPlotPanel;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Graph.GraphElements.GraphNode;
@@ -19,6 +23,7 @@ import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
 
 /**
  *
@@ -26,15 +31,43 @@ import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
  */
 public class SimulationResultsPanel extends ClassViewerPlotPanel
 {
+    private JFrame jframe;
     private LayoutFrame layoutFrame;
     private ChartPanel subPlot;
+    private AbstractAction renderPlotImageToFileAction;
 
-    public SimulationResultsPanel(LayoutFrame layoutFrame)
+    public SimulationResultsPanel(JFrame jframe, LayoutFrame layoutFrame)
     {
         super();
 
+        this.jframe = jframe;
         this.layoutFrame = layoutFrame;
         this.setLayout(new BorderLayout());
+
+        renderPlotImageToFileAction = new AbstractAction("Render Plot To File...")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                renderPlotImageToFile();
+            }
+        };
+        renderPlotImageToFileAction.setEnabled(false);
+    }
+
+    private void renderPlotImageToFile()
+    {
+        File saveScreenshotFile = layoutFrame.getGraph().saveImageToFile(jframe, "Render Plot Image To File As", "plot");
+        if (saveScreenshotFile != null)
+        {
+            if (!savePlotToImageFile(subPlot, saveScreenshotFile, true, ""))
+            {
+                JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" +
+                        "Please try again with a different file name/path/drive.",
+                        "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
+                renderPlotImageToFile();
+            }
+        }
     }
 
     @Override
@@ -46,13 +79,13 @@ public class SimulationResultsPanel extends ClassViewerPlotPanel
     @Override
     public AbstractAction getRenderPlotImageToFileAction()
     {
-        return null; //FIXME
+        return renderPlotImageToFileAction;
     }
 
     @Override
     public AbstractAction getRenderAllCurrentClassSetPlotImagesToFilesAction()
     {
-        return null; //FIXME
+        return null;
     }
 
     @Override
@@ -90,7 +123,7 @@ public class SimulationResultsPanel extends ClassViewerPlotPanel
             }
 
             int nodeID = graphNode.getNodeID();
-            YIntervalSeries dataset = new YIntervalSeries("Simulation results " + graphNode.getNodeName());
+            YIntervalSeries dataset = new YIntervalSeries(graphNode.getNodeName());
             for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
             {
                 double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);
@@ -101,6 +134,7 @@ public class SimulationResultsPanel extends ClassViewerPlotPanel
             datasetCollection.addSeries(dataset);
             dr.setSeriesPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
             dr.setSeriesFillPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
+            dr.setSeriesStroke(datasetCollection.getSeriesCount() - 1, new BasicStroke(2.0f, 1, 1));
         }
 
         plot.setDataset(datasetCollection);
@@ -124,8 +158,10 @@ public class SimulationResultsPanel extends ClassViewerPlotPanel
         axis.setLowerMargin(0.0);
         axis.setUpperMargin(0.0);
 
-        dr.setSeriesStroke(0, new BasicStroke(2.0f, 1, 1));
         dr.setAlpha(0.333f);
+        // The shapes aren't shown, but this defines the tooltip hover zone
+        dr.setBaseShape(new Rectangle2D.Double(-20.0, -20.0, 40.0, 40.0));
+        dr.setBaseToolTipGenerator(new StandardXYToolTipGenerator());
         plot.setRenderer(dr);
 
         ChartPanel chartPanel = new ChartPanel(simulationResultsJFreeChart);

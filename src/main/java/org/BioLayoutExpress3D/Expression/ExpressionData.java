@@ -1392,45 +1392,18 @@ public final class ExpressionData
         return out;
     }
 
-    public float getTransformedExpressionDataValue(int i, int j)
-    {
-        float transformed[] = getTransformedRow(i);
-        return transformed[j];
-    }
-
-    public float[] getIQRForRows(List<Integer> rows)
-    {
-        float[] iqr = new float[totalColumns];
-        for (int column = 0; column < totalColumns; column++)
-        {
-            float[] values = new float[rows.size()];
-            for (int index = 0; index < rows.size(); index++)
-            {
-                values[index] = getTransformedExpressionDataValue(rows.get(index), column);
-            }
-
-            Arrays.sort(values);
-
-            int _25Column = (int) java.lang.Math.round(rows.size() * 0.25);
-            int _75Column = (int) java.lang.Math.round(rows.size() * 0.75);
-            iqr[column] = values[_75Column] - values[_25Column];
-        }
-
-        return iqr;
-    }
-
     public float[] getMeanForRows(List<Integer> rows)
     {
-        float[] mean = new float[totalColumns];
-        for (int column = 0; column < totalColumns; column++)
+        float mean[] = new float[totalColumns];
+        for (int index = 0; index < rows.size(); index++)
         {
-            float rowSum = 0.0f;
-            for (int index = 0; index < rows.size(); index++)
-            {
-                rowSum += getTransformedExpressionDataValue(rows.get(index), column);
-            }
+            float row[] = getTransformedRow(rows.get(index));
 
-            mean[column] = rowSum / rows.size();
+            for (int column = 0; column < totalColumns; column++)
+            {
+                float x = row[column];
+                mean[column] += x / rows.size();
+            }
         }
 
         return mean;
@@ -1439,16 +1412,15 @@ public final class ExpressionData
     public float[] getVarianceForRows(List<Integer> rows, float[] mean)
     {
         float variance[] = new float[totalColumns];
-        for (int column = 0; column < totalColumns; column++)
+        for (int index = 0; index < rows.size(); index++)
         {
-            float varianceSum = 0.0f;
-            float[] values = new float[rows.size()];
-            for (int index = 0; index < rows.size(); index++)
+            float row[] = getTransformedRow(rows.get(index));
+
+            for (int column = 0; column < totalColumns; column++)
             {
-                float x = getTransformedExpressionDataValue(rows.get(index), column);
-                varianceSum += ((x - mean[column]) * (x - mean[column]));
+                float x = row[column];
+                variance[column] += ((x - mean[column]) * (x - mean[column])) / rows.size();
             }
-            variance[column] = varianceSum / rows.size();
         }
 
         return variance;

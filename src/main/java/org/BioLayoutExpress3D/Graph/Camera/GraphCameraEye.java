@@ -67,6 +67,11 @@ public class GraphCameraEye
         bottom = -top;
     }
 
+    public double getTop() { return top; }
+    public double getBottom() { return bottom; }
+    public double getLeft() { return left; }
+    public double getRight() { return right; }
+
     /**
     *  Sets the IntraOcularDistance & frustum shift variables.
     */
@@ -155,7 +160,7 @@ public class GraphCameraEye
     /**
     *  Sets the perspective projection frustum for this camera.
     */
-    public final void setProjection(GL2 gl)
+    public final void setProjection(GL2 gl, double left, double right, double bottom, double top)
     {
         gl.glMatrixMode(GL_PROJECTION); // set the view attributes
         gl.glLoadIdentity();
@@ -165,6 +170,14 @@ public class GraphCameraEye
 
         gl.glMatrixMode(GL_MODELVIEW);
         // gl.glLoadIdentity(); // resetted in main renderer
+    }
+
+    /**
+    *  Sets the perspective projection frustum for this camera.
+    */
+    public final void setProjection(GL2 gl)
+    {
+        setProjection(gl, this.left, this.right, this.bottom, this.top);
     }
 
     /**

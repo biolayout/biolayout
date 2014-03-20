@@ -1118,7 +1118,7 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
                 gl.glEndList();
             }
-            else if ( shape3D.equals(DUMB_BELL) && (changeAllShapes || changeTesselationRelatedShapes || changeSphericalCoordsRelatedShapes) ) //dumbbell added for BioPAX RnaRegion 
+            else if ( shape3D.equals(DUMB_BELL) && (changeAllShapes || changeTesselationRelatedShapes || changeSphericalCoordsRelatedShapes) ) //dumbbell added for BioPAX RnaRegion
             {
                 shapeIndex = DUMB_BELL.ordinal();
                 modelSettings.centerModel = true; // Lathe3D Shape will be centered
@@ -3274,7 +3274,6 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
             tr.setTileSize(256, 256, 0);
             tr.setImageSize(tileWidth, tileHeight);
-            //tr.trPerspective(FOV_Y, (double)width / (double)height, NEAR_DISTANCE, FAR_DISTANCE);
 
             final GLPixelBuffer.GLPixelBufferProvider pixelBufferProvider = GLPixelBuffer.defaultProviderWithRowStride;
             final boolean[] flipVertically =
@@ -3419,6 +3418,27 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
     public void reshape(GL2 gl, int tileX, int tileY, int tileWidth, int tileHeight, int imageWidth, int imageHeight)
     {
+        // Scene dimensions
+        float originalLeft = (float) CENTER_VIEW_CAMERA.getLeft();
+        float originalRight = (float) CENTER_VIEW_CAMERA.getRight();
+        float originalTop = (float) CENTER_VIEW_CAMERA.getTop();
+        float originalBottom = (float) CENTER_VIEW_CAMERA.getBottom();
+
+        final float w = originalRight - originalLeft;
+        final float h = originalTop - originalBottom;
+
+        // Tile dimensions
+        final float tileLeft = originalLeft + tileX * w / imageWidth;
+        final float tileRight = tileLeft + tileWidth * w / imageWidth;
+        final float tileBottom = originalBottom + tileY * h / imageHeight;
+        final float tileTop = tileBottom + tileHeight * h / imageHeight;
+
+        CENTER_VIEW_CAMERA.setProjection(gl, tileLeft, tileRight, tileBottom, tileTop);
+
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        CENTER_VIEW_CAMERA.setCamera(gl, translateDX, translateDY, scaleValue,
+                xRotate, yRotate, 0.0f, FOCUS_POSITION_3D, true);
     }
 
     /**

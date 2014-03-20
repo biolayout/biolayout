@@ -789,6 +789,28 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
 
     public void reshape(GL2 gl, int tileX, int tileY, int tileWidth, int tileHeight, int imageWidth, int imageHeight)
     {
+        // Scene dimensions
+        float originalLeft = 0.0f;
+        float originalRight = width;
+        float originalTop = 0.0f;
+        float originalBottom = height;
+
+        final float w = originalRight - originalLeft;
+        final float h = originalTop - originalBottom;
+
+        // Tile dimensions
+        final float tileLeft = originalLeft + tileX * w / imageWidth;
+        final float tileRight = tileLeft + tileWidth * w / imageWidth;
+        final float tileBottom = originalBottom + tileY * h / imageHeight;
+        final float tileTop = tileBottom + tileHeight * h / imageHeight;
+
+        gl.glMatrixMode(GL_PROJECTION);
+        gl.glLoadIdentity();
+        gl.glOrtho(tileLeft, tileRight, tileBottom, tileTop, -1.0f, 1.0f);
+
+        gl.glMatrixMode(GL_MODELVIEW);
+        gl.glLoadIdentity();
+        performOpenGLTransformations(gl);
     }
 
     /**

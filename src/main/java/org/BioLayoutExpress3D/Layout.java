@@ -1,5 +1,6 @@
 package org.BioLayoutExpress3D;
 
+import java.awt.Dimension;
 import java.io.*;
 import java.util.*;
 import javax.swing.*;
@@ -239,6 +240,8 @@ public final class Layout
                 UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel");
             else
                 UIManager.setLookAndFeel( UIManager.getSystemLookAndFeelClassName() );
+
+            UIManager.put("ScrollBar.minimumThumbSize", new Dimension(32, 32));
         }
         catch (UnsupportedLookAndFeelException e1)
         {

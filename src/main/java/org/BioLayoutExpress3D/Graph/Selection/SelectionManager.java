@@ -821,7 +821,10 @@ public final class SelectionManager
         dialog.setVisible(true);
     }
 
-    private void selectAll()
+    /**
+     * Selects all nodes in the graph.
+     */
+    public void selectAll()
     {
         clearAllSelection();
         addNodesToSelected(graph.getGraphNodes(), false, true);
@@ -1485,9 +1488,6 @@ public final class SelectionManager
 
     private void updateViewers(boolean updateExpressionGraphViewOnly, boolean notUpdateTitleBar)
     {
-        if ( layoutFrame.getExpressionViewerFrame() != null && layoutFrame.getExpressionViewerFrame().isVisible() )
-            layoutFrame.getExpressionViewerFrame().refreshExpressionViewer();
-
         if ( layoutFrame.getClassViewerFrame().isVisible() )
             layoutFrame.getClassViewerFrame().populateClassViewer(updateExpressionGraphViewOnly, notUpdateTitleBar);
     }

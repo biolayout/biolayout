@@ -107,14 +107,14 @@ public final class LayoutOnlineServices extends HttpConnection
                         if (runningVersion >= currentServerVersion)
                         {
                             if (!runOnStartup)
-                                JOptionPane.showMessageDialog(layoutFrame, "You are running the latest version of BioLayout Express 3D!", "Latest Version Running!", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(layoutFrame, "You are running the latest version " + currentServerVersion + " of BioLayout Express 3D!", "Latest Version Running!", JOptionPane.INFORMATION_MESSAGE);
                         }
                         else
                         {
                             if (runOnStartup)
                                 LayoutFrame.sleep(10000);
 
-                            int option = JOptionPane.showConfirmDialog(layoutFrame, "A newer version of BioLayout Express 3D is available!\n  Would you like to visit the Downloads page now ?", "Newer Version of BioLayout Express 3D found!", JOptionPane.YES_NO_OPTION);
+                            int option = JOptionPane.showConfirmDialog(layoutFrame, "A newer version " + currentServerVersion + " of BioLayout Express 3D is available!\n  Would you like to visit the Downloads page now ?", "Newer Version of BioLayout Express 3D found!", JOptionPane.YES_NO_OPTION);
                             if (option == JOptionPane.YES_OPTION)
                             {
                                 InitDesktop.browse(BIOLAYOUT_EXPRESS_3D_DOMAIN_URL + SERVER_DOWNLOADS_DIRECTORY);

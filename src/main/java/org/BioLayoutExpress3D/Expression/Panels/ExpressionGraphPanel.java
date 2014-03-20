@@ -6,6 +6,7 @@ import java.awt.font.*;
 import java.awt.geom.*;
 import java.awt.image.*;
 import java.io.*;
+import java.lang.Math;
 import java.util.*;
 import javax.imageio.*;
 import javax.swing.*;
@@ -13,6 +14,8 @@ import javax.swing.filechooser.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import static java.lang.Math.*;
+import java.text.NumberFormat;
+import org.BioLayoutExpress3D.ClassViewerUI.ClassViewerPlotPanel;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.DataStructures.*;
 import org.BioLayoutExpress3D.Expression.*;
@@ -23,13 +26,15 @@ import org.BioLayoutExpress3D.StaticLibraries.*;
 import org.BioLayoutExpress3D.Textures.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItem;
+import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.category.SlidingCategoryDataset;
 import org.jfree.data.statistics.StatisticalCategoryDataset;
@@ -45,6 +50,12 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.category.AbstractCategoryItemRenderer;
 import org.jfree.util.ShapeUtilities;
 import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
+import org.jfree.chart.plot.CombinedDomainCategoryPlot;
+import org.jfree.chart.plot.DefaultDrawingSupplier;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.renderer.category.StackedBarRenderer;
+import org.jfree.data.category.CategoryDataset;
 
 /**
 *
@@ -55,7 +66,7 @@ import org.jfree.chart.labels.StandardCategoryToolTipGenerator;
 *
 */
 
-public final class ExpressionGraphPanel extends JPanel implements ActionListener, ChangeListener
+public final class ExpressionGraphPanel extends ClassViewerPlotPanel implements ActionListener, ChangeListener
 {
     /**
     *  Serial version UID variable for the ExpressionGraph class.
@@ -89,7 +100,10 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     private JComboBox<String> classStatComboBox = null;
     private JComboBox<String> selectionStatComboBox = null;
     private JCheckBox axesLegendCheckBox = null;
-    private JCheckBox hideSampleLabelsCheckBox = null;
+    private JButton columnInfoButton = null;
+    private JPopupMenu columnInfoPopupMenu = null;
+    private JComboBox<String> sortColumnAnnotationComboBox = null;
+    private JCheckBoxMenuItem sampleNameCheckBox = null;
     private JComboBox<String> transformComboBox = null;
     private JButton exportPlotExpressionProfileAsButton = null;
 
@@ -108,7 +122,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
     public ExpressionGraphPanel(JFrame jframe, LayoutFrame layoutFrame, ExpressionData expressionData)
     {
-        super(true);
+        super();
 
         this.jframe = jframe;
         this.layoutFrame = layoutFrame;
@@ -193,16 +207,12 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         gridLinesCheckBox.setToolTipText("Grid Lines");
         axesLegendCheckBox = new JCheckBox("Axes Legend");
         axesLegendCheckBox.setToolTipText("Axes Legend");
-        hideSampleLabelsCheckBox = new JCheckBox("Hide Sample Names");
-        hideSampleLabelsCheckBox.setToolTipText("Hide Sample Names");
         exportPlotExpressionProfileAsButton = new JButton(exportPlotExpressionProfileAsAction);
         exportPlotExpressionProfileAsButton.setToolTipText("Export Plot Expression Profile As...");
         gridLinesCheckBox.addActionListener(this);
         axesLegendCheckBox.addActionListener(this);
-        hideSampleLabelsCheckBox.addActionListener(this);
         gridLinesCheckBox.setSelected(PLOT_GRID_LINES.get());
         axesLegendCheckBox.setSelected(PLOT_AXES_LEGEND.get());
-        hideSampleLabelsCheckBox.setSelected(PLOT_HIDE_SAMPLES.get());
         maximumVisibleSamplesSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 999, 1));
         maximumVisibleSamplesSpinner.getModel().addChangeListener(this);
 
@@ -236,6 +246,29 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         transformComboBox.setToolTipText("Transform");
         transformComboBox.addActionListener(this);
 
+        columnInfoPopupMenu = new JPopupMenu();
+        columnInfoButton = new JButton();
+        columnInfoButton.setAction(new AbstractAction("Column Info")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                columnInfoPopupMenu.show(columnInfoButton, 0, columnInfoButton.getHeight());
+            }
+        });
+
+        sortColumnAnnotationComboBox = new JComboBox<String>();
+        sortColumnAnnotationComboBox.addItem("No Column Sort");
+        for (ExpressionData.ColumnAnnotation columnAnnotation : expressionData.getColumnAnnotations())
+        {
+            sortColumnAnnotationComboBox.addItem(columnAnnotation.getName());
+        }
+        sortColumnAnnotationComboBox.setToolTipText("Sort Column Annotation");
+        sortColumnAnnotationComboBox.addActionListener(this);
+
+        sampleNameCheckBox = new JCheckBoxMenuItem("Sample names");
+        sampleNameCheckBox.addActionListener(this);
+
         JPanel expressionGraphUpperPartPanel = new JPanel(true);
 
         expressionGraphCheckBoxesPanel = new JPanel(true);
@@ -245,9 +278,10 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         plotOptionsLine1.add(transformComboBox);
         plotOptionsLine1.add(new JLabel("Maximum Samples:"));
         plotOptionsLine1.add(maximumVisibleSamplesSpinner);
+        plotOptionsLine1.add(columnInfoButton);
+        plotOptionsLine1.add(sortColumnAnnotationComboBox);
         plotOptionsLine1.add(gridLinesCheckBox);
         plotOptionsLine1.add(axesLegendCheckBox);
-        plotOptionsLine1.add(hideSampleLabelsCheckBox);
         plotOptionsLine2.add(new JLabel("Class Plot:"));
         plotOptionsLine2.add(classStatComboBox);
         plotOptionsLine2.add(new JLabel("Selection Plot:"));
@@ -256,7 +290,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         expressionGraphCheckBoxesPanel.add(plotOptionsLine1);
         expressionGraphCheckBoxesPanel.add(plotOptionsLine2);
 
-        expressionGraphPlotPanel = createExpressionPlot();
+        expressionGraphPlotPanel = createChartPanel();
         expressionChooseClassesToRenderPlotImagesFromDialog = new ExpressionChooseClassesToRenderPlotImagesFromDialog(jframe, layoutFrame, this);
 
         JPanel expressionGraphButtonPanel = new JPanel(true);
@@ -288,7 +322,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         exportPlotExpressionProfileToFileChooser.setDialogTitle("Export Plot Expression Profile As");
     }
 
-    private CategoryPlot plot;
+    private CategoryPlot mainPlot = null;
+    private CategoryPlot columnAnnotationPlot = null;
+    private CombinedDomainCategoryPlot combinedDomainCategoryPlot = null;
 
     class RowData
     {
@@ -446,6 +482,58 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         }
     }
 
+    class CategoryPlotReversedLegend extends CategoryPlot
+    {
+        public CategoryPlotReversedLegend()
+        {
+            super();
+        }
+
+        public CategoryPlotReversedLegend(CategoryDataset dataset, CategoryAxis domainAxis,
+                ValueAxis rangeAxis, CategoryItemRenderer renderer)
+        {
+            super(dataset, domainAxis, rangeAxis, renderer);
+        }
+
+        public @Override LegendItemCollection getLegendItems()
+        {
+            // This is a monstrously ineffcient and hacky way of getting the legend in the right order
+            // but for the number of items involved it's probably not too bad
+            LegendItemCollection superLegendItems = super.getLegendItems();
+            LegendItemCollection reversedLegendItems = new LegendItemCollection();
+            int legendItemCount = superLegendItems.getItemCount();
+
+            HashSet<String> orderedLegendLabels = new LinkedHashSet<String>();
+
+            for (ExpressionData.ColumnAnnotation annotation : expressionData.getColumnAnnotations())
+            {
+                String annotationName = annotation.getName();
+
+                for (int column = 0; column < expressionData.getTotalColumns(); column++)
+                {
+                    String annotationValue = annotation.getFullyQualifiedValue(column);
+                    orderedLegendLabels.add(annotationValue);
+                }
+            }
+
+            for (String legendLabel : orderedLegendLabels)
+            {
+                for (int legendItemIndex = 0; legendItemIndex < legendItemCount; legendItemIndex++)
+                {
+                    LegendItem legendItem = superLegendItems.get(legendItemIndex);
+
+                    if (legendItem.getLabel().equals(legendLabel))
+                    {
+                        reversedLegendItems.add(legendItem);
+                        break;
+                    }
+                }
+            }
+
+            return reversedLegendItems;
+        }
+    }
+
     private void addStatisticalPlot(int datasetIndex, int seriesIndex, ArrayList<Integer> rows, Color color, String className,
             StatisticType type)
     {
@@ -463,9 +551,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             {
                 mean = expressionData.getMeanForRows(rows);
 
-                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset)plot.getDataset(datasetIndex);
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset)mainPlot.getDataset(datasetIndex);
                 DefaultCategoryDataset dataset;
-                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)mainPlot.getRenderer(datasetIndex);
 
                 if (slidingDataset == null)
                 {
@@ -485,19 +573,20 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
 
                 DefaultCategoryItemRenderer dcir = (DefaultCategoryItemRenderer)r;
-                plot.setDataset(datasetIndex, slidingDataset);
+                mainPlot.setDataset(datasetIndex, slidingDataset);
                 dcir.setSeriesPaint(seriesIndex, color);
                 dcir.setSeriesShapesVisible(seriesIndex, false);
                 dcir.setSeriesStroke(seriesIndex, new BasicStroke(3.0f, 1, 1, 1.0f, new float[]
                         {
                             9.0f, 4.0f
                         }, 0.0f));
+                dcir.setSeriesVisibleInLegend(seriesIndex, false);
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
                 dcir.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
                 dcir.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
 
-                plot.setRenderer(datasetIndex, dcir);
+                mainPlot.setRenderer(datasetIndex, dcir);
             }
             break;
 
@@ -505,9 +594,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             {
                 mean = expressionData.getMeanForRows(rows);
 
-                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset)plot.getDataset(datasetIndex);
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset)mainPlot.getDataset(datasetIndex);
                 DefaultCategoryDataset dataset;
-                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)mainPlot.getRenderer(datasetIndex);
 
                 if (slidingDataset == null)
                 {
@@ -527,8 +616,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
 
                 BarRenderer br = (BarRenderer)r;
-                plot.setDataset(datasetIndex, slidingDataset);
+                mainPlot.setDataset(datasetIndex, slidingDataset);
                 br.setSeriesPaint(seriesIndex, color);
+                br.setSeriesVisibleInLegend(seriesIndex, false);
 
                 // The shapes aren't shown, but this defines the tooltip hover zone
                 br.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
@@ -536,7 +626,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 br.setShadowVisible(false);
                 br.setBarPainter(new StandardBarPainter());
 
-                plot.setRenderer(datasetIndex, br);
+                mainPlot.setRenderer(datasetIndex, br);
             }
             break;
 
@@ -547,9 +637,9 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             case Mean_Line_With_Std_Err:
             case Mean_Histogram_With_Std_Err:
             {
-                SlidingStatisticalCategoryDataset slidingDataset = (SlidingStatisticalCategoryDataset)plot.getDataset(datasetIndex);
+                SlidingStatisticalCategoryDataset slidingDataset = (SlidingStatisticalCategoryDataset)mainPlot.getDataset(datasetIndex);
                 DefaultStatisticalCategoryDataset dataset;
-                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)mainPlot.getRenderer(datasetIndex);
 
                 if (slidingDataset == null)
                 {
@@ -612,20 +702,21 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     }
                 }
 
-                plot.setDataset(datasetIndex, slidingDataset);
+                mainPlot.setDataset(datasetIndex, slidingDataset);
 
                 r.setSeriesShape(seriesIndex, ShapeUtilities.createDiamond(3.0f));
                 r.setSeriesPaint(seriesIndex, color);
                 r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
-                plot.setRenderer(datasetIndex, r);
+                r.setSeriesVisibleInLegend(seriesIndex, false);
+                mainPlot.setRenderer(datasetIndex, r);
             }
             break;
 
             case IQR_Box_Plot:
             {
-                SlidingBoxAndWhiskerCategoryDataset slidingDataset = (SlidingBoxAndWhiskerCategoryDataset)plot.getDataset(datasetIndex);
+                SlidingBoxAndWhiskerCategoryDataset slidingDataset = (SlidingBoxAndWhiskerCategoryDataset)mainPlot.getDataset(datasetIndex);
                 DefaultBoxAndWhiskerCategoryDataset dataset;
-                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)plot.getRenderer(datasetIndex);
+                AbstractCategoryItemRenderer r = (AbstractCategoryItemRenderer)mainPlot.getRenderer(datasetIndex);
 
                 if (slidingDataset == null)
                 {
@@ -657,23 +748,24 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 }
 
                 BoxAndWhiskerRenderer bawr = (BoxAndWhiskerRenderer)r;
-                plot.setDataset(datasetIndex, slidingDataset);
+                mainPlot.setDataset(datasetIndex, slidingDataset);
                 bawr.setSeriesPaint(seriesIndex, color);
                 bawr.setMedianVisible(true);
                 bawr.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
-                plot.setRenderer(datasetIndex, bawr);
+                bawr.setSeriesVisibleInLegend(seriesIndex, false);
+                mainPlot.setRenderer(datasetIndex, bawr);
             }
             break;
         }
     }
 
+    @Override
     public void refreshPlot()
     {
         boolean drawGridLines = PLOT_GRID_LINES.get();
         boolean drawStatsOfClass = StatisticType.values()[PLOT_CLASS_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
         boolean drawStatsOfSelection = StatisticType.values()[PLOT_SELECTION_STATISTIC_TYPE.get()] != StatisticType.Individual_Lines;
         boolean drawAxesLegend = PLOT_AXES_LEGEND.get();
-        boolean hideSampleLabels = PLOT_HIDE_SAMPLES.get();
 
         HashSet<GraphNode> expandedSelectedNodes =
                 layoutFrame.getGraph().getSelectionManager().getExpandedSelectedNodes();
@@ -682,14 +774,29 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         int totalColumns = expressionData.getTotalColumns();
         int datasetIndex = 0;
 
-        plot.getRangeAxis().setAutoRange(false);
-        plot.setNotify(false);
+        mainPlot.getRangeAxis().setAutoRange(false);
+        mainPlot.setNotify(false);
+
+        if (combinedDomainCategoryPlot.getSubplots().contains(columnAnnotationPlot))
+        {
+            combinedDomainCategoryPlot.remove(columnAnnotationPlot);
+            columnAnnotationPlot = null;
+        }
 
         if (numSelectedNodes > 0 && totalColumns > 0)
         {
             ExpressionEnvironment.TransformType transformType =
                     ExpressionEnvironment.TransformType.values()[PLOT_TRANSFORM.get()];
             expressionData.setTransformType(transformType);
+
+            if (sortColumnAnnotationComboBox.getSelectedIndex() > 0)
+            {
+                expressionData.setSortColumnAnnotation((String) sortColumnAnnotationComboBox.getSelectedItem());
+            }
+            else
+            {
+                expressionData.setSortColumnAnnotation(null);
+            }
 
             // Mean of selection
             RowData meanOfSelection = new RowData(totalColumns, new Color(0));
@@ -743,7 +850,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                         dataset.addValue(transformedData[column], nodeName, columnName);
                     }
 
-                    plot.setDataset(datasetIndex, new SlidingCategoryDataset(dataset, 0, maximumVisibleSamples()));
+                    mainPlot.setDataset(datasetIndex, new SlidingCategoryDataset(dataset, 0, maximumVisibleSamples()));
                     DefaultCategoryItemRenderer r = new DefaultCategoryItemRenderer();
                     r.setSeriesPaint(0, nodeColor);
                     r.setSeriesShapesVisible(0, false);
@@ -751,13 +858,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     // The shapes aren't shown, but this defines the tooltip hover zone
                     r.setBaseShape(new Rectangle2D.Double(-10.0, -10.0, 20.0, 20.0));
                     r.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+                    r.setSeriesVisibleInLegend(0, false);
 
-                    plot.setRenderer(datasetIndex, r);
+                    mainPlot.setRenderer(datasetIndex, r);
                     datasetIndex++;
                 }
             }
 
-            plot.setDataset(datasetIndex, null);
+            mainPlot.setDataset(datasetIndex, null);
             if (drawStatsOfSelection)
             {
                 Color color = new Color(meanR / numSelectedNodes, meanG / numSelectedNodes, meanB / numSelectedNodes);
@@ -767,7 +875,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                 datasetIndex++;
             }
 
-            plot.setDataset(datasetIndex, null);
+            mainPlot.setDataset(datasetIndex, null);
             if (drawStatsOfClass)
             {
                 int seriesIndex = 0;
@@ -790,27 +898,31 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         }
 
         // Remove any datasets that shouldn't be displayed any more
-        while (datasetIndex < plot.getDatasetCount())
+        while (datasetIndex < mainPlot.getDatasetCount())
         {
-            plot.setDataset(datasetIndex, null);
-            plot.setRenderer(datasetIndex, null);
+            mainPlot.setDataset(datasetIndex, null);
+            mainPlot.setRenderer(datasetIndex, null);
             datasetIndex++;
         }
 
+        // This works around an apparent bug in JFreeChart whereby a CombinedDomainCategoryPlot's subplot
+        // has no dataset and its categories are enumerated in CombinedDomainCategoryPlot.getCategories()
+        combinedDomainCategoryPlot.getDomainAxis().setVisible(mainPlot.getCategories() != null);
+
         if (drawAxesLegend)
         {
-            plot.getDomainAxis().setLabel(EXPRESSION_X_AXIS_LABEL);
-            plot.getRangeAxis().setLabel(EXPRESSION_Y_AXIS_LABEL);
+            mainPlot.getDomainAxis().setLabel(EXPRESSION_X_AXIS_LABEL);
+            mainPlot.getRangeAxis().setLabel(EXPRESSION_Y_AXIS_LABEL);
         }
         else
         {
-            plot.getDomainAxis().setLabel(null);
-            plot.getRangeAxis().setLabel(null);
+            mainPlot.getDomainAxis().setLabel(null);
+            mainPlot.getRangeAxis().setLabel(null);
         }
 
-        for (datasetIndex = 0; datasetIndex < plot.getDatasetCount(); datasetIndex++)
+        for (datasetIndex = 0; datasetIndex < mainPlot.getDatasetCount(); datasetIndex++)
         {
-            SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) plot.getDataset(datasetIndex);
+            SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) mainPlot.getDataset(datasetIndex);
             if (slidingDataset != null)
             {
                 slidingDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
@@ -818,35 +930,143 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             }
         }
 
-        plot.getRangeAxis().setAutoRange(true);
-        plot.setNotify(true);
+        mainPlot.getRangeAxis().setAutoRange(true);
+        mainPlot.setNotify(true);
 
-        plot.setRangeGridlinesVisible(drawGridLines);
-        plot.setDomainGridlinesVisible(drawGridLines);
-        plot.getDomainAxis().setTickLabelsVisible(!hideSampleLabels);
-        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
-        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
-        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        mainPlot.setRangeGridlinesVisible(drawGridLines);
+        mainPlot.setDomainGridlinesVisible(drawGridLines);
+        mainPlot.getDomainAxis().setTickLabelsVisible(sampleNameCheckBox.isSelected());
+        mainPlot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        mainPlot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        mainPlot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+
+        CategoryDataset dataset = createColumnAnnotationDataset();
+
+        if (dataset.getRowCount() > 0)
+        {
+            // What is actually happening here is a StackedBarRenderer is being used with each datapoint
+            // equal to 1, so that all the stacks line up. Essentially this is a way of getting something
+            // similar to an XYBlockRenderer but on a category basis. It's hacky, but it substantially works.
+            StackedBarRenderer sbr = new StackedBarRenderer();
+            sbr.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator("{0}, {1}", NumberFormat.getInstance()));
+            sbr.setShadowVisible(false);
+            sbr.setDrawBarOutline(false);
+            sbr.setBarPainter(new StandardBarPainter());
+
+            for (int seriesIndex = 0; seriesIndex < dataset.getRowKeys().size(); seriesIndex++)
+            {
+                sbr.setSeriesVisibleInLegend(seriesIndex, false); // Hide the legend, always; it's "too confusing"
+            }
+
+            columnAnnotationPlot = new CategoryPlotReversedLegend(null, new CategoryAxis(), new NumberAxis(), sbr);
+
+            SlidingCategoryDataset columnAnnotationDataset = new SlidingCategoryDataset(
+                    dataset, 0, maximumVisibleSamples());
+            columnAnnotationDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
+            columnAnnotationDataset.setMaximumCategoryCount(maximumVisibleSamples());
+            columnAnnotationPlot.setDataset(columnAnnotationDataset);
+
+            columnAnnotationPlot.setRangeGridlinesVisible(false);
+            columnAnnotationPlot.setDomainGridlinesVisible(false);
+            columnAnnotationPlot.getRangeAxis().setTickMarksVisible(false);
+            columnAnnotationPlot.getRangeAxis().setTickLabelsVisible(false);
+
+            combinedDomainCategoryPlot.add(columnAnnotationPlot);
+            int numAnnotations = selectedAnnotations().size();
+            int totalWeight = 40;
+            int annotationsWeight = Math.min(numAnnotations, totalWeight / 2);
+            mainPlot.setWeight(totalWeight - annotationsWeight);
+            columnAnnotationPlot.setWeight(annotationsWeight);
+
+            // This keeps the colours consistent
+            combinedDomainCategoryPlot.setDrawingSupplier(new DefaultDrawingSupplier());
+        }
 
         exportPlotExpressionProfileAsAction.setEnabled(!expandedSelectedNodes.isEmpty());
     }
 
-    private ChartPanel createExpressionPlot()
+    private ArrayList<String> selectedAnnotations()
     {
-        JFreeChart expressionGraphJFreeChart = ChartFactory.createLineChart(
-                null, null, null, null,
-                PlotOrientation.VERTICAL, false, true, false);
+        ArrayList<String> selectedAnnotations = new ArrayList<String>();
+        for (Component component : columnInfoPopupMenu.getComponents())
+        {
+            JCheckBoxMenuItem cbmi = (JCheckBoxMenuItem) component;
 
-        plot = (CategoryPlot) expressionGraphJFreeChart.getPlot();
-        plot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
-        plot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
-        plot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+            if (cbmi.isSelected())
+            {
+                selectedAnnotations.add(cbmi.getText());
+            }
+        }
 
-        CategoryAxis axis = plot.getDomainAxis();
-        axis.setLowerMargin(0.0);
-        axis.setUpperMargin(0.0);
-        axis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_90);
+        return selectedAnnotations;
+    }
 
+    private CategoryDataset createColumnAnnotationDataset()
+    {
+        ExpressionData.ColumnAnnotation sortColumnAnnotation =
+                expressionData.getColumnAnnotationByName((String)sortColumnAnnotationComboBox.getSelectedItem());
+        int[] sortedColumnMap = null;
+
+        if (sortColumnAnnotation != null)
+        {
+            sortedColumnMap = sortColumnAnnotation.getSortedColumnMap();
+        }
+
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+        int totalColumns = expressionData.getTotalColumns();
+
+        ArrayList<ExpressionData.ColumnAnnotation> annotations =
+                new ArrayList<ExpressionData.ColumnAnnotation>(expressionData.getColumnAnnotations());
+        Collections.reverse(annotations); // So the rows appear in the same order as the source file
+
+        for (ExpressionData.ColumnAnnotation annotation : annotations)
+        {
+            String annotationName = annotation.getName();
+
+            if(!selectedAnnotations().contains(annotationName))
+            {
+                continue;
+            }
+
+            for (int column = 0; column < totalColumns; column++)
+            {
+                int mappedColumn = column;
+                if (sortedColumnMap != null)
+                {
+                    mappedColumn = sortedColumnMap[column];
+                }
+
+                String annotationValue = annotation.getFullyQualifiedValue(mappedColumn);
+                String columnName = expressionData.getColumnName(mappedColumn);
+                dataset.addValue(1.0, annotationValue, columnName);
+            }
+        }
+
+        return dataset;
+    }
+
+    private ChartPanel createChartPanel()
+    {
+        CategoryAxis categoryAxis = new CategoryAxis();
+        categoryAxis.setLowerMargin(0.0);
+        categoryAxis.setUpperMargin(0.0);
+        categoryAxis.setCategoryMargin(0.0);
+        categoryAxis.setCategoryLabelPositions(CategoryLabelPositions.DOWN_90);
+
+        LineAndShapeRenderer lasr = new LineAndShapeRenderer(true, false);
+        lasr.setBaseToolTipGenerator(new StandardCategoryToolTipGenerator());
+        mainPlot = new CategoryPlot(null, categoryAxis, new NumberAxis(), lasr);
+        mainPlot.setBackgroundPaint(PLOT_BACKGROUND_COLOR.get());
+        mainPlot.setRangeGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+        mainPlot.setDomainGridlinePaint(PLOT_GRIDLINES_COLOR.get());
+
+        combinedDomainCategoryPlot = new CombinedDomainCategoryPlot(categoryAxis);
+        combinedDomainCategoryPlot.add(mainPlot);
+        combinedDomainCategoryPlot.setGap(0.0);
+        combinedDomainCategoryPlot.setDomainGridlinesVisible(false);
+
+        JFreeChart expressionGraphJFreeChart = new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, combinedDomainCategoryPlot, true);
         ChartPanel chartPanel = new ChartPanel(expressionGraphJFreeChart);
         chartPanel.setMaximumDrawWidth(4096);
         chartPanel.setMaximumDrawHeight(4096);
@@ -858,7 +1078,15 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         File saveScreenshotFile = layoutFrame.getGraph().saveImageToFile(jframe, "Render Plot Image To File As", "plot");
         if (saveScreenshotFile != null)
-            savePlotToImageFile(saveScreenshotFile, true, "");
+        {
+            if (!savePlotToImageFile(expressionGraphPlotPanel, saveScreenshotFile, true, ""))
+            {
+                JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" +
+                        "Please try again with a different file name/path/drive.",
+                        "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
+                initiateTakeSingleScreenShotProcess();
+            }
+        }
     }
 
     public void initiateTakeMultipleClassesScreenShotsProcess()
@@ -892,7 +1120,19 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
                     currentVertexClassName = currentVertexClass.getName();
                     numberOfSelectedNodes = layoutFrame.getGraph().getSelectionManager().getSelectedNodes().size();
                     tuple2 = addCurrentClassNameToSaveScreenshotFile(initialSaveScreenshotFile, currentVertexClassName, numberOfSelectedNodes);
-                    savedOk = savePlotToImageFile(tuple2.first, false, (numberOfSelectedNodes > 0) ? currentVertexClassName + " (" + numberOfSelectedNodes + " nodes)" : currentVertexClassName);
+                    savedOk = savePlotToImageFile(expressionGraphPlotPanel, tuple2.first, false,
+                            (numberOfSelectedNodes > 0) ? currentVertexClassName +
+                            " (" + numberOfSelectedNodes + " nodes)" : currentVertexClassName);
+
+                    if (!savedOk)
+                    {
+                        layoutFrame.getClassViewerFrame().setTitle("Class Viewer");
+                        JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" +
+                                "Please try again with a different file name/path/drive.",
+                                "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
+                        initiateTakeMultipleClassesScreenShotsProcess();
+                    }
+
                     layoutFrame.getClassViewerFrame().setTitle("Class Viewer (Now Rendering Plot Image To File " + ++currentClassIndex + " of " + endingClassIndex + " for Class: " + tuple2.second + ( (numberOfSelectedNodes > 0) ? " with " + numberOfSelectedNodes + " nodes" : "") + ")");
                 }
                 while ( ( currentVertexClass = layoutFrame.getClassViewerFrame().navigateToNextClass(false) ) != null && (currentClassIndex < endingClassIndex) && savedOk );
@@ -924,67 +1164,7 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
 
         return Tuples.tuple(new File(saveScreenshotFileName + " for Class " + ( (numberOfSelectedNodes > 0) ? currentVertexClassName + " (" + numberOfSelectedNodes + " nodes)" : currentVertexClassName ) + "." + format), currentVertexClassName);
     }
-
-    private boolean savePlotToImageFile(File saveScreenshotFile, boolean initiateTakeSingleScreenShotProcess, String className)
-    {
-        try
-        {
-            BufferedImage upperBorderScreenshotImage = null;
-            Graphics g = null;
-
-            upperBorderScreenshotImage = new BufferedImage(expressionGraphPlotPanel.getWidth(), ( ( !className.isEmpty() ) ? 1 : 2 ) * PAD_BORDER, Transparency.OPAQUE);
-            g = upperBorderScreenshotImage.createGraphics();
-            g.setColor( expressionGraphPlotPanel.getBackground() );
-            g.fillRect(0, 0, upperBorderScreenshotImage.getWidth(), upperBorderScreenshotImage.getHeight());
-
-            if ( !className.isEmpty() )
-            {
-                BufferedImage upperBorderClassNameScreenshotImage = createCenteredTextImage(className, expressionGraphPlotPanel.getFont().deriveFont(AXIS_FONT_STYLE, AXIS_FONT_SIZE), DESCRIPTIONS_COLOR, true, false, expressionGraphPlotPanel.getBackground(), expressionGraphPlotPanel.getWidth());
-                upperBorderScreenshotImage = ImageSFXs.createCollatedImage(upperBorderScreenshotImage, upperBorderClassNameScreenshotImage, ImageSFXsCollateStates.COLLATE_SOUTH, true);
-
-                BufferedImage upperBorderBottomScreenshotImage = new BufferedImage(expressionGraphPlotPanel.getWidth(), PAD_BORDER, Transparency.OPAQUE);
-                g = upperBorderBottomScreenshotImage.createGraphics();
-                g.setColor( expressionGraphPlotPanel.getBackground() );
-                g.fillRect(0, 0, upperBorderBottomScreenshotImage.getWidth(), upperBorderBottomScreenshotImage.getHeight());
-
-                upperBorderScreenshotImage = ImageSFXs.createCollatedImage(upperBorderScreenshotImage, upperBorderBottomScreenshotImage, ImageSFXsCollateStates.COLLATE_SOUTH, true);
-            }
-
-            BufferedImage rightBorderScreenshotImage = new BufferedImage(PAD_BORDER / 2, expressionGraphPlotPanel.getHeight() + upperBorderScreenshotImage.getHeight(), Transparency.OPAQUE);
-            g = rightBorderScreenshotImage.createGraphics();
-            g.setColor( expressionGraphPlotPanel.getBackground() );
-            g.fillRect(0, 0, rightBorderScreenshotImage.getWidth(), rightBorderScreenshotImage.getHeight());
-
-            BufferedImage plotScreenshotImage = new BufferedImage(expressionGraphPlotPanel.getWidth(), expressionGraphPlotPanel.getHeight(), Transparency.OPAQUE);
-            expressionGraphPlotPanel.paintComponent( plotScreenshotImage.createGraphics() );
-
-            plotScreenshotImage = ImageSFXs.createCollatedImage(upperBorderScreenshotImage, plotScreenshotImage, ImageSFXsCollateStates.COLLATE_SOUTH, true);
-            plotScreenshotImage = ImageSFXs.createCollatedImage(rightBorderScreenshotImage, plotScreenshotImage, ImageSFXsCollateStates.COLLATE_WEST, true);
-
-            String format = saveScreenshotFile.getAbsolutePath().substring( saveScreenshotFile.getAbsolutePath().lastIndexOf(".") + 1, saveScreenshotFile.getAbsolutePath().length() );
-            ImageIO.write(plotScreenshotImage, format, saveScreenshotFile);
-            if (initiateTakeSingleScreenShotProcess)
-                InitDesktop.open(saveScreenshotFile);
-
-            return true;
-        }
-        catch (Exception exc)
-        {
-            if (!initiateTakeSingleScreenShotProcess) layoutFrame.getClassViewerFrame().setTitle("Class Viewer");
-
-            if (DEBUG_BUILD) println("Exception in ExpressionGraphPlotPanel.savePlotToImageFile():\n" + exc.getMessage());
-
-            JOptionPane.showMessageDialog(jframe, "Something went wrong while saving the plot image to file:\n" + exc.getMessage() + "\nPlease try again with a different file name/path/drive.", "Error with saving the image to file!", JOptionPane.ERROR_MESSAGE);
-
-            if (initiateTakeSingleScreenShotProcess)
-                initiateTakeSingleScreenShotProcess();
-            else
-                initiateTakeMultipleClassesScreenShotsProcess();
-
-            return false;
-        }
-    }
-
+    
     private BufferedImage createCenteredTextImage(String text, Font font, Color fontColor, boolean isAntiAliased, boolean usesFractionalMetrics, Color backGroundColor, int imageWidth)
     {
         FontRenderContext frc = new FontRenderContext(null, isAntiAliased, usesFractionalMetrics);
@@ -1117,13 +1297,14 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         {
             PLOT_AXES_LEGEND.set(axesLegendCheckBox.isSelected());
         }
-        else if (e.getSource().equals(hideSampleLabelsCheckBox))
-        {
-            PLOT_HIDE_SAMPLES.set(hideSampleLabelsCheckBox.isSelected());
-        }
         else if (e.getSource().equals(transformComboBox))
         {
             PLOT_TRANSFORM.set(transformComboBox.getSelectedIndex());
+        }
+        else if(Arrays.asList(columnInfoPopupMenu.getComponents()).contains((Component)e.getSource()))
+        {
+            // Reopen the popup menu when an item is selected
+            columnInfoPopupMenu.setVisible(true);
         }
 
         layoutFrame.getLayoutGraphPropertiesDialog().setHasNewPreferencesBeenApplied(true);
@@ -1146,7 +1327,6 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
             zoomScrollBar.setVisible(true);
             int maxSamples = maximumVisibleSamples();
             zoomScrollBar.setMaximum(totalColumns - maxSamples);
-
         }
         else
         {
@@ -1159,9 +1339,18 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         if (ce.getSource().equals(zoomScrollBar.getModel()))
         {
-            for (int datasetIndex = 0; datasetIndex < plot.getDatasetCount(); datasetIndex++)
+            for (int datasetIndex = 0; datasetIndex < mainPlot.getDatasetCount(); datasetIndex++)
             {
-                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) plot.getDataset(datasetIndex);
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) mainPlot.getDataset(datasetIndex);
+                if (slidingDataset != null)
+                {
+                    slidingDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
+                }
+            }
+
+            if (columnAnnotationPlot != null)
+            {
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) columnAnnotationPlot.getDataset();
                 if (slidingDataset != null)
                 {
                     slidingDataset.setFirstCategoryIndex(zoomScrollBar.getValue());
@@ -1170,9 +1359,18 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
         }
         else if (ce.getSource().equals(maximumVisibleSamplesSpinner.getModel()))
         {
-            for (int datasetIndex = 0; datasetIndex < plot.getDatasetCount(); datasetIndex++)
+            for (int datasetIndex = 0; datasetIndex < mainPlot.getDatasetCount(); datasetIndex++)
             {
-                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) plot.getDataset(datasetIndex);
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) mainPlot.getDataset(datasetIndex);
+                if (slidingDataset != null)
+                {
+                    slidingDataset.setMaximumCategoryCount(maximumVisibleSamples());
+                }
+            }
+
+            if (columnAnnotationPlot != null)
+            {
+                SlidingCategoryDataset slidingDataset = (SlidingCategoryDataset) columnAnnotationPlot.getDataset();
                 if (slidingDataset != null)
                 {
                     slidingDataset.setMaximumCategoryCount(maximumVisibleSamples());
@@ -1187,5 +1385,20 @@ public final class ExpressionGraphPanel extends JPanel implements ActionListener
     {
         SpinnerNumberModel snm = (SpinnerNumberModel) maximumVisibleSamplesSpinner.getModel();
         snm.setValue(expressionData.getTotalColumns());
+
+        columnInfoPopupMenu.removeAll();
+        columnInfoPopupMenu.add(sampleNameCheckBox);
+        sampleNameCheckBox.setSelected(true);
+        for (ExpressionData.ColumnAnnotation annotation : expressionData.getColumnAnnotations())
+        {
+            String annotationName = annotation.getName();
+            JCheckBoxMenuItem checkBox = new JCheckBoxMenuItem(annotationName);
+            checkBox.addActionListener(this);
+            columnInfoPopupMenu.add(checkBox);
+        }
+
+        sortColumnAnnotationComboBox.setVisible(expressionData.getColumnAnnotations().size() > 0);
+
+        refreshPlot();
     }
 }

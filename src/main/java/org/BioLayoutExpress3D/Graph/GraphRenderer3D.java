@@ -1118,6 +1118,28 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
                 gl.glEndList();
             }
+            else if ( shape3D.equals(DUMB_BELL) && (changeAllShapes || changeTesselationRelatedShapes || changeSphericalCoordsRelatedShapes) ) //dumbbell added for BioPAX RnaRegion 
+            {
+                shapeIndex = DUMB_BELL.ordinal();
+                modelSettings.centerModel = true; // Lathe3D Shape will be centered
+                ModelShape lathe3DShape = Lathe3DShapesProducer.createDumbBellShape(gl, (tesselation < 3) ? 1 : tesselation / 3, graph.getLathe3DShapeAngleIncrement(tesselation), modelSettings);
+
+                gl.glDeleteLists(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], 1);
+                gl.glNewList(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
+
+                if ( MATERIAL_SPHERICAL_MAPPING.get() ) enableGenerateSphericalTextureCoordinates(gl);
+
+                gl.glPushMatrix();
+                gl.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                lathe3DShape.drawModelShape(gl);
+                gl.glPopMatrix();
+
+                if ( MATERIAL_SPHERICAL_MAPPING.get() ) disableGenerateSphericalTextureCoordinates(gl);
+
+                gl.glEndList();
+
+                lathe3DShape.disposeAllModelShapeResources(gl);
+            }
         }
     }
 
@@ -2536,6 +2558,12 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
             case OBJ_MODEL_LOADER:
 
                 draw3DShape(gl, coordX, coordY, coordZ, OBJ_MODEL_LOADER, size / 1.5f, 1.0f, isFastSelectionNode);
+
+                break;
+
+            case DUMB_BELL:
+
+                draw3DShape(gl, coordX, coordY, coordZ, DUMB_BELL, size / 1.5f, 1.0f, isFastSelectionNode);
 
                 break;
 
@@ -4182,7 +4210,15 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
             if ( !lastNodeNamePicked.isEmpty() )
             {
                 layoutFrame.setNodeLabel(lastNodeNamePicked);
-                GRAPH_POPUP_COMPONENT.setPopupComponent(graph, e.getX(), e.getY(), lastNodeNamePicked, closestNode, nc.getIsPetriNet(), layoutFrame);
+                if(!selectionManager.getSelectedNodes().isEmpty() && selectionManager.getSelectedNodes().contains(closestNode))
+                {
+                    GRAPH_POPUP_COMPONENT.setPopupComponent(graph, e.getX(), e.getY(),
+                            selectionManager.getSelectedNodes(), nc, layoutFrame);
+                }
+                else
+                {
+                    GRAPH_POPUP_COMPONENT.setPopupComponent(graph, e.getX(), e.getY(), closestNode, nc, layoutFrame);
+                }
                 graphPopupScheduledFuture = GRAPH_POPUP_SCHEDULED_EXECUTOR_SERVICE.schedule(GRAPH_POPUP_COMPONENT, COMPONENT_POPUP_DELAY_MILLISECONDS, TimeUnit.MILLISECONDS);
                 graphPopupIsTiming = true;
                 graphPopupReset = true;

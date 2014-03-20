@@ -23,7 +23,7 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
     */
     public static final long serialVersionUID = 111222333444555790L;
 
-    public static final String[] ORIGINAL_COLUMN_NAMES = { "Selected", "Name", "Connections" };
+    public static final String[] ORIGINAL_COLUMN_NAMES = { "Selected", "Name", "Connections"};
 
     private int originalNumberOfColumns = ORIGINAL_COLUMN_NAMES.length;
     private String[] columnNames = ORIGINAL_COLUMN_NAMES;

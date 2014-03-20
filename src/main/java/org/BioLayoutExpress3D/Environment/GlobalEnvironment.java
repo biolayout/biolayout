@@ -261,7 +261,7 @@ public final class GlobalEnvironment
     public static boolean CHANGE_GRAPHML_COMPONENT_CONTAINERS = false;
     public static enum Shapes2D { CIRCLE, RECTANGLE, ROUND_RECTANGLE, TRIANGLE, DIAMOND, PARALLELOGRAM, HEXAGON, OCTAGON, TRAPEZOID1, TRAPEZOID2, RECTANGLE_VERTICAL, RECTANGLE_HORIZONTAL }
     public static final int NUMBER_OF_2D_SHAPES = Shapes2D.values().length;
-    public static enum Shapes3D { SPHERE, POINT, CUBE, TETRAHEDRON, OCTAHEDRON, DODECAHEDRON, ICOSAHEDRON, CONE_LEFT, CONE_RIGHT, TRAPEZOID_UP, TRAPEZOID_DOWN, CYLINDER, TORUS, RECTANGLE_VERTICAL, RECTANGLE_HORIZONTAL, ROUND_CUBE_LARGE, ROUND_CUBE_THIN, GENE_MODEL, PINEAPPLE_SLICE_TOROID, PINEAPPLE_SLICE_ELLIPSOID, DOUBLE_PYRAMID_THIN, DOUBLE_PYRAMID_LARGE, TORUS_8_PETALS, SAUCER_4_PETALS, LATHE_3D, SUPER_QUADRIC, OBJ_MODEL_LOADER }
+    public static enum Shapes3D { SPHERE, POINT, CUBE, TETRAHEDRON, OCTAHEDRON, DODECAHEDRON, ICOSAHEDRON, CONE_LEFT, CONE_RIGHT, TRAPEZOID_UP, TRAPEZOID_DOWN, CYLINDER, TORUS, RECTANGLE_VERTICAL, RECTANGLE_HORIZONTAL, ROUND_CUBE_LARGE, ROUND_CUBE_THIN, GENE_MODEL, PINEAPPLE_SLICE_TOROID, PINEAPPLE_SLICE_ELLIPSOID, DOUBLE_PYRAMID_THIN, DOUBLE_PYRAMID_LARGE, TORUS_8_PETALS, SAUCER_4_PETALS, LATHE_3D, SUPER_QUADRIC, OBJ_MODEL_LOADER, DUMB_BELL }
     public static final int NUMBER_OF_3D_SHAPES = Shapes3D.values().length;
     public static boolean MANUAL_SHAPE_2D = false;
     public static boolean MANUAL_SHAPE_3D = false;
@@ -457,7 +457,6 @@ public final class GlobalEnvironment
     public static final PrefInt PLOT_CLASS_STATISTIC_TYPE = new PrefInt(0, "plot_class_statistic_type", true);
     public static final PrefInt PLOT_SELECTION_STATISTIC_TYPE = new PrefInt(0, "plot_selection_statistic_type", true);
     public static final PrefBool PLOT_AXES_LEGEND = new PrefBool(false, "plot_axes", true);
-    public static final PrefBool PLOT_HIDE_SAMPLES = new PrefBool(false, "plot_hide_samples", true);
     public static final PrefInt PLOT_TRANSFORM = new PrefInt(0, "plot_transform", true);
 
     public static final PrefBool CV_AUTO_SIZE_COLUMNS = new PrefBool(true, "cv_auto_size_columns", true);

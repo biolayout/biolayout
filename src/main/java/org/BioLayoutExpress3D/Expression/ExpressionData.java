@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import javax.swing.*;
 import static java.lang.Math.*;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.CPUParallelism.*;
@@ -29,6 +31,95 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
 public final class ExpressionData
 {
+    public class ColumnAnnotation
+    {
+        private int index;
+        private String name;
+        private String[] values;
+
+        private int[] sortedColumnMap;
+
+        public ColumnAnnotation(int index, String name, int numColumns)
+        {
+            this.index = index;
+            this.name = name;
+            this.values = new String[numColumns];
+
+            sortedColumnMap = null;
+        }
+
+        public void setValue(int column, String value)
+        {
+            values[column] = value;
+            sortedColumnMap = null;
+        }
+
+        public String getValue(int column)
+        {
+            return values[column];
+        }
+
+        public String getFullyQualifiedValue(int column)
+        {
+            return getName() + " " + getValue(column);
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        class StringValueComparator implements Comparator<Integer>
+        {
+            Map<Integer, String> base;
+
+            public StringValueComparator(Map<Integer, String> base)
+            {
+                this.base = base;
+            }
+
+            @Override
+            public int compare(Integer a, Integer b)
+            {
+                int stringDiff = base.get(a).compareTo(base.get(b));
+
+                if (stringDiff == 0)
+                {
+                    return a - b;
+                }
+
+                return stringDiff;
+            }
+        }
+
+        public int[] getSortedColumnMap()
+        {
+            if (sortedColumnMap == null)
+            {
+                HashMap<Integer, String> map = new HashMap<Integer, String>();
+
+                for (int i = 0; i < values.length; i++)
+                {
+                    map.put(i, values[i]);
+                }
+
+                StringValueComparator svc = new StringValueComparator(map);
+                TreeMap<Integer, String> sortedMap = new TreeMap<Integer, String>(svc);
+                sortedMap.putAll(map);
+
+                sortedColumnMap = new int[values.length];
+
+                int i = 0;
+                for (Entry<Integer, String> entry : sortedMap.entrySet())
+                {
+                    sortedColumnMap[i++] = entry.getKey();
+                }
+            }
+
+            return sortedColumnMap;
+        }
+    }
+
     /**
     *  Constant used defining the amount of RAM to be used in the N-Core Parallelization algorithm.
     *  Here, 128Mb (2^27) RAM will be allocated for the float results array.
@@ -53,7 +144,6 @@ public final class ExpressionData
 
     private int totalRows = 0;
     private int totalColumns = 0;
-    private int totalAnnotationColunms = 0;
     private boolean transpose = false;
     private String[] columnNamesArray = null;
     private String[] rowIDsArray = null;
@@ -85,6 +175,8 @@ public final class ExpressionData
     private float[] meanCache = null;
     private boolean meanCached = false;
 
+    private HashMap<Integer, ColumnAnnotation> columnAnnotations;
+
     // variables needed for N-CP
     private final CyclicBarrierTimer cyclicBarrierTimer = (USE_MULTICORE_PROCESS) ? new CyclicBarrierTimer() : null;
     private final CyclicBarrier threadBarrier = (USE_MULTICORE_PROCESS) ? new CyclicBarrier(NUMBER_OF_AVAILABLE_PROCESSORS + 1, cyclicBarrierTimer) : null;
@@ -98,16 +190,16 @@ public final class ExpressionData
 
         identityMap = new HashMap<String, Integer>();
         columnNameMap = new HashMap<String, Integer>();
+        columnAnnotations = new HashMap<Integer, ColumnAnnotation>();
     }
 
     /**
     *  Initalizes all the data structures.
     */
-    public void initialize(int totalRows, int totalColumns, int totalAnnotationColunms, boolean transpose)
+    public void initialize(int totalRows, int totalColumns, boolean transpose)
     {
         this.totalRows = totalRows;
         this.totalColumns = totalColumns;
-        this.totalAnnotationColunms = totalAnnotationColunms;
         this.transpose = transpose;
 
         columnNamesArray = new String[totalColumns];
@@ -124,6 +216,7 @@ public final class ExpressionData
 
         identityMap.clear();
         columnNameMap.clear();
+        columnAnnotations.clear();
         clearCounts();
 
         minValueCache = null;
@@ -138,6 +231,40 @@ public final class ExpressionData
         maxStddev = Float.MIN_VALUE;
         meanCache = null;
         meanCached = false;
+    }
+
+    public void addColumnAnnotation(int index, String name)
+    {
+        ColumnAnnotation columnAnnotation = new ColumnAnnotation(index, name, totalColumns);
+        columnAnnotations.put(index, columnAnnotation);
+    }
+
+    public ColumnAnnotation getColumnAnnotationByIndex(int index)
+    {
+        if(columnAnnotations.containsKey(index))
+        {
+            return columnAnnotations.get(index);
+        }
+
+        return null;
+    }
+
+    public ColumnAnnotation getColumnAnnotationByName(String name)
+    {
+        for(ColumnAnnotation columnAnnotation : columnAnnotations.values())
+        {
+            if (columnAnnotation.getName().equals(name))
+            {
+                return columnAnnotation;
+            }
+        }
+
+        return null;
+    }
+
+    public Collection<ColumnAnnotation> getColumnAnnotations()
+    {
+        return columnAnnotations.values();
     }
 
     /**
@@ -972,14 +1099,6 @@ public final class ExpressionData
         return transpose;
     }
 
-    /**
-    *  Gets the total annotation columns.
-    */
-    public int getTotalAnnotationColumns()
-    {
-        return totalAnnotationColunms;
-    }
-
     public float getMaxValueForRow(int row)
     {
         if (maxValueCached)
@@ -1072,6 +1191,19 @@ public final class ExpressionData
     public void setTransformType(TransformType transformType)
     {
         this.transformType = transformType;
+    }
+
+    private ColumnAnnotation sortColumnAnnotation;
+    public void setSortColumnAnnotation(String sortColumnAnnotationName)
+    {
+        if (sortColumnAnnotationName != null)
+        {
+            sortColumnAnnotation = getColumnAnnotationByName(sortColumnAnnotationName);
+        }
+        else
+        {
+            sortColumnAnnotation = null;
+        }
     }
 
     public float getIQRForRow(int row)
@@ -1211,9 +1343,25 @@ public final class ExpressionData
         float stddev = (float)sqrt(variance);
         float pareto = (float)sqrt(stddev);
 
+        int[] sortedColumnMap = null;
+
+        if (sortColumnAnnotation != null)
+        {
+            sortedColumnMap = sortColumnAnnotation.getSortedColumnMap();
+        }
+
         for (int column = 0; column < totalColumns; column++)
         {
-            float value = getExpressionDataValue(row, column);
+            float value;
+
+            if (sortedColumnMap != null)
+            {
+                value = getExpressionDataValue(row, sortedColumnMap[column]);
+            }
+            else
+            {
+                value = getExpressionDataValue(row, column);
+            }
 
             switch (transformType)
             {

@@ -1,5 +1,6 @@
 package org.BioLayoutExpress3D.CoreUI;
 
+import org.BioLayoutExpress3D.Files.webservice.ImportWebService;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -86,7 +87,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
     private LayoutGraphPropertiesDialog layoutGraphPropertiesDialog = null;
     private LayoutGraphStatisticsDialog layoutGraphStatisticsDialog = null;
     private ExpressionData expressionData = null;
-    private ExpressionViewerFrame expressionViewerFrame;
     private ClassViewerFrame classViewerFrame = null;
     private LayoutAnimationControlDialog layoutAnimationControlDialog = null;
     private LayoutClusterMCL layoutClusterMCL = null;
@@ -117,12 +117,19 @@ public final class LayoutFrame extends JFrame implements GraphListener
     private String fileNameLoaded = "";
 
     private ImportClassSetsParser importClassSetsParser = null;
+    private ImportWebService importWebService = null;
+    
     private ExportClassSets exportClassSets = null;
     private ExportCorrelationNodesEdgesTable exportCorrelationNodesEdgesTable = null;
     private ExportSbgn exportSbgn = null;
 
     private ArrayList<Integer> allExitMessageIndices = null;
     private boolean navigationWizardShownOnce = false;
+    
+    /**
+     * Multiplier to adjust resizing of nodes in resizeNodesAndArrowHeadsToKvalue()
+     */
+    private double nodeResizeFactor = 1;
 
     /**
     *  The constructor of LayoutFrame.
@@ -172,7 +179,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         splashScreen.setText(" Initializing Classes...");
         layoutClassSetsManager = new LayoutClassSetsManager();
         layoutClassSetsManager.createNewClassSet("Default Classes...");
-
+        
         sleepMaxTime(prevTimeInMSecs);
         prevTimeInMSecs = System.nanoTime() / 1000000;
 
@@ -217,7 +224,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutClusterMCL = new LayoutClusterMCL(this, graph);
         layoutGraphStatisticsDialog = new LayoutGraphStatisticsDialog(this, graph);
         expressionData = new ExpressionData(this);
-        expressionViewerFrame = new ExpressionViewerFrame(this, expressionData);
         classViewerFrame = new ClassViewerFrame(this);
         SPNSimulationDialog = new SignalingPetriNetSimulationDialog(nc, this);
         layoutAnimationControlDialog = new LayoutAnimationControlDialog(this);
@@ -295,7 +301,10 @@ public final class LayoutFrame extends JFrame implements GraphListener
         filterEdgesByWeightDialog = new FilterEdgesByWeightDialog(this);
 
         saver = new CoreSaver(nc, this);
+        
         importClassSetsParser = new ImportClassSetsParser(nc, this);
+        importWebService = new ImportWebService(this);
+        
         exportClassSets = new ExportClassSets(this);
         exportCorrelationNodesEdgesTable = new ExportCorrelationNodesEdgesTable(this, expressionData);
         exportSbgn = new ExportSbgn(this);
@@ -334,6 +343,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
         frameInitializationFinish(startWithAutomaticFileLoading);
 
         return this;
+    }
+
+    public ImportWebService getImportWebService() 
+    {
+        return importWebService;
     }
 
     /**
@@ -630,7 +644,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setFileMenuSaveGraphAsAction( saver.getSaveAction() );
         layoutMenuBar.setFileMenuSaveGraphSelectionAsAction( saver.getSaveSelectedAction() );
         layoutMenuBar.setFileMenuSaveVisibleGraphAsAction( saver.getSaveVisibleAction() );
-        layoutMenuBar.setFileMenuImportAction( importClassSetsParser.getImportClassSetsAction() );
+        
+        //Import submenu
+        layoutMenuBar.setFileSubMenuImportClassSetsAction(importClassSetsParser.getImportClassSetsAction() );
+        layoutMenuBar.setFileSubMenuImportNetworkAction(importWebService.getImportWebServiceAction());
+        
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromGraphAction() );
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromGraphSelectionAction() );
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromVisibleGraphAction() );
@@ -692,7 +710,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setToolsMenuSavePreferences(toolsMenuSavePreferencesAction);
         layoutMenuBar.setToolsMenuRevertToDefaultPreferences(toolsMenuRevertToDefaultPreferencesAction);
         layoutMenuBar.setToolsMenuGraphStatisticsAction( layoutGraphStatisticsDialog.getGraphStatisticsDialogAction() );
-        layoutMenuBar.setToolsMenuExpressionViewerAction( expressionViewerFrame.getExpressionViewerAction() );
         layoutMenuBar.setToolsMenuClassViewerAction( classViewerFrame.getClassViewerAction() );
         layoutMenuBar.setToolsMenuAnimationControlDialogAction( layoutAnimationControlDialog.getAnimationControlDialogAction() );
         layoutMenuBar.setToolsMenuClusterUsingMCL( layoutClusterMCL.getClusterMCLAction() );
@@ -1402,18 +1419,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
             classViewerFrame.getClassViewerAction().setEnabled(true);
             classViewerFrame.populateClassViewer( null, false, DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed(), true);
-
-            if ( DATA_TYPE.equals(DataTypes.EXPRESSION) && !expressionData.isTransposed() )
-            {
-                expressionViewerFrame.getExpressionViewerAction().setEnabled(true);
-                classViewerFrame.refreshCurrentClassSetSelection();
-                classViewerFrame.restoreSplitPaneDividerLocation();
-            }
-            else
-            {
-                expressionViewerFrame.getExpressionViewerAction().setEnabled(false);
-                classViewerFrame.setSplitPaneDividerLocationForNoExpressionData();
-            }
+            classViewerFrame.refreshCurrentClassSetSelection();
 
             filterNodesByEdgesDialog.getFilterNodesByEdgesAction().setEnabled(true);
             filterEdgesByWeightDialog.getFilterEdgesByWeightAction().setEnabled(WEIGHTED_EDGES); // enable weight filter dialog action only when weights have been parsed
@@ -1467,6 +1473,13 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
         if (!nc.getHasStandardPetriNetTransitions() || initCheckToShowNavigationWizardOnStartup)
             checkToShowNavigationWizardOnStartup();
+        
+        //if BioPAX network, display the class viewer
+        if(DATA_TYPE == DataTypes.OWL)
+        {
+            graph.getSelectionManager().selectAll();
+            classViewerFrame.displayClassViewer();
+        }
     }
 
     private void resetAllRelevantLoadingValues()
@@ -1774,9 +1787,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
 
         // disable all the events below as well
-        if ( expressionViewerFrame.getExpressionViewerAction().isEnabled() )
-            expressionViewerFrame.getExpressionViewerAction().setEnabled(false);
-
         if ( classViewerFrame.getClassViewerAction().isEnabled() )
             classViewerFrame.getClassViewerAction().setEnabled(false);
 
@@ -1804,22 +1814,22 @@ public final class LayoutFrame extends JFrame implements GraphListener
     {
         double nodesToKValueRatio = nc.getKValue() / REFERENCE_K_VALUE;
         double arrowheadsToKValueRatio = nc.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
-
+        
         int newNodeSize = 0;
         for (Vertex vertex : nc.getVertices())
         {
-            newNodeSize = (int) (nodesToKValueRatio * vertex.getVertexSize());
+            newNodeSize = (int)( nodesToKValueRatio * vertex.getVertexSize() * this.nodeResizeFactor);
             if (newNodeSize < MIN_NODE_SIZE)
             {
                 newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
             }
             vertex.setVertexSize(newNodeSize);
         }
-
-        arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ((arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio);
-        ARROW_HEAD_SIZE.set((int) arrowheadsToKValueRatio);
+        
+        arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ( (arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio );
+        ARROW_HEAD_SIZE.set( (int)arrowheadsToKValueRatio );
     }
-
+    
     /**
     *  Clears any previously loaded network.
     */
@@ -1993,11 +2003,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
     public ExpressionData getExpressionData()
     {
         return expressionData;
-    }
-
-    public ExpressionViewerFrame getExpressionViewerFrame()
-    {
-        return expressionViewerFrame;
     }
 
     public ClassViewerFrame getClassViewerFrame()
@@ -2187,5 +2192,22 @@ public final class LayoutFrame extends JFrame implements GraphListener
         setEnabledAllToolBars(true);
     }
 
+    /**
+     * Gets multiplier by which to resize nodes.
+     * @return multiplier by which to resize nodes
+     */
+    public double getNodeResizeFactor() 
+    {
+        return nodeResizeFactor;
+    }
+
+    /**
+     * Sets multiplier by which to resize nodes.
+     * @param nodeResizeFactor - multiplier by which to resize nodes
+     */
+    public void setNodeResizeFactor(double nodeResizeFactor) 
+    {
+        this.nodeResizeFactor = nodeResizeFactor;
+    }
 
 }

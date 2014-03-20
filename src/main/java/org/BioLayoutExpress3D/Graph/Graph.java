@@ -1547,7 +1547,7 @@ public class Graph extends GLCanvas implements GraphInterface
     {
         if ( isEventNotAllowed() ) return;
 
-        if ( !hasFocus() && !layoutFrame.getExpressionViewerFrame().isVisible() && !layoutFrame.getClassViewerFrame().isVisible() )
+        if ( !hasFocus() && !layoutFrame.getClassViewerFrame().isVisible() )
             requestFocus();
 
         // currentGraphRenderer.mouseEntered(e);

@@ -645,6 +645,7 @@ public final class GraphmlParser extends XmlParser
         {
             isAtNodeLabel = false;
 
+            nodeLabelName[0] = nodeLabelName[0].trim();
             if (DEBUG_BUILD && DEBUG_GRAPHML)
             {
                 println("nodeLabelName: " + nodeLabelName[0]);
@@ -706,6 +707,7 @@ public final class GraphmlParser extends XmlParser
         {
             isAtEdgeLabel = false;
 
+            edgeLabelValues[17] = edgeLabelValues[17].trim();
             if (DEBUG_BUILD && DEBUG_GRAPHML)
             {
                 println("edgeLabelName: " + edgeLabelValues[17]);

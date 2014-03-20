@@ -13,7 +13,6 @@ import org.BioLayoutExpress3D.ClassViewerUI.Dialogs.*;
 import org.BioLayoutExpress3D.ClassViewerUI.Tables.*;
 import org.BioLayoutExpress3D.ClassViewerUI.Tables.TableModels.*;
 import org.BioLayoutExpress3D.CoreUI.*;
-import org.BioLayoutExpress3D.Expression.Panels.*;
 import org.BioLayoutExpress3D.Graph.GraphElements.*;
 import org.BioLayoutExpress3D.Graph.Selection.SelectionUI.Dialogs.*;
 import org.BioLayoutExpress3D.Network.*;
@@ -22,6 +21,8 @@ import org.BioLayoutExpress3D.Utils.*;
 import static org.BioLayoutExpress3D.ClassViewerUI.ClassViewerFrame.ClassViewerTabTypes.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Expression.Panels.ExpressionGraphPanel;
+import org.BioLayoutExpress3D.Simulation.Panels.SimulationResultsPanel;
 
 /**
 *
@@ -62,16 +63,24 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private boolean updateResetSelectDeselectAllButton = true;
     private JCheckBox highlightIsSelectionCheckbox = null;
 
-    private ExpressionGraphPanel expressionGraphPanel = null;
+    private ClassViewerPlotPanel plotPanel = null;
     private FindNameDialog findNameDialog = null;
     private FindClassDialog findClassDialog = null;
     private FindMultipleClassesDialog findMultipleClassesDialog = null;
+
+    private JPanel tabGeneralPanel = null;
+    private JPanel generalTablePanel = null;
     private JSplitPane splitPane = null;
+
+    private JButton renderAllCurrentClassSetPlotImagesToFilesButton = null;
+    private JButton renderPlotImageToFileButton = null;
+
     private JButton findNameButton = null;
     private JButton findClassButton = null;
     private JButton findMultipleClassesButton = null;
     private JButton previousClassButton = null;
     private JButton nextClassButton = null;
+
     private AbstractAction findNameAction = null;
     private AbstractAction findClassAction = null;
     private AbstractAction findMultipleClassesAction = null;
@@ -84,6 +93,10 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
     private JButton exportTableAsButton = null;
     private AbstractAction chooseColumnsToHideAction = null;
     private AbstractAction exportTableToFileAction = null;
+
+    //search database
+    private JButton searchDatabaseButton = null;
+    //private AbstractAction searchDatabaseAction = null;
 
     // entropy table
     private ClassViewerTable entropyTable = null;
@@ -162,7 +175,8 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 isWindowMaximized = (getExtendedState() == JFrame.MAXIMIZED_VERT || getExtendedState() == JFrame.MAXIMIZED_HORIZ || getExtendedState() == JFrame.MAXIMIZED_BOTH);
                 if (isWindowMaximized)
                 {
-                    if ( splitPane.getDividerLocation() == (classViewerWidthValue / 2) ) // only do this if the slit pane divider is in original location (classViewerWidthValue / 2) of the Class Viewer
+                    //FIXME this whole thing smells bad
+                    if ( splitPane != null && splitPane.getDividerLocation() == (classViewerWidthValue / 2) ) // only do this if the slit pane divider is in original location (classViewerWidthValue / 2) of the Class Viewer
                     {
                         validate();
                         splitPane.setDividerLocation(classViewerFrame.getWidth() / 2);
@@ -171,6 +185,53 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 }
             }
         } );
+    }
+
+    /**
+     * Displays the Class Viewer. May be called by an Action or programmatically.
+     * Initializes the Class Viewer if not already visible.
+     * If visible, deiconifies the frame, maximizes and brings to the front.
+     */
+    public void displayClassViewer()
+    {
+        if ( !isVisible() )
+        {
+            initializeCommonComponents();
+
+            if (getExtendedState() != JFrame.NORMAL)
+                setExtendedState(JFrame.NORMAL);
+
+            classViewerWidthValue = (SCREEN_DIMENSION.width > 1280) ? (int)(0.75 * SCREEN_DIMENSION.width) : 1010;
+            int classViewerHeightValue = (SCREEN_DIMENSION.height > 1024) ? (int)(0.75 * SCREEN_DIMENSION.height) : 680;
+            setSize(classViewerWidthValue, classViewerHeightValue);
+            setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+            setVisible(true);
+
+            if ( ( this.getWidth() + 1.5 * classViewerHideColumnsDialog.getWidth() ) > SCREEN_DIMENSION.width )
+                classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
+            else
+                classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2 - classViewerHideColumnsDialog.getWidth(), ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
+
+            // only if expression data is loaded, otherwise the divider location will have been already set to 0
+            if (splitPane != null)
+            {
+                splitPane.setDividerLocation(this.getWidth() / 2);
+                prevSplitPaneDividerLocation = splitPane.getDividerLocation();
+            }
+
+            // make sure to clear all plot/tables if current selection is empty
+            if ( layoutFrame.getGraph().getSelectionManager().getSelectedNodes().isEmpty() )
+                populateClassViewer();
+
+            if (plotPanel != null)
+            {
+                plotPanel.onFirstShown();
+            }
+        }
+        else
+        {
+            processAndSetWindowState();
+        }
     }
 
     private void initActions(final ClassViewerFrame classViewerFrame)
@@ -185,41 +246,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                if ( !isVisible() )
-                {
-                    initializeCommonComponents();
-
-                    if (getExtendedState() != JFrame.NORMAL)
-                        setExtendedState(JFrame.NORMAL);
-
-                    classViewerWidthValue = (SCREEN_DIMENSION.width > 1280) ? (int)(0.75 * SCREEN_DIMENSION.width) : 1010;
-                    int classViewerHeightValue = (SCREEN_DIMENSION.height > 1024) ? (int)(0.75 * SCREEN_DIMENSION.height) : 680;
-                    setSize(classViewerWidthValue, classViewerHeightValue);
-                    setLocation( ( SCREEN_DIMENSION.width - classViewerFrame.getWidth() ) / 2, ( SCREEN_DIMENSION.height - classViewerFrame.getHeight() ) / 2 );
-                    setVisible(true);
-
-                    if ( ( classViewerFrame.getWidth() + 1.5 * classViewerHideColumnsDialog.getWidth() ) > SCREEN_DIMENSION.width )
-                        classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - classViewerFrame.getWidth() ) / 2, ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
-                    else
-                        classViewerHideColumnsDialog.setLocation( ( SCREEN_DIMENSION.width - classViewerFrame.getWidth() ) / 2 - classViewerHideColumnsDialog.getWidth(), ( SCREEN_DIMENSION.height - classViewerHideColumnsDialog.getHeight() ) / 2 );
-
-                    // only if expression data is loaded, otherwise the divider location will have been already set to 0
-                    if (DATA_TYPE.equals(DataTypes.EXPRESSION) && !layoutFrame.getExpressionData().isTransposed())
-                    {
-                        splitPane.setDividerLocation(classViewerFrame.getWidth() / 2);
-                        prevSplitPaneDividerLocation = splitPane.getDividerLocation();
-                    }
-
-                    // make sure to clear all plot/tables if current selection is empty
-                    if ( layoutFrame.getGraph().getSelectionManager().getSelectedNodes().isEmpty() )
-                        populateClassViewer();
-
-                    expressionGraphPanel.onFirstShown();
-                }
-                else
-                {
-                    processAndSetWindowState();
-                }
+                displayClassViewer();
             }
         };
         classViewerDialogAction.setEnabled(false);
@@ -426,6 +453,75 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
     private void initializeCommonComponents()
     {
+        if (DATA_TYPE.equals(DataTypes.EXPRESSION) && !layoutFrame.getExpressionData().isTransposed())
+        {
+            // Expression data
+            plotPanel = new ExpressionGraphPanel(this, layoutFrame, layoutFrame.getExpressionData());
+        }
+        else if (DATA_TYPE.equals(DataTypes.GRAPHML) && layoutFrame.getNetworkRootContainer().getIsPetriNet())
+        {
+            // SPN simulation data
+            plotPanel = new SimulationResultsPanel(this, layoutFrame);
+        }
+        else
+        {
+            // No plot at all
+            plotPanel = null;
+        }
+
+        if (splitPane != null && Arrays.asList(tabGeneralPanel.getComponents()).contains(splitPane))
+        {
+            tabGeneralPanel.remove(splitPane);
+        }
+        else if (Arrays.asList(tabGeneralPanel.getComponents()).contains(generalTablePanel))
+        {
+            tabGeneralPanel.remove(generalTablePanel);
+        }
+
+        if (plotPanel != null)
+        {
+            plotPanel.setMinimumSize(new Dimension(300, 300));
+
+            splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, plotPanel, generalTablePanel);
+            splitPane.setOneTouchExpandable(true);
+            splitPane.setContinuousLayout(false);
+            tabGeneralPanel.add(splitPane, BorderLayout.CENTER);
+
+            AbstractAction renderAllCurrentClassSetPlotImagesToFilesAction =
+                    plotPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction();
+            if (renderAllCurrentClassSetPlotImagesToFilesAction != null)
+            {
+                renderAllCurrentClassSetPlotImagesToFilesAction.setEnabled(true);
+                renderAllCurrentClassSetPlotImagesToFilesButton.setAction(
+                        renderAllCurrentClassSetPlotImagesToFilesAction);
+                renderAllCurrentClassSetPlotImagesToFilesButton.setVisible(true);
+            }
+            else
+            {
+                renderAllCurrentClassSetPlotImagesToFilesButton.setVisible(false);
+            }
+
+            AbstractAction renderPlotImageToFileAction = plotPanel.getRenderPlotImageToFileAction();
+            if (renderPlotImageToFileAction != null)
+            {
+                renderPlotImageToFileAction.setEnabled(true);
+                renderPlotImageToFileButton.setAction(renderPlotImageToFileAction);
+                renderPlotImageToFileButton.setVisible(true);
+            }
+            else
+            {
+                renderPlotImageToFileButton.setVisible(false);
+            }
+        }
+        else
+        {
+            tabGeneralPanel.add(generalTablePanel, BorderLayout.CENTER);
+            splitPane = null;
+
+            renderAllCurrentClassSetPlotImagesToFilesButton.setVisible(false);
+            renderPlotImageToFileButton.setVisible(false);
+        }
+
         tableModelGeneral.proccessSelected( viewAllClassSets.isSelected() );
         selectedGenes = entropyTableModel.proccessSelected();
 
@@ -497,7 +593,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         if (DEBUG_BUILD) println("Create Class Viewer Frame Elements.");
 
         //// GENERAL PANEL ////
-        JPanel tabGeneralPanel = new JPanel(true);
+        tabGeneralPanel = new JPanel(true);
         tabGeneralPanel.setLayout( new BorderLayout() );
         tabGeneralPanel.setBackground(Color.WHITE);
 
@@ -531,7 +627,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         setUpStringEditor(generalTable);
 
-        JPanel generalTablePanel = new JPanel(true);
+        generalTablePanel = new JPanel(true);
         generalTablePanel.setLayout( new BoxLayout(generalTablePanel, BoxLayout.Y_AXIS) );
         generalTablePanel.add(scrollPane);
 
@@ -557,20 +653,12 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         JPanel generalButtonPanel = new JPanel(true);
 
         // expression graph GUI component
-        expressionGraphPanel = new ExpressionGraphPanel( this, layoutFrame, layoutFrame.getExpressionData() );
         findNameDialog = new FindNameDialog(layoutFrame, this);
         findClassDialog = new FindClassDialog(layoutFrame, this);
         findMultipleClassesDialog = new FindMultipleClassesDialog(layoutFrame, this);
 
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, expressionGraphPanel, generalTablePanel);
-        splitPane.setOneTouchExpandable(true);
-        splitPane.setContinuousLayout(false);
-
         //Provide minimum sizes for the two components in the split pane
         scrollPane.setMinimumSize( new Dimension(400, 300) );
-        expressionGraphPanel.setMinimumSize( new Dimension(300, 300) );
-
-        tabGeneralPanel.add(splitPane, BorderLayout.CENTER);
 
         findNameButton = new JButton(findNameAction);
         findNameButton.setToolTipText("Find By Name");
@@ -585,14 +673,13 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         nextClassButton.setEnabled(false);
         nextClassButton.setToolTipText("►► (Next Class)");
 
-        JButton renderAllCurrentClassSetPlotImagesToFilesButton = new JButton( expressionGraphPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction() );
+        renderAllCurrentClassSetPlotImagesToFilesButton = new JButton();
         renderAllCurrentClassSetPlotImagesToFilesButton.setToolTipText("Render Class Set Plots To Files...");
         generalTopPanel.add(renderAllCurrentClassSetPlotImagesToFilesButton);
-        // generalTopPanel.add( Box.createRigidArea( new Dimension(20, 30) ) );
-        JButton renderPlotImageToFileButton = new JButton( expressionGraphPanel.getRenderPlotImageToFileAction() );
+
+        renderPlotImageToFileButton = new JButton();
         renderPlotImageToFileButton.setToolTipText("Render Plot To File...");
         generalTopPanel.add(renderPlotImageToFileButton);
-        // generalTopPanel.add( Box.createRigidArea( new Dimension(10, 30) ) );
 
         generalButtonPanel.add(findNameButton);
         generalButtonPanel.add(findClassButton);
@@ -605,12 +692,22 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         refreshSelectionInTableButton = new JButton(refreshSelectionInTableAction);
         refreshSelectionInTableButton.setEnabled(false);
         refreshSelectionInTableButton.setToolTipText("Hide Unselected Rows");
+
         exportTableAsButton = new JButton(exportTableToFileAction);
         exportTableAsButton.setEnabled(false);
         exportTableAsButton.setToolTipText("Export Table As...");
+
         chooseColumnsToHideButton = new JButton(chooseColumnsToHideAction);
         chooseColumnsToHideButton.setEnabled(false);
         chooseColumnsToHideButton.setToolTipText("Choose Columns To Hide");
+
+        /* want to add the same Action as the Import Network menu but if try
+        to add here causes NullPointerException as LayoutFrame not fully set up yet
+        so add Action later when button is enabled */
+        searchDatabaseButton = new JButton();
+        searchDatabaseButton.setEnabled(false);
+        searchDatabaseButton.setText("Search Database");
+        searchDatabaseButton.setToolTipText("Search Online Database");
 
         // topPanel, north
         generalTopPanel.add( new JLabel("Class Set:") );
@@ -624,6 +721,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // button panel, south
         generalButtonPanel.add(chooseColumnsToHideButton);
         generalButtonPanel.add(exportTableAsButton);
+        generalButtonPanel.add(searchDatabaseButton);
         JButton okButton = new JButton(okAction);
         okButton.setToolTipText("Close");
         generalButtonPanel.add(okButton);
@@ -846,6 +944,12 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 exportTableAsButton.setEnabled(enableHideColumnsAndExportButtons);
                 chooseColumnsToHideButton.setEnabled( enableHideColumnsAndExportButtons || classViewerHideColumnsDialog.isVisible() );
 
+                //reuse the Action from the Import Network menu option
+                searchDatabaseButton.setAction(layoutFrame.getImportWebService().getImportWebServiceAction());
+                searchDatabaseButton.setText("Search Database"); //don't want to use same text as Action here
+                searchDatabaseButton.setToolTipText("Search Online Database");
+                searchDatabaseButton.setEnabled(enableHideColumnsAndExportButtons);
+
                 boolean enableDetailsForAllButton = (entropyTable.getRowCount() > 0);
                 detailsForAllButton.setEnabled(enableDetailsForAllButton);
 
@@ -866,24 +970,17 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
                 generalTable.sortTableByColumn(NAME_COLUMN, generalTableSorter);
             }
 
-            // HACK
-            if (!layoutFrame.getExpressionData().isTransposed())
+            if (plotPanel != null)
             {
-                expressionGraphPanel.setVisible(true);
-
                 if (refreshPlot)
                 {
-                    expressionGraphPanel.refreshPlot();
+                    plotPanel.refreshPlot();
                 }
 
-                expressionGraphPanel.repaint();
-                generalTable.repaint();
+                plotPanel.repaint();
             }
-            else
-            {
-                expressionGraphPanel.setVisible(false);
-                generalTable.repaint();
-            }
+
+            generalTable.repaint();
 
             checkClassViewerNavigationButtons();
             if (updateResetSelectDeselectAllButton)
@@ -1131,27 +1228,20 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // nextClassButton.doClick();
         // fire actionPerformed event directly, thus effectively avoiding the JButton being pressed down for some time
         nextClassAction.actionPerformed( new ActionEvent(nextClassAction, ActionEvent.ACTION_PERFORMED, "") );
-        expressionGraphPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction().setEnabled(
-                DATA_TYPE.equals(DataTypes.EXPRESSION) &&
-                !layoutFrame.getExpressionData().isTransposed() &&
-                (layoutFrame.getLayoutClassSetsManager().getCurrentClassSetAllClasses().getTotalClasses() > 0));
-        expressionGraphPanel.getRenderPlotImageToFileAction().setEnabled(
-                DATA_TYPE.equals(DataTypes.EXPRESSION) &&
-                !layoutFrame.getExpressionData().isTransposed());
-    }
 
-    public void setSplitPaneDividerLocationForNoExpressionData()
-    {
-        if (splitPane.getDividerLocation() != 0)
+        if (plotPanel != null)
         {
-            prevSplitPaneDividerLocation = splitPane.getDividerLocation();
-        }
-        splitPane.setDividerLocation(0);
-    }
+            if (plotPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction() != null)
+            {
+                plotPanel.getRenderAllCurrentClassSetPlotImagesToFilesAction().setEnabled(
+                        (layoutFrame.getLayoutClassSetsManager().getCurrentClassSetAllClasses().getTotalClasses() > 0));
+            }
 
-    public void restoreSplitPaneDividerLocation()
-    {
-        splitPane.setDividerLocation(prevSplitPaneDividerLocation);
+            if (plotPanel.getRenderPlotImageToFileAction() != null)
+            {
+                plotPanel.getRenderPlotImageToFileAction().setEnabled(true);
+            }
+        }
     }
 
     public void closeClassViewerWindow()
@@ -1307,9 +1397,5 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
             return this;
         }
-
-
     }
-
-
 }

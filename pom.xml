@@ -20,7 +20,8 @@
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
-        <jogampVersion>2.1.2</jogampVersion>
+        <!-- The -01 is because apparently the 2.1.5 release was screwed up and is missing all its class files -->
+        <jogampVersion>2.1.5-01</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
 
@@ -87,7 +88,7 @@
             <artifactId>commons-logging</artifactId>
             <version>1.1.2</version>
         </dependency>
-        
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -98,7 +99,7 @@
             <groupId>org.biopax.paxtools</groupId>
             <artifactId>paxtools-core</artifactId>
             <version>4.2.1</version>
-        </dependency>        
+        </dependency>
 
         <dependency>
             <groupId>pathwaycommons.cpath</groupId>
@@ -116,7 +117,7 @@
             <artifactId>miglayout</artifactId>
             <version>3.7.4</version>
         </dependency>
-            
+
         <dependency>
             <groupId>org.swinglabs</groupId>
             <artifactId>swing-layout</artifactId>
@@ -136,14 +137,6 @@
     </dependencies>
 
     <repositories>
-        <!-- JogAmp local repository -->
-         <repository>
-           <id>jogamp-remote</id>
-           <name>jogamp test mirror</name>
-           <url>http://www.jogamp.org/deployment/maven/</url>
-           <layout>default</layout>
-         </repository>
-                 
         <!-- BioPAX release repository -->
         <!--
          <repository>
@@ -154,7 +147,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        --> 
+        -->
         <repository>
                 <id>pathway-commons</id>
                 <name>Pathway Commons Repository at Google Code</name>
@@ -162,7 +155,7 @@
                 <snapshots>
                     <enabled>true</enabled>
                 </snapshots>
-        </repository> 
+        </repository>
         <repository>
                 <id>biopax.releases</id>
                 <name>BioPAX Repository</name>
@@ -178,8 +171,8 @@
                 <snapshots>
                     <enabled>false</enabled>
                 </snapshots>
-        </repository>        
-        
+        </repository>
+
         <!-- This allows us to treat local jars (e.g. libsbgn) as
              normal dependencies -->
         <repository>

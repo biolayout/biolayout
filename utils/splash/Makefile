@@ -89,7 +89,7 @@ $(TARGET): $(SRC) Makefile
 clean:
 	rm -f $(GENERATED_SRC) $(TARGET)
 
-install: $(TARGET)
+install: all
 	$(CONVERT) -resize 750x393 $(TARGET) ../../src/main/resources/Resources/Images/BioLayoutExpress3DLogo.png
 
 .PHONY: clean all

@@ -102,6 +102,7 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
 
         this.setResizable(false);
         this.pack();
+        this.setSize(800, 600);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
 
         aboutAction = new AbstractAction("About")

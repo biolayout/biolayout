@@ -11,13 +11,14 @@ STATIC_SRC= \
 	roslin.png \
 	embl-ebi.png
 
+GENERATED_DIR=./generated
 GENERATED_SRC= \
-	biolayout.png \
-	express.png \
-	3d.png \
-	credits.png \
-	version.png \
-	version.txt
+	$(GENERATED_DIR)/biolayout.png \
+	$(GENERATED_DIR)/express.png \
+	$(GENERATED_DIR)/3d.png \
+	$(GENERATED_DIR)/credits.png \
+	$(GENERATED_DIR)/version.png \
+	$(GENERATED_DIR)/$(VERSION_TXT)
 
 SRC= \
 	$(STATIC_SRC) \
@@ -28,43 +29,44 @@ TARGET=splash.png
 SHADOW_PARAMS=\( +clone -background black -shadow 80x4+8+8 \) \
     +swap -background none -layers merge +repage
 
-LAST_VERSION=$(shell cat $(VERSION_TXT))
+LAST_VERSION=$(shell cat $(GENERATED_DIR)/$(VERSION_TXT))
 all:
+	@mkdir -p $(GENERATED_DIR)
 ifneq ($(VERSION),)
 ifneq ($(LAST_VERSION),$(VERSION))
-	@echo $(VERSION) > $(VERSION_TXT)
+	@echo $(VERSION) > $(GENERATED_DIR)/$(VERSION_TXT)
 endif
 endif
 	@$(MAKE) $(TARGET) # Do the actual build
 
-biolayout.png:
+$(GENERATED_DIR)/biolayout.png:
 	convert -background none -fill white \
 		-font $(FONT) -pointsize 265 label:'BioLayout' \
 		$(SHADOW_PARAMS) $@
 
-express.png:
+$(GENERATED_DIR)/express.png:
 	convert -background none -fill white \
 		-font $(FONT_ITALIC) -pointsize 265 label:'Express' \
 		$(SHADOW_PARAMS) $@
 
-3d.png:
+$(GENERATED_DIR)/3d.png:
 	convert -background none -fill white \
 		-font $(FONT) -pointsize 165 label:'3D' \
 		$(SHADOW_PARAMS) $@
 
-credits.png: credits.txt
+$(GENERATED_DIR)/credits.png: credits.txt
 	convert -background none -fill white \
 		-font $(FONT) -pointsize 46 label:"$(shell cat $<)" \
 		$(SHADOW_PARAMS) $@
 
-$(VERSION_TXT):
+$(GENERATED_DIR)/$(VERSION_TXT):
 ifneq ($(VERSION),)
-	echo $(VERSION) > $(VERSION_TXT)
+	echo $(VERSION) > $(GENERATED_DIR)/$(VERSION_TXT)
 else
-	echo "undefined" > $(VERSION_TXT)
+	echo "undefined" > $(GENERATED_DIR)/$(VERSION_TXT)
 endif
 
-version.png: $(VERSION_TXT)
+$(GENERATED_DIR)/version.png: $(GENERATED_DIR)/$(VERSION_TXT)
 	convert -background none -fill white \
 		-font $(FONT) -pointsize 46 label:"Version $(shell cat $<)" \
 		$(SHADOW_PARAMS) $@

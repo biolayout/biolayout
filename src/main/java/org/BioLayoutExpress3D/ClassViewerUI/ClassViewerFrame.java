@@ -204,7 +204,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             classViewerWidthValue = (SCREEN_DIMENSION.width > 1280) ? (int)(0.75 * SCREEN_DIMENSION.width) : 1010;
             int classViewerHeightValue = (SCREEN_DIMENSION.height > 1024) ? (int)(0.75 * SCREEN_DIMENSION.height) : 680;
             setSize(classViewerWidthValue, classViewerHeightValue);
-            setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+            setLocationRelativeTo(null);
             setVisible(true);
 
             if ( ( this.getWidth() + 1.5 * classViewerHideColumnsDialog.getWidth() ) > SCREEN_DIMENSION.width )
@@ -811,7 +811,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         // this.pack();
         this.setSize(800, 680);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
 
         // at end the ClassViewerHideColumns initialization, to have already initialized the ClassViewer setLocation() method
         classViewerHideColumnsDialog = new ClassViewerHideColumnsDialog(this);

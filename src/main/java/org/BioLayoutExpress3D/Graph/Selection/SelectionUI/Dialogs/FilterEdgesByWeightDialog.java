@@ -57,7 +57,7 @@ public final class FilterEdgesByWeightDialog extends JDialog implements ChangeLi
         this.setResizable(false);
         this.pack();
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
     }
 
     private void createDialogElements()

@@ -102,7 +102,7 @@ public final class ExpressionChooseClassesToRenderPlotImagesFromDialog extends J
         this.getContentPane().add(expressionChooseClassesToRenderToPlotImagesDialogPanel);
         this.setResizable(false);
         this.pack();
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 

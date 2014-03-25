@@ -48,7 +48,7 @@ public final class LayoutOpenGLDriverCapsDialog extends JDialog implements Actio
                     doneOneInit = true;
                     initComponents();
                 }
-                setLocation( ( SCREEN_DIMENSION.width - getWidth() ) / 2, ( SCREEN_DIMENSION.height - getHeight() ) / 2 );
+                setLocationRelativeTo(null);
                 setVisible(true);
             }
         };
@@ -106,7 +106,7 @@ public final class LayoutOpenGLDriverCapsDialog extends JDialog implements Actio
         this.setResizable(false);
         this.pack();
         this.setSize(dialogSizeX, dialogSizeY);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 

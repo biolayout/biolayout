@@ -70,7 +70,7 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
         this.add(buttonsPanel, BorderLayout.SOUTH);
 
         this.pack();
-        this.setLocation((SCREEN_DIMENSION.width - this.getWidth()) / 2, (SCREEN_DIMENSION.height - this.getHeight()) / 2);
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 

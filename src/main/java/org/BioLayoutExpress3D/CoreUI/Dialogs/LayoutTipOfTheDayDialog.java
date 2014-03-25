@@ -50,7 +50,7 @@ public final class LayoutTipOfTheDayDialog extends JDialog implements ActionList
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                setLocation( ( SCREEN_DIMENSION.width - getWidth() ) / 2, ( SCREEN_DIMENSION.height - getHeight() ) / 2 );
+                setLocationRelativeTo(null);
                 setVisible(true);
             }
         };
@@ -112,7 +112,7 @@ public final class LayoutTipOfTheDayDialog extends JDialog implements ActionList
         this.setResizable(false);
         this.pack();
         this.setSize(500, 525);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setVisible(false);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }

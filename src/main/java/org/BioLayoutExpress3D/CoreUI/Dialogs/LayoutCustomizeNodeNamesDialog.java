@@ -364,8 +364,7 @@ public final class LayoutCustomizeNodeNamesDialog extends JDialog implements Act
         this.setResizable(false);
         this.pack();
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        // window gets positioned at left of layout frame main window
-        this.setLocation( ( SCREEN_DIMENSION.width - layoutFrame.getWidth() ) / 2 + 2 * this.getInsets().left, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2);
+        this.setLocationRelativeTo(null);
         this.addWindowListener( new WindowAdapter()
         {
            @Override

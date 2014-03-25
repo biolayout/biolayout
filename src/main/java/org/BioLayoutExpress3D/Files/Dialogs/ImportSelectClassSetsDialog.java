@@ -63,8 +63,7 @@ final class ImportSelectClassSetsDialog extends JDialog // package access
         this.setResizable(true);
         this.pack();
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // so as to be controlled from within ImportClassSetsDialog only
-        // window gets positioned at left of the ImportClassSetsDialog
-        this.setLocation( ( SCREEN_DIMENSION.width - importClassSetsDialog.getWidth() ) / 2 - this.getWidth(), ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
 
         // so as to be excluded from NOT being able to be used while the ImportClassSetsDialog is on
         this.setModalExclusionType(Dialog.ModalExclusionType.APPLICATION_EXCLUDE);

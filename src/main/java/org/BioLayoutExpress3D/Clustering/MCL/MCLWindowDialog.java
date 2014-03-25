@@ -103,7 +103,7 @@ final class MCLWindowDialog extends JDialog implements Runnable, ActionListener 
         this.setResizable(false);
         this.setSize( new Dimension(500, 500) );
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 

@@ -69,7 +69,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
         createDialogElements( transposeCheckBox.isSelected(), true );
 
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
     }
 
     private JPanel generalTab()

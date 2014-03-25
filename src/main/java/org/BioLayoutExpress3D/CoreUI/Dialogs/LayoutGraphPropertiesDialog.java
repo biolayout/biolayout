@@ -480,7 +480,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         this.setResizable(false);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.pack();
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
     }
 
     private void showPropertiesDialog(LayoutGraphPropertiesTabTypes layoutGraphPropertiesTabType)
@@ -654,7 +654,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             setEnabledAllApplyButtons(false);
 
             if ( !this.isVisible() )
-                this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+                this.setLocationRelativeTo(null);
             this.setVisible(true);
         }
     }

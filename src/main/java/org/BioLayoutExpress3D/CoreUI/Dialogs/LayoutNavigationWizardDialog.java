@@ -60,7 +60,7 @@ public final class LayoutNavigationWizardDialog extends JDialog implements Actio
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                setLocation( ( SCREEN_DIMENSION.width - getWidth() ) / 2, ( SCREEN_DIMENSION.height - getHeight() ) / 2 );
+                setLocationRelativeTo(null);
                 openDialogWindow();
             }
         };
@@ -110,7 +110,7 @@ public final class LayoutNavigationWizardDialog extends JDialog implements Actio
         this.setResizable(false);
         this.pack();
         this.setSize(650, 735);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setVisible(false);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }

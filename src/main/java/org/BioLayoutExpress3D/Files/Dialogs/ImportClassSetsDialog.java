@@ -229,7 +229,7 @@ public final class ImportClassSetsDialog extends JDialog implements ActionListen
         this.setResizable(false);
         this.pack();
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.addWindowListener( new WindowAdapter()
         {
            @Override

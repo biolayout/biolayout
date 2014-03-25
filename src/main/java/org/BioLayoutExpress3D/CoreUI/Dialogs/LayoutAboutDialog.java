@@ -66,16 +66,8 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
 
         this.getContentPane().add(layoutPanel, BorderLayout.SOUTH);
         this.pack();
-        this.setLocation( getSplashScreenLocation() );
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
-    }
-
-    private Point getSplashScreenLocation()
-    {
-        SplashScreen splashScreen = SplashScreen.getSplashScreen();
-        // Java 1.6 SplashScreen detected at startup or use standard SplashScreen positionning
-        return (splashScreen != null) ? splashScreen.getBounds().getLocation()
-                                      : new Point( ( SCREEN_DIMENSION.width - BIOLAYOUT_EXDPRESS_3D_LOGO_IMAGE.getWidth() ) / 2, ( SCREEN_DIMENSION.height - BIOLAYOUT_EXDPRESS_3D_LOGO_IMAGE.getHeight() ) / 2 );
     }
 
     private void initComponentsForAboutDialog()
@@ -103,7 +95,7 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
         this.setResizable(false);
         this.pack();
         this.setSize(800, 600);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
 
         aboutAction = new AbstractAction("About")
         {
@@ -115,7 +107,7 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                setLocation( ( SCREEN_DIMENSION.width - getWidth() ) / 2, ( SCREEN_DIMENSION.height - getHeight() ) / 2 );
+                setLocationRelativeTo(null);
                 setVisible(true);
             }
         };

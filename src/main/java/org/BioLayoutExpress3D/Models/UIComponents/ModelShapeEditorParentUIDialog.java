@@ -238,7 +238,7 @@ public class ModelShapeEditorParentUIDialog extends JDialog implements ActionLis
 
         this.setResizable(false);
         this.setSize(MODEL_SHAPE_UI_PANEL_WIDTH + MODEL_SHAPE_RENDERER_PANEL_SIZE + MODEL_SHAPE_TOOLBAR_PANEL_SIZE, MODEL_SHAPE_RENDERER_PANEL_SIZE);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.addWindowListener( new WindowAdapter()
         {

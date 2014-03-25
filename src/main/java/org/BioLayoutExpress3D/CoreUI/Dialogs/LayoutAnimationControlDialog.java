@@ -544,8 +544,7 @@ public class LayoutAnimationControlDialog extends JDialog implements ActionListe
         this.setResizable(false);
         this.pack();
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        // window gets positioned at right of layout frame main window, centered at height
-        this.setLocation( ( SCREEN_DIMENSION.width - layoutFrame.getWidth() ) / 2 + layoutFrame.getWidth() - this.getWidth() - 2 * this.getInsets().right, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2);
+        this.setLocationRelativeTo(null);
         this.addWindowListener( new WindowAdapter()
         {
            @Override

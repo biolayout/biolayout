@@ -89,8 +89,7 @@ public final class LayoutGraphStatisticsDialog extends JDialog implements Runnab
         this.getContentPane().add(textArea);
         this.pack();
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        // window gets positioned at right of layout frame main window, centered at height
-        this.setLocation( ( SCREEN_DIMENSION.width - frame.getWidth() ) / 2 + frame.getWidth() - this.getWidth() - 2 * this.getInsets().right, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2);
+        this.setLocationRelativeTo(null);
         this.addWindowListener( new WindowAdapter()
         {
            @Override

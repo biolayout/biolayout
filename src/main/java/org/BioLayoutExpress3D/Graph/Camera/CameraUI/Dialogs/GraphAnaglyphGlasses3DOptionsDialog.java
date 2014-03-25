@@ -123,7 +123,7 @@ public class GraphAnaglyphGlasses3DOptionsDialog extends JDialog implements Acti
         this.pack();
 
         this.setResizable(false);
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.addWindowListener( new WindowAdapter()
         {

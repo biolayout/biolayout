@@ -64,7 +64,7 @@ public final class LayoutLicensesDialog extends JDialog implements ActionListene
 
         this.pack();
         this.setSize( this.getWidth() + 20, (int)(this.getHeight() * ( (SCREEN_DIMENSION.height >= 900) ? ( (SCREEN_DIMENSION.height >= 1024) ? 0.725 : 0.7 ) : 0.6 ) ) );
-        this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
+        this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
@@ -80,7 +80,7 @@ public final class LayoutLicensesDialog extends JDialog implements ActionListene
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                setLocation( ( SCREEN_DIMENSION.width - getWidth() ) / 2, ( SCREEN_DIMENSION.height - getHeight() ) / 2 );
+                setLocationRelativeTo(null);
                 setVisible(true);
             }
         };

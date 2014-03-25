@@ -1,7 +1,6 @@
 FONT=LiberationSans-Bold.ttf
 FONT_ITALIC=LiberationSans-BoldItalic.ttf
 VERSION_TXT=version.txt
-TARGET=splash.png
 
 STATIC_SRC= \
 	background.png \
@@ -11,7 +10,7 @@ STATIC_SRC= \
 	roslin.png \
 	embl-ebi.png
 
-GENERATED_DIR=./generated
+GENERATED_DIR=generated
 GENERATED_SRC= \
 	$(GENERATED_DIR)/biolayout.png \
 	$(GENERATED_DIR)/express.png \
@@ -19,6 +18,8 @@ GENERATED_SRC= \
 	$(GENERATED_DIR)/credits.png \
 	$(GENERATED_DIR)/version.png \
 	$(GENERATED_DIR)/$(VERSION_TXT)
+
+TARGET=$(GENERATED_DIR)/splash.png
 
 SRC= \
 	$(STATIC_SRC) \
@@ -78,12 +79,12 @@ $(TARGET): $(SRC) Makefile
 		uoe.png        -geometry +13+11     -composite \
 		roslin.png     -geometry +264+43    -composite \
 		embl-ebi.png   -geometry +58+266    -composite \
-		biolayout.png  -geometry +15+550    -composite \
-		express.png    -geometry +15+770    -composite \
-		3d.png         -geometry +1070+770  -composite \
-		credits.png    -geometry +15+15     -gravity SouthWest -composite \
-		version.png    -geometry +10+10     -gravity NorthEast -composite \
-		splash.png
+		$(GENERATED_DIR)/biolayout.png  -geometry +15+550    -composite \
+		$(GENERATED_DIR)/express.png    -geometry +15+770    -composite \
+		$(GENERATED_DIR)/3d.png         -geometry +1070+770  -composite \
+		$(GENERATED_DIR)/credits.png    -geometry +15+15     -gravity SouthWest -composite \
+		$(GENERATED_DIR)/version.png    -geometry +10+10     -gravity NorthEast -composite \
+		$(TARGET)
 
 clean:
 	rm -f $(GENERATED_SRC) $(TARGET)

@@ -9,9 +9,7 @@ STATIC_SRC= \
 	\
 	uoe.png \
 	roslin.png \
-	embl-ebi.png \
-	opengl.png \
-	opencl.png
+	embl-ebi.png
 
 GENERATED_SRC= \
 	biolayout.png \

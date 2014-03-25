@@ -78,11 +78,9 @@ $(TARGET): $(SRC) Makefile
 		uoe.png        -geometry +13+11     -composite \
 		roslin.png     -geometry +264+43    -composite \
 		embl-ebi.png   -geometry +58+266    -composite \
-		opengl.png     -geometry +1974+1164 -composite \
-		opencl.png     -geometry +2394+1146 -composite \
-		biolayout.png  -geometry +15+490    -composite \
-		express.png    -geometry +15+710    -composite \
-		3d.png         -geometry +1070+710  -composite \
+		biolayout.png  -geometry +15+550    -composite \
+		express.png    -geometry +15+770    -composite \
+		3d.png         -geometry +1070+770  -composite \
 		credits.png    -geometry +15+15     -gravity SouthWest -composite \
 		version.png    -geometry +10+10     -gravity NorthEast -composite \
 		splash.png

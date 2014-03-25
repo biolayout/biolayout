@@ -65,7 +65,6 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
         layoutPanel.add(actionLabel, BorderLayout.CENTER);
 
         this.getContentPane().add(layoutPanel, BorderLayout.SOUTH);
-        this.setSize( new Dimension(750, 640) );
         this.pack();
         this.setLocation( getSplashScreenLocation() );
         this.setVisible(true);
@@ -103,7 +102,6 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
 
         this.setResizable(false);
         this.pack();
-        this.setSize(950, 710);
         this.setLocation( ( SCREEN_DIMENSION.width - this.getWidth() ) / 2, ( SCREEN_DIMENSION.height - this.getHeight() ) / 2 );
 
         aboutAction = new AbstractAction("About")

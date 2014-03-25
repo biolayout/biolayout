@@ -25,7 +25,7 @@ VIProductVersion "1.0.0.0"
 
 VIAddVersionKey ProductName "${LONG_NAME}"
 VIAddVersionKey Comments "${LONG_NAME}"
-VIAddVersionKey LegalCopyright "© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2013"
+VIAddVersionKey LegalCopyright "ï¿½ The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2014"
 VIAddVersionKey FileDescription "${LONG_NAME}"
 VIAddVersionKey FileVersion "1.0.0.0"
 VIAddVersionKey ProductVersion "1.0.0.0"

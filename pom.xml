@@ -16,7 +16,7 @@
         <outFilename>${jarName}-${versionNumber}</outFilename>
         <mainClass>org.BioLayoutExpress3D.Layout</mainClass>
         <manifestVersion>1.0.0.0</manifestVersion>
-        <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2013</copyright>
+        <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2014</copyright>
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>

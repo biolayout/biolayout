@@ -20,7 +20,7 @@
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
-        <jogampVersion>2.1.2</jogampVersion>
+        <jogampVersion>2.1.3</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
 

@@ -3251,6 +3251,11 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     */
     private void takeHighResScreenshot(GL2 gl)
     {
+        float originalEdgeSize = DEFAULT_EDGE_SIZE.get();
+        DEFAULT_EDGE_SIZE.set(originalEdgeSize * TILE_SCREEN_FACTOR.get());
+        updateEdgesDisplayList = true;
+        buildAllDisplayLists(gl);
+
         try
         {
             // do the trick below so as to avoid tile rendering artifacts for every tile being rendered and then changed
@@ -3383,6 +3388,10 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
             this.reshape(graph, 0, 0, width, height);
 
             CENTER_VIEW_CAMERA.setProjection(gl);
+
+            DEFAULT_EDGE_SIZE.set(originalEdgeSize);
+            updateEdgesDisplayList = true;
+            buildAllDisplayLists(gl);
         }
     }
 

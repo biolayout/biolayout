@@ -638,6 +638,11 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
     */
     private void takeHighResScreenshot(GL2 gl)
     {
+        float originalEdgeSize = DEFAULT_EDGE_SIZE.get();
+        DEFAULT_EDGE_SIZE.set(originalEdgeSize * TILE_SCREEN_FACTOR.get());
+        updateEdgesDisplayList = true;
+        buildAllDisplayListsAndRenderScene2D(gl);
+
         try
         {
             int tileWidth = width * TILE_SCREEN_FACTOR.get();
@@ -754,6 +759,10 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
             // same with:
             // GLU.gluOrtho2D(0, origWidth, origHeight, 0);
             gl.glMatrixMode(GL_MODELVIEW);
+
+            DEFAULT_EDGE_SIZE.set(originalEdgeSize);
+            updateEdgesDisplayList = true;
+            buildAllDisplayListsAndRenderScene2D(gl);
         }
     }
 

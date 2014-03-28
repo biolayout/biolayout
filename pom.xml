@@ -20,7 +20,8 @@
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.6</minJavaVersion>
-        <jogampVersion>2.1.2</jogampVersion>
+        <!-- The -01 is because apparently the 2.1.5 release was screwed up and is missing all its class files -->
+        <jogampVersion>2.1.5-01</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
 

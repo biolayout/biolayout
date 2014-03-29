@@ -276,21 +276,7 @@ public final class ExpressionLoader
 
     private String cleanString(String string)
     {
-        char thisChar = ' ';
-        String cleanString = "";
-
-        for (int i = 0; i < string.length(); i++)
-        {
-            thisChar = string.charAt(i);
-
-            if ( (thisChar == '\"') || (thisChar == '\'') )
-                thisChar = ' ';
-
-            cleanString += String.valueOf(thisChar);
-        }
-
-        return cleanString;
+        // This is apparently marginally faster than replaceAll("[\"\']", " ")
+        return string.replace('\"', ' ').replace('\'', ' ');
     }
-
-
 }

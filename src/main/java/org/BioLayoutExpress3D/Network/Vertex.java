@@ -60,12 +60,13 @@ public final class Vertex implements Comparable<Vertex>
 
     public void addConnection(Vertex vertex, Edge edge)
     {
-        if ( !edgeConnections.containsKey(vertex) )
+        if (!this.equals(vertex))
         {
-            if ( !vertexName.equals(vertex.vertexName) )
-                edgeConnections.put(vertex, edge);
-            else
-                selfEdge = edge;
+            edgeConnections.put(vertex, edge);
+        }
+        else
+        {
+            selfEdge = edge;
         }
     }
 

@@ -30,7 +30,7 @@ public abstract class NetworkContainer
     protected LayoutFrame layoutFrame = null;
     protected LayoutClassSetsManager layoutClassSetsManager = null;
     protected HashMap<String, Vertex> verticesMap = null;
-    protected HashSet<Edge> edges = null;
+    protected ArrayList<Edge> edges = null;
     protected boolean isOptimized = false;
     protected boolean isRelayout = false;
 
@@ -49,7 +49,7 @@ public abstract class NetworkContainer
         this.layoutFrame = layoutFrame;
 
         verticesMap = new HashMap<String, Vertex>();
-        edges = new HashSet<Edge>();
+        edges = new ArrayList<Edge>();
     }
 
     public void setOptimized(boolean isOptimized)
@@ -337,7 +337,7 @@ public abstract class NetworkContainer
         return verticesMap.values();
     }
 
-    public HashSet<Edge> getEdges()
+    public ArrayList<Edge> getEdges()
     {
         return edges;
     }

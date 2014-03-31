@@ -251,7 +251,7 @@ public final class FilterEdgesByWeightDialog extends JDialog implements ChangeLi
         float minWeight = 1.0f;
         float maxWeight = 0.0f;
         float currentWeight = 0.0f;
-        HashSet<Edge> allAvailableEdges = layoutFrame.getNetworkRootContainer().getEdges();
+        ArrayList<Edge> allAvailableEdges = layoutFrame.getNetworkRootContainer().getEdges();
         for (Edge edge : allAvailableEdges)
         {
             currentWeight = edge.getWeight();

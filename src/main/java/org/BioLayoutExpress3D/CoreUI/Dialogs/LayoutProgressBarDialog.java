@@ -26,6 +26,8 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
     private JButton cancelButton = null;
     private LayoutFrame layoutFrame = null;
     private Timer timer = null;
+    private int progressValue;
+    private long lastUpdateTime;
 
     private volatile boolean reset = false;
 
@@ -89,6 +91,8 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
     {
         timer.start();
         layoutFrame.block();
+        progressValue = 0;
+        lastUpdateTime = System.currentTimeMillis();
         progressBar.setValue(0);
         progressBar.setString("0%");
         this.pack();
@@ -109,18 +113,26 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
         this.setVisible(false);
     }
 
-    public synchronized void incrementProgress(int iteration)
+    public synchronized void incrementProgress(int value)
     {
-        progressBar.setValue(iteration);
-        int percentage = (int)( ( ( (double)progressBar.getValue() ) / ( (double)progressBar.getMaximum() ) * 100) );
+        final int UPDATE_PERIOD_MS = 50;
+        long currentTime = System.currentTimeMillis();
+        progressValue = value;
+
+        if (currentTime < lastUpdateTime + UPDATE_PERIOD_MS)
+        {
+            return;
+        }
+
+        progressBar.setValue(progressValue);
+        int percentage = (progressValue * 100) / progressBar.getMaximum();
         progressBar.setString(percentage + "%");
+        lastUpdateTime = currentTime;
     }
 
     public synchronized void incrementProgress()
     {
-        progressBar.setValue(progressBar.getValue() + 1);
-        int percentage = (int)( ( ( (double)progressBar.getValue() ) / ( (double)progressBar.getMaximum() ) * 100) );
-        progressBar.setString(percentage + "%");
+        incrementProgress(progressValue + 1);
     }
 
     public synchronized void setText(String text)

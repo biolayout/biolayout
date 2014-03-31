@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.geom.*;
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.BioLayoutExpress3D.Analysis.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
@@ -34,8 +36,11 @@ public class CoreParser
     protected BufferedReader fileReaderBuffered = null;
     protected BufferedReader fileReaderCounter = null;
     protected String line = "";
-    protected int length = 0;
-    protected int currentPos = 0;
+    protected ArrayList<String> tokens = null;
+    protected int numberOfTokens = 0;
+    protected int currentTokenIndex = 0;
+    protected int length = 0; //FIXME: only used by subclasses, should be using above tokens and currentTokenIndex
+    protected int currentPos = 0; //FIXME: only used by subclasses, should be using above tokens and currentTokenIndex
     protected boolean isExpressionData = false;
     protected boolean isSif = false;
     protected boolean isSuccessful = false;
@@ -108,6 +113,26 @@ public class CoreParser
         }
     }
 
+    private static Pattern quotedStringRegex = Pattern.compile("\"([^\"]*)\"|(\\S+)");
+    private static ArrayList tokenize(String line)
+    {
+        ArrayList<String> tokens = new ArrayList<String>();
+        Matcher m = quotedStringRegex.matcher(line);
+        while (m.find())
+        {
+            if (m.group(1) != null)
+            {
+                tokens.add(m.group(1));
+            }
+            else
+            {
+                tokens.add(m.group(2));
+            }
+        }
+
+        return tokens;
+    }
+
     public boolean parse()
     {
         int totalLines = 0;
@@ -128,10 +153,13 @@ public class CoreParser
             while ( ( line = fileReaderBuffered.readLine() ) != null )
             {
                 layoutProgressBarDialog.incrementProgress(++counter);
-                length = line.length();
-                currentPos = 0;
 
-                if (length > 0)
+                tokens = tokenize(line);
+
+                currentTokenIndex = 0;
+                numberOfTokens = tokens.size();
+
+                if (line.length() > 0)
                 {
                     if ( line.startsWith("//") )
                         updateVertexProperties();
@@ -315,8 +343,8 @@ public class CoreParser
 
             if ( nc.getVerticesMap().containsKey(vertex) )
             {
-                nc.getVerticesMap().get(vertex).setVertex2DShape(Shapes2D.values()[getVertexIndexForShape(Shapes2D.class, field1)]);
-                nc.getVerticesMap().get(vertex).setVertex3DShape(Shapes3D.values()[getVertexIndexForShape(Shapes3D.class, field2)]);
+                nc.getVerticesMap().get(vertex).setVertex2DShape(get2DShapeForString(field1));
+                nc.getVerticesMap().get(vertex).setVertex3DShape(get3DShapeForString(field2));
             }
         }
         else if ( property.equals("//NODEALPHA") )
@@ -486,20 +514,48 @@ public class CoreParser
         }
     }
 
-    private <T extends Enum<T>> int getVertexIndexForShape(Class<T> enumType, String field)
+    private static <T extends Enum<T>> T getEnumValueForString(Class<T> clazz, HashMap<String, T> map, String field)
     {
-        try // new way enum-name-based shape definitions
+        T value = map.get(field);
+        if (value == null)
         {
-            return Enum.valueOf(enumType, field).ordinal();
+            try
+            {
+                // Textual shape description
+                value = Enum.valueOf(clazz, field);
+            }
+            catch (Exception e)
+            {
+                // Index shape description
+                int index;
+                try
+                {
+                    index = Integer.parseInt(field);
+                }
+                catch (NumberFormatException nfe)
+                {
+                    index = 0;
+                }
+
+                value = clazz.getEnumConstants()[index];
+            }
+
+            map.put(field, value);
         }
-        catch (IllegalArgumentException iaExc) // old fashioned integer-based shape definitions
-        {
-            return Integer.parseInt(field);
-        }
-        catch (Exception exc)
-        {
-            return 0;
-        }
+
+        return value;
+    }
+
+    HashMap<String, Shapes2D> shapes2DMap = new HashMap<String, Shapes2D>();
+    private Shapes2D get2DShapeForString(String field)
+    {
+        return getEnumValueForString(Shapes2D.class, shapes2DMap, field);
+    }
+
+    HashMap<String, Shapes3D> shapes3DMap = new HashMap<String, Shapes3D>();
+    private Shapes3D get3DShapeForString(String field)
+    {
+        return getEnumValueForString(Shapes3D.class, shapes3DMap, field);
     }
 
     private void createVertices(int lines)
@@ -599,41 +655,11 @@ public class CoreParser
 
     protected String getNext()
     {
-        String word = "";
-        String separatorString = "\r\n\t ";
-        char tempChar = ' ';
-
-        while (currentPos < length)
+        if (currentTokenIndex >= numberOfTokens)
         {
-            tempChar = line.charAt(currentPos);
-
-            if ( separatorString.contains( String.valueOf(tempChar) ) )
-                currentPos++;
-            else
-                break;
+            return "";
         }
 
-        if (tempChar == '"')
-        {
-            currentPos++;
-            separatorString = "\"";
-        }
-
-        while (currentPos < length)
-        {
-            tempChar = line.charAt(currentPos);
-            if ( separatorString.contains( String.valueOf(tempChar) ) )
-                break;
-
-            word += tempChar;
-            currentPos++;
-        }
-
-        if ( separatorString.contains("\"") )
-            currentPos++;
-
-        return word;
+        return tokens.get(currentTokenIndex++);
     }
-
-
 }

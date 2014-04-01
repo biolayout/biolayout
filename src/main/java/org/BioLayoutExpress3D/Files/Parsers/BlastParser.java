@@ -47,10 +47,9 @@ public final class BlastParser extends CoreParser
             while ( ( line = fileReaderBuffered.readLine() ) != null )
             {
                 layoutProgressBarDialog.incrementProgress(++counter);
-                length = line.length();
-                currentPos = 0;
 
-                if (length > 0)
+                tokenize(line);
+                if (line.length() > 0)
                 {
                     if ( line.startsWith("Query= ") )
                     {
@@ -107,7 +106,6 @@ public final class BlastParser extends CoreParser
             while ( ( line = fileReaderBuffered.readLine() ) != null && !line.isEmpty() )
             {
                 counter++;
-                length = line.length();
                 createVertices();
             }
 
@@ -120,8 +118,8 @@ public final class BlastParser extends CoreParser
 
     private void createVertices()
     {
+        int length = line.length();
         float weight = 0.0f;
-        currentPos = 0;
         String vertex2 = getNext();
         if ( vertex2.equals(firstVertex) )
             return;

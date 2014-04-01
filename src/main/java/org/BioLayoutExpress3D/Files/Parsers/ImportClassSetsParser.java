@@ -240,9 +240,8 @@ public final class ImportClassSetsParser extends CoreParser implements ImportCla
             while ( ( line = fileReaderBuffered.readLine() ) != null && !cancelParse )
             {
                 layoutProgressBarDialog.incrementProgress(++counter);
-                length = line.length();
-                currentPos = 0;
 
+                tokenize(line);
                 if (line.length() > 0)
                     if ( line.startsWith("//") )
                         updateVertexClassProperties();

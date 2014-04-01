@@ -59,10 +59,8 @@ public final class BioPaxLegacyParser extends CoreParser
             while ( ( line = fileReaderBuffered.readLine() ) != null )
             {
                 layoutProgressBarDialog.incrementProgress(++counter);
-                length = line.length();
-                currentPos = 0;
 
-                if (length > 0)
+                if (line.length() > 0)
                 {
                     matcher = patternMatcher(line, ".*<bp:biochemicalReaction rdf:ID=\\\"([^\\\"]+)\\\".*");
                     if ( matcher.matches() )

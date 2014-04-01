@@ -39,8 +39,6 @@ public class CoreParser
     protected ArrayList<String> tokens = null;
     protected int numberOfTokens = 0;
     protected int currentTokenIndex = 0;
-    protected int length = 0; //FIXME: only used by subclasses, should be using above tokens and currentTokenIndex
-    protected int currentPos = 0; //FIXME: only used by subclasses, should be using above tokens and currentTokenIndex
     protected boolean isExpressionData = false;
     protected boolean isSif = false;
     protected boolean isSuccessful = false;
@@ -113,10 +111,10 @@ public class CoreParser
         }
     }
 
-    private static Pattern quotedStringRegex = Pattern.compile("\"([^\"]*)\"|(\\S+)");
-    private static ArrayList tokenize(String line)
+    private Pattern quotedStringRegex = Pattern.compile("\"([^\"]*)\"|(\\S+)");
+    protected void tokenize(String line)
     {
-        ArrayList<String> tokens = new ArrayList<String>();
+        tokens = new ArrayList<String>();
         Matcher m = quotedStringRegex.matcher(line);
         while (m.find())
         {
@@ -130,7 +128,8 @@ public class CoreParser
             }
         }
 
-        return tokens;
+        currentTokenIndex = 0;
+        numberOfTokens = tokens.size();
     }
 
     public boolean parse()
@@ -154,11 +153,7 @@ public class CoreParser
             {
                 layoutProgressBarDialog.incrementProgress(++counter);
 
-                tokens = tokenize(line);
-
-                currentTokenIndex = 0;
-                numberOfTokens = tokens.size();
-
+                tokenize(line);
                 if (line.length() > 0)
                 {
                     if ( line.startsWith("//") )

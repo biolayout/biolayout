@@ -107,8 +107,6 @@ public class GraphAttributes
                     (float)((p.getY() + yOffset) * scale),
                     (float)((p.getZ() + yOffset) * scale) +
                         NetworkContainer.CANVAS_Z_SIZE * 0.5f);
-
-            vertex.setVertexSize(vertex.getVertexSize() * (float)scale);
         }
     }
 

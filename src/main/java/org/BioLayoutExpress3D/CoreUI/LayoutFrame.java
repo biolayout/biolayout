@@ -118,14 +118,14 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
     private ImportClassSetsParser importClassSetsParser = null;
     private ImportWebService importWebService = null;
-    
+
     private ExportClassSets exportClassSets = null;
     private ExportCorrelationNodesEdgesTable exportCorrelationNodesEdgesTable = null;
     private ExportSbgn exportSbgn = null;
 
     private ArrayList<Integer> allExitMessageIndices = null;
     private boolean navigationWizardShownOnce = false;
-    
+
     /**
      * Multiplier to adjust resizing of nodes in resizeNodesAndArrowHeadsToKvalue()
      */
@@ -179,7 +179,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         splashScreen.setText(" Initializing Classes...");
         layoutClassSetsManager = new LayoutClassSetsManager();
         layoutClassSetsManager.createNewClassSet("Default Classes...");
-        
+
         sleepMaxTime(prevTimeInMSecs);
         prevTimeInMSecs = System.nanoTime() / 1000000;
 
@@ -301,10 +301,10 @@ public final class LayoutFrame extends JFrame implements GraphListener
         filterEdgesByWeightDialog = new FilterEdgesByWeightDialog(this);
 
         saver = new CoreSaver(nc, this);
-        
+
         importClassSetsParser = new ImportClassSetsParser(nc, this);
         importWebService = new ImportWebService(this);
-        
+
         exportClassSets = new ExportClassSets(this);
         exportCorrelationNodesEdgesTable = new ExportCorrelationNodesEdgesTable(this, expressionData);
         exportSbgn = new ExportSbgn(this);
@@ -345,7 +345,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         return this;
     }
 
-    public ImportWebService getImportWebService() 
+    public ImportWebService getImportWebService()
     {
         return importWebService;
     }
@@ -644,11 +644,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setFileMenuSaveGraphAsAction( saver.getSaveAction() );
         layoutMenuBar.setFileMenuSaveGraphSelectionAsAction( saver.getSaveSelectedAction() );
         layoutMenuBar.setFileMenuSaveVisibleGraphAsAction( saver.getSaveVisibleAction() );
-        
+
         //Import submenu
         layoutMenuBar.setFileSubMenuImportClassSetsAction(importClassSetsParser.getImportClassSetsAction() );
         layoutMenuBar.setFileSubMenuImportNetworkAction(importWebService.getImportWebServiceAction());
-        
+
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromGraphAction() );
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromGraphSelectionAction() );
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromVisibleGraphAction() );
@@ -1368,11 +1368,12 @@ public final class LayoutFrame extends JFrame implements GraphListener
             graph.getSelectionManager().getGroupManager().resetState();
             nc.createNetworkComponentsContainer();
 
+            GraphLayoutAlgorithm gla = GraphLayoutAlgorithm.ALWAYS_ASK;
             if (!nc.getVertices().isEmpty()) // fail-safe check in case the parsed file is an empty graph
             {
                 if (!nc.isOptimized())
                 {
-                    GraphLayoutAlgorithm gla = GRAPH_LAYOUT_ALGORITHM.get();
+                    gla = GRAPH_LAYOUT_ALGORITHM.get();
 
                     if (gla == GraphLayoutAlgorithm.ALWAYS_ASK)
                     {
@@ -1391,10 +1392,18 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
             if (!layoutProgressBarDialog.userHasCancelled())
             {
-                // skip resizeNodesAndArrowHeadsToKvalue() if the file is a layout file (for now, in the future it will be incorporated within the layout algorithm)
-                if (!fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString()) && RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get())
+                // Only the FR algorithm has a K-value
+                if (gla == GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD && RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get())
                 {
-                    resizeNodesAndArrowHeadsToKvalue();
+                    boolean nodeSizesSetFromLayoutFile =
+                            fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString());
+                    boolean graphMLButNotYedStyle = DATA_TYPE.equals(DataTypes.GRAPHML) &&
+                            !YED_STYLE_RENDERING_FOR_GPAPHML_FILES.get();
+
+                    if (!nodeSizesSetFromLayoutFile && graphMLButNotYedStyle)
+                    {
+                        resizeNodesAndArrowHeadsToKvalue();
+                    }
                 }
 
                 nc.clearRoot();
@@ -1473,7 +1482,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
         if (!nc.getHasStandardPetriNetTransitions() || initCheckToShowNavigationWizardOnStartup)
             checkToShowNavigationWizardOnStartup();
-        
+
         //if BioPAX network, display the class viewer
         if(DATA_TYPE == DataTypes.OWL)
         {
@@ -1814,7 +1823,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
     {
         double nodesToKValueRatio = nc.getKValue() / REFERENCE_K_VALUE;
         double arrowheadsToKValueRatio = nc.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
-        
+
         int newNodeSize = 0;
         for (Vertex vertex : nc.getVertices())
         {
@@ -1825,11 +1834,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
             }
             vertex.setVertexSize(newNodeSize);
         }
-        
+
         arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ( (arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio );
         ARROW_HEAD_SIZE.set( (int)arrowheadsToKValueRatio );
     }
-    
+
     /**
     *  Clears any previously loaded network.
     */
@@ -2196,7 +2205,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
      * Gets multiplier by which to resize nodes.
      * @return multiplier by which to resize nodes
      */
-    public double getNodeResizeFactor() 
+    public double getNodeResizeFactor()
     {
         return nodeResizeFactor;
     }
@@ -2205,7 +2214,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
      * Sets multiplier by which to resize nodes.
      * @param nodeResizeFactor - multiplier by which to resize nodes
      */
-    public void setNodeResizeFactor(double nodeResizeFactor) 
+    public void setNodeResizeFactor(double nodeResizeFactor)
     {
         this.nodeResizeFactor = nodeResizeFactor;
     }

@@ -27,6 +27,7 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
     private LayoutFrame layoutFrame = null;
     private Timer timer = null;
     private int progressValue;
+    private int maxValue;
     private long lastUpdateTime;
 
     private volatile boolean reset = false;
@@ -76,7 +77,14 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
     {
         reset = false;
         statusLabel.setText(" " + title);
-        progressBar.setMaximum(max);
+
+        maxValue = max;
+        if (maxValue <= 0)
+        {
+            maxValue = 1;
+        }
+
+        progressBar.setMaximum(maxValue);
         cancelled = false;
         cancelButton.setEnabled(true);
         cancelButton.setVisible(isCancellable);

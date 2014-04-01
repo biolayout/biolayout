@@ -45,9 +45,11 @@ import java.io.File;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -134,7 +136,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public static final String BIOPAX_FILE_EXTENSION = ".owl";
     
     private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
-    private JButton advancedExecuteButton, advancedStopButton, advancedCancelButton;
+    private JButton advancedExecuteButton, advancedStopButton, advancedCancelButton, advancedRemoveButton, advancedClearButton;
     private JTextField searchField, organismField;
     private JComboBox<String> networkTypeCombo;
     private LayoutFrame frame;
@@ -247,6 +249,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedExecuteButton = this.createJButton("Execute", "Execute query", false);
         advancedCancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
         advancedStopButton = this.createJButton("Stop", "Stop query", false); //stop button
+        advancedRemoveButton = this.createJButton("Remove", "Remove search hit", false);
+        advancedClearButton = this.createJButton("Clear", "Remove all search hits", modal);
 
         searchField = new JTextField(70);
         organismField = new JTextField(35); //organism text field
@@ -311,7 +315,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //create HTML editor panes
         editorPane = createEditorPane(); 
-        //advancedEditorPane = createEditorPane();
         advancedSearchHits = new LinkedHashSet<SearchHit>();
         
         hitInteractionCountMap.clear();
@@ -378,6 +381,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         enableAll(directionGroup, false);
                         advancedExecuteButton.setEnabled(true);
                         advancedStopButton.setEnabled(false);
+                        advancedRemoveButton.setEnabled(true);
+                        advancedClearButton.setEnabled(true);
                     }
                 }
                 else if (e.getType() == TableModelEvent.DELETE)
@@ -388,6 +393,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                         enableAll(directionGroup, false);
                         advancedExecuteButton.setEnabled(false);
                         advancedStopButton.setEnabled(false);
+                        advancedRemoveButton.setEnabled(false);
+                        advancedClearButton.setEnabled(false);
                     }
                 }
             }
@@ -447,9 +454,11 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedFieldPanel.add(queryTypePanel, "wrap, span");
         advancedFieldPanel.add(directionPanel, "Wrap");
                 
-        advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 3, sizegroup bttn");
+        advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 5, sizegroup bttn");
         advancedFieldPanel.add(advancedCancelButton, "tag cancel, sizegroup bttn");
         advancedFieldPanel.add(advancedStopButton, "tag yes, sizegroup bttn");
+        advancedFieldPanel.add(advancedRemoveButton, "tag left, sizegroup bttn");
+        advancedFieldPanel.add(advancedClearButton, "tag left, sizegroup bttn");
         
         ItemListener itemListener = new ItemListener() //listener for get, pathsbetween, pathsfromto
         {
@@ -776,26 +785,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 }
             }
     }
-    /*
-    private class AdvancedHitListSelectionListener implements ListSelectionListener
-    {
-        public void valueChanged(ListSelectionEvent e) 
-        {
-            if (e.getValueIsAdjusting()) return; //Ignore extra messages.
 
-            //TODO enable buttons
-
-            ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-            if (!lsm.isSelectionEmpty()) 
-            {
-                int selectedRow = lsm.getMinSelectionIndex();
-                SearchHit hit = advancedSearchHits.get(selectedRow);
-                String excerptHTML = generateExcerptHTML(hit);
-                advancedEditorPane.setText(excerptHTML);
-            }
-        } 
-    }
-    */
     private ZebraJTable createHitsTable(DefaultTableModel model, String[] colHeadings)
     {
         ZebraJTable table = new ZebraJTable(model, colHeadings);
@@ -815,7 +805,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         if(clearAdvanced)
         {
             advancedModel.setRowCount(0); //clear previous search results
-            // advancedEditorPane.setText(""); //clear excerpt pane
             advancedSearchHits.clear(); //empty the list of added search hits
         }
     }
@@ -874,13 +863,23 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         HashSet<String> from = new HashSet<String>(); //all selected search hit URIs
         HashSet<String> to = new HashSet<String>(); //all unselected search hit URIs        
         
+        // convert selected row indices to those of the underlying TableModel
+        int[] selection = advancedTable.getSelectedRows();
+        for (int i = 0; i < selection.length; i++) 
+        {
+             selection[i] = table.convertRowIndexToModel(selection[i]);
+        }
+        Arrays.sort(selection);
+
         int i = 0;
+        int selectionIndex = 0;
         for(SearchHit hit: advancedSearchHits)
         {
             allUri.add(hit.getUri());
-            if(advancedTable.isRowSelected(i))
+            if(selectionIndex < selection.length && selection[selectionIndex] == i) //row is selected
             {
                 from.add(hit.getUri());
+                selectionIndex++;
             }
             else
             {
@@ -888,6 +887,9 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             }
             i++;
         }
+        
+        //logger.info(Arrays.toString(from.toArray()));
+        //logger.info(Arrays.toString(to.toArray()));
         
         String fileName = "Advanced" + BIOPAX_FILE_EXTENSION; //default name of .owl file to be created
 
@@ -969,6 +971,48 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             getWorker.execute();
         }
     }
+    
+    /**
+     * Removes selected rows from the Advanced tab table.
+     */
+    private void removeAdvanced()
+    {
+        //remove selected rows from table model and convert selected table row indices to table model indices
+        int[] selection = advancedTable.getSelectedRows();
+        Arrays.sort(selection);
+        for (int i = selection.length - 1; i >= 0; i--) //iterate over table model backwards and remove selected rows
+        {
+            //convert table row index to model index to safeguard against user sorting columns
+            selection[i] = advancedTable.convertRowIndexToModel(selection[i]);
+            advancedModel.removeRow(selection[i]); 
+        }
+        Arrays.sort(selection);
+
+        //remove corresponding search hits
+        int i = 0;
+        int selectionIndex = 0;        
+        Iterator<SearchHit> iterator = advancedSearchHits.iterator();
+        while(iterator.hasNext())
+        {
+            SearchHit hit = iterator.next();
+            if(selectionIndex < selection.length && selection[selectionIndex] == i) //row is selected
+            {
+                iterator.remove();
+                selectionIndex++;
+            }
+            i++;
+        }
+    }
+    
+    /**
+     * Clears advanced table model and advanced search hits.
+     */
+    private void clearAdvanced()
+    {
+        advancedModel.setRowCount(0); //clear previous search results
+        advancedSearchHits.clear(); //empty search hits
+    }
+
 
     /*
      * Performs Pathway Commons CPath2 web service GET operation concurrently and displays graph
@@ -1600,6 +1644,17 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         else if(advancedExecuteButton == e.getSource())
         {
             openAdvancedNetwork();
+        }
+        else if(advancedRemoveButton == e.getSource())
+        {
+            this.removeAdvanced(); //remove selected rows from advanced table
+            statusLabel.setText("Removed selected rows from Advanced");
+            
+        }
+        else if(advancedClearButton == e.getSource()) //clear advanced table
+        {
+            clearAdvanced();
+            statusLabel.setText("Cleared Advanced");
         }
     }
 

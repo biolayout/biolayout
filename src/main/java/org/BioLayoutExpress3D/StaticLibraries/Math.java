@@ -672,6 +672,22 @@ public final class Math
         }
     }
 
+    public static float clamp(float v, float min, float max)
+    {
+        if (v < min)
+        {
+            return min;
+        }
+        else if (v > max)
+        {
+            return max;
+        }
+        else
+        {
+            return v;
+        }
+    }
+
     public static double clamp(double v, double min, double max)
     {
         if (v < min)

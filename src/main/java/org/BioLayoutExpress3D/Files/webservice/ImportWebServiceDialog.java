@@ -239,7 +239,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         this.setTitle(myMessage);
         
         //search panel buttons
-        searchButton = this.createJButton("Search", "Search Pathway Commons", true);
+        searchButton = this.createJButton("Search", "Search Pathway Commons", false);
         cancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
         stopButton = this.createJButton("Stop", "Stop Search", false); //stop button
         openButton = this.createJButton("Open", "Open network", false); //open button
@@ -322,7 +322,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         //create results table //create table model
         String[] colHeadings = {"Name", "Database", "BioPAX Class", "Pathways"};
         model = createHitsModel(colHeadings);
-        table = createHitsTable(model, colHeadings);
+        table = new ZebraJTable(model, colHeadings);
+
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new MouseAdapter() //double click adds search hit to Advanced
         { 
@@ -336,15 +337,26 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     if(advancedSearchHits.add(hit))
                     {
                         advancedModel.addRow(new Object[]{hit.getName(), joinDatabases(hit), hit.getBiopaxClass(), hit.getPathway().size()});  
-                        statusLabel.setText("Added " + hit.getName() + " to Advanced");
+                        int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);
+                        //TableModelEvent tme = new TableModelEvent(advancedModel, lastRow, lastRow, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT);
+                        //advancedModel.fireTableChanged(tme);
+                        advancedModel.fireTableChanged(new TableModelEvent(advancedModel));
+                        statusLabel.setText("Added " + hit.getName() + " to Advanced");                        
+                        /*
+                        int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);
+                        advancedModel.fireTableRowsInserted(lastRow, lastRow);
+                        */
                     }
-                    else
+                    else //unable to add because search hit already in Set
                     {
                         statusLabel.setText(hit.getName() + " already added");
                     }
                 }
             }
          });
+        
+        //display search hit info when row selected
+        table.getSelectionModel().addListSelectionListener(new HitListSelectionListener());        
         
         //set column widths
         table.getColumn(colHeadings[0]).setPreferredWidth(400);
@@ -362,11 +374,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedPanel.add(createAdvancedFieldPanel(), BorderLayout.PAGE_START);
         
         advancedModel = createHitsModel(colHeadings);
-        advancedTable = createHitsTable(advancedModel, colHeadings);
+        advancedTable = new ZebraJTable(advancedModel, colHeadings);
+
         advancedTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         advancedTable.getColumn(colHeadings[0]).setPreferredWidth(WIDTH - 275);
         advancedTable.getColumn(colHeadings[1]).setPreferredWidth(75);
         advancedTable.getColumn(colHeadings[2]).setPreferredWidth(125);
+        
+        advancedTable.getSelectionModel().addListSelectionListener(new AdvancedHitListSelectionListener());
         
         //listener to disable radio buttons in advanced table if no data
         advancedModel.addTableModelListener(new TableModelListener() 
@@ -376,13 +391,18 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                 {
                     if(advancedModel.getRowCount() == 1) //first row, set up for get query
                     {
-                        enableAll(queryTypeGroup, true);
-                        getRadio.setSelected(true);
+                        getRadio.setEnabled(true);
+                        nearestNeighborhoodRadio.setEnabled(true);
+                        commonStreamRadio.setEnabled(true);
+                        pathsBetweenRadio.setEnabled(true);
+                        pathsFromToRadio.setEnabled(false);
+                        
+                        getRadio.setSelected(true); //make Get the default option
+                        
                         enableAll(directionGroup, false);
                         advancedExecuteButton.setEnabled(true);
                         advancedStopButton.setEnabled(false);
-                        advancedRemoveButton.setEnabled(true);
-                        advancedClearButton.setEnabled(true);
+                        advancedClearButton.setEnabled(true); //NB not enabling remove button here - do it when a row is selected
                     }
                 }
                 else if (e.getType() == TableModelEvent.DELETE)
@@ -401,10 +421,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         });        
 
         JScrollPane advancedTableScrollPane = new JScrollPane(advancedTable);
-        /*
-        JScrollPane advancedEditorScrollPane = new JScrollPane(advancedEditorPane);
-        JSplitPane advancedSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, advancedTableScrollPane, advancedEditorScrollPane);
-        */
         advancedPanel.add(advancedTableScrollPane, BorderLayout.CENTER);       
         
         tabbedPane = new JTabbedPane();
@@ -769,34 +785,58 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     
     private class HitListSelectionListener implements ListSelectionListener
     {
-            public void valueChanged(ListSelectionEvent e) 
+        public void valueChanged(ListSelectionEvent e) 
+        {
+            if (e.getValueIsAdjusting()) return; //Ignore extra messages.
+
+            openButton.setEnabled(true);
+
+            ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+            if (!lsm.isSelectionEmpty()) 
             {
-                if (e.getValueIsAdjusting()) return; //Ignore extra messages.
-
-                openButton.setEnabled(true);
-
-                ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-                if (!lsm.isSelectionEmpty()) 
-                {
-                    int selectedRow = lsm.getMinSelectionIndex();
-                    SearchHit hit = searchHits.get(selectedRow);
-                    String excerptHTML = generateExcerptHTML(hit);
-                    editorPane.setText(excerptHTML);
-                }
+                int selectedRow = lsm.getMinSelectionIndex();
+                SearchHit hit = searchHits.get(selectedRow);
+                String excerptHTML = generateExcerptHTML(hit);
+                editorPane.setText(excerptHTML);
             }
-    }
-
-    private ZebraJTable createHitsTable(DefaultTableModel model, String[] colHeadings)
-    {
-        ZebraJTable table = new ZebraJTable(model, colHeadings);
-        
-        //display search hit info when row selected
-        ListSelectionModel rowSelectionModel = table.getSelectionModel();
-        rowSelectionModel.addListSelectionListener(new HitListSelectionListener());        
-
-        return table;
+        }
     }
     
+    /**
+     * Listener for selection/deselection of rows in Advanced table.
+     */
+    private class AdvancedHitListSelectionListener implements ListSelectionListener
+    {
+        public void valueChanged(ListSelectionEvent e)
+        {
+            if (e.getValueIsAdjusting()) return; //Ignore extra messages.
+            ListSelectionModel lsm = (ListSelectionModel)e.getSource();
+            if(lsm.isSelectionEmpty())
+            {
+                pathsFromToRadio.setEnabled(false);
+                advancedRemoveButton.setEnabled(false);
+            }
+            else
+            {
+                /*
+                enable remove button if at least one row selected
+                enable Paths From to
+                if at least one row is selected
+                and not all rows are selected
+                */
+                if(advancedTable.getSelectedRowCount() > 0) 
+                {
+                    advancedRemoveButton.setEnabled(true);
+                    if(advancedTable.getSelectedRowCount() < advancedTable.getRowCount())
+                    {
+                        pathsFromToRadio.setEnabled(true);            
+                    }
+                }
+            }
+
+        }
+    }
+
     private void clearSearchResults(boolean clearAdvanced)
     {
         model.setRowCount(0); //clear previous search results

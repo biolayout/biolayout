@@ -437,7 +437,7 @@ public final class GlobalEnvironment
     public static final float WEIGHT_LEVEL = 2.0f;
     public static final PrefColor DEFAULT_EDGE_COLOR = new PrefColor(new Color(170, 207, 174), "default_edge_color", true);
     public static final Color DEFAULT_NODE_COLOR = new Color(0, 0, 144);
-    public static final PrefFloat DEFAULT_NODE_SIZE = new PrefFloat(10.0f, "default_node_size", true);
+    public static final PrefFloat DEFAULT_NODE_SIZE = new PrefFloat(7.0f, "default_node_size", false);
     public static final PrefBool COLOR_EDGES_BY_WEIGHT = new PrefBool(true, "color_edges_by_weight", true);
     public static final PrefBool COLOR_EDGES_BY_COLOR = new PrefBool(false, "color_edges_by_color", true);
     public static final PrefFloat DEFAULT_EDGE_SIZE = new PrefFloat(1.0f, "default_edge_size", true);

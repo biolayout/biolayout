@@ -606,10 +606,16 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                     nodeColorButton.setBackground( graphNode.getColor() );
                 }
 
-                if (multipleSize)
-                    nodeSizeComboBox.setSelectedIndex(1);
+                if (!multipleSize)
+                {
+                    int selectedNodeSize = (int) graphNode.getNodeSize();
+                    int index = selectedNodeSize - 1;
+                    nodeSizeComboBox.setSelectedIndex(index < nodeSizeComboBox.getItemCount() ? index : 0);
+                }
                 else
-                    nodeSizeComboBox.setSelectedIndex( ( (int)graphNode.getNodeSize() < nodeSizeComboBox.getItemCount() ) ? (int)graphNode.getNodeSize() : 0 );
+                {
+                    nodeSizeComboBox.setSelectedIndex(0);
+                }
 
                 if ( nc.getIsGraphml() && graphmlViewNodeDepthPositioningTextField.isEnabled() )
                 {

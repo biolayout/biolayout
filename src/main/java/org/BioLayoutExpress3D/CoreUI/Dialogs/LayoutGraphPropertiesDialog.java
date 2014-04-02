@@ -1109,15 +1109,11 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         layoutBurstIterationsField = new JTextField("", 10);
         layoutBurstIterationsField.addCaretListener(this);
         layoutBurstIterationsField.setToolTipText("Burst Layout Iterations");
-        layoutMinimumComponentSizeField = new JTextField("", 10);
-        layoutMinimumComponentSizeField.addCaretListener(this);
-        layoutMinimumComponentSizeField.setToolTipText("Minimum Component Size");
 
         layoutStartingTemperatureField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
         layoutIterationsField.setDocument( new TextFieldFilter(TextFieldFilter.NUMERIC) );
         layoutKvalueField.setDocument( new TextFieldFilter(TextFieldFilter.FLOAT) );
         layoutBurstIterationsField.setDocument( new TextFieldFilter(TextFieldFilter.NUMERIC) );
-        layoutMinimumComponentSizeField.setDocument( new TextFieldFilter(TextFieldFilter.NUMERIC) );
 
         // Algorithm selection
         JPanel algorithmPanel = new JPanel(true);
@@ -1145,6 +1141,15 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         layoutAlgorithmGroup.add(askRadioButton);
         algorithmPanel.add(askRadioButton);
 
+        // Minimum Component Size
+        JPanel minimumComponentSizePanel = new JPanel(true);
+        algorithmPanel.setLayout(new BoxLayout(algorithmPanel, BoxLayout.X_AXIS));
+        layoutMinimumComponentSizeField = new JTextField("", 10);
+        layoutMinimumComponentSizeField.addCaretListener(this);
+        layoutMinimumComponentSizeField.setToolTipText("Minimum Component Size");
+        layoutMinimumComponentSizeField.setDocument( new TextFieldFilter(TextFieldFilter.NUMERIC) );
+        minimumComponentSizePanel.add(layoutMinimumComponentSizeField);
+
         // FR options
         JPanel fruchtermanRheingoldPanel = new JPanel(true);
         fruchtermanRheingoldPanel.setLayout( new BoxLayout(fruchtermanRheingoldPanel, BoxLayout.Y_AXIS) );
@@ -1166,9 +1171,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
 
         layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Burst Layout Iterations");
         addTitledButtonBorder(layoutPropertiesPanelBorder, layoutBurstIterationsField, "           (e.g. 20)", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fruchtermanRheingoldPanel);
-
-        layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Minimum Component Size");
-        addTitledButtonBorder(layoutPropertiesPanelBorder, layoutMinimumComponentSizeField, "           (e.g. 3)", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fruchtermanRheingoldPanel);
 
         // FMMM options
         JPanel fmmmPanel = new JPanel(true);
@@ -1237,7 +1239,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         JPanel layoutLargePanel = new JPanel(true);
         layoutLargePanel.setLayout( new GridBagLayout() );
 
-        addPanelToGrid("Algorithm", algorithmPanel, layoutLargePanel, 0, 0, 2, 1);
+        addPanelToGrid("Algorithm", algorithmPanel, layoutLargePanel, 0, 0, 1, 1);
+        addPanelToGrid("Minimum Component Size", minimumComponentSizePanel, layoutLargePanel, 1, 0, 1, 1);
         addPanelToGrid("Fruchterman-Rheingold", fruchtermanRheingoldPanel, layoutLargePanel, 0, 1, 1, 1);
         addPanelToGrid("FMMM", fmmmPanel, layoutLargePanel, 1, 1, 1, 1);
 

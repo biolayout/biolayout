@@ -133,7 +133,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JRadioButton circleRadioButton = null;
     private JRadioButton askRadioButton = null;
 
-    private JCheckBox layoutResizeNodesAndArrowheadsToKvalue = null;
     private JCheckBox layoutUseEdgeWeightsForLayout = null;
     private JCheckBox layoutTiledLayout = null;
     private FloatNumberField layoutKvalueField = null;
@@ -1083,14 +1082,10 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     {
         TitledBorder layoutPropertiesPanelBorder = null;
 
-        layoutResizeNodesAndArrowheadsToKvalue = new JCheckBox("Resize Nodes And Arrowheads To K-Value");
-        layoutResizeNodesAndArrowheadsToKvalue.setToolTipText("Resize Nodes And Arrowheads To K-Value");
         layoutUseEdgeWeightsForLayout = new JCheckBox("Use Edge Weights For Layout");
         layoutUseEdgeWeightsForLayout.setToolTipText("Use Edge Weights For Layout");
         layoutTiledLayout = new JCheckBox("Tiled Layout");
         layoutTiledLayout.setToolTipText("Tiled Layout");
-        layoutResizeNodesAndArrowheadsToKvalue.addActionListener(this);
-        layoutResizeNodesAndArrowheadsToKvalue.setActionCommand(CHANGE_ACTION_COMMAND);
         layoutUseEdgeWeightsForLayout.addActionListener(this);
         layoutUseEdgeWeightsForLayout.setActionCommand(CHANGE_ACTION_COMMAND);
         layoutTiledLayout.addActionListener(this);
@@ -1147,9 +1142,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         // FR options
         JPanel fruchtermanRheingoldPanel = new JPanel(true);
         fruchtermanRheingoldPanel.setLayout( new BoxLayout(fruchtermanRheingoldPanel, BoxLayout.Y_AXIS) );
-
-        layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Resize Nodes And Arrowheads To Kvalue");
-        addTitledButtonBorder(layoutPropertiesPanelBorder, layoutResizeNodesAndArrowheadsToKvalue, "(e.g. ON)", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fruchtermanRheingoldPanel);
 
         layoutPropertiesPanelBorder = BorderFactory.createTitledBorder(ETCHED, "Use Edge Weights For Layout");
         addTitledButtonBorder(layoutPropertiesPanelBorder, layoutUseEdgeWeightsForLayout, "             (e.g. ON)", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, fruchtermanRheingoldPanel);
@@ -3064,7 +3056,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         fmmmStopCriterion.setSelectedIndex(FMMM_STOP_CRITERION.getIndex());
         fmmmIterationLevelFactor.setValue(FMMM_ITERATION_LEVEL_FACTOR.get());
 
-        layoutResizeNodesAndArrowheadsToKvalue.setSelected( RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get() );
         layoutUseEdgeWeightsForLayout.setSelected( USE_EDGE_WEIGHTS_FOR_LAYOUT.get() );
         layoutTiledLayout.setSelected( TILED_LAYOUT.get() );
         layoutStartingTemperatureField.setText( Float.toString( STARTING_TEMPERATURE.get() ) );
@@ -3386,7 +3377,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             GRAPH_LAYOUT_ALGORITHM.set(GraphLayoutAlgorithm.ALWAYS_ASK);
         }
 
-        RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.set( layoutResizeNodesAndArrowheadsToKvalue.isSelected() );
         USE_EDGE_WEIGHTS_FOR_LAYOUT.set( layoutUseEdgeWeightsForLayout.isSelected() );
         TILED_LAYOUT.set( layoutTiledLayout.isSelected() );
         STARTING_TEMPERATURE.set( layoutStartingTemperatureField.getValue() );

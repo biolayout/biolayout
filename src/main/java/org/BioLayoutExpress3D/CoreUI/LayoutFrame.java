@@ -1392,20 +1392,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
             if (!layoutProgressBarDialog.userHasCancelled())
             {
-                // Only the FR algorithm has a K-value
-                if (gla == GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD && RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE.get())
-                {
-                    boolean nodeSizesSetFromLayoutFile =
-                            fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString());
-                    boolean graphMLButNotYedStyle = DATA_TYPE.equals(DataTypes.GRAPHML) &&
-                            !YED_STYLE_RENDERING_FOR_GPAPHML_FILES.get();
-
-                    if (!nodeSizesSetFromLayoutFile && graphMLButNotYedStyle)
-                    {
-                        resizeNodesAndArrowHeadsToKvalue();
-                    }
-                }
-
                 nc.clearRoot();
                 nc.normaliseWeights();
                 graph.rebuildGraph();
@@ -1814,29 +1800,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutGraphPropertiesDialog.setEnabledProportionalEdgesSizeToWeight(false);
         layoutGraphPropertiesDialog.setEnabledNodeNameTextFieldAndSelectNodesTab(false, null, 0);
         layoutGraphPropertiesDialog.setEnabledGraphmlRelatedOptions(false);
-    }
-
-    /**
-     * Resizes nodes to K value.
-     */
-    private void resizeNodesAndArrowHeadsToKvalue()
-    {
-        double nodesToKValueRatio = nc.getKValue() / REFERENCE_K_VALUE;
-        double arrowheadsToKValueRatio = nc.getKValue() / (REFERENCE_K_VALUE / 5.0) + 1.0;
-
-        int newNodeSize = 0;
-        for (Vertex vertex : nc.getVertices())
-        {
-            newNodeSize = (int)( nodesToKValueRatio * vertex.getVertexSize() * this.nodeResizeFactor);
-            if (newNodeSize < MIN_NODE_SIZE)
-            {
-                newNodeSize = MIN_NODE_SIZE; // make sure node size is at least MIN_NODE_SIZE
-            }
-            vertex.setVertexSize(newNodeSize);
-        }
-
-        arrowheadsToKValueRatio = (arrowheadsToKValueRatio < MIN_ARROWHEAD_SIZE) ? MIN_ARROWHEAD_SIZE : ( (arrowheadsToKValueRatio > MAX_ARROWHEAD_SIZE) ? MAX_ARROWHEAD_SIZE : arrowheadsToKValueRatio );
-        ARROW_HEAD_SIZE.set( (int)arrowheadsToKValueRatio );
     }
 
     /**

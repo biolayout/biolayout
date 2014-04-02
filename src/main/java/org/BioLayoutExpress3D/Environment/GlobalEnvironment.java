@@ -211,7 +211,6 @@ public final class GlobalEnvironment
 
     public static final boolean RANDOM_INITIAL_LAYOUT_COORDS = true;
     public static final double REFERENCE_K_VALUE = 30.0;
-    public static final PrefBool RESIZE_NODES_AND_ARROWHEADS_TO_KVALUE = new PrefBool(true, "resize_nodes_and_arrowheads_to_kvalue", true);
     public static final PrefBool TILED_LAYOUT = new PrefBool(true, "tiled_layout", true);
     public static final PrefBool USE_EDGE_WEIGHTS_FOR_LAYOUT = new PrefBool(true, "use_edge_weights_for_layout", true);
     public static final PrefFloat STARTING_TEMPERATURE = new PrefFloat(100.0f, "starting_temperature", true);

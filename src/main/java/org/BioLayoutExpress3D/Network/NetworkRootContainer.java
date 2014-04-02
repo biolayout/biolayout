@@ -1,6 +1,5 @@
 package org.BioLayoutExpress3D.Network;
 
-import java.awt.*;
 import java.io.*;
 import java.util.*;
 import ogdf.basic.PointFactory;
@@ -10,6 +9,7 @@ import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Utils.Point3D;
 
 /**
 *
@@ -295,8 +295,102 @@ public final class NetworkRootContainer extends NetworkContainer
                     layoutProgressBarDialog.endProgressBar();
                 }
 
+                // It's a bit wasteful to rescale here only to then call rescaleToFitCanvas,
+                // but it makes the logic much more simple
+                rescale((float) REFERENCE_K_VALUE / frLayout.getKValue(), new Point3D(), true, false, false);
                 break;
         }
+
+        rescaleToFitCanvas();
+    }
+
+    private void rescale(float scale, Point3D offset,
+            boolean positions, boolean nodeSizes, boolean arrowHeadSizes)
+    {
+        for (Vertex vertex : getVertices())
+        {
+            if (positions)
+            {
+                vertex.setVertexLocation(
+                        (float) (vertex.getX() + offset.getX()) * scale,
+                        (float) (vertex.getY() + offset.getY()) * scale,
+                        (float) (vertex.getZ() + offset.getZ()) * scale);
+            }
+
+            if (nodeSizes)
+            {
+                vertex.setVertexSize(vertex.getVertexSize() * (float) scale);
+            }
+        }
+
+        if (arrowHeadSizes)
+        {
+            // This is crap, but then so is the entire concept of having a global user setting that
+            // is then subsequently programatically adjusted
+            int newSize = (int) (15.0f * scale);
+            newSize = org.BioLayoutExpress3D.StaticLibraries.Math.clamp(newSize, MIN_ARROWHEAD_SIZE, MAX_ARROWHEAD_SIZE);
+
+            ARROW_HEAD_SIZE.set(newSize);
+        }
+    }
+
+    private void rescaleToFitCanvas()
+    {
+        float xMin = Float.MAX_VALUE;
+        float xMax = Float.MIN_VALUE;
+        float yMin = Float.MAX_VALUE;
+        float yMax = Float.MIN_VALUE;
+        float zMin = Float.MAX_VALUE;
+        float zMax = Float.MIN_VALUE;
+
+        for (Vertex vertex : getVertices())
+        {
+            float x = vertex.getX();
+            float y = vertex.getY();
+            float z = vertex.getZ();
+
+            if (x < xMin)
+            {
+                xMin = x;
+            }
+            if (x > xMax)
+            {
+                xMax = x;
+            }
+            if (y < yMin)
+            {
+                yMin = y;
+            }
+            if (y > yMax)
+            {
+                yMax = y;
+            }
+            if (z < zMin)
+            {
+                zMin = z;
+            }
+            if (z > zMax)
+            {
+                zMax = z;
+            }
+        }
+
+        float xSpan = xMax - xMin;
+        float ySpan = yMax - yMin;
+        float zSpan = zMax - zMin;
+
+        float maxDimension = Math.max(Math.max(xSpan, ySpan), zSpan);
+        float maxTargetDimension = Math.max(Math.max(NetworkContainer.CANVAS_X_SIZE,
+                NetworkContainer.CANVAS_Y_SIZE), NetworkContainer.CANVAS_Z_SIZE);
+        float scale = maxTargetDimension / maxDimension;
+
+        float xOffset = -xMin - (xSpan * 0.5f) + ((NetworkContainer.CANVAS_X_SIZE * 0.5f) / scale);
+        float yOffset = -yMin - (ySpan * 0.5f) + ((NetworkContainer.CANVAS_Y_SIZE * 0.5f) / scale);
+        float zOffset = -zMin - (zSpan * 0.5f) + ((NetworkContainer.CANVAS_Z_SIZE * 0.5f) / scale);
+
+        Point3D offset = new Point3D(xOffset, yOffset, zOffset);
+
+        rescale((float) scale, offset, true, !isRelayout, !isRelayout);
     }
 
     @Override

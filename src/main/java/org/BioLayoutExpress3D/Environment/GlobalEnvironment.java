@@ -189,6 +189,7 @@ public final class GlobalEnvironment
     public static final PrefBool SHOW_EDGES_WHEN_DRAGGING_NODES = new PrefBool(false, "show_edges_when_dragging_nodes", true);
     public static final PrefBool YED_STYLE_RENDERING_FOR_GPAPHML_FILES = new PrefBool(true, "yed_style_rendering_for_graphml_files", true);
     public static final PrefBool YED_STYLE_COMPONENT_CONTAINERS_RENDERING_FOR_GPAPHML_FILES = new PrefBool(true, "yed_style_component_containers_rendering_for_graphml_files", true);
+    public static final PrefBool SHOW_NODE_NAMES_OF_SELECTION = new PrefBool(false, "show_node_names_of_selection", true);
     public static final PrefBool HIGH_QUALITY_ANTIALIASING = new PrefBool(false, "high_quality_antialiasing", true);
     public static final PrefBool NORMAL_QUALITY_ANTIALIASING = new PrefBool(false, "normal_quality_antialiasing", true);
     public static final PrefBool USE_VSYNCH = new PrefBool(true, "use_vsynch", true);

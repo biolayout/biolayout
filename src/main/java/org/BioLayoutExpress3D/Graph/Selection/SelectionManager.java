@@ -79,6 +79,7 @@ public final class SelectionManager
         selectedEdges.clear();
 
         setActionsEnable(false);
+        selectionChanged();
     }
 
     public void clearGraphUndoDelete()
@@ -647,7 +648,6 @@ public final class SelectionManager
             include = showConfirmationDialogSomeHidden();
 
         addNodesToSelectedAndNotSelectHiddenNodes(foundNodes, include);
-        graph.updateSelectedNodesDisplayList();
     }
 
     private void deleteNodes(HashSet<GraphNode> nodes, String progressMessage)
@@ -828,7 +828,6 @@ public final class SelectionManager
     {
         clearAllSelection();
         addNodesToSelected(graph.getGraphNodes(), false, true);
-        graph.updateSelectedNodesDisplayList();
 
         layoutFrame.setEnabledNodeNameTextFieldAndSelectNodesTab( false, null, selectedNodes.size() );
     }
@@ -837,7 +836,6 @@ public final class SelectionManager
     {
         clearAllSelection();
         addNodesToSelected(new HashSet<GraphNode>(), false, true);
-        graph.updateSelectedNodesDisplayList();
 
         layoutFrame.setEnabledNodeNameTextFieldAndSelectNodesTab(false, null, 0);
     }
@@ -905,6 +903,11 @@ public final class SelectionManager
             updateViewers(updateExpressionGraphViewOnly, notUpdateTitleBar);
         updateGraphStatistics();
         updateFrameStatusLabel();
+
+        if (hasAddedNodes)
+        {
+            selectionChanged();
+        }
 
         return hasAddedNodes;
     }
@@ -1479,6 +1482,8 @@ public final class SelectionManager
             updateViewers(updateExpressionGraphViewOnly, notUpdateTitleBar);
         updateGraphStatistics();
         updateFrameStatusLabel();
+
+        selectionChanged();
     }
 
     private void updateViewers()
@@ -1511,10 +1516,10 @@ public final class SelectionManager
 
     public void selectByClass(VertexClass vertexClass)
     {
-        selectByClass(vertexClass, true, true, true);
+        selectByClass(vertexClass, true, true);
     }
 
-    public void selectByClass(VertexClass vertexClass, boolean updateViewers, boolean updateSelectedNodesDisplayList, boolean notUpdateTitleBar)
+    public void selectByClass(VertexClass vertexClass, boolean updateViewers, boolean notUpdateTitleBar)
     {
         clearAllSelection();
 
@@ -1530,12 +1535,27 @@ public final class SelectionManager
 
         addNodesToSelected(foundGraphNodes, false, true, true, updateViewers, false, notUpdateTitleBar);
 
-        if (foundGraphNodes.size() > GroupManager.NUMBER_OF_NODES_TO_UPDATE_SELECTED_NODES_DISPLAY_LIST_WHILE_COLLAPSING || updateSelectedNodesDisplayList)
+        if (foundGraphNodes.size() > GroupManager.NUMBER_OF_NODES_TO_UPDATE_SELECTED_NODES_DISPLAY_LIST_WHILE_COLLAPSING)
         {
             if (DEBUG_BUILD) println("Found size > " + GroupManager.NUMBER_OF_NODES_TO_UPDATE_SELECTED_NODES_DISPLAY_LIST_WHILE_COLLAPSING + " : " + foundGraphNodes.size() + " Now repainting");
             graph.updateSelectedNodesDisplayList();
         }
     }
 
+    public void refreshNodeNames()
+    {
+        selectionChanged();
+    }
 
+    private void selectionChanged()
+    {
+        if (SHOW_NODE_NAMES_OF_SELECTION.get())
+        {
+            ActionEvent e = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null);
+            hideAllNodeNamesAction.actionPerformed(e);
+            showSelectedNodeNamesAction.actionPerformed(e);
+        }
+
+        graph.updateSelectedNodesDisplayList();
+    }
 }

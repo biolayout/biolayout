@@ -100,14 +100,12 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
                 {
                     layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(false);
                     layoutFrame.getGraph().getSelectionManager().removeNodeFromSelected(graphNode, false, true, true);
-                    layoutFrame.getGraph().updateSelectedNodesDisplayList();
                     layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(true);
                 }
                 else
                 {
                     layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(false);
                     layoutFrame.getGraph().getSelectionManager().addNodeToSelectedUpdateExpressionGraphViewOnly(graphNode, false, true);
-                    layoutFrame.getGraph().updateSelectedNodesDisplayList();
                     layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(true);
                 }
 
@@ -167,7 +165,6 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
 
         layoutFrame.getGraph().getSelectionManager().clearAllSelection();
         layoutFrame.getGraph().getSelectionManager().addNodeToSelectedUpdateExpressionGraphViewOnly(graphNodes, false, true);
-        layoutFrame.getGraph().updateSelectedNodesDisplayList();
 
         layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(true);
     }
@@ -187,7 +184,6 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
             layoutFrame.getGraph().getSelectionManager().removeNodeFromSelected(graphNodes, false, true, true);
         else
             layoutFrame.getGraph().getSelectionManager().addNodeToSelectedUpdateExpressionGraphViewOnly(graphNodes, false, true);
-        layoutFrame.getGraph().updateSelectedNodesDisplayList();
 
         fireTableDataChanged();
         layoutFrame.getClassViewerFrame().setUpdateResetSelectDeselectAllButton(true);

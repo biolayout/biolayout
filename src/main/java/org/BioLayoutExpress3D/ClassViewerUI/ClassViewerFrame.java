@@ -1021,6 +1021,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(currentVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
+            layoutFrame.getGraph().updateSelectedNodesDisplayList();
             setCurrentClassName( currentVertexClass.getName() );
 
             nextClassButton.setEnabled(true);
@@ -1039,6 +1040,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(previousVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
+            layoutFrame.getGraph().updateSelectedNodesDisplayList();
             setCurrentClassName( previousVertexClass.getName() );
 
             nextClassButton.setEnabled(true);
@@ -1064,6 +1066,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
             setUpdateResetSelectDeselectAllButton(false);
             layoutFrame.getGraph().getSelectionManager().selectByClass(nextVertexClass);
             generalTable.getDefaultEditor(String.class).stopCellEditing();
+            layoutFrame.getGraph().updateSelectedNodesDisplayList();
             if (enableTitleBarUpdate)
                 setCurrentClassName( nextVertexClass.getName() );
 

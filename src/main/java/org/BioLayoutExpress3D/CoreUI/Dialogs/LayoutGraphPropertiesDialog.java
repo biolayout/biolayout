@@ -111,7 +111,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     private JCheckBox generalDragShowEdgesWhileDraggingNodes = null;
     private JCheckBox generalyEdStyleRenderingForGraphmlFiles = null;
     private JCheckBox generalyEdStyleComponentContainersRenderingForGraphmlFiles = null;
-    private JCheckBox generalSelectionNodeNames = null;
 
     private JRadioButton generalHighQualityAntiAlias = null;
     private JRadioButton generalNormalQualityAntiAlias = null;
@@ -905,11 +904,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         generalyEdStyleComponentContainersRenderingForGraphmlFiles.setEnabled(false);
         generalyEdStyleComponentContainersRenderingForGraphmlFiles.setToolTipText("yEd-style Component Containers Rendering for Graphml files");
 
-        generalSelectionNodeNames = new JCheckBox("Show Node Names Of Selection");
-        generalSelectionNodeNames.setActionCommand(CHANGE_ACTION_COMMAND);
-        generalSelectionNodeNames.addActionListener(this);
-        generalSelectionNodeNames.setToolTipText("Show Node Names Of Selection");
-
         generalHighQualityAntiAlias = new JRadioButton("Texture MipMapping & High Quality FullScreen Anti-Aliasing (FSAA 4x)");
         generalHighQualityAntiAlias.setActionCommand(CHANGE_ACTION_COMMAND);
         generalHighQualityAntiAlias.addActionListener(this);
@@ -1003,9 +997,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         graphOptionsPanel1.add(generalDisableNodesRendering);
         graphOptionsPanel1.add( Box.createRigidArea( new Dimension(10, 10) ) );
         graphOptionsPanel1.add(generalDisableEdgesRendering);
-        graphOptionsPanel1.add( Box.createRigidArea( new Dimension(10, 10) ) );
-        graphOptionsPanel1.add(generalSelectionNodeNames);
-
 
         graphOptionsPanel2.setLayout( new BoxLayout(graphOptionsPanel2, BoxLayout.Y_AXIS) );
         graphOptionsPanel2.add(generalDirectional);
@@ -2993,8 +2984,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         if ( generalyEdStyleRenderingForGraphmlFiles.isEnabled() )
             setEnabledGraphmlRenderingAndDepthRelatedOptions( generalyEdStyleRenderingForGraphmlFiles.isSelected() );
 
-        generalSelectionNodeNames.setSelected(SHOW_NODE_NAMES_OF_SELECTION.get());
-
         if ( HIGH_QUALITY_ANTIALIASING.get() )
         {
             generalHighQualityAntiAlias.setSelected(true);
@@ -3446,12 +3435,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
             YED_STYLE_COMPONENT_CONTAINERS_RENDERING_FOR_GPAPHML_FILES.set( generalyEdStyleComponentContainersRenderingForGraphmlFiles.isSelected() );
             if ( generalyEdStyleRenderingForGraphmlFiles.isEnabled() )
                 setEnabledGraphmlRenderingAndDepthRelatedOptions( generalyEdStyleRenderingForGraphmlFiles.isSelected() );
-
-            SHOW_NODE_NAMES_OF_SELECTION.set(generalSelectionNodeNames.isSelected());
-            if (SHOW_NODE_NAMES_OF_SELECTION.get())
-            {
-                layoutFrame.getGraph().getSelectionManager().refreshNodeNames();
-            }
 
             if ( generalHighQualityAntiAlias.isSelected() )
             {

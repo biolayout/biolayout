@@ -115,7 +115,7 @@ public final class GroupManager
             if (DEBUG_BUILD) println("Got Class:" + vc.getName() + vc.getClassID());
             layoutProgressBarDialog.incrementProgress();
 
-            selectionManager.selectByClass(vc, false, false); // do not update viewers so as to avoid crashes!
+            selectionManager.selectByClass(vc, false, false, false); // do not update viewers so as to avoid crashes!
 
             if (vc.getClassID() != 0)
             {

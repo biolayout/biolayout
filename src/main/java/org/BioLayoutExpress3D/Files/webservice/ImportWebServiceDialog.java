@@ -35,8 +35,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -240,14 +238,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         
         //search panel buttons
         searchButton = this.createJButton("Search", "Search Pathway Commons", false);
-        cancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
+        cancelButton = this.createJButton("Close", "Close dialog", true); //cancel button
         stopButton = this.createJButton("Stop", "Stop Search", false); //stop button
         openButton = this.createJButton("Open", "Open network", false); //open button
         getRootPane().setDefaultButton(searchButton); //searches with enter key
         
         //advanced panel buttons
         advancedExecuteButton = this.createJButton("Execute", "Execute query", false);
-        advancedCancelButton = this.createJButton("Cancel", "Close dialog", true); //cancel button
+        advancedCancelButton = this.createJButton("Close", "Close dialog", true); //cancel button
         advancedStopButton = this.createJButton("Stop", "Stop query", false); //stop button
         advancedRemoveButton = this.createJButton("Remove", "Remove search hit", false);
         advancedClearButton = this.createJButton("Clear", "Remove all search hits", modal);
@@ -302,6 +300,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
 
         nameCheckBox = new JCheckBox("Name", true);
         nameCheckBox.setToolTipText("Restrict search to name field only");
+        
+        getRadio.setToolTipText("Retrieve multiple search hits as a single network graph");
+        nearestNeighborhoodRadio.setToolTipText("Search neighborhood of a given source set of nodes");
+        commonStreamRadio.setToolTipText("Search common downstream or common upstream of a specified set of entities based on the given directions");
+        pathsBetweenRadio.setToolTipText("Find the paths between specific source set of states or entities");
+        pathsFromToRadio.setToolTipText("Find the paths from a specific source set of states or entities (highlighted rows) to a specific target set of states or entities (non-highlighted rows)");
+        
+        upstreamRadio.setToolTipText("Graph search direction upstream");
+        downstreamRadio.setToolTipText("Graph search direction downstream");
+        bothRadio.setToolTipText("Graph search directions upstream and downstream");
 
         /**********add form fields******************/
         
@@ -382,7 +390,6 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() == TableModelEvent.INSERT) 
                 {
-                    logger.info("tableChanged INSERT event");
                     if(advancedModel.getRowCount() >= 1) //first row, set up for get query
                     {
                         getRadio.setEnabled(true);
@@ -462,9 +469,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedFieldPanel.add(queryTypePanel, "wrap, span");
         advancedFieldPanel.add(directionPanel, "Wrap");
                 
-        advancedFieldPanel.add(advancedExecuteButton, "tag ok, span, split 5, sizegroup bttn");
-        advancedFieldPanel.add(advancedCancelButton, "tag cancel, sizegroup bttn");
-        advancedFieldPanel.add(advancedStopButton, "tag yes, sizegroup bttn");
+        advancedFieldPanel.add(advancedExecuteButton, "tag right, span, split 5, sizegroup bttn");
+        advancedFieldPanel.add(advancedStopButton, "tag right, sizegroup bttn");
+        advancedFieldPanel.add(advancedCancelButton, "tag right, sizegroup bttn");
+        
         advancedFieldPanel.add(advancedRemoveButton, "tag left, sizegroup bttn");
         advancedFieldPanel.add(advancedClearButton, "tag left, sizegroup bttn");
         
@@ -592,10 +600,10 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(networkTypeLabel, "align label");
         fieldPanel.add(networkTypeCombo, "wrap");
 
-        fieldPanel.add(searchButton, "tag ok, span, split 4, sizegroup bttn");
-        fieldPanel.add(cancelButton, "tag cancel, sizegroup bttn");
-        fieldPanel.add(stopButton, "tag yes, sizegroup bttn");
-        fieldPanel.add(openButton, "tag no, sizegroup bttn");
+        fieldPanel.add(searchButton, "tag right, span, split 4, sizegroup bttn");
+        fieldPanel.add(stopButton, "tag right, sizegroup bttn");
+        fieldPanel.add(openButton, "tag right, sizegroup bttn");
+        fieldPanel.add(cancelButton, "tag right, sizegroup bttn");
         
         fieldPanel.setPreferredSize(new Dimension(WIDTH, 205));
         return fieldPanel;

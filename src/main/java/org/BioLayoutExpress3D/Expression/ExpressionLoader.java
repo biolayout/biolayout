@@ -27,6 +27,7 @@ public final class ExpressionLoader
     private int firstDataRow = 0;
     private boolean transpose = false;
     boolean isSuccessful = false;
+    public String reasonForFailure = "";
 
     public ExpressionLoader(LayoutClassSetsManager layoutClassSetsManager)
     {
@@ -61,6 +62,16 @@ public final class ExpressionLoader
         }
     }
 
+    private void setReasonForFailure(int row, int column, String reason)
+    {
+        if (row >= 0 && column >= 0)
+        {
+            reasonForFailure += "At row " + (row + 1) + ", column " + (column + 1) + ":\n";
+        }
+
+        reasonForFailure += reason;
+    }
+
     public boolean parse(LayoutFrame layoutFrame)
     {
         LayoutProgressBarDialog layoutProgressBarDialog = layoutFrame.getLayoutProgressBar();
@@ -71,9 +82,13 @@ public final class ExpressionLoader
         ParseProgressIndicator ppi = new ParseProgressIndicator(layoutProgressBarDialog);
 
         TextDelimitedMatrix tdm;
+        int row = -1;
+        int column = -1;
 
         try
         {
+            reasonForFailure = "";
+
             tdm = new TextDelimitedMatrix(file, "\t", ppi);
 
             layoutProgressBarDialog.setText("Parsing " + tdm.numLines() + " lines");
@@ -97,12 +112,12 @@ public final class ExpressionLoader
 
             layoutProgressBarDialog.setText("Loading data");
 
-            for (int row = 0; row < numRows; row++)
+            for (row = 0; row < numRows; row++)
             {
                 int percent = (100 * row) / numRows;
                 layoutProgressBarDialog.incrementProgress(percent);
 
-                for (int column = 0; column < numColumns; column++)
+                for (column = 0; column < numColumns; column++)
                 {
                     String value = tdm.valueAt(column, row);
                     int dataColumn = column - firstDataColumn;
@@ -167,6 +182,7 @@ public final class ExpressionLoader
                 println("NumberFormatException in ExpressionLoader.parse():\n" + nfe.getMessage());
             }
 
+            setReasonForFailure(row, column, nfe.toString());
             return false;
         }
         catch (IOException ioe)
@@ -176,6 +192,7 @@ public final class ExpressionLoader
                 println("IOException in ExpressionLoader.parse():\n" + ioe.getMessage());
             }
 
+            setReasonForFailure(row, column, ioe.toString());
             return false;
         }
         finally

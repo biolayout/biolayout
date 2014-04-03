@@ -1088,6 +1088,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         EXPRESSION_FILE_PATH = "";
         WEIGHTED_EDGES = false;
         ExpressionLoader expressionLoader = null;
+        String reasonForExpressionLoadFailure = null;
         double correlationCutOffValue = 0.0;
 
         // Blast data
@@ -1233,6 +1234,8 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     INSTALL_DIR_FOR_SCREENSHOTS_HAS_CHANGED = false;
 
                     disableAllActions();
+
+                    reasonForExpressionLoadFailure = expressionLoader.reasonForFailure;
                 }
             }
             else
@@ -1340,6 +1343,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
                                 EXPRESSION_DATA_FIRST_ROW,
                                 EXPRESSION_DATA_TRANSPOSE);
                         isSuccessful = expressionLoader.parse(this);
+                        reasonForExpressionLoadFailure = expressionLoader.reasonForFailure; // "" if no failure
 
                         isSuccessful = isSuccessful && expressionLoader.parseAnnotations(this, nc);
                         DATA_TYPE = DataTypes.EXPRESSION;
@@ -1464,7 +1468,20 @@ public final class LayoutFrame extends JFrame implements GraphListener
         }
 
         if (!isSuccessful && isNotSkipped)
-            JOptionPane.showMessageDialog(this, "Parse Error with file " + file.getName() + ":\nPlease check the file format and retry loading!", "Parse Error", JOptionPane.ERROR_MESSAGE);
+        {
+            String errorMessage = "Parse error loading file " + file.getName() + ".\n";
+
+            if (reasonForExpressionLoadFailure != null && !reasonForExpressionLoadFailure.isEmpty())
+            {
+                errorMessage += reasonForExpressionLoadFailure;
+            }
+            else
+            {
+                errorMessage += "Please check the file is formatted correctly.";
+            }
+
+            JOptionPane.showMessageDialog(this, errorMessage, "Parse Error", JOptionPane.ERROR_MESSAGE);
+        }
 
         if (!nc.getHasStandardPetriNetTransitions() || initCheckToShowNavigationWizardOnStartup)
             checkToShowNavigationWizardOnStartup();

@@ -153,7 +153,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private DefaultTableModel advancedModel; 
     private JTabbedPane tabbedPane;
     
-    private JRadioButton getRadio = new JRadioButton("Get");
+    private JRadioButton getRadio = new JRadioButton("Get", true); //default option
     private JRadioButton nearestNeighborhoodRadio = new JRadioButton("Nearest Neighborhood");
     private JRadioButton commonStreamRadio = new JRadioButton("Common Stream");
     private JRadioButton pathsBetweenRadio = new JRadioButton("Paths Between");
@@ -337,15 +337,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
                     if(advancedSearchHits.add(hit))
                     {
                         advancedModel.addRow(new Object[]{hit.getName(), joinDatabases(hit), hit.getBiopaxClass(), hit.getPathway().size()});  
-                        int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);
-                        //TableModelEvent tme = new TableModelEvent(advancedModel, lastRow, lastRow, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT);
-                        //advancedModel.fireTableChanged(tme);
-                        advancedModel.fireTableChanged(new TableModelEvent(advancedModel));
+                        int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);                        
                         statusLabel.setText("Added " + hit.getName() + " to Advanced");                        
-                        /*
-                        int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);
-                        advancedModel.fireTableRowsInserted(lastRow, lastRow);
-                        */
                     }
                     else //unable to add because search hit already in Set
                     {
@@ -389,15 +382,14 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() == TableModelEvent.INSERT) 
                 {
-                    if(advancedModel.getRowCount() == 1) //first row, set up for get query
+                    logger.info("tableChanged INSERT event");
+                    if(advancedModel.getRowCount() >= 1) //first row, set up for get query
                     {
                         getRadio.setEnabled(true);
                         nearestNeighborhoodRadio.setEnabled(true);
                         commonStreamRadio.setEnabled(true);
                         pathsBetweenRadio.setEnabled(true);
-                        pathsFromToRadio.setEnabled(false);
-                        
-                        getRadio.setSelected(true); //make Get the default option
+                        enableAdvancedBySelection(); //enable remove/pathsfromto according to row selection
                         
                         enableAll(directionGroup, false);
                         advancedExecuteButton.setEnabled(true);
@@ -811,32 +803,46 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         {
             if (e.getValueIsAdjusting()) return; //Ignore extra messages.
             ListSelectionModel lsm = (ListSelectionModel)e.getSource();
-            if(lsm.isSelectionEmpty())
+            if(lsm.isSelectionEmpty()) //deselection event and no rows selected
             {
+                getRadio.setSelected(true); //ensure pathsfromto query can't be run
                 pathsFromToRadio.setEnabled(false);
                 advancedRemoveButton.setEnabled(false);
             }
             else
             {
-                /*
-                enable remove button if at least one row selected
-                enable Paths From to
-                if at least one row is selected
-                and not all rows are selected
-                */
-                if(advancedTable.getSelectedRowCount() > 0) 
-                {
-                    advancedRemoveButton.setEnabled(true);
-                    if(advancedTable.getSelectedRowCount() < advancedTable.getRowCount())
-                    {
-                        pathsFromToRadio.setEnabled(true);            
-                    }
-                }
+                enableAdvancedBySelection();
             }
-
         }
     }
-
+    
+    /**
+     * Enable Advanced components when table rows are selected.
+     */
+    private void enableAdvancedBySelection()
+    {
+        /*
+        enable remove button if at least one row selected
+        enable Paths From to
+            if at least one row is selected
+            and not all rows are selected
+        disable PathsFromTo 
+            if all rows are selected (i.e. all froms and no tos)
+        */
+        if(advancedTable.getSelectedRowCount() > 0) 
+        {
+            advancedRemoveButton.setEnabled(true);
+            if(advancedTable.getSelectedRowCount() < advancedTable.getRowCount())
+            {
+                pathsFromToRadio.setEnabled(true);            
+            }
+            else
+            {
+                pathsFromToRadio.setEnabled(false);            
+            }
+        }
+    }
+    
     private void clearSearchResults(boolean clearAdvanced)
     {
         model.setRowCount(0); //clear previous search results
@@ -1687,7 +1693,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         }
         else if(advancedRemoveButton == e.getSource())
         {
-            this.removeAdvanced(); //remove selected rows from advanced table
+            removeAdvanced(); //remove selected rows from advanced table
             statusLabel.setText("Removed selected rows from Advanced");
             
         }

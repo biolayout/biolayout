@@ -123,7 +123,8 @@ public class SimulationResultsPanel extends ClassViewerPlotPanel
             }
 
             int nodeID = graphNode.getNodeID();
-            YIntervalSeries dataset = new YIntervalSeries(graphNode.getNodeName());
+            String name = layoutFrame.getNetworkRootContainer().getNodeName(graphNode.getNodeName());
+            YIntervalSeries dataset = new YIntervalSeries(name + " (" + graphNode.getNodeName() + ")");
             for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
             {
                 double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);

@@ -40,7 +40,7 @@ public final class GraphmlLookUpmEPNTables
 
                                              // Process Nodes
                                              BINDING,
-                                             OLIGERMISATION,
+                                             OLIGOMERIZATION,
                                              CLEAVAGE,
                                              AUTO_CLEAVAGE,
                                              DISSOCIATION,
@@ -95,7 +95,7 @@ public final class GraphmlLookUpmEPNTables
 
                                                                                 // Process Nodes
                                                                                 BINDING,
-                                                                                OLIGERMISATION,
+                                                                                OLIGOMERIZATION,
                                                                                 CLEAVAGE,
                                                                                 AUTO_CLEAVAGE,
                                                                                 DISSOCIATION,
@@ -141,7 +141,7 @@ public final class GraphmlLookUpmEPNTables
 
                                                                           // Process Nodes
                                                                           Tuples.tuple("B",   "ellipse", BINDING,                      decode("#FFFF99"), 5.0f, CIRCLE, SPHERE), //index 2
-                                                                          Tuples.tuple("O",   "ellipse", OLIGERMISATION,               decode("#FFFF99"), 5.0f, CIRCLE, SPHERE), //index 3
+                                                                          Tuples.tuple("O",   "ellipse", OLIGOMERIZATION,              decode("#FFFF99"), 5.0f, CIRCLE, SPHERE), //index 3
                                                                           Tuples.tuple("X",   "ellipse", CLEAVAGE,                     decode("#BFBFBF"), 5.0f, CIRCLE, SPHERE), //index 4
                                                                           Tuples.tuple("AX",  "ellipse", AUTO_CLEAVAGE,                decode("#BFBFBF"), 5.0f, CIRCLE, SPHERE), //index 5
                                                                           Tuples.tuple("D",   "ellipse", DISSOCIATION,                 decode("#FFCC99"), 5.0f, CIRCLE, SPHERE), //index 6
@@ -233,7 +233,7 @@ public final class GraphmlLookUpmEPNTables
                                              // Other
                                              ENERGY_MOLECULAR_TRANSFER,
                                              CONDITIONAL_SWITCH,
-                                             
+
                                              //BioPAX
                                              DNA,
                                              RNA,
@@ -261,33 +261,33 @@ public final class GraphmlLookUpmEPNTables
                                                                           // Other
                                                                           Tuples.tuple("trapezoid2",     ENERGY_MOLECULAR_TRANSFER, decode("#FFFFFF"), 10.0f, TRAPEZOID2,      Shapes3D.TRAPEZOID_DOWN), //index 8
                                                                           Tuples.tuple("octagon",        CONDITIONAL_SWITCH,        decode("#FF0000"), 20.0f, OCTAGON,         Shapes3D.ICOSAHEDRON), //index 9
-            
+
                                                                           //BioPAX
                                                                           Tuples.tuple("rectangle",      DNA,                      decode("#CCCC00"), 25.0f, RECTANGLE,       Shapes3D.GENE_MODEL), //index 10
                                                                           Tuples.tuple("parallelogram",  RNA,                      decode("#CCCC00"), 25.0f, PARALLELOGRAM,   Shapes3D.GENE_MODEL), //index 11 //TODO SINGLE HELIX
                                                                           Tuples.tuple("parallelogram",  RNA_REGION,               decode("#CCCC00"), 25.0f, PARALLELOGRAM,   Shapes3D.DUMB_BELL) //index 12 //DUMBELL
                                                                        };
-    
+
     /**
-     * Map of BioPAX PhysicalEntity, Gene and Pathway class names to mEPN shapes. 
+     * Map of BioPAX PhysicalEntity, Gene and Pathway class names to mEPN shapes.
      * Includes new shapes for BioPAX entities that do not map readily to mEPN.
      * @return a Map with key BioPAX type and value a tuple describing node shape, color and size
      */
     public static final Map<String, Tuple6> BIOPAX_MEPN_MAP;
-    
-    
+
+
     /**
-     * Map of BioPAX Interaction class names to mEPN shapes. 
+     * Map of BioPAX Interaction class names to mEPN shapes.
      * Includes new shapes for BioPAX entities that do not map readily to mEPN.
      * @return a Map with key BioPAX type and value a tuple describing node shape, color and size
      */
     public static final Map<String, Tuple7> BIOPAX_MEPN_INTERACTION_MAP;
-    
+
     //Create BIOPAX_MEPN_MAP
-    static 
+    static
     {
         Map<String, Tuple6> entityNameMap = new HashMap<String, Tuple6>();
-        
+
         //TODO replace array index with method to search lookup table?
         //physical entities
         entityNameMap.put("Complex", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[0]); //PROTEIN_COMPLEX
@@ -299,48 +299,48 @@ public final class GraphmlLookUpmEPNTables
         entityNameMap.put("Protein", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[1]); //PROTEIN_PEPTIDE
         entityNameMap.put("SimplePhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY
         entityNameMap.put("SmallMolecule", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[7]); //ION_SIMPLE_MOLECULE
-        
+
         entityNameMap.put("PhysicalEntity", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[5]); //GENERIC_ENTITY (default)
-        
+
         entityNameMap.put("Pathway", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[0]); //PATHWAY_MODULE
-                
+
         entityNameMap.put("Gene", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[2]); //GENE
-        
+
         BIOPAX_MEPN_MAP = Collections.unmodifiableMap(entityNameMap);
 
-        
+
         //interactions
-        //BioPAX: BiochemicalReaction, Catalysis, ComplexAssembly, Control,     Conversion, Degradation, GeneticInteraction, Modulation MOD, MolecularInteraction, TemplateReaction TRE, TemplateReactionRegulation TRR, Transport T, TransportWithBiochemicalReaction  TWB      
-        //mEPN: catalysis,          catalysis,   binding        ,( new CTL)   new CON     sink        new(GI)               
+        //BioPAX: BiochemicalReaction, Catalysis, ComplexAssembly, Control,     Conversion, Degradation, GeneticInteraction, Modulation MOD, MolecularInteraction, TemplateReaction TRE, TemplateReactionRegulation TRR, Transport T, TransportWithBiochemicalReaction  TWB
+        //mEPN: catalysis,          catalysis,   binding        ,( new CTL)   new CON     sink        new(GI)
         Map<String, Tuple7> interactionNameMap = new HashMap<String, Tuple7>();
 
         interactionNameMap.put("BiochemicalReaction", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[8]); //CATALYSIS
         interactionNameMap.put("Catalysis", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[8]); //CATALYSIS
         interactionNameMap.put("ComplexAssembly", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[2]); //BINDING
-        
+
         interactionNameMap.put("Control",                   Tuples.tuple("CTL",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //CTL (new)
         interactionNameMap.put("Conversion",                Tuples.tuple("CON",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE));  //CON (new)
-        
+
         interactionNameMap.put("Degradation", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[2]); //SINK_PROTEASOMAL_DEGRADATION
-        
+
         interactionNameMap.put("GeneticInteraction",         Tuples.tuple("GI",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //GI (new)
         interactionNameMap.put("Modulation",                 Tuples.tuple("MOD",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //MOD (new)
         interactionNameMap.put("MolecularInteraction",       Tuples.tuple("MI",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //MI (new)
         interactionNameMap.put("TemplateReaction",           Tuples.tuple("TRE",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //TRE (new)
         interactionNameMap.put("TemplateReactionRegulation", Tuples.tuple("TRR",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE));  //TRR (new)
-        
+
         interactionNameMap.put("Transport", GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[10]); //TRANSLOCATION
-        
+
         interactionNameMap.put("TransportWithBiochemicalReaction", Tuples.tuple("TWB",   "ellipse", UNKNOWN_TRANSITION, decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE)); //TWB (new)
 
         interactionNameMap.put("Interaction",  GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_1[35]);  //UNKNOWN_TRANSITION (default)
-        
+
         //        return Tuples.tuple(GraphmlShapesGroup1.NONE, Color.BLACK, 0.0f, CIRCLE, SPHERE, false);
 
-       
+
         BIOPAX_MEPN_INTERACTION_MAP = Collections.unmodifiableMap(interactionNameMap);
     }
-    
+
     /**
     *  Graphml Petri Net inhibitor arrowhead look-up table.
     */

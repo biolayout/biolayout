@@ -34,6 +34,11 @@
         <osx.app.dir>${project.build.directory}/dmg/${project.name}.app</osx.app.dir>
 
         <debug.build>true</debug.build>
+        
+        <jarsigner.keystore>keystore.jks</jarsigner.keystore>
+        <jarsigner.alias>selfsigned</jarsigner.alias>
+        <jarsigner.storepass>password</jarsigner.storepass>
+        <jarsigner.keypass>password</jarsigner.keypass>
     </properties>
 
     <profiles>
@@ -208,6 +213,11 @@
                         </manifest>
                         <manifestEntries>
                             <url>${project.url}</url>
+                            <Application-Name>BioLayout Express3D</Application-Name>
+                            <Permissions>all-permissions</Permissions>
+                            <Application-Library-Allowable-Codebase>*</Application-Library-Allowable-Codebase>
+                            <Caller-Allowable-Codebase>*</Caller-Allowable-Codebase>
+                            <Codebase>*</Codebase>
                         </manifestEntries>
                     </archive>
 
@@ -618,13 +628,19 @@
                 <configuration>
                     <skip>false</skip>
                     <archive>${project.build.directory}/${outFilename}.jar</archive>
-                    <keystore>keystore.jks</keystore>
-                    <alias>selfsigned</alias>
-                    <storepass>password</storepass>
-                    <keypass>password</keypass>
+                    <keystore>${jarsigner.keystore}</keystore>
+                    <alias>${jarsigner.alias}</alias>
+                    <storepass>${jarsigner.storepass}</storepass>
+                    <keypass>${jarsigner.keypass}</keypass>
+                    <arguments>
+                        <argument>-sigalg</argument>
+                        <argument>SHA1withRSA</argument>
+                        <argument>-digestalg</argument>
+                        <argument>SHA1</argument>
+                    </arguments>                
                 </configuration>
             </plugin>
-
+ 
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>

@@ -35,7 +35,7 @@
 
         <debug.build>true</debug.build>
         
-        <jarsigner.keystore>keystore.jks</jarsigner.keystore>
+        <jarsigner.keystore>selfsign.jks</jarsigner.keystore>
         <jarsigner.alias>selfsigned</jarsigner.alias>
         <jarsigner.storepass>password</jarsigner.storepass>
         <jarsigner.keypass>password</jarsigner.keypass>

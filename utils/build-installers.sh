@@ -35,7 +35,8 @@ cp ${SRC_DIR}/nsis-installer/${BASE_NAME}-${VERSION}-installer.exe ${BUILD_DIR}
 
 # OS X
 cd ${SRC_DIR}/target
-genisoimage -D -V BioLayoutExpress3D -no-pad -r -apple -o ${BUILD_DIR}/${BASE_NAME}-${VERSION}.dmg dmg/
+genisoimage -D -V BioLayoutExpress3D -no-pad -uid 0 -gid 0 -dir-mode 755 -file-mode 644 \
+    -apple -o ${BUILD_DIR}/${BASE_NAME}-${VERSION}.dmg dmg/
 
 # Everything else
 cp ${SRC_DIR}/target/${BASE_NAME}-${VERSION}.jar ${BUILD_DIR}

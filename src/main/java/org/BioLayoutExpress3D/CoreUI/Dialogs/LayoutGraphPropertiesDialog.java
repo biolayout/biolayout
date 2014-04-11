@@ -464,7 +464,9 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         createClassesPropertiesTab( classesPropertiesPanel, tabbedPane, CLASSES.ordinal() );
 
         tabbedPane.setSelectedComponent(generalPropertiesPanel);
-        this.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(tabbedPane);
+
+        this.getContentPane().add(scrollPane, BorderLayout.CENTER);
 
         int stringIndexToCut = 0;
         for (int i = MIN_EDGE_THICKNESS; i <= MAX_EDGE_THICKNESS; i++)
@@ -476,7 +478,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         for (int i = MIN_ARROWHEAD_SIZE; i <= MAX_ARROWHEAD_SIZE; i++)
             arrowHeadSizeComboBox.addItem( Integer.toString(i) );
 
-        this.setResizable(false);
+        this.setResizable(true);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.pack();
         this.setLocationRelativeTo(null);

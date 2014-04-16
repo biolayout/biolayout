@@ -4,7 +4,7 @@
 !include "LogicLib.nsh"
 
 !define LONG_NAME "BioLayout Express 3D"
-!define VERSION "3.1"
+!define VERSION "_VERSION_"
 !define BASE_NAME "BLE3D"
 !define BASE_DIR ".."
 

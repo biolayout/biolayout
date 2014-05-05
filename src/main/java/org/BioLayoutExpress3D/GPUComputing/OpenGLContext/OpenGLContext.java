@@ -663,7 +663,7 @@ public abstract class OpenGLContext extends Canvas
             String className = fullClassName.substring(fullClassName.lastIndexOf(".") + 1);
             String methodName = ste.getMethodName();
             int lineNumber = ste.getLineNumber();
-            String errorReport = className + "." + methodName + "():" + lineNumber +
+            final String errorReport = className + "." + methodName + "():" + lineNumber +
                     " OpenGL error '" + stringError + "'";
 
             if (DEBUG_BUILD)
@@ -674,7 +674,14 @@ public abstract class OpenGLContext extends Canvas
             // Don't show a dialog if we've just shown the same error
             if (dialog && (previousErrorReport.compareTo(errorReport) != 0))
             {
-                JOptionPane.showMessageDialog(null, errorReport, "OpenGL Error", JOptionPane.WARNING_MESSAGE);
+                EventQueue.invokeLater(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        JOptionPane.showMessageDialog(null, errorReport, "OpenGL Error", JOptionPane.WARNING_MESSAGE);
+                    }
+                });
             }
 
             previousErrorReport = errorReport;

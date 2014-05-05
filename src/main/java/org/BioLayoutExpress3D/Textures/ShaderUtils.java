@@ -3,10 +3,10 @@ package org.BioLayoutExpress3D.Textures;
 import java.io.*;
 import java.nio.*;
 import javax.media.opengl.*;
-import com.jogamp.opengl.util.*;
 import com.jogamp.common.nio.Buffers;
-import static javax.media.opengl.GL2.*;
+import java.awt.EventQueue;
 import static javax.media.opengl.GL3.*;
+import javax.swing.JOptionPane;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -197,31 +197,35 @@ public final class ShaderUtils
 
         if (loadVertexFragmentPair[0])
         {
-            String vertexSource = GLSLPreprocessorCommands + readShaderFile(pathName, VERTEX_SHADER_FILE_NAME + shaderName + VERTEX_SHADERS_FILE_NAME_EXTENSION, loadFromFileOrFromJar);
+            String vertFileName = VERTEX_SHADER_FILE_NAME + shaderName + VERTEX_SHADERS_FILE_NAME_EXTENSION;
+            String vertexSource = GLSLPreprocessorCommands + readShaderFile(pathName, vertFileName, loadFromFileOrFromJar);
             if ( !vertexSource.isEmpty() )
             {
                 gl.glShaderSource( vertexShaders[index], 1, new String[]{ vertexSource }, (IntBuffer)VERTEX_SOURCE_BUFFER.put( vertexSource.length() ).rewind() );
                 gl.glCompileShader(vertexShaders[index]);
-                checkInfoLog(gl, "Vertex File '" + VERTEX_SHADER_FILE_NAME + shaderName + VERTEX_SHADERS_FILE_NAME_EXTENSION + "'", vertexShaders[index], true);
-                gl.glAttachShader(shaderPrograms[index], vertexShaders[index]);
+                attachShader(gl, shaderPrograms[index], vertFileName, vertexShaders[index]);
             }
         }
 
         if (loadVertexFragmentPair[1])
         {
-            String fragmentSource = GLSLPreprocessorCommands + readShaderFile(pathName, FRAGMENT_SHADER_FILE_NAME + shaderName + FRAGMENT_SHADERS_FILE_NAME_EXTENSION, loadFromFileOrFromJar);
+            String fragFileName = FRAGMENT_SHADER_FILE_NAME + shaderName + FRAGMENT_SHADERS_FILE_NAME_EXTENSION;
+            String fragmentSource = GLSLPreprocessorCommands + readShaderFile(pathName, fragFileName, loadFromFileOrFromJar);
             if ( !fragmentSource.isEmpty() )
             {
                 gl.glShaderSource( fragmentShaders[index], 1, new String[]{ fragmentSource }, (IntBuffer)FRAGMENT_SOURCE_BUFFER.put( fragmentSource.length() ).rewind() );
                 gl.glCompileShader(fragmentShaders[index]);
-                checkInfoLog(gl, "Fragment File '" + FRAGMENT_SHADER_FILE_NAME + shaderName + FRAGMENT_SHADERS_FILE_NAME_EXTENSION + "'", fragmentShaders[index], true);
-                gl.glAttachShader(shaderPrograms[index], fragmentShaders[index]);
+                attachShader(gl, shaderPrograms[index], fragFileName, fragmentShaders[index]);
             }
         }
 
         gl.glLinkProgram(shaderPrograms[index]);
         if (!validateShader && !GL_IS_AMD_ATI) gl.glValidateProgram(shaderPrograms[index]); // warning, the AMD/ATI driver produces unnecessary OpenGL errors with GLSL validation
-        checkInfoLog(gl, "Shader Program '" + shaderName + "'", shaderPrograms[index], false);
+
+        if (DEBUG_BUILD)
+        {
+            println(shaderInfoLog(gl, "Shader Program '" + shaderName + "'", shaderPrograms[index], false));
+        }
     }
 
     /**
@@ -310,25 +314,25 @@ public final class ShaderUtils
         {
             if (loadVertexFragmentPair[i][0])
             {
-                vertexSource = GLSLPreprocessorCommands + readShaderFile(pathShaderNames[i], VERTEX_SHADER_FILE_NAME + shaderNames[i] + VERTEX_SHADERS_FILE_NAME_EXTENSION, loadFromFileOrFromJar);
+                String vertFileName = VERTEX_SHADER_FILE_NAME + shaderNames[i] + VERTEX_SHADERS_FILE_NAME_EXTENSION;
+                vertexSource = GLSLPreprocessorCommands + readShaderFile(pathShaderNames[i], vertFileName, loadFromFileOrFromJar);
                 if ( !vertexSource.isEmpty() )
                 {
                     gl.glShaderSource( vertexShaders[index][i], 1, new String[]{ vertexSource }, (IntBuffer)VERTEX_SOURCE_BUFFER.put( vertexSource.length() ).rewind() );
                     gl.glCompileShader(vertexShaders[index][i]);
-                    checkInfoLog(gl, "Modular Vertex File '" + VERTEX_SHADER_FILE_NAME + shaderNames[i] + VERTEX_SHADERS_FILE_NAME_EXTENSION + "'", vertexShaders[index][i], true);
-                    gl.glAttachShader(shaderPrograms[index], vertexShaders[index][i]);
+                    attachShader(gl, shaderPrograms[index], vertFileName, vertexShaders[index][i]);
                 }
             }
 
             if (loadVertexFragmentPair[i][1])
             {
-                fragmentSource = GLSLPreprocessorCommands + readShaderFile(pathShaderNames[i], FRAGMENT_SHADER_FILE_NAME + shaderNames[i] + FRAGMENT_SHADERS_FILE_NAME_EXTENSION, loadFromFileOrFromJar);
+                String fragFileName = FRAGMENT_SHADER_FILE_NAME + shaderNames[i] + FRAGMENT_SHADERS_FILE_NAME_EXTENSION;
+                fragmentSource = GLSLPreprocessorCommands + readShaderFile(pathShaderNames[i], fragFileName, loadFromFileOrFromJar);
                 if ( !fragmentSource.isEmpty() )
                 {
                     gl.glShaderSource( fragmentShaders[index][i], 1, new String[]{ fragmentSource }, (IntBuffer)FRAGMENT_SOURCE_BUFFER.put( fragmentSource.length() ).rewind() );
                     gl.glCompileShader(fragmentShaders[index][i]);
-                    checkInfoLog(gl, "Modular Fragment File '" + FRAGMENT_SHADER_FILE_NAME + shaderNames[i] + FRAGMENT_SHADERS_FILE_NAME_EXTENSION + "'", fragmentShaders[index][i], true);
-                    gl.glAttachShader(shaderPrograms[index], fragmentShaders[index][i]);
+                    attachShader(gl, shaderPrograms[index], fragFileName, fragmentShaders[index][i]);
                 }
             }
         }
@@ -340,7 +344,10 @@ public final class ShaderUtils
         for (int i = 1; i < shaderNames.length; i++)
             mergedShaderName += " + " + shaderNames[i];
 
-        checkInfoLog(gl, "Modular Shader Program '" + mergedShaderName + "'", shaderPrograms[index], false);
+        if (DEBUG_BUILD)
+        {
+            println(shaderInfoLog(gl, "Modular Shader Program '" + mergedShaderName + "'", shaderPrograms[index], false));
+        }
     }
 
     /**
@@ -435,7 +442,7 @@ public final class ShaderUtils
     /**
     *  Checks the OpenGL info log of the shader loading process.
     */
-    private static void checkInfoLog(GL2 gl, String shaderName, int obj, boolean shaderInfo)
+    private static String shaderInfoLog(GL2 gl, String shaderName, int obj, boolean shaderInfo)
     {
         IntBuffer value = Buffers.newDirectIntBuffer(1);
         if (shaderInfo)
@@ -445,7 +452,7 @@ public final class ShaderUtils
 
         int length = value.get();
         if (length <= 1)
-            return;
+            return "";
 
         ByteBuffer infoLog = Buffers.newDirectByteBuffer(length);
         value.flip();
@@ -458,7 +465,43 @@ public final class ShaderUtils
         byte[] infoBytes = new byte[length];
         infoLog.get(infoBytes);
 
-        if (DEBUG_BUILD) println( "\nGLSL Validation Report for the Shader " + shaderName + ":\n" + new String(infoBytes) );
+        String shaderLog = shaderName + ":\n" + new String(infoBytes);
+        return shaderLog;
+    }
+
+    private static boolean shaderCompiled(GL2 gl, int shader)
+    {
+        IntBuffer value = Buffers.newDirectIntBuffer(1);
+        gl.glGetShaderiv(shader, GL_COMPILE_STATUS, value);
+
+        return value.get() == GL_TRUE;
+    }
+
+    private static boolean attachShader(GL2 gl, int program, String fileName, int shader)
+    {
+        if (!shaderCompiled(gl, shader))
+        {
+            final String log = shaderInfoLog(gl, fileName, shader, true);
+
+            EventQueue.invokeLater(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    JOptionPane.showMessageDialog(null, log, "Shader failed to compile", JOptionPane.WARNING_MESSAGE);
+                }
+            });
+
+            if (DEBUG_BUILD)
+            {
+                println(log);
+            }
+
+            return false;
+        }
+
+        gl.glAttachShader(program, shader);
+        return true;
     }
 
     /**

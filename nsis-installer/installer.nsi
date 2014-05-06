@@ -4,7 +4,6 @@
 !include "LogicLib.nsh"
 
 !addplugindir "."
-File "ShellExecAsUser.dll"
 
 !define LONG_NAME "BioLayout Express 3D"
 !define VERSION "_VERSION_"
@@ -78,6 +77,8 @@ Var STARTMENU_FOLDER
 
 ;Launch function
 Function Launch
+    File "ShellExecAsUser.dll"
+
     ShellExecAsUser::ShellExecAsUser "" "$INSTDIR\${OUTPUT_EXE_NAME}"
 FunctionEnd
 

@@ -7,6 +7,7 @@ import com.jogamp.common.nio.Buffers;
 import java.awt.EventQueue;
 import static javax.media.opengl.GL3.*;
 import javax.swing.JOptionPane;
+import org.BioLayoutExpress3D.CoreUI.Dialogs.LayoutShaderCompileLogDialog;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
@@ -203,7 +204,7 @@ public final class ShaderUtils
             {
                 gl.glShaderSource( vertexShaders[index], 1, new String[]{ vertexSource }, (IntBuffer)VERTEX_SOURCE_BUFFER.put( vertexSource.length() ).rewind() );
                 gl.glCompileShader(vertexShaders[index]);
-                attachShader(gl, shaderPrograms[index], vertFileName, vertexShaders[index]);
+                attachShader(gl, shaderPrograms[index], vertexShaders[index], vertFileName, vertexSource);
             }
         }
 
@@ -215,7 +216,7 @@ public final class ShaderUtils
             {
                 gl.glShaderSource( fragmentShaders[index], 1, new String[]{ fragmentSource }, (IntBuffer)FRAGMENT_SOURCE_BUFFER.put( fragmentSource.length() ).rewind() );
                 gl.glCompileShader(fragmentShaders[index]);
-                attachShader(gl, shaderPrograms[index], fragFileName, fragmentShaders[index]);
+                attachShader(gl, shaderPrograms[index], fragmentShaders[index], fragFileName, fragmentSource);
             }
         }
 
@@ -320,7 +321,10 @@ public final class ShaderUtils
                 {
                     gl.glShaderSource( vertexShaders[index][i], 1, new String[]{ vertexSource }, (IntBuffer)VERTEX_SOURCE_BUFFER.put( vertexSource.length() ).rewind() );
                     gl.glCompileShader(vertexShaders[index][i]);
-                    attachShader(gl, shaderPrograms[index], vertFileName, vertexShaders[index][i]);
+                    if (!attachShader(gl, shaderPrograms[index], vertexShaders[index][i], vertFileName, vertexSource))
+                    {
+
+                    }
                 }
             }
 
@@ -332,7 +336,7 @@ public final class ShaderUtils
                 {
                     gl.glShaderSource( fragmentShaders[index][i], 1, new String[]{ fragmentSource }, (IntBuffer)FRAGMENT_SOURCE_BUFFER.put( fragmentSource.length() ).rewind() );
                     gl.glCompileShader(fragmentShaders[index][i]);
-                    attachShader(gl, shaderPrograms[index], fragFileName, fragmentShaders[index][i]);
+                    attachShader(gl, shaderPrograms[index], fragmentShaders[index][i], fragFileName, fragmentSource);
                 }
             }
         }
@@ -477,7 +481,7 @@ public final class ShaderUtils
         return value.get() == GL_TRUE;
     }
 
-    private static boolean attachShader(GL2 gl, int program, String fileName, int shader)
+    private static boolean attachShader(GL2 gl, int program, int shader, String fileName, final String source)
     {
         if (!shaderCompiled(gl, shader))
         {
@@ -488,7 +492,10 @@ public final class ShaderUtils
                 @Override
                 public void run()
                 {
-                    JOptionPane.showMessageDialog(null, log, "Shader failed to compile", JOptionPane.WARNING_MESSAGE);
+                    LayoutShaderCompileLogDialog dialog = new LayoutShaderCompileLogDialog(null);
+                    dialog.setShaderError(log);
+                    dialog.setShaderSource(source);
+                    dialog.setVisible(true);
                 }
             });
 

@@ -31,6 +31,10 @@ mkdir -p ${BUILD_DIR}
 # Windows
 cd ${SRC_DIR}/nsis-installer
 cat installer.nsi | sed -e "s/_VERSION_/${VERSION}/g" | makensis -
+if [ "$?" != "0" ];
+then
+    exit $?
+fi
 cp ${SRC_DIR}/nsis-installer/${BASE_NAME}-${VERSION}-installer.exe ${BUILD_DIR}
 
 # OS X

@@ -2,6 +2,7 @@
 !include "x64.nsh"
 !include "FileAssociation.nsh"
 !include "LogicLib.nsh"
+!addplugindir "."
 
 !define LONG_NAME "BioLayout Express 3D"
 !define VERSION "_VERSION_"

@@ -75,7 +75,7 @@ Var STARTMENU_FOLDER
 
 ;Launch function
 Function Launch
-    ExecShell "" "$INSTDIR\${OUTPUT_EXE_NAME}"
+    ShellExecAsUser::ShellExecAsUser "" "$INSTDIR\${OUTPUT_EXE_NAME}"
 FunctionEnd
 
 Function CheckJVM

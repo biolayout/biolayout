@@ -24,7 +24,7 @@ public final class LayoutShaderCompileLogDialog extends JDialog implements Actio
 
     public LayoutShaderCompileLogDialog(JFrame jframe)
     {
-        super(jframe, "Shader Failed To Compile", true);
+        super(jframe, "Shader Failed To Compile", false);
 
         initComponents();
     }

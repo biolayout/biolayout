@@ -73,9 +73,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 vec4 applyFog(in vec4);
 
 
@@ -98,10 +95,6 @@ void main()
     if (fractalTexturing)
         applyTexture(finalColor, gl_TexCoord[0].st);
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-        if (fractalSolidWireFrame)
-            finalColor = applySolidWireFrame(finalColor, 1.5);    
-    #endif
     // apply per-pixel fog if appriopriate
     gl_FragColor = (fractalFog) ? applyFog(finalColor) : finalColor;
 }
@@ -127,7 +120,7 @@ void applyFractalTexture(inout vec4 finalColor)
         }
 
         finalColor *= ( ( rSquared < double(4.0) ) ? vec4(InnerColor, 1.0) : vec4(mix( finalColor.rgb, OuterColor, fract(0.05 * iterations) ), 1.0) );
-    #else                 
+    #else
         vec2 Position = 5.0 * vec2(gl_TexCoord[0] - 0.5);
         Position = Position * ( smootherstep(0.0, 1.0, sin(fractalTimer + 1.0) ) + ( (!fractalState) ? 0.015 : 0.003 ) ) + vec2(Xcenter, Ycenter);
         float real = Position.x;
@@ -145,6 +138,6 @@ void applyFractalTexture(inout vec4 finalColor)
            rSquared = (real * real) + (imag * imag);
         }
 
-        finalColor *= ( (rSquared < 4.0) ? vec4(InnerColor, 1.0) : vec4(mix( finalColor.rgb, OuterColor, fract(0.05 * iterations) ), 1.0) );        
-    #endif        
+        finalColor *= ( (rSquared < 4.0) ? vec4(InnerColor, 1.0) : vec4(mix( finalColor.rgb, OuterColor, fract(0.05 * iterations) ), 1.0) );
+    #endif
 }

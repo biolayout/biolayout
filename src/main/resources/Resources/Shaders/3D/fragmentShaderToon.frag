@@ -59,9 +59,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 float applyFogFactor();
 
 
@@ -83,10 +80,6 @@ void main()
     if (lambertTerm < SILHOUETTE_LOWER_BOUND_THRESHOLD)
     {
         vec4 silhouetteColorToUse = vec4( ( (!toonState) ? sceneColorLocal.rgb : SILHOUETTE_COLOR ), alpha );
-        #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-            if (toonSolidWireFrame)
-                silhouetteColorToUse = applySolidWireFrame(silhouetteColorToUse, 1.5);    
-        #endif
         gl_FragColor = (toonFog) ? mix(gl_Fog.color, silhouetteColorToUse, fogFactor) : silhouetteColorToUse;
     }
     else if (lambertTerm >= SILHOUETTE_LOWER_BOUND_THRESHOLD && lambertTerm < SILHOUETTE_UPPER_BOUND_THRESHOLD)
@@ -101,11 +94,7 @@ void main()
         // apply texturing if appropriate
         if (toonTexturing)
             applyTexture(finalColor, gl_TexCoord[0].st);
-        
-        #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-            if (toonSolidWireFrame)
-                finalColor = applySolidWireFrame(finalColor, 1.5);    
-        #endif
+
         vec3 L = normalize(gl_LightSource[0].position.xyz - FS_POSITION);
         vec3 H = normalize(L - FS_POSITION);
 
@@ -116,12 +105,12 @@ void main()
 
         // Diffuse part
         float diffuse = max(dot(N, L), 0.0);
-        if (diffuse < 0.5) 
+        if (diffuse < 0.5)
             finalColor.rgb *= 0.8;
 
         gl_FragColor = mix(gl_FragColor, finalColor, (toonAntiAlias) ? smootherstep(SILHOUETTE_LOWER_BOUND_THRESHOLD, SILHOUETTE_UPPER_BOUND_THRESHOLD, lambertTerm) : lambertTerm);
     }
-    else 
+    else
     {
         vec4 finalColor = (toonFog) ? mix(gl_Fog.color, sceneColorLocal, fogFactor) : sceneColorLocal;
         if (alpha < 1.0)
@@ -131,12 +120,8 @@ void main()
         if (toonTexturing)
             applyTexture(finalColor, gl_TexCoord[0].st);
 
-        #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-            if (toonSolidWireFrame)
-                finalColor = applySolidWireFrame(finalColor, 1.5);    
-        #endif
         vec3 L = normalize(gl_LightSource[0].position.xyz - FS_POSITION);
-        vec3 H = normalize(L - FS_POSITION);        
+        vec3 H = normalize(L - FS_POSITION);
 
         // Specular part
         float specularPower = pow(max(dot(N, H), 0.0), gl_FrontMaterial.shininess);

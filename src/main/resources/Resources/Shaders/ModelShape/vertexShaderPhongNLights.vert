@@ -34,15 +34,11 @@ uniform bool sphericalMapping;
 vec2 applySphericalCoordinates(in vec3, in vec3);
 
 void main()
-{    
+{
     vec3 position = vec3(gl_ModelViewMatrix * gl_Vertex);
     VS_EYE_VECTOR = -position;
     VS_NORMAL = gl_NormalMatrix * gl_Normal;
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-        gl_Position = gl_Vertex;
-    #else    
-        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-    #endif
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 
     if (texturing)
         gl_TexCoord[0] = (sphericalMapping) ? vec4(applySphericalCoordinates(position, VS_NORMAL), (gl_TextureMatrix[0] * gl_MultiTexCoord0).pq) : gl_TextureMatrix[0] * gl_MultiTexCoord0;

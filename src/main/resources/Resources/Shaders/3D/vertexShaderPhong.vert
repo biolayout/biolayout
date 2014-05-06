@@ -50,7 +50,7 @@ vec2 applySphericalCoordinates(in vec3, in vec3);
 vec4 applyAnimationGPUComputing(in vec4);
 
 void main()
-{    
+{
     vec4 vertex;
     VS_SCENE_COLOR = gl_Color;
     // apply morphing if appropriate
@@ -69,14 +69,10 @@ void main()
     }
 
     VS_POSITION = vec3(gl_ModelViewMatrix * vertex);
-    VS_NORMAL = gl_NormalMatrix * gl_Normal;    
+    VS_NORMAL = gl_NormalMatrix * gl_Normal;
     VS_MC_POSITION = vec3(vertex) / animationNodeSizeRatio;
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-        gl_Position = vertex;
-    #else    
-        gl_Position = gl_ModelViewProjectionMatrix * vertex;
-    #endif
+    gl_Position = gl_ModelViewProjectionMatrix * vertex;
 
     if (phongUserClipping)
     {

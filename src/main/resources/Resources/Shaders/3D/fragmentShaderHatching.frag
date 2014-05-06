@@ -63,9 +63,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 vec4 applyFog(in vec4);
 
 
@@ -82,7 +79,7 @@ void main()
     float noise = ( (hatchingSphericalMapping) ? ScaleSpherical : ScaleStandard ) * texture3D(hatchingPerlinNoise3DTexture, FS_MC_POSITION).x;
     float sawtooth = fract( (FS_V + 0.1 * noise) * ( (hatchingSphericalMapping) ? frequencySpherical : frequencyStandard ) * stripes );
     float triangle = abs(2.0 * sawtooth - 1.0);
-    
+
     // adjust line width
     float transition = logdp - ilogdp;
 
@@ -116,10 +113,6 @@ void main()
     if (hatchingTexturing)
         applyTexture(finalColor, gl_TexCoord[0].st);
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-        if (hatchingSolidWireFrame)
-            finalColor = applySolidWireFrame(finalColor, 1.5);    
-    #endif
     // apply per-pixel fog if appriopriate
     gl_FragColor = (hatchingFog) ? applyFog(finalColor) : finalColor;
 }

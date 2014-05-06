@@ -65,9 +65,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 float applyFogFactor();
 
 
@@ -89,10 +86,6 @@ void main()
     if (lambertTerm < SILHOUETTE_LOWER_BOUND_THRESHOLD)
     {
         vec4 silhouetteColorToUse = vec4( ( (!goochState) ? sceneColorLocal.rgb : SILHOUETTE_COLOR ), alpha );
-        #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-            if (goochSolidWireFrame)
-                silhouetteColorToUse = applySolidWireFrame(silhouetteColorToUse, 1.5);    
-        #endif
         gl_FragColor = (goochFog) ? mix(gl_Fog.color, silhouetteColorToUse, fogFactor) : silhouetteColorToUse;
     }
     else if ( (lambertTerm >= SILHOUETTE_LOWER_BOUND_THRESHOLD) && (lambertTerm < SILHOUETTE_UPPER_BOUND_THRESHOLD) )
@@ -116,10 +109,6 @@ void main()
         if (goochTexturing)
             applyTexture(finalColor, gl_TexCoord[0].st);
 
-        #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-            if (goochSolidWireFrame)
-                finalColor = applySolidWireFrame(finalColor, 1.5);    
-        #endif
         gl_FragColor = mix(gl_FragColor, finalColor, (goochAntiAlias) ? smootherstep(SILHOUETTE_LOWER_BOUND_THRESHOLD, SILHOUETTE_UPPER_BOUND_THRESHOLD, lambertTerm) : lambertTerm);
     }
     else
@@ -140,10 +129,6 @@ void main()
         if (goochTexturing)
             applyTexture(finalColor, gl_TexCoord[0].st);
 
-        #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-            if (goochSolidWireFrame)
-                finalColor = applySolidWireFrame(finalColor, 1.5);    
-        #endif
         gl_FragColor = (goochFog) ? mix(gl_Fog.color, finalColor, fogFactor) : finalColor;
     }
 }

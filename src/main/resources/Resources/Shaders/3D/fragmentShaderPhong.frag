@@ -50,9 +50,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 vec4 applyFog(in vec4);
 
 
@@ -64,7 +61,7 @@ void main()
     vec4 sceneColorLocal = (AnimationGPUComputingMode && ANIMATION_USE_COLOR_PALETTE_SPECTRUM_TRANSITION) ? applyAnimationGPUComputing(FS_SCENE_COLOR) : FS_SCENE_COLOR;
     float alpha = sceneColorLocal.a;
     sceneColorLocal.rgb *= intensityLevel;
-    vec4 finalColor = applyADSLightingModel(phongState, true, FS_NORMAL, FS_POSITION, sceneColorLocal);    
+    vec4 finalColor = applyADSLightingModel(phongState, true, FS_NORMAL, FS_POSITION, sceneColorLocal);
     if (alpha < 1.0)
         finalColor.a *= (alpha / intensityTransparencyLevel);
 
@@ -72,10 +69,6 @@ void main()
     if (phongTexturing)
         applyTexture(finalColor, gl_TexCoord[0].st);
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-        if (phongSolidWireFrame)
-            finalColor = applySolidWireFrame(finalColor, 1.5);    
-    #endif    
     // apply per-pixel fog if appriopriate
     gl_FragColor = (phongFog) ? applyFog(finalColor) : finalColor;
 }

@@ -72,11 +72,7 @@ void main()
     VS_NORMAL = gl_NormalMatrix * gl_Normal;
     VS_MC_POSITION = vec3(vertex) / animationNodeSizeRatio;
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-        gl_Position = vertex;
-    #else    
-        gl_Position = gl_ModelViewProjectionMatrix * vertex;
-    #endif
+    gl_Position = gl_ModelViewProjectionMatrix * vertex;
 
     if (cloudUserClipping)
     {

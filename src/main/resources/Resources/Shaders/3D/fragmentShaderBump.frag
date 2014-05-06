@@ -72,9 +72,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 vec4 applyFog(in vec4);
 
 
@@ -97,10 +94,6 @@ void main()
     if (bumpTexturing)
         applyTexture(finalColor, gl_TexCoord[0].st);
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-        if (bumpSolidWireFrame)
-            finalColor = applySolidWireFrame(finalColor, 1.5);    
-    #endif
     // apply per-pixel fog if appriopriate
     gl_FragColor = (bumpFog) ? applyFog(finalColor) : finalColor;
 }
@@ -147,12 +140,12 @@ vec3 applyRipples()
     vec3 normalRipple1 = vec3(-Amp0 * (TWO_PI / Pd) * sin(TWO_PI * radius1 / Pd - TWO_PI * bumpTimer / 10.0),
                               0.0,
                               1.0);
-    // float angle1 = atan(FS_MC_POSITION.y - RIPPLE_C0.y, FS_MC_POSITION.x - RIPPLE_C0.x);    
-    // vec3 rotatedNormalRipple1 = vec3( dot( normalRipple1.xy, vec2( cos(angle1), -sin(angle1) ) ), 
+    // float angle1 = atan(FS_MC_POSITION.y - RIPPLE_C0.y, FS_MC_POSITION.x - RIPPLE_C0.x);
+    // vec3 rotatedNormalRipple1 = vec3( dot( normalRipple1.xy, vec2( cos(angle1), -sin(angle1) ) ),
     //                                   dot( normalRipple1.xy, vec2( sin(angle1),  cos(angle1) ) ),
     //                                   1.0);
-    vec2 cossin1 = normalize(FS_MC_POSITION.xy - RIPPLE_C0.xy);                                      
-    vec3 rotatedNormalRipple1 = vec3( dot( normalRipple1.xy, vec2(cossin1.x, -cossin1.y) ), 
+    vec2 cossin1 = normalize(FS_MC_POSITION.xy - RIPPLE_C0.xy);
+    vec3 rotatedNormalRipple1 = vec3( dot( normalRipple1.xy, vec2(cossin1.x, -cossin1.y) ),
                                       dot( normalRipple1.xy, cossin1.yx ),
                                       1.0);
 
@@ -164,11 +157,11 @@ vec3 applyRipples()
                               0.0,
                               1.0);
     // float angle2 = atan(FS_MC_POSITION.y - RIPPLE_C1.y, FS_MC_POSITION.x - RIPPLE_C1.x);
-    // vec3 rotatedNormalRipple2 = vec3( dot( normalRipple2.xy, vec2( cos(angle2), -sin(angle2) ) ), 
+    // vec3 rotatedNormalRipple2 = vec3( dot( normalRipple2.xy, vec2( cos(angle2), -sin(angle2) ) ),
     //                                   dot( normalRipple2.xy, vec2( sin(angle2),  cos(angle2) ) ),
     //                                   1.0);
-    vec2 cossin2 = normalize(FS_MC_POSITION.xy - RIPPLE_C1.xy);   
-    vec3 rotatedNormalRipple2 = vec3( dot( normalRipple2.xy, vec2(cossin2.x, -cossin2.y) ), 
+    vec2 cossin2 = normalize(FS_MC_POSITION.xy - RIPPLE_C1.xy);
+    vec3 rotatedNormalRipple2 = vec3( dot( normalRipple2.xy, vec2(cossin2.x, -cossin2.y) ),
                                       dot( normalRipple2.xy, cossin2.yx ),
                                       1.0);
 

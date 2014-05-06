@@ -27,9 +27,6 @@
 
 FS_VARYING vec3 FS_EYE_VECTOR;
 FS_VARYING vec3 FS_NORMAL;
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    FS_VARYING vec4 FS_COLOR;
-#endif
 
 uniform bool useOrenNayarDiffuseModel;
 uniform bool texturing;
@@ -61,17 +58,13 @@ float smootherstep(in float edge0, in float edge1, in float x)
 
 void main()
 {
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-        vec4 finalColor = FS_COLOR + gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient;
-    #else     
-        vec4 finalColor = gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient;
-    #endif    
+    vec4 finalColor = gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient;
     vec3 lightVector;
     vec3 N = normalize(FS_NORMAL);
-    vec3 L;    
+    vec3 L;
     vec3 R;
     vec3 E;
-    
+
     float lambertTerm;
     float specularPower;
     float distance;
@@ -83,8 +76,8 @@ void main()
         float cosInnerConeAngle;
         float spot;
         float spotWidth;
-    #endif        
-    
+    #endif
+
     for (int index = 0; index < MAX_LIGHTS; index++)
     {
         finalColor += gl_LightSource[index].ambient * gl_FrontMaterial.ambient; // ambient light computation
@@ -93,7 +86,7 @@ void main()
         distance = length(L);
         attenuation = 1.0 / (gl_LightSource[index].constantAttenuation +
                              gl_LightSource[index].linearAttenuation * distance +
-                             gl_LightSource[index].quadraticAttenuation * distance * distance);        
+                             gl_LightSource[index].quadraticAttenuation * distance * distance);
 
         #if USE_SPOT_LIGHTS
             // used for spotlight lighting model
@@ -104,23 +97,23 @@ void main()
             spot = (useOrenNayarDiffuseModel) ? smootherstep(cosInnerConeAngle - spotWidth, cosInnerConeAngle + spotWidth, cosCurrentAngle)
                                               : clamp( (cosCurrentAngle - COS_OUTER_CONE_ANGLE) / spotWidth, 0.0, 1.0 );
         #endif
-    
+
         lambertTerm = dot(N, L);
         if (lambertTerm > 0.0)
         {
             R = reflect(-L, N);
             E = normalize(FS_EYE_VECTOR);
 
-            lambertTerm = max(0.0, lambertTerm); // diffuse light computation            
+            lambertTerm = max(0.0, lambertTerm); // diffuse light computation
             specularPower = pow(max(dot(R, E), 0.0001), gl_FrontMaterial.shininess); // failsafe GLSL Shader value for specular light computation
 
             #if USE_SPOT_LIGHTS
                 finalColor += (useOrenNayarDiffuseModel ? orenNayarDiffuseModel(index, -FS_EYE_VECTOR, N, L) : gl_LightSource[index].diffuse) * gl_FrontMaterial.diffuse * lambertTerm * attenuation * spot; // diffuse light computation
                 finalColor += gl_LightSource[index].specular * gl_FrontMaterial.specular * specularPower * attenuation * spot; // specular light computation
-            #else    
+            #else
                 finalColor += (useOrenNayarDiffuseModel ? orenNayarDiffuseModel(index, -FS_EYE_VECTOR, N, L) : gl_LightSource[index].diffuse) * gl_FrontMaterial.diffuse * lambertTerm * attenuation; // diffuse light computation
                 finalColor += gl_LightSource[index].specular * gl_FrontMaterial.specular * specularPower * attenuation; // specular light computation
-            #endif                            
+            #endif
         }
 
         finalColor = clamp(finalColor, 0.0, 1.0);
@@ -156,5 +149,5 @@ void applyTexture(inout vec4 finalColor)
 {
     vec4 textureColor = texture2D(texture, gl_TexCoord[0].st);
     finalColor.rgb = mix(textureColor.rgb, finalColor.rgb, 0.5);
-    // finalColor.a = textureColor.a;    
+    // finalColor.a = textureColor.a;
 }

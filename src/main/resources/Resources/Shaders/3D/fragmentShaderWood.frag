@@ -68,9 +68,6 @@ void applyOldStyleTransparency();
 vec4 applyAnimationGPUComputing(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 void applyTexture(inout vec4, in vec2);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-#endif
 vec4 applyFog(in vec4);
 
 
@@ -121,10 +118,6 @@ void main()
     if (woodTexturing)
         applyTexture(finalColor, gl_TexCoord[0].st);
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION    
-        if (woodSolidWireFrame)
-            finalColor = applySolidWireFrame(finalColor, 1.5);    
-    #endif
     // apply per-pixel fog if appriopriate
     gl_FragColor = (woodFog) ? applyFog(finalColor) : finalColor;
 }

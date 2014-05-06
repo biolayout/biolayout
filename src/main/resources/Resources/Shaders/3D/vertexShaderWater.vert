@@ -67,15 +67,11 @@ void main()
     {
         vertex = gl_Vertex;
     }
-    
+
     VS_POSITION = vec3(gl_ModelViewMatrix * vertex);
     VS_NORMAL = gl_NormalMatrix * gl_Normal;
 
-    #if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-        gl_Position = vertex;
-    #else    
-        gl_Position = gl_ModelViewProjectionMatrix * vertex;
-    #endif
+    gl_Position = gl_ModelViewProjectionMatrix * vertex;
 
     if (waterUserClipping)
     {

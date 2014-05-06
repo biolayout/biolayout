@@ -25,10 +25,6 @@
 
 */
 
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    FS_VARYING vec3 fsTriangleDistances;
-#endif
-
 uniform sampler2D texture;
 uniform sampler3D perlinNoise3DTexture;
 uniform bool embossNodeTexture;
@@ -78,10 +74,6 @@ void applyOldStyleTransparency();
 void applyErosion(in vec4);
 vec4 applyADSLightingModel(in bool, in bool, in vec3, in vec3, in vec4);
 vec4 orenNayarDiffuseModel(in vec3, in vec3, in vec3);
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4, in float);
-    float amplify(in float, in float, in float);
-#endif
 void applyTexture(inout vec4, in vec2);
 float applyFogFactor();
 vec4 applyFog(in vec4);
@@ -95,7 +87,7 @@ vec3 rainbowTransferFunction(in float depth)
     if (depth < 0.0) // black if below bounds
     {
         return vec3(0.0);
-    }    
+    }
     else if ( (depth >= 0.0) && (depth < 0.2) ) // purple to blue ramp
     {
         vec3 color;
@@ -104,7 +96,7 @@ vec3 rainbowTransferFunction(in float depth)
         color.b = 0.5 + (0.5 * depth / 0.2);
 
         return clamp(color, 0.0, 1.0);
-    }    
+    }
     else if ( (depth >= 0.2) && (depth < 0.4) ) // blue to cyan ramp
     {
         vec3 color;
@@ -113,16 +105,16 @@ vec3 rainbowTransferFunction(in float depth)
         color.b = 1.0;
 
         return clamp(color, 0.0, 1.0);
-    }    
+    }
     else if ( (depth >= 0.4) && (depth < 0.6) ) // cyan to green ramp
     {
         vec3 color;
         color.r = 0.0;
         color.g = 1.0;
         color.b = (0.6 - depth) * 5.0;
-        
+
         return clamp(color, 0.0, 1.0);
-    }    
+    }
     else if ( (depth >= 0.6) && (depth < 0.8) ) // green to yellow ramp
     {
         vec3 color;
@@ -131,7 +123,7 @@ vec3 rainbowTransferFunction(in float depth)
         color.b = 0.0;
 
         return clamp(color, 0.0, 1.0);
-    }    
+    }
     else if ( (depth >= 0.8) && (depth <= 1.0) ) // yellow to red ramp
     {
         vec3 color;
@@ -140,7 +132,7 @@ vec3 rainbowTransferFunction(in float depth)
         color.b = 0.0;
 
         return clamp(color, 0.0, 1.0);
-    }    
+    }
     else if (depth > 1.0) // white if above bound
     {
         return vec3(1.0);
@@ -182,7 +174,7 @@ vec3 chromaDepth1TransferFunction(in float depth)
     float r = 1.0;
     float g = 0.0;
     float b = 1.0 - 6.0 * ( depth - (5.0 / 6.0) );
-    
+
     if ( depth <= (5.0 / 6.0) )
     {
         r = 6.0 * ( depth - (4.0 / 6.0 ) );
@@ -221,7 +213,7 @@ vec3 chromaDepth1TransferFunction(in float depth)
 }
 
 vec3 chromaDepth2TransferFunction(in float depth)
-{    
+{
     // the depth value can be the gl_Position.z one or (gl_FragCoord.z / gl_FragCoord.w)
     // usage in BL: vec4(1.0 - chromaDepth2TransferFunction(gl_FragCoord.z / gl_FragCoord.w), 1.0)
     depth = clamp( (depth - CHROMA_DEPTH_NEAR) / CHROMA_DEPTH_FAR, 0.0, 1.0 );
@@ -230,17 +222,17 @@ vec3 chromaDepth2TransferFunction(in float depth)
     // http://www.chromatek.com/Image_Design/Color_Lookup_Functions/color_lookup_functions.shtml
     float depth2 = depth * depth;
     vec3 rgb;
-    if (depth < 0.5) 
+    if (depth < 0.5)
     {
         rgb.g = 1.6 * depth2 + 1.2 * depth;
-    } 
-    else 
+    }
+    else
     {
         rgb.g = 3.2 * depth2 - 6.8 * depth + 3.6;
         rgb.b = depth2 * -4.8 + 9.2 * depth - 3.4;
     }
     depth  = depth  / 0.9;
-    depth2 = depth2 / 0.81;    
+    depth2 = depth2 / 0.81;
     rgb.r = -2.14 * depth2 * depth2 -1.07 * depth2 * depth + 0.133 * depth2 + 0.0667 * depth + 1.0;
 
     return clamp(rgb, 0.0, 1.0);
@@ -279,13 +271,13 @@ void applyErosion(in vec4 noisevec)
 
 vec4 applyADSLightingModel(in bool useOrenNayarDiffuseModel, in bool useHalfVector, in vec3 normal, in vec3 position, in vec4 sceneColor)
 {
-    vec3 N = normalize(normal);    
+    vec3 N = normalize(normal);
     vec3 L = normalize(gl_LightSource[0].position.xyz - position);
     float distance = length(L);
     float attenuation = 1.0 / (gl_LightSource[0].constantAttenuation +
                    	       gl_LightSource[0].linearAttenuation * distance +
                    	       gl_LightSource[0].quadraticAttenuation * distance * distance);
-    
+
     float lambertTerm = max( 0.0, dot(N, L) );
     vec4 diffuse = ( (useOrenNayarDiffuseModel) ? orenNayarDiffuseModel(position, N, L) : gl_LightSource[0].diffuse ) * lambertTerm * attenuation;
 
@@ -304,7 +296,7 @@ vec4 applyADSLightingModel(in bool useOrenNayarDiffuseModel, in bool useHalfVect
             float RxE = max(dot( R, normalize(position) ), 0.0);
             specularPower = pow(RxE, gl_FrontMaterial.shininess / SHININESS_DIVIDER_FOR_REFLECTION_VECTOR) ;
         }
-        specular = (gl_LightSource[0].specular * specularPower / SPECULAR_DIVIDER) * attenuation;    
+        specular = (gl_LightSource[0].specular * specularPower / SPECULAR_DIVIDER) * attenuation;
     }
 
     return vec4(sceneColor + gl_LightSource[0].ambient + diffuse * vec4(sceneColor.rgb, 1.0) + specular * sceneColor.a);
@@ -329,37 +321,6 @@ vec4 orenNayarDiffuseModel(in vec3 position, in vec3 normal, in vec3 lightVector
 
     return 2.0 * R * cosTi * ( A + B * max( 0.0, dot(Ep, Lp) ) * max(sinTr, sinTi) * min(tanTi, tanTr) ) * gl_LightSource[0].diffuse;
 }
-
-#if GPU_GEOMETRY_SHADER4_COMPATIBILITY_CONDITION
-    vec4 applySolidWireFrame(in vec4 originalColor, in float lineWidth)
-    {
-        // compute the shortest distance between the fragment and the edges
-        float minDistance = min(min(fsTriangleDistances.x, fsTriangleDistances.y), fsTriangleDistances.z);
-        // cull fragments after a certain distance
-        if (minDistance > 0.05)
-            discard;        
-
-        // gradient is computed from the function exp2(-2(x)^2)
-        lineWidth = 150.0 / (lineWidth / gl_FragCoord.w);
-        if (lineWidth < 10) 
-            lineWidth = 10;
-        float gradient = 1.0 - amplify(minDistance, lineWidth, -0.5);
-        float value = smootherstep(1.0, 0.0, 20.0 * minDistance);
-        vec4 newColor = mix(vec4( ( gradient / (1.0 + gl_FragCoord.w) ) * SOLID_WIREFRAME_BRIGHTNESS_FACTOR * originalColor.rgb, gradient ), originalColor, value);
-        if ( any( lessThan(newColor.rgb, originalColor.rgb - 0.1) ) )
-            discard;
-        
-        return newColor;
-    }
-
-    float amplify(in float d, in float scale, in float offset)
-    {
-        d = scale * d + offset;
-        d = clamp(d, 0.0, 1.0);
-
-        return 1.0 - exp2(-2.0 * d * d);
-    }
-#endif
 
 void applyTexture(inout vec4 finalColor, in vec2 textureCoords)
 {

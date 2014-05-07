@@ -69,16 +69,28 @@ public abstract class LayoutAbstractToolBar extends JToolBar
 
     protected abstract String getFirstButtonName();
 
+    // When tearing toolbars off we occasionally see JDK bug 8013550
+    // It appears to be triggered by the size of components, so we attempt
+    // to work around it here by enforcing a minimum size
+    final int JAVA_BUG_8013550_MIN_COMPONENT_SIZE = 10;
+
     protected void addPaddingSpace()
     {
-        this.add( Box.createRigidArea( new Dimension(imageIconWidth, imageIconHeight / 2) ) );
+        int width = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, imageIconWidth);
+        int height = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, imageIconHeight / 2);
+
+        this.add(Box.createRigidArea(new Dimension(width, height)));
     }
 
     protected void addEmptySpaceAndSeparator()
     {
-        this.add( Box.createRigidArea( new Dimension( (int)(imageIconWidth / imageDivisor), (int)(imageIconHeight / imageDivisor) ) ) );
+        int width = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, (int) (imageIconWidth / imageDivisor));
+        int height = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, (int) (imageIconHeight / imageDivisor));
+        Dimension dimension = new Dimension(width, height);
+
+        this.add(Box.createRigidArea(dimension));
         this.addSeparator();
-        this.add( Box.createRigidArea( new Dimension( (int)(imageIconWidth / imageDivisor), (int)(imageIconHeight / imageDivisor) ) ) );
+        this.add(Box.createRigidArea(dimension));
     }
 
     protected void setToolBarButtonImages(JButton button, String actionName)

@@ -115,27 +115,30 @@ public class SimulationResultsPanel extends ClassViewerPlotPanel
         YIntervalSeriesCollection datasetCollection = new YIntervalSeriesCollection();
         DeviationRenderer dr = (DeviationRenderer) plot.getRenderer();
 
-        for (GraphNode graphNode : graphNodes)
+        if (ANIMATION_SIMULATION_RESULTS != null)
         {
-            if (graphNode.ismEPNTransition())
+            for (GraphNode graphNode : graphNodes)
             {
-                continue;
-            }
+                if (graphNode.ismEPNTransition())
+                {
+                    continue;
+                }
 
-            int nodeID = graphNode.getNodeID();
-            String name = layoutFrame.getNetworkRootContainer().getNodeName(graphNode.getNodeName());
-            YIntervalSeries dataset = new YIntervalSeries(name + " (" + graphNode.getNodeName() + ")");
-            for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
-            {
-                double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);
-                double halfError = ANIMATION_SIMULATION_RESULTS.getError(nodeID, timeBlock) * 0.5;
-                dataset.add(timeBlock, value, value - halfError, value + halfError);
-            }
+                int nodeID = graphNode.getNodeID();
+                String name = layoutFrame.getNetworkRootContainer().getNodeName(graphNode.getNodeName());
+                YIntervalSeries dataset = new YIntervalSeries(name + " (" + graphNode.getNodeName() + ")");
+                for (int timeBlock = 1; timeBlock < totalTimeBlocks; timeBlock++)
+                {
+                    double value = ANIMATION_SIMULATION_RESULTS.getValue(nodeID, timeBlock);
+                    double halfError = ANIMATION_SIMULATION_RESULTS.getError(nodeID, timeBlock) * 0.5;
+                    dataset.add(timeBlock, value, value - halfError, value + halfError);
+                }
 
-            datasetCollection.addSeries(dataset);
-            dr.setSeriesPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
-            dr.setSeriesFillPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
-            dr.setSeriesStroke(datasetCollection.getSeriesCount() - 1, new BasicStroke(2.0f, 1, 1));
+                datasetCollection.addSeries(dataset);
+                dr.setSeriesPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
+                dr.setSeriesFillPaint(datasetCollection.getSeriesCount() - 1, graphNode.getColor());
+                dr.setSeriesStroke(datasetCollection.getSeriesCount() - 1, new BasicStroke(2.0f, 1, 1));
+            }
         }
 
         plot.setDataset(datasetCollection);

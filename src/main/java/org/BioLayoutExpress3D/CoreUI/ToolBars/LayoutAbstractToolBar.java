@@ -76,16 +76,16 @@ public abstract class LayoutAbstractToolBar extends JToolBar
 
     protected void addPaddingSpace()
     {
-        int width = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, imageIconWidth);
-        int height = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, imageIconHeight / 2);
+        int width = Math.max(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, imageIconWidth);
+        int height = Math.max(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, imageIconHeight / 2);
 
         this.add(Box.createRigidArea(new Dimension(width, height)));
     }
 
     protected void addEmptySpaceAndSeparator()
     {
-        int width = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, (int) (imageIconWidth / imageDivisor));
-        int height = Math.min(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, (int) (imageIconHeight / imageDivisor));
+        int width = Math.max(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, (int) (imageIconWidth / imageDivisor));
+        int height = Math.max(JAVA_BUG_8013550_MIN_COMPONENT_SIZE, (int) (imageIconHeight / imageDivisor));
         Dimension dimension = new Dimension(width, height);
 
         this.add(Box.createRigidArea(dimension));

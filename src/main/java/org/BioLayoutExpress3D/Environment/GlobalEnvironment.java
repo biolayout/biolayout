@@ -303,7 +303,7 @@ public final class GlobalEnvironment
     // Model Shape Editor variables
     public static enum Lathe3DShapes { CYLINDER, CONE, TRAPEZOID, EGG, DRIP, CUP, LIMB, ROUND_R, OVAL_R, FLOWER, CHESS_PIECE, BRANCH, TORUS, DUMB_BELL, DOME, ARMOUR, SAUCER }
     public static enum SuperQuadricShapes { SPHERE, CYLINDER, STAR, DOUBLE_PYRAMID, TORUS, PINEAPPLE_SLICE, PILLOW, SQUARE_TORUS, PINCHED_TORUS, ROUND_CUBE, HYPERBOLOID_ONE_SHEET, HYPERBOLOID_TWO_SHEETS }
-    public static enum OBJModelShapes { PIG, COW, CALF, HORSE, DINO, GENE, LEAVES, APHRODITE, HELICOPTER, PENGUIN }
+    public static enum OBJModelShapes { PIG, COW, CALF, HORSE, DINO, GENE, LEAVES, HELICOPTER, PENGUIN }
     public static final float[] OBJ_MODEL_SHAPE_SIZES  = { 3.0f, 3.0f, 2.5f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f, 2.8f, 2.0f };
     public static final String DEFAULT_OBJ_MODEL_SHAPE_NAME = "RoundCube";
     public static final float DEFAULT_OBJ_MODEL_SHAPE_SIZE = 2.0f;

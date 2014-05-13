@@ -139,6 +139,7 @@ Section "-${LONG_NAME}"
     CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
     CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\${LONG_NAME}.lnk" "$INSTDIR\${OUTPUT_EXE_NAME}"
 
+    !insertmacro UPDATEFILEASSOC
     !insertmacro MUI_STARTMENU_WRITE_END
 
 SectionEnd
@@ -148,25 +149,21 @@ SectionGroup "File associations"
     Section "BioLayout layout file (.layout)"
         !insertmacro APP_ASSOCIATE "layout" "BLE3D.layout" "BioLayout Express 3D Layout File" \
             "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
-        !insertmacro UPDATEFILEASSOC
     SectionEnd
 
     Section "Simple interaction file (.sif)"
         !insertmacro APP_ASSOCIATE "sif" "BLE3D.sif" "BioLayout Express 3D Sif File" \
             "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
-        !insertmacro UPDATEFILEASSOC
     SectionEnd
 
     Section "Gene expression file (.expression)"
         !insertmacro APP_ASSOCIATE "expression" "BLE3D.expression" "BioLayout Express 3D Expression File" \
             "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
-        !insertmacro UPDATEFILEASSOC
     SectionEnd
 
     Section "Matrix file (.matrix)"
         !insertmacro APP_ASSOCIATE "matrix" "BLE3D.matrix" "BioLayout Express 3D Matrix File" \
             "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
-        !insertmacro UPDATEFILEASSOC
     SectionEnd
 SectionGroupEnd
 

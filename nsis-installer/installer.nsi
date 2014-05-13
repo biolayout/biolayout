@@ -1,6 +1,6 @@
 !include "MUI2.nsh"
 !include "x64.nsh"
-!include "FileAssociation.nsh"
+!include "fileassoc.nsh"
 !include "LogicLib.nsh"
 
 !addplugindir "."
@@ -77,8 +77,6 @@ Var STARTMENU_FOLDER
 
 ;Launch function
 Function Launch
-    File "ShellExecAsUser.dll"
-
     ShellExecAsUser::ShellExecAsUser "" "$INSTDIR\${OUTPUT_EXE_NAME}"
 FunctionEnd
 
@@ -148,20 +146,27 @@ SectionEnd
 ; File Associations
 SectionGroup "File associations"
     Section "BioLayout layout file (.layout)"
-        ${UnregisterExtension} ".layout"     "BioLayout Express 3D Layout File"
-        ${RegisterExtension} "$INSTDIR\${OUTPUT_EXE_NAME}" ".layout" "BioLayout Express 3D Layout File"
+        !insertmacro APP_ASSOCIATE "layout" "BLE3D.layout" "BioLayout Express 3D Layout File" \
+            "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
+        !insertmacro UPDATEFILEASSOC
     SectionEnd
 
     Section "Simple interaction file (.sif)"
-        ${RegisterExtension} "$INSTDIR\${OUTPUT_EXE_NAME}" ".sif" "BioLayout Express 3D Sif File"
+        !insertmacro APP_ASSOCIATE "sif" "BLE3D.sif" "BioLayout Express 3D Sif File" \
+            "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
+        !insertmacro UPDATEFILEASSOC
     SectionEnd
 
     Section "Gene expression file (.expression)"
-        ${RegisterExtension} "$INSTDIR\${OUTPUT_EXE_NAME}" ".expression" "BioLayout Express 3D Expression File"
+        !insertmacro APP_ASSOCIATE "expression" "BLE3D.expression" "BioLayout Express 3D Expression File" \
+            "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
+        !insertmacro UPDATEFILEASSOC
     SectionEnd
 
     Section "Matrix file (.matrix)"
-        ${RegisterExtension} "$INSTDIR\${OUTPUT_EXE_NAME}" ".matrix" "BioLayout Express 3D Matrix File"
+        !insertmacro APP_ASSOCIATE "matrix" "BLE3D.matrix" "BioLayout Express 3D Matrix File" \
+            "$INSTDIR\${OUTPUT_EXE_NAME},0" "Open" "$INSTDIR\${OUTPUT_EXE_NAME} $\"%1$\""
+        !insertmacro UPDATEFILEASSOC
     SectionEnd
 SectionGroupEnd
 
@@ -194,9 +199,10 @@ Section "Uninstall"
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${LONG_NAME}"
     DeleteRegKey HKLM "SOFTWARE\${LONG_NAME}"
 
-    ${UnregisterExtension} ".layout"     "BioLayout Express 3D Layout File"
-    ${UnregisterExtension} ".sif"        "BioLayout Express 3D Sif File"
-    ${UnregisterExtension} ".expression" "BioLayout Express 3D Expression File"
-    ${UnregisterExtension} ".matrix"     "BioLayout Express 3D Matrix File"
+    !insertmacro APP_UNASSOCIATE "layout"     "BLE3D.layout"
+    !insertmacro APP_UNASSOCIATE "sif"        "BLE3D.sif"
+    !insertmacro APP_UNASSOCIATE "expression" "BLE3D.expression"
+    !insertmacro APP_UNASSOCIATE "matrix"     "BLE3D.matrix"
+    !insertmacro UPDATEFILEASSOC
 
 SectionEnd

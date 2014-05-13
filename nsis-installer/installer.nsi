@@ -148,6 +148,7 @@ SectionEnd
 ; File Associations
 SectionGroup "File associations"
     Section "BioLayout layout file (.layout)"
+        ${UnregisterExtension} ".layout"     "BioLayout Express 3D Layout File"
         ${RegisterExtension} "$INSTDIR\${OUTPUT_EXE_NAME}" ".layout" "BioLayout Express 3D Layout File"
     SectionEnd
 

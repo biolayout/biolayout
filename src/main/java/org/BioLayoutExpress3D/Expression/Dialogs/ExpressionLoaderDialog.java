@@ -36,6 +36,7 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     private File expressionFile = null;
 
     private boolean proceed = false;
+    private boolean failed = false;
 
     private AbstractAction okAction = null;
     private AbstractAction cancelAction = null;
@@ -372,6 +373,8 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
 
             if (!tdm.parse())
             {
+                failed = true;
+                proceed = true; // Ugh; even though we failed we need to keep going to allow the error to be reported
                 return;
             }
 
@@ -552,6 +555,11 @@ public final class ExpressionLoaderDialog extends JDialog implements ActionListe
     public boolean proceed()
     {
         return proceed;
+    }
+
+    public boolean failed()
+    {
+        return failed;
     }
 
     public int getFirstDataColumn()

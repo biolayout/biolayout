@@ -24,6 +24,7 @@ public class TextDelimitedMatrix
     private boolean transpose;
     private boolean unparsedColumns;
     private boolean unparsedRows;
+    public String reasonForFailure = "";
 
     public interface ProgressIndicator
     {
@@ -31,6 +32,16 @@ public class TextDelimitedMatrix
     }
 
     private ProgressIndicator progressIndicator;
+
+    private void setReasonForFailure(int row, int column, String reason)
+    {
+        if (row >= 0 && column >= 0)
+        {
+            reasonForFailure += "At row " + (row + 1) + ", column " + (column + 1) + ":\n";
+        }
+
+        reasonForFailure += reason;
+    }
 
     public TextDelimitedMatrix(File file, String delimiterRegex, ProgressIndicator progressIndicator) throws IOException
     {
@@ -58,12 +69,13 @@ public class TextDelimitedMatrix
 
     public boolean parse()
     {
+        int column = -1;
+        int row = 0;
+
         try
         {
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line;
-            int column = 0;
-            int row = 0;
             int columnCount = -1;
             int linesRead = 0;
 
@@ -80,7 +92,21 @@ public class TextDelimitedMatrix
 
                 if (columnCount >= 0 && split.length != columnCount)
                 {
-                    throw new IOException("File contains unequal column counts");
+                    int missingColumnCount = columnCount - split.length;
+                    if (missingColumnCount > 0)
+                    {
+                        // In Excel if you export a tab separated file with some rows that
+                        // are shorter than the others, the short rows will not get trailing
+                        // tabs to indicate empty cells; this adds them
+                        split = Arrays.copyOf(split, columnCount);
+                        Arrays.fill(split, columnCount - missingColumnCount, columnCount, "");
+                    }
+                    else
+                    {
+                        // We have rows with extra columns
+                        throw new IOException("Row " + (row + 1) + " contains " +
+                                (-missingColumnCount) + " excess columns");
+                    }
                 }
 
                 columnCount = split.length;
@@ -122,11 +148,11 @@ public class TextDelimitedMatrix
 
             reader.close();
         }
-        catch (IOException ioe)
+        catch (Exception e)
         {
            if (DEBUG_BUILD)
            {
-               println("IOException in TextDelimitedMatrix.parse():\n" + ioe.getMessage());
+               setReasonForFailure(row, column, e.getMessage());
                return false;
            }
         }

@@ -1107,7 +1107,12 @@ public final class LayoutFrame extends JFrame implements GraphListener
         else if ( fileExtension.equals( SupportedInputFileTypes.EXPRESSION.toString() ) )
         {
             ExpressionLoaderDialog expressionLoaderDialog = new ExpressionLoaderDialog(this, file);
-            expressionLoaderDialog.setVisible(true);
+
+            if (!expressionLoaderDialog.failed())
+            {
+                // Only show if we haven't already failed
+                expressionLoaderDialog.setVisible(true);
+            }
 
             if ( isNotSkipped = expressionLoaderDialog.proceed() )
             {
@@ -1120,6 +1125,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         expressionLoaderDialog.getFirstDataRow(),
                         expressionLoaderDialog.transpose() );
                 isSuccessful = expressionLoader.parse(this);
+                reasonForExpressionLoadFailure = expressionLoader.reasonForFailure; // "" if no failure
 
                 if (isSuccessful)
                 {

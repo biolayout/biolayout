@@ -95,6 +95,7 @@ public final class ExpressionLoader
 
             if (!tdm.parse())
             {
+                reasonForFailure = tdm.reasonForFailure;
                 return false;
             }
 
@@ -224,6 +225,7 @@ public final class ExpressionLoader
 
             if (!tdm.parse())
             {
+                reasonForFailure = tdm.reasonForFailure;
                 return false;
             }
 

@@ -14,6 +14,7 @@ import org.BioLayoutExpress3D.StaticLibraries.*;
 import org.BioLayoutExpress3D.Environment.DataFolder;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Environment.GlobalEnvironment;
 
 /**
 *
@@ -215,10 +216,16 @@ final class MCLWindowDialog extends JDialog implements Runnable, ActionListener 
 
         try
         {
-            // Runtime runtime = Runtime.getRuntime();
-            // has to use the exec(String[]) method instead of the old exec(String) so as to avoid the Tokenizer of the second one omitting all whitespaces in file paths!!!
-            // Process MCL_process = runtime.exec( createMCLcommand() );
-            Process MCL_process = new ProcessBuilder( createMCLcommand() ).start();
+            ProcessBuilder MCL_processBuilder = new ProcessBuilder( createMCLcommand() );
+
+            if (GlobalEnvironment.IS_WIN)
+            {
+                // Cygwin complains in its output about DOS style paths, disable the warning
+                Map<String, String> env = MCL_processBuilder.environment();
+                env.put("CYGWIN", "nodosfilewarning");
+            }
+
+            Process MCL_process = MCL_processBuilder.start();
             br = new BufferedReader( new InputStreamReader( MCL_process.getInputStream() ) );
             MCLStreamGrabber errorGrabberMCL = new MCLStreamGrabber( MCL_process.getErrorStream() );
             errorGrabberMCL.start(this);

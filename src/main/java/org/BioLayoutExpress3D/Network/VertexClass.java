@@ -1,6 +1,7 @@
 package org.BioLayoutExpress3D.Network;
 
 import java.awt.*;
+import java.util.ArrayList;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.StaticLibraries.*;
 
@@ -29,17 +30,12 @@ public final class VertexClass implements Comparable<VertexClass>
         this.classID = classID;
         this.className = className;
 
-        createRandomClassColor(layoutClasses);
+        assignClassColor(layoutClasses);
     }
 
-    private void createRandomClassColor(LayoutClasses layoutClasses)
+    private void assignClassColor(LayoutClasses layoutClasses)
     {
-        int colorRange = UPPER_THRESHOLD - LOWER_THRESHOLD;
-        int RGBColorCombinations = colorRange * colorRange * colorRange;
-        classColor = createRandomColor();
-        while (layoutClasses.getClassesColors().contains(classColor) && layoutClasses.getClassesColors().size() <= RGBColorCombinations)
-            classColor = createRandomColor();
-        layoutClasses.getClassesColors().add(classColor);
+        classColor = layoutClasses.getVertexClassColorAssigner().assign(className);
     }
 
     public static Color createRandomColor()

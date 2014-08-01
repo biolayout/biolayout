@@ -114,6 +114,8 @@ public final class LayoutClassSetsManager
         for (LayoutClasses layoutClasses : classSetNames)
             layoutClasses.clearClasses();
 
+        LayoutClasses.resetVertexClassColorAssigner();
+
         currentClassSetName = "";
         currentClassSetID = 0;
         totalclassSetNames = 0;

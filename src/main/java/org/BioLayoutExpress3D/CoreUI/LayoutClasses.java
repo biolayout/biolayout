@@ -199,4 +199,15 @@ public final class LayoutClasses
     {
         return classSetName;
     }
+
+    private static VertexClassColorAssigner vcca = new VertexClassColorAssigner();
+    public static void resetVertexClassColorAssigner()
+    {
+        vcca.reset();
+    }
+
+    public VertexClassColorAssigner getVertexClassColorAssigner()
+    {
+        return vcca;
+    }
 }

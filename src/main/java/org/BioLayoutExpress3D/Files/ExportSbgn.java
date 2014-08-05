@@ -146,6 +146,7 @@ public final class ExportSbgn
         map.put("AC", "process");
         map.put("C",  "process");
         map.put("TL", "process");
+        map.put("TR", "process");
         map.put("T",  "process");
         map.put("I",  "process");
         map.put("A",  "process");

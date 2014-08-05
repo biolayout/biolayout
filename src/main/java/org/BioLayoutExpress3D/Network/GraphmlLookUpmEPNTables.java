@@ -48,7 +48,8 @@ public final class GraphmlLookUpmEPNTables
                                              CATALYSIS,
                                              AUTO_CATALYSIS,
                                              TRANSLOCATION,
-                                             TRANSCRIPTION_TRANSLATION,
+                                             TRANSLATION,
+                                             TRANSCRIPTION,
                                              ACTIVATION,
                                              INHIBITION,
                                              PHOSPHORYLATION,
@@ -103,7 +104,8 @@ public final class GraphmlLookUpmEPNTables
                                                                                 CATALYSIS,
                                                                                 AUTO_CATALYSIS,
                                                                                 TRANSLOCATION,
-                                                                                TRANSCRIPTION_TRANSLATION,
+                                                                                TRANSLATION,
+                                                                                TRANSCRIPTION,
                                                                                 ACTIVATION,
                                                                                 INHIBITION,
                                                                                 PHOSPHORYLATION,
@@ -149,39 +151,40 @@ public final class GraphmlLookUpmEPNTables
                                                                           Tuples.tuple("C",   "ellipse", CATALYSIS,                    decode("#9999FF"), 5.0f, CIRCLE, SPHERE), //index 8
                                                                           Tuples.tuple("AC",  "ellipse", AUTO_CATALYSIS,               decode("#9999FF"), 5.0f, CIRCLE, SPHERE), //index 9
                                                                           Tuples.tuple("T",   "ellipse", TRANSLOCATION,                decode("#00CCFF"), 5.0f, CIRCLE, SPHERE), //index 10
-                                                                          Tuples.tuple("TL",  "ellipse", TRANSCRIPTION_TRANSLATION,    decode("#99CCFF"), 5.0f, CIRCLE, SPHERE), //index 11
-                                                                          Tuples.tuple("A",   "ellipse", ACTIVATION,                   decode("#00CC33"), 5.0f, CIRCLE, SPHERE), //index 12
-                                                                          Tuples.tuple("I",   "ellipse", INHIBITION,                   decode("#FF0000"), 5.0f, CIRCLE, SPHERE), //index 13
-                                                                          Tuples.tuple("P",   "ellipse", PHOSPHORYLATION,              decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 14
-                                                                          Tuples.tuple("-P",  "ellipse", DEPHOSPHORYLATION,            decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 15
-                                                                          Tuples.tuple("AP",  "ellipse", AUTO_PHOSPHORYLATION,         decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 16
-                                                                          Tuples.tuple("PT",  "ellipse", PHOSPHO_TRANSFER,             decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 17
-                                                                          Tuples.tuple("Ub",  "ellipse", UBIQUITISATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 18
-                                                                          Tuples.tuple("Su",  "ellipse", SUMOYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 19
-                                                                          Tuples.tuple("Se",  "ellipse", SELENYLATION,                 decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 20
-                                                                          Tuples.tuple("Gy",  "ellipse", GLYCOSYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 21
-                                                                          Tuples.tuple("Pr",  "ellipse", PRENYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 22
-                                                                          Tuples.tuple("Me",  "ellipse", METHYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 23
-                                                                          Tuples.tuple("Ac",  "ellipse", ACETYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 24
-                                                                          Tuples.tuple("Pa",  "ellipse", PALMITOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 25
-                                                                          Tuples.tuple("H+",  "ellipse", PROTONATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 26
-                                                                          Tuples.tuple("Sp",  "ellipse", SULPHATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 27
-                                                                          Tuples.tuple("Pe",  "ellipse", PEGYLATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 28
-                                                                          Tuples.tuple("My",  "ellipse", MYRISTOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 29
-                                                                          Tuples.tuple("OH",  "ellipse", HYDROXYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 30
-                                                                          Tuples.tuple("S",   "ellipse", SECRETION,                    decode("#CCFFCC"), 5.0f, CIRCLE, SPHERE), //index 31
-                                                                          Tuples.tuple("/",   "ellipse", SINK_PROTEASOMAL_DEGRADATION, decode("#FFFFFF"), 5.0f, CIRCLE, TORUS), //index 32
-                                                                          Tuples.tuple("Ox",  "ellipse", OXIDATION,                    decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 33
-                                                                          Tuples.tuple("M",   "ellipse", MUTATION,                     decode("#FF99CC"), 5.0f, CIRCLE, SPHERE), //index 34
-                                                                          Tuples.tuple("?",   "ellipse", UNKNOWN_TRANSITION,           decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 35
+                                                                          Tuples.tuple("TL",  "ellipse", TRANSLATION,                  decode("#99CCFF"), 5.0f, CIRCLE, SPHERE), //index 11
+                                                                          Tuples.tuple("TR",  "ellipse", TRANSCRIPTION,                decode("#99CCFF"), 5.0f, CIRCLE, SPHERE), //index 12
+                                                                          Tuples.tuple("A",   "ellipse", ACTIVATION,                   decode("#00CC33"), 5.0f, CIRCLE, SPHERE), //index 13
+                                                                          Tuples.tuple("I",   "ellipse", INHIBITION,                   decode("#FF0000"), 5.0f, CIRCLE, SPHERE), //index 14
+                                                                          Tuples.tuple("P",   "ellipse", PHOSPHORYLATION,              decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 15
+                                                                          Tuples.tuple("-P",  "ellipse", DEPHOSPHORYLATION,            decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 16
+                                                                          Tuples.tuple("AP",  "ellipse", AUTO_PHOSPHORYLATION,         decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 17
+                                                                          Tuples.tuple("PT",  "ellipse", PHOSPHO_TRANSFER,             decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 18
+                                                                          Tuples.tuple("Ub",  "ellipse", UBIQUITISATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 19
+                                                                          Tuples.tuple("Su",  "ellipse", SUMOYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 20
+                                                                          Tuples.tuple("Se",  "ellipse", SELENYLATION,                 decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 21
+                                                                          Tuples.tuple("Gy",  "ellipse", GLYCOSYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 22
+                                                                          Tuples.tuple("Pr",  "ellipse", PRENYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 23
+                                                                          Tuples.tuple("Me",  "ellipse", METHYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 24
+                                                                          Tuples.tuple("Ac",  "ellipse", ACETYLATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 25
+                                                                          Tuples.tuple("Pa",  "ellipse", PALMITOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 26
+                                                                          Tuples.tuple("H+",  "ellipse", PROTONATION,                  decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 27
+                                                                          Tuples.tuple("Sp",  "ellipse", SULPHATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 28
+                                                                          Tuples.tuple("Pe",  "ellipse", PEGYLATION,                   decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 29
+                                                                          Tuples.tuple("My",  "ellipse", MYRISTOYLATION,               decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 30
+                                                                          Tuples.tuple("OH",  "ellipse", HYDROXYLATION,                decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 31
+                                                                          Tuples.tuple("S",   "ellipse", SECRETION,                    decode("#CCFFCC"), 5.0f, CIRCLE, SPHERE), //index 32
+                                                                          Tuples.tuple("/",   "ellipse", SINK_PROTEASOMAL_DEGRADATION, decode("#FFFFFF"), 5.0f, CIRCLE, TORUS),  //index 33
+                                                                          Tuples.tuple("Ox",  "ellipse", OXIDATION,                    decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 34
+                                                                          Tuples.tuple("M",   "ellipse", MUTATION,                     decode("#FF99CC"), 5.0f, CIRCLE, SPHERE), //index 35
+                                                                          Tuples.tuple("?",   "ellipse", UNKNOWN_TRANSITION,           decode("#F0FFFF"), 5.0f, CIRCLE, SPHERE), //index 36
 
                                                                           // Edge Annotations
-                                                                          Tuples.tuple("A",   "diamond", EDGE_ACTIVATES,               decode("#00CC33"), 5.0f, DIAMOND, OCTAHEDRON), //index 36
-                                                                          Tuples.tuple("I",   "diamond", EDGE_INHIBITS,                decode("#FF0000"), 5.0f, DIAMOND, OCTAHEDRON), //index 37
-                                                                          Tuples.tuple("C",   "diamond", EDGE_CATALYSIS,               decode("#CC99FF"), 5.0f, DIAMOND, OCTAHEDRON), //index 38
+                                                                          Tuples.tuple("A",   "diamond", EDGE_ACTIVATES,               decode("#00CC33"), 5.0f, DIAMOND, OCTAHEDRON), //index 37
+                                                                          Tuples.tuple("I",   "diamond", EDGE_INHIBITS,                decode("#FF0000"), 5.0f, DIAMOND, OCTAHEDRON), //index 38
+                                                                          Tuples.tuple("C",   "diamond", EDGE_CATALYSIS,               decode("#CC99FF"), 5.0f, DIAMOND, OCTAHEDRON), //index 39
 
                                                                           // Dummy Component
-                                                                          Tuples.tuple("",    "ellipse", DUMMY_COMPONENT,              decode("#FFFFFF"), 3.0f, CIRCLE, SPHERE) //index 39
+                                                                          Tuples.tuple("",    "ellipse", DUMMY_COMPONENT,              decode("#FFFFFF"), 3.0f, CIRCLE, SPHERE) //index 40
                                                                         };
 
     /**
@@ -190,7 +193,6 @@ public final class GraphmlLookUpmEPNTables
     public static enum GraphmlShapesGroup2 {
                                              // Other
                                              PATHWAY_MODULE,
-                                             PATHWAY_OUTPUT,
 
                                              // Petri Net Transition Nodes
                                              TRANSITION_VERTICAL,
@@ -207,13 +209,12 @@ public final class GraphmlLookUpmEPNTables
     */
     public static final Tuple6[] GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2 = {
                                                                           // Other
-                                                                          Tuples.tuple("octagon",   PATHWAY_MODULE,        decode("#00FF00"), 5.0f, HEXAGON,                       DODECAHEDRON), //index 0
-                                                                          Tuples.tuple("octagon",   PATHWAY_OUTPUT,        decode("#F0FFFF"), 5.0f, HEXAGON,                       DODECAHEDRON), //index 1
+                                                                          Tuples.tuple("octagon",   PATHWAY_MODULE,        decode("#FFFFFF"), 5.0f, HEXAGON,                       DODECAHEDRON), //index 0
 
                                                                           // Petri Net Transition Nodes
-                                                                          Tuples.tuple("rectangle", TRANSITION_VERTICAL,   decode("#000000"), 5.0f, Shapes2D.RECTANGLE_VERTICAL,   Shapes3D.RECTANGLE_VERTICAL), //index 2
-                                                                          Tuples.tuple("rectangle", TRANSITION_HORIZONTAL, decode("#000000"), 5.0f, Shapes2D.RECTANGLE_HORIZONTAL, Shapes3D.RECTANGLE_HORIZONTAL), // distinguish by width/height sizes //index 3
-                                                                          Tuples.tuple("diamond",   TRANSITION_DIAMOND,    decode("#000000"), 4.0f, DIAMOND,                       OCTAHEDRON), //index 4
+                                                                          Tuples.tuple("rectangle", TRANSITION_VERTICAL,   decode("#000000"), 5.0f, Shapes2D.RECTANGLE_VERTICAL,   Shapes3D.RECTANGLE_VERTICAL), //index 1
+                                                                          Tuples.tuple("rectangle", TRANSITION_HORIZONTAL, decode("#000000"), 5.0f, Shapes2D.RECTANGLE_HORIZONTAL, Shapes3D.RECTANGLE_HORIZONTAL), // distinguish by width/height sizes //index 2
+                                                                          Tuples.tuple("diamond",   TRANSITION_DIAMOND,    decode("#000000"), 4.0f, DIAMOND,                       OCTAHEDRON), //index 3
                                                                        };
 
     /**

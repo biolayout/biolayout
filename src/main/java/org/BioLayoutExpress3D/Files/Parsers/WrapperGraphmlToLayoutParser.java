@@ -306,7 +306,7 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
 
             if ( nodeGroup2Tuple6.first.equals(GraphmlShapesGroup2.NONE) )
             {
-                nodeGroup3Tuple6 = graphmlShapeLookUpGroup3(nodeName, nodeShape);
+                nodeGroup3Tuple6 = graphmlShapeLookUpGroup3(nodeName, nodeShape, nodeColor1);
 
                 if ( nodeGroup3Tuple6.first.equals(GraphmlShapesGroup3.NONE) )
                 {
@@ -408,8 +408,7 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
                     currentGraphmlShape = (nodeWidth < nodeHeight) ? GraphmlShapesGroup2.TRANSITION_VERTICAL : GraphmlShapesGroup2.TRANSITION_HORIZONTAL;
                 }
                 else if (currentGraphmlShape.equals(GraphmlShapesGroup2.TRANSITION_DIAMOND) ||
-                        currentGraphmlShape.equals(GraphmlShapesGroup2.PATHWAY_MODULE) ||
-                        currentGraphmlShape.equals(GraphmlShapesGroup2.PATHWAY_OUTPUT))
+                        currentGraphmlShape.equals(GraphmlShapesGroup2.PATHWAY_MODULE))
                 {
                     ismEPNTransition = true;
                 }
@@ -430,7 +429,7 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
     /**
     *  Look up shapes method for graphml shapes group 3 for shape only, also returning color.
     */
-    private Tuple6<GraphmlShapesGroup3, Color, Float, Shapes2D, Shapes3D, Boolean> graphmlShapeLookUpGroup3(String nodeName, String nodeShape)
+    private Tuple6<GraphmlShapesGroup3, Color, Float, Shapes2D, Shapes3D, Boolean> graphmlShapeLookUpGroup3(String nodeName, String nodeShape, Color nodeColor1)
     {
         int numberOfShapes = GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3.length;
         GraphmlShapesGroup3 currentGraphmlShape = GraphmlShapesGroup3.NONE;
@@ -438,7 +437,7 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
         int shapeIndex = 0;
         for (int i = 0; i < numberOfShapes; i++)
         {
-            if ( nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].first ) )
+            if ( nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].first ) && ( (nodeColor1 != null) && nodeColor1.equals( (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].third ) ) )
             {
                 currentGraphmlShape = (GraphmlShapesGroup3)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].second;
                 if ( currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_COMPLEX) && !nodeName.contains(":") )

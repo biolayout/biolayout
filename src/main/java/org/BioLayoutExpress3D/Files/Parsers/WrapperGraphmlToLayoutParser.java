@@ -437,11 +437,17 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
         int shapeIndex = 0;
         for (int i = 0; i < numberOfShapes; i++)
         {
-            if ( nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].first ) && ( (nodeColor1 != null) && nodeColor1.equals( (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].third ) ) )
+            if ( nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].first ) )
             {
                 currentGraphmlShape = (GraphmlShapesGroup3)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].second;
+
+                // Mild hack: require generic entities to be the correct colour
+                if ( currentGraphmlShape.equals(GraphmlShapesGroup3.GENERIC_ENTITY) && !nodeColor1.equals( (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].third ) )
+                    return Tuples.tuple(GraphmlShapesGroup3.NONE, Color.BLACK, 0.0f, CIRCLE, SPHERE, false);
+
                 if ( currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_COMPLEX) && !nodeName.contains(":") )
                     currentGraphmlShape = GraphmlShapesGroup3.PROTEIN_PEPTIDE;
+
                 if ( currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_COMPLEX)    || currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_PEPTIDE) ||
                      currentGraphmlShape.equals(GraphmlShapesGroup3.GENE)               || currentGraphmlShape.equals(GraphmlShapesGroup3.DNA_SEQUENCE)    ||
                      currentGraphmlShape.equals(GraphmlShapesGroup3.SIMPLE_BIOCHEMICAL) || currentGraphmlShape.equals(GraphmlShapesGroup3.GENERIC_ENTITY)  ||

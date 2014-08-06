@@ -88,6 +88,8 @@ public class GraphmlNetworkContainer
             if (firstIsmEPNComponent)
                 vertex1.setmEPNComponent();
 
+            vertex1.setVertexColor(node1mEPNShapeGroupsTuple4.fourth);
+
             nc.verticesMap.put(first, vertex1);
             allNodesmEPNShapeGroupTuplesMap.put(vertex1, node1mEPNShapeGroupsTuple4);
         }
@@ -110,6 +112,8 @@ public class GraphmlNetworkContainer
                 vertex2.setmEPNTransition();
             if (secondIsmEPNComponent)
                 vertex2.setmEPNComponent();
+
+            vertex2.setVertexColor(node2mEPNShapeGroupsTuple4.fourth);
 
             nc.verticesMap.put(second, vertex2);
             allNodesmEPNShapeGroupTuplesMap.put(vertex2, node2mEPNShapeGroupsTuple4);

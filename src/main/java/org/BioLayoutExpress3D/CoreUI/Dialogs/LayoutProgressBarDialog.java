@@ -81,10 +81,14 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
         maxValue = max;
         if (maxValue <= 0)
         {
-            maxValue = 1;
+            progressBar.setIndeterminate(true);
+        }
+        else
+        {
+            progressBar.setIndeterminate(false);
+            progressBar.setMaximum(maxValue);
         }
 
-        progressBar.setMaximum(maxValue);
         cancelled = false;
         cancelButton.setEnabled(true);
         cancelButton.setVisible(isCancellable);
@@ -102,7 +106,16 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
         progressValue = 0;
         lastUpdateTime = System.currentTimeMillis();
         progressBar.setValue(0);
-        progressBar.setString("0%");
+
+        if(progressBar.isIndeterminate())
+        {
+            progressBar.setString("");
+        }
+        else
+        {
+            progressBar.setString("0%");
+        }
+
         this.pack();
     }
 
@@ -123,6 +136,12 @@ public class LayoutProgressBarDialog extends JDialog implements ActionListener
 
     public synchronized void incrementProgress(int value)
     {
+        if(progressBar.isIndeterminate())
+        {
+            // Can't increment progress if we don't know the maximum
+            return;
+        }
+
         final int UPDATE_PERIOD_MS = 50;
         long currentTime = System.currentTimeMillis();
         progressValue = value;

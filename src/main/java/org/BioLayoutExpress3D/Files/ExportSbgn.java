@@ -39,7 +39,7 @@ import org.BioLayoutExpress3D.Utils.Point3D;
 public final class ExportSbgn
 {
     // Constant to adjust to an appropriate scale for SBGN files
-    final static float SCALE = 40.0f;
+    final static float MEPN_TO_SBGN_SCALE = 2.0f;
     final static String PROCESS_EDGE_GLYPH_INDICATOR = "pegi";
     final static String ENERGY_TRANSFER_GLYPH_INDICATOR = "em/t";
 
@@ -48,6 +48,7 @@ public final class ExportSbgn
     private AbstractAction exportSbgnAction = null;
     private FileNameExtensionFilter fileNameExtensionFilterSbgn = null;
 
+    private float scale;
     private NetworkRootContainer nc;
     private GraphmlNetworkContainer gnc;
 
@@ -439,7 +440,7 @@ public final class ExportSbgn
 
     private List<Bbox> subDivideGlyph(Glyph glyph, ComponentList cl)
     {
-        final float ALIAS_VERTICAL_SPACE = 1.0f * SCALE;
+        final float ALIAS_VERTICAL_SPACE = 1.0f * scale;
         final float TARGET_ASPECT = 2.0f;
         int subdivisions = cl.getComponents().size();
 
@@ -754,13 +755,13 @@ public final class ExportSbgn
         if (nc.getIsGraphml() && YED_STYLE_RENDERING_FOR_GPAPHML_FILES.get())
         {
             float[] graphmlCoord = gnc.getAllGraphmlNodesMap().get(id).first;
-            x = graphmlCoord[2] * SCALE;
-            y = graphmlCoord[3] * SCALE;
+            x = graphmlCoord[2] * scale;
+            y = graphmlCoord[3] * scale;
         }
         else
         {
-            x = graphNode.getX() * SCALE;
-            y = graphNode.getY() * SCALE;
+            x = graphNode.getX() * scale;
+            y = graphNode.getY() * scale;
         }
 
         Glyph glyph = new Glyph();
@@ -780,8 +781,8 @@ public final class ExportSbgn
             mepnBackColor = Color.WHITE;
         }
 
-        float width = mepnWidth * SCALE;
-        float height = mepnHeight * SCALE;
+        float width = mepnWidth * scale;
+        float height = mepnHeight * scale;
 
         Bbox bbox = new Bbox();
         bbox.setX(x - (width * 0.5f));
@@ -1280,8 +1281,8 @@ public final class ExportSbgn
             float rightDivision = submapBbox.getH() / (rightArcs.size() + 1);
             float topDivision = submapBbox.getW() / (topArcs.size() + 1);
             float bottomDivision = submapBbox.getW() / (bottomArcs.size() + 1);
-            float tagWidth = SCALE * 1.2f;
-            float tagHeight = SCALE * 0.6f;
+            float tagWidth = scale * 1.2f;
+            float tagHeight = scale * 0.6f;
 
             // Clockwise: left, top, right, bottom
             sortArcListByY(leftArcs, submap, true);
@@ -1790,17 +1791,17 @@ public final class ExportSbgn
         {
             float[] graphmlStartCoord = gnc.getAllGraphmlNodesMap().get(startNode.getNodeName()).first;
             float[] graphmlEndCoord = gnc.getAllGraphmlNodesMap().get(endNode.getNodeName()).first;
-            startX = graphmlStartCoord[2] * SCALE;
-            startY = graphmlStartCoord[3] * SCALE;
-            endX = graphmlEndCoord[2] * SCALE;
-            endY = graphmlEndCoord[3] * SCALE;
+            startX = graphmlStartCoord[2] * scale;
+            startY = graphmlStartCoord[3] * scale;
+            endX = graphmlEndCoord[2] * scale;
+            endY = graphmlEndCoord[3] * scale;
         }
         else
         {
-            startX = startNode.getX() * SCALE;
-            startY = startNode.getY() * SCALE;
-            endX = endNode.getX() * SCALE;
-            endY = endNode.getY() * SCALE;
+            startX = startNode.getX() * scale;
+            startY = startNode.getY() * scale;
+            endX = endNode.getX() * scale;
+            endY = endNode.getY() * scale;
         }
 
         Arc arc = new Arc();
@@ -1832,8 +1833,8 @@ public final class ExportSbgn
                 for (Point2D.Float polylinePoint2D : intermediatePoints)
                 {
                     Arc.Next next = new Arc.Next();
-                    next.setX(polylinePoint2D.x * SCALE);
-                    next.setY(polylinePoint2D.y * SCALE);
+                    next.setX(polylinePoint2D.x * scale);
+                    next.setY(polylinePoint2D.y * scale);
                     nextList.add(next);
                 }
             }
@@ -1856,10 +1857,10 @@ public final class ExportSbgn
 
     private Glyph translateContainerToSbgnGlyph(GraphmlComponentContainer componentContainer, int order)
     {
-        float x = componentContainer.rectangle2D.x * SCALE;
-        float y = componentContainer.rectangle2D.y * SCALE;
-        float width = componentContainer.rectangle2D.width * SCALE;
-        float height = componentContainer.rectangle2D.height * SCALE;
+        float x = componentContainer.rectangle2D.x * scale;
+        float y = componentContainer.rectangle2D.y * scale;
+        float width = componentContainer.rectangle2D.width * scale;
+        float height = componentContainer.rectangle2D.height * scale;
 
         Glyph glyph = new Glyph();
         glyph.setId(componentContainer.id);
@@ -1997,6 +1998,10 @@ public final class ExportSbgn
         {
             nc = layoutFrame.getNetworkRootContainer();
             gnc = nc.getGraphmlNetworkContainer();
+
+            // When an mEPN graphml is loaded, it is scaled in order to fill the canvas
+            // This scaling is reversed here, in addition to a static scaled
+            scale = MEPN_TO_SBGN_SCALE / gnc.getScaleFactor();
 
             Sbgn sbgn = translateMepnToSbgn(layoutFrame.getGraph());
             SbgnUtil.writeToFile(sbgn, saveFile);

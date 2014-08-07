@@ -507,5 +507,14 @@ public class GraphmlNetworkContainer
         rangeY = 0.0f;
     }
 
+    private float scaleFactor;
+    public void setScaleFactor(float scaleFactor)
+    {
+        this.scaleFactor = scaleFactor;
+    }
 
+    public float getScaleFactor()
+    {
+        return this.scaleFactor;
+    }
 }

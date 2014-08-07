@@ -517,7 +517,9 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
         float ratioX = rangeX / CANVAS_X_SIZE;
         float ratioY = rangeY / CANVAS_Y_SIZE;
         // convert to multiplicationFactor instead of divisionFactor for a possible speed-up (divisions are usually more slow)
-        float multiplicationFactor = (ratioX > ratioY) ? (1.0f / ratioX) : (1.0f / ratioY);
+        float scaleFactor = (ratioX > ratioY) ? (1.0f / ratioX) : (1.0f / ratioY);
+
+        gnc.setScaleFactor(scaleFactor);
 
         if (DEBUG_BUILD)
         {
@@ -529,13 +531,13 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
             println("maxY: " + maxY);
             println("ratioX: " + ratioX);
             println("ratioY: " + ratioY);
-            println("multiplicationFactor: " + multiplicationFactor);
+            println("multiplicationFactor: " + scaleFactor);
         }
 
-        rangeX *= multiplicationFactor;
-        rangeY *= multiplicationFactor;
-        minX *= multiplicationFactor;
-        minY *= multiplicationFactor;
+        rangeX *= scaleFactor;
+        rangeY *= scaleFactor;
+        minX *= scaleFactor;
+        minY *= scaleFactor;
 
         if (ratioX > ratioY)
             // center the Y dimention, since the X will be exactly CANVAS_X_SIZE
@@ -549,10 +551,10 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
             nodeTuple6 = allNodesMap.get(nodeKey);
 
             // scale the height/width/x/y values
-            nodeTuple6.first[0] *= multiplicationFactor;
-            nodeTuple6.first[1] *= multiplicationFactor;
-            nodeTuple6.first[2] *= multiplicationFactor;
-            nodeTuple6.first[3] *= multiplicationFactor;
+            nodeTuple6.first[0] *= scaleFactor;
+            nodeTuple6.first[1] *= scaleFactor;
+            nodeTuple6.first[2] *= scaleFactor;
+            nodeTuple6.first[3] *= scaleFactor;
             // nodeTuple6.first[4] *= multiplicationFactorZ; // not needed since the depth (Z coordinate) is always zero when a graphml file is parsed
 
             // need to translate the x/y values only
@@ -572,10 +574,10 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
             edgeLabelValues = edgeTuple6.fifth;
 
             // scale the sx/sy/tx/ty values
-            allPathValues.first[0] *= multiplicationFactor;
-            allPathValues.first[1] *= multiplicationFactor;
-            allPathValues.first[2] *= multiplicationFactor;
-            allPathValues.first[3] *= multiplicationFactor;
+            allPathValues.first[0] *= scaleFactor;
+            allPathValues.first[1] *= scaleFactor;
+            allPathValues.first[2] *= scaleFactor;
+            allPathValues.first[3] *= scaleFactor;
 
             // need to translate the sx/sy/tx/ty values
             allPathValues.first[0] -= minX;
@@ -588,8 +590,8 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
             for (int i = 0; i < size; i++)
             {
                 // scale the polyline point values
-                allPathValues.second.get(i).x *= multiplicationFactor;
-                allPathValues.second.get(i).y *= multiplicationFactor;
+                allPathValues.second.get(i).x *= scaleFactor;
+                allPathValues.second.get(i).y *= scaleFactor;
 
                 // need to translate the polyline point values
                 allPathValues.second.get(i).x -= minX;
@@ -599,21 +601,21 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
             if ( !edgeLabelValues[7].isEmpty() )
             {
                 height = Float.parseFloat(edgeLabelValues[7]); // retrieve the height value
-                height *= multiplicationFactor; // scale the height value
+                height *= scaleFactor; // scale the height value
                 edgeLabelValues[7] = Float.toString(height);
 
             }
             if ( !edgeLabelValues[14].isEmpty() )
             {
                 width = Float.parseFloat(edgeLabelValues[14]); // retrieve the width value
-                width *= multiplicationFactor; // scale the width value
+                width *= scaleFactor; // scale the width value
                 edgeLabelValues[14] = Float.toString(width);
             }
 
             if ( !edgeLabelValues[15].isEmpty() )
             {
                 x = Float.parseFloat(edgeLabelValues[15]); // retrieve the x value
-                x *= multiplicationFactor; // scale the x value
+                x *= scaleFactor; // scale the x value
                 x -= minX; // need to translate the x value only
                 edgeLabelValues[15] = Float.toString(x);
             }
@@ -621,7 +623,7 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
             if ( !edgeLabelValues[16].isEmpty() )
             {
                 y = Float.parseFloat(edgeLabelValues[16]); // retrieve the y value
-                y *= multiplicationFactor; // scale the y value
+                y *= scaleFactor; // scale the y value
                 y -= minY; // need to translate the y value only
                 edgeLabelValues[16] = Float.toString(y);
             }

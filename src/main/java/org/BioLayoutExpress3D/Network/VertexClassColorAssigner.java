@@ -3,6 +3,8 @@ package org.BioLayoutExpress3D.Network;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -33,8 +35,24 @@ public class VertexClassColorAssigner
         DISTINCT_COLORS.add(new Color(87,  87,  87 )); // Dark grey
     }
 
-    private int nextColorIndex;
-    private int numShifts;
+    private int mod(int x, int y)
+    {
+        x %= y;
+        return x < 0 ? x + y : x;
+    }
+
+    private Color chooseColorByInt(int i)
+    {
+        int numShifts = i / DISTINCT_COLORS.size();
+        i %= DISTINCT_COLORS.size();
+        Color color = DISTINCT_COLORS.get(i);
+        int r = mod(color.getRed() + (numShifts * SHIFT_VALUE), 256);
+        int g = mod(color.getGreen() + (numShifts * SHIFT_VALUE), 256);
+        int b = mod(color.getBlue() + (numShifts * SHIFT_VALUE), 256);
+
+        return new Color(r, g, b);
+    }
+
     private HashMap<String,Color> assignedColors;
 
     public VertexClassColorAssigner()
@@ -44,8 +62,6 @@ public class VertexClassColorAssigner
 
     public final void reset()
     {
-        nextColorIndex = 0;
-        numShifts = 0;
         assignedColors = new HashMap<String,Color>();
     }
 
@@ -56,20 +72,43 @@ public class VertexClassColorAssigner
             return assignedColors.get(name);
         }
 
-        Color color = DISTINCT_COLORS.get(nextColorIndex);
-        int r = (color.getRed() + (numShifts * SHIFT_VALUE)) % 256;
-        int g = (color.getGreen() + (numShifts * SHIFT_VALUE)) % 256;
-        int b = (color.getBlue() + (numShifts * SHIFT_VALUE)) % 256;
+        String originalName = name;
+        String nameWithoutDigits = "";
+        int sumOfValues = 0;
 
-        color = new Color(r, g, b);
-        assignedColors.put(name, color);
-
-        nextColorIndex++;
-        if(nextColorIndex == DISTINCT_COLORS.size())
+        // Strip out digits and sum them
+        Pattern digitsRegex = Pattern.compile("([^\\d]*)(\\d*)([^\\d]*)");
+        Matcher digitsMatcher = digitsRegex.matcher(name);
+        while (digitsMatcher.find())
         {
-            nextColorIndex = 0;
-            numShifts++;
+            String paddingString = "";
+            String digits = digitsMatcher.group(2);
+
+            if (!digits.isEmpty())
+            {
+                int value = Integer.parseInt(digits);
+                sumOfValues += value;
+            }
+
+            nameWithoutDigits += digitsMatcher.group(1) + digitsMatcher.group(3);
         }
+
+        name = nameWithoutDigits;
+
+        // Sum the ASCII values of the non-digit characters in the name
+        int hash = 0;
+        for(int i = 0; i < name.length(); i++)
+        {
+            hash += name.charAt(i);
+        }
+
+        // Add on the sum of the numerical values
+        hash += sumOfValues;
+        hash -= 442; // This mysterious value is used in order to avoid having to remake existing diagrams
+        hash = mod(hash, Integer.MAX_VALUE);
+
+        Color color = chooseColorByInt(hash);
+        assignedColors.put(originalName, color);
 
         return color;
     }

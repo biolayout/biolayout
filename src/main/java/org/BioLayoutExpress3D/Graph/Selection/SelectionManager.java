@@ -1105,9 +1105,9 @@ public final class SelectionManager
         graph.updateNodesAndSelectedNodesDisplayList();
     }
 
-    public void findName(JFrame jFrame, String givenName, boolean matchCase, boolean matchEntireName, boolean clearSelection)
+    public void findTerms(JFrame jFrame, String searchTerm, boolean matchCase, boolean matchEntireTerm, boolean clearSelection)
     {
-        HashSet<GraphNode> foundGraphNodes = findNameInCollection(graph.getGraphNodes(), givenName, matchCase, matchEntireName);
+        HashSet<GraphNode> foundGraphNodes = findTermsInCollection(graph.getGraphNodes(), searchTerm, matchCase, matchEntireTerm);
         groupManager.processNodes(foundGraphNodes);
 
         if (foundGraphNodes.size() > 0)
@@ -1126,33 +1126,40 @@ public final class SelectionManager
         else
         {
             setActionsEnable(false);
-            showInformationDialog(jFrame, "Name Not Found", "Name '" + givenName + "' not found!");
+            showInformationDialog(jFrame, "Not Found", "Nothing found for '" + searchTerm + "'.");
         }
     }
 
-    private HashSet<GraphNode> findNameInCollection(Collection<GraphNode> graphNodes, String givenName, boolean matchCase, boolean matchEntireName)
+    private HashSet<GraphNode> findTermsInCollection(Collection<GraphNode> graphNodes, String searchTerm, boolean matchCase, boolean matchEntireName)
     {
-        String name = "";
+        String[] needles = searchTerm.split("\\s+");
         HashSet<GraphNode> foundGraphNodes = new HashSet<GraphNode>();
         for (GraphNode graphNode : graphNodes)
         {
-            name = layoutFrame.getNetworkRootContainer().getNodeName( graphNode.getNodeName() );
+            for (String needle : needles)
+            {
+                String name = layoutFrame.getNetworkRootContainer().getNodeName(graphNode.getNodeName());
 
-            if (!matchCase)
-            {
-                name = name.toLowerCase();
-                givenName = givenName.toLowerCase();
-            }
+                if (!matchCase)
+                {
+                    name = name.toLowerCase();
+                    needle = needle.toLowerCase();
+                }
 
-            if (matchEntireName)
-            {
-                if ( givenName.equals(name) )
-                    foundGraphNodes.add(graphNode);
-            }
-            else
-            {
-                if ( name.contains(givenName) )
-                    foundGraphNodes.add(graphNode);
+                if (matchEntireName)
+                {
+                    if (needle.equals(name))
+                    {
+                        foundGraphNodes.add(graphNode);
+                    }
+                }
+                else
+                {
+                    if (name.contains(needle))
+                    {
+                        foundGraphNodes.add(graphNode);
+                    }
+                }
             }
         }
 

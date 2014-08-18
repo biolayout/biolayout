@@ -82,7 +82,7 @@ public final class FindNameDialog extends JDialog
             public void actionPerformed(ActionEvent e)
             {
                 setVisible(false);
-                layoutFrame.getGraph().getSelectionManager().findName(jFrame, textField.getText(), matchCaseCheckBox.isSelected(), matchEntireNameCheckBox.isSelected(), true);
+                layoutFrame.getGraph().getSelectionManager().findTerms(jFrame, textField.getText(), matchCaseCheckBox.isSelected(), matchEntireNameCheckBox.isSelected(), true);
             }
         };
 
@@ -97,7 +97,7 @@ public final class FindNameDialog extends JDialog
             public void actionPerformed(ActionEvent e)
             {
                 setVisible(false);
-                layoutFrame.getGraph().getSelectionManager().findName(jFrame, textField.getText(), matchCaseCheckBox.isSelected(), matchEntireNameCheckBox.isSelected(), false);
+                layoutFrame.getGraph().getSelectionManager().findTerms(jFrame, textField.getText(), matchCaseCheckBox.isSelected(), matchEntireNameCheckBox.isSelected(), false);
 
             }
         };

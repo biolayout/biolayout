@@ -329,16 +329,14 @@ public class CoreParser
             if ( nc.getVerticesMap().containsKey(vertex) )
                 nc.getVerticesMap().get(vertex).setVertexSize( Float.parseFloat(field1) );
         }
-        /*
         else if ( property.equals("//NODECOLOR") )
         {
             vertex = getNext();
             field1 = getNext();
 
-            if ( nc.getVertexHash().containsKey(vertex) )
-                nc.getVertexHash().get(vertex).setNodeColor( Color.decode(field1) );
+            if ( nc.getVerticesMap().containsKey(vertex) )
+                nc.getVerticesMap().get(vertex).setVertexColor( Color.decode(field1) );
         }
-        */
         else if ( property.equals("//NODESHAPE") )
         {
             vertex = getNext();

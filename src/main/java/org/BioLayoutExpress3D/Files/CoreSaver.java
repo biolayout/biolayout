@@ -511,7 +511,12 @@ public final class CoreSaver
             }
 
             fileWriter.write("//NODESIZE\t\"" + graphNode.getNodeName() + "\"\t" + graphNode.getNodeSize() + "\n");
-            // fileWriter.write("//NODECOLOR\t\"" + graphNode.getNodeName() + "\"\t" + colorToString( graphNode.getColor() ) + "\n");
+
+            if (graphNode.isOverrideClassColor())
+            {
+                fileWriter.write("//NODECOLOR\t\"" + graphNode.getNodeName() + "\"\t" + Utils.getHexColor( graphNode.getColor() ) + "\n");
+            }
+
             fileWriter.write("//NODESHAPE\t\"" + graphNode.getNodeName() + "\"\t" + graphNode.getNode2DShape() + "\t" + graphNode.getNode3DShape() + "\n");
             fileWriter.write("//NODEALPHA\t\"" + graphNode.getNodeName() + "\"\t" + graphNode.getTransparencyAlpha() + "\n");
             if ( !graphNode.getURLString().isEmpty() )

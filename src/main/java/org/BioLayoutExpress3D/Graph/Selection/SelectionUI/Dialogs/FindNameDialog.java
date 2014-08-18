@@ -59,7 +59,7 @@ public final class FindNameDialog extends JDialog
 
     private void initComponents(final JFrame jFrame)
     {
-        JLabel textLabel = new JLabel("Please Type the Name of the Node:");
+        JLabel textLabel = new JLabel("Search Term:");
         textLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         matchCaseCheckBox = new JCheckBox("Match Case", true);
         matchCaseCheckBox.setSelected(false);

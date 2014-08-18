@@ -1351,6 +1351,8 @@ public final class LayoutFrame extends JFrame implements GraphListener
                         isSuccessful = expressionLoader.parse(this);
                         reasonForExpressionLoadFailure = expressionLoader.reasonForFailure; // "" if no failure
 
+                        expressionData.preprocess(layoutProgressBarDialog, CURRENT_SCALE_TRANSFORM);
+
                         isSuccessful = isSuccessful && expressionLoader.parseAnnotations(this, nc);
                         DATA_TYPE = DataTypes.EXPRESSION;
                         EXPRESSION_FILE_PATH = file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf( System.getProperty("file.separator") ) + 1);

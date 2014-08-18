@@ -205,50 +205,59 @@ public class CoreParser
         String vertex = "";
         String field1 = "", field2 = "", field3 = "", field4 = "", field5 = "", field6 = "", field7 = "";
 
-        if ( property.equals("//EXPRESSION_DATA") ) // Produced by BL2.2 or lower
+        if (property.startsWith("//EXPRESSION_DATA"))
         {
             field1 = getNext();
             field2 = getNext();
             field3 = getNext();
 
-            if (DEBUG_BUILD) println("Expression data file used was:" + field1);
+            if (DEBUG_BUILD)
+            {
+                println("Expression data file used was:" + field1);
+            }
 
-            String expressionFileName = field1.substring( field1.lastIndexOf( System.getProperty("file.separator") ) + 1, field1.length() );
-            String expressionFilePath = field1.substring(0, field1.lastIndexOf( System.getProperty("file.separator") ) + 1);
-
-            EXPRESSION_FILE = expressionFileName;
-            EXPRESSION_FILE_PATH = expressionFilePath;
-            EXPRESSION_DATA_FIRST_COLUMN = Integer.parseInt(field2);
-
-            // Older files don't have this data, so fill with likely values
-            EXPRESSION_DATA_FIRST_ROW = 1;
-            EXPRESSION_DATA_TRANSPOSE = false;
-
-            CURRENT_CORRELATION_THRESHOLD = Float.parseFloat(field3);
-
-            isExpressionData = true;
-        }
-        else if ( property.equals("//EXPRESSION_DATA_V2") ) // Produced by BL2.3 or higher
-        {
-            field1 = getNext();
-            field2 = getNext();
-            field3 = getNext();
-            field4 = getNext();
-            field5 = getNext();
-
-            if (DEBUG_BUILD) println("Expression data file used was:" + field1);
-
-            String expressionFileName = field1.substring( field1.lastIndexOf( System.getProperty("file.separator") ) + 1, field1.length() );
-            String expressionFilePath = field1.substring(0, field1.lastIndexOf( System.getProperty("file.separator") ) + 1);
+            String expressionFileName = field1.substring(field1.lastIndexOf(System.getProperty("file.separator")) + 1, field1.length());
+            String expressionFilePath = field1.substring(0, field1.lastIndexOf(System.getProperty("file.separator")) + 1);
 
             EXPRESSION_FILE = expressionFileName;
             EXPRESSION_FILE_PATH = expressionFilePath;
             EXPRESSION_DATA_FIRST_COLUMN = Integer.parseInt(field2);
-            EXPRESSION_DATA_FIRST_ROW = Integer.parseInt(field3);
-            EXPRESSION_DATA_TRANSPOSE = Boolean.parseBoolean(field4);
-            CURRENT_CORRELATION_THRESHOLD = Float.parseFloat(field5);
 
             isExpressionData = true;
+
+            if (property.equals("//EXPRESSION_DATA"))
+            {
+                // Older files don't have this data, so fill with likely values
+                EXPRESSION_DATA_FIRST_ROW = 1;
+                EXPRESSION_DATA_TRANSPOSE = false;
+                CURRENT_CORRELATION_THRESHOLD = Float.parseFloat(field3);
+                CURRENT_SCALE_TRANSFORM = ScaleTransformType.NONE;
+            }
+            else if (property.equals("//EXPRESSION_DATA_V2")) // 3.0 through 3.2
+            {
+                field4 = getNext();
+                field5 = getNext();
+
+                EXPRESSION_DATA_FIRST_ROW = Integer.parseInt(field3);
+                EXPRESSION_DATA_TRANSPOSE = Boolean.parseBoolean(field4);
+                CURRENT_CORRELATION_THRESHOLD = Float.parseFloat(field5);
+                CURRENT_SCALE_TRANSFORM = ScaleTransformType.NONE;
+            }
+            else if (property.equals("//EXPRESSION_DATA_V3")) // 3.3
+            {
+                field4 = getNext();
+                field5 = getNext();
+                field6 = getNext();
+
+                EXPRESSION_DATA_FIRST_ROW = Integer.parseInt(field3);
+                EXPRESSION_DATA_TRANSPOSE = Boolean.parseBoolean(field4);
+                CURRENT_CORRELATION_THRESHOLD = Float.parseFloat(field5);
+                CURRENT_SCALE_TRANSFORM = Enum.valueOf(ScaleTransformType.class, field6);
+            }
+            else
+            {
+                isExpressionData = false;
+            }
         }
         else if ( property.equals("//NODECOORD") )
         {

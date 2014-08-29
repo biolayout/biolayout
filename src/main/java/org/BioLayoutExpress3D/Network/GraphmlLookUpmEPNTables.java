@@ -206,7 +206,7 @@ public final class GraphmlLookUpmEPNTables
     */
     public static final Tuple6[] GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2 = {
                                                                           // Other
-                                                                          Tuples.tuple("octagon",   PATHWAY_MODULE,        decode("#FFFFFF"), 5.0f, HEXAGON,                       DODECAHEDRON), //index 0
+                                                                          Tuples.tuple("octagon",   PATHWAY_MODULE,        null,              5.0f, HEXAGON,                       DODECAHEDRON), //index 0
 
                                                                           // Petri Net Transition Nodes
                                                                           Tuples.tuple("rectangle", TRANSITION_VERTICAL,   decode("#000000"), 5.0f, Shapes2D.RECTANGLE_VERTICAL,   Shapes3D.RECTANGLE_VERTICAL), //index 1

@@ -399,7 +399,16 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
         int shapeIndex = 0;
         for (int i = 0; i < numberOfShapes; i++)
         {
-            if ( nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[i].first ) && ( (nodeColor1 != null) && nodeColor1.equals( (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[i].third ) ) ) // because of possible errors in glyph color definitions
+            String targetShape = (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[i].first;
+            Color targetColor = (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[i].third;
+
+            if (targetColor == null)
+            {
+                // When the match color is null, we match on the color of the node itself
+                targetColor = nodeColor1;
+            }
+
+            if (nodeShape.equals(targetShape) && (nodeColor1 != null && nodeColor1.equals(targetColor)))
             {
                 currentGraphmlShape = (GraphmlShapesGroup2)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[i].second;
                 if (currentGraphmlShape.equals(GraphmlShapesGroup2.TRANSITION_VERTICAL) || currentGraphmlShape.equals(GraphmlShapesGroup2.TRANSITION_HORIZONTAL))
@@ -414,12 +423,12 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
                 }
 
                 shapeIndex = currentGraphmlShape.ordinal();
-                return Tuples.tuple(currentGraphmlShape,                                             // return type of graphml shape
-                                       (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].third,  // return graphml color
-                                       (Float)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].fourth, // return graphml shape size
-                                    (Shapes2D)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].fifth,  // return graphml 2D shape
-                                    (Shapes3D)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].sixth,  // return graphml 3D shape
-                                    ismEPNTransition);
+                return Tuples.tuple(currentGraphmlShape,
+                        targetColor,
+                        (Float) GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].fourth,
+                        (Shapes2D) GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].fifth,
+                        (Shapes3D) GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_2[shapeIndex].sixth,
+                        ismEPNTransition);
             }
         }
 

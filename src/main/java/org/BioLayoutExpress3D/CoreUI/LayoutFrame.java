@@ -122,6 +122,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
     private ExportClassSets exportClassSets = null;
     private ExportCorrelationNodesEdgesTable exportCorrelationNodesEdgesTable = null;
     private ExportSbgn exportSbgn = null;
+    private ExportD3 exportD3 = null;
 
     private ArrayList<Integer> allExitMessageIndices = null;
     private boolean navigationWizardShownOnce = false;
@@ -308,6 +309,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         exportClassSets = new ExportClassSets(this);
         exportCorrelationNodesEdgesTable = new ExportCorrelationNodesEdgesTable(this, expressionData);
         exportSbgn = new ExportSbgn(this);
+        exportD3 = new ExportD3(this);
 
         layoutPrintServices = new LayoutPrintServices();
 
@@ -654,6 +656,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         layoutMenuBar.setFileMenuExportClassSetsAsFileAction( exportClassSets.getExportClassSetsFromVisibleGraphAction() );
         layoutMenuBar.setFileMenuExportAction( exportCorrelationNodesEdgesTable.getExportCorrelationNodesEdgesTableAction() );
         layoutMenuBar.setFileMenuExportAction( exportSbgn.getExportSbgnAction() );
+        layoutMenuBar.setFileMenuExportAction( exportD3.getExportD3Action() );
         layoutMenuBar.setFileMenuPrintPageSetupAction( layoutPrintServices.getPrintGraphPageSetupDialogAction() );
         layoutMenuBar.setFileMenuPrintGraphAction( graph.getGraphActions().getPrintGraphAction() );
         layoutMenuBar.setFileMenuExitAction(fileMenuExitAction);
@@ -1821,6 +1824,9 @@ public final class LayoutFrame extends JFrame implements GraphListener
 
         if ( exportSbgn.getExportSbgnAction().isEnabled() )
             exportSbgn.getExportSbgnAction().setEnabled(false);
+
+        if ( exportD3.getExportD3Action().isEnabled() )
+            exportD3.getExportD3Action().setEnabled(false);
 
         layoutGraphPropertiesDialog.setEnabledProportionalEdgesSizeToWeight(false);
         layoutGraphPropertiesDialog.setEnabledNodeNameTextFieldAndSelectNodesTab(false, null, 0);

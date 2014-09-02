@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.io.*;
 import java.util.*;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;
 import org.BioLayoutExpress3D.DataStructures.Tuple6;
@@ -12,24 +11,26 @@ import org.BioLayoutExpress3D.DataStructures.Tuple7;
 import org.BioLayoutExpress3D.Environment.GlobalEnvironment.Shapes2D;
 import org.BioLayoutExpress3D.Environment.GlobalEnvironment.Shapes3D;
 import org.BioLayoutExpress3D.Network.*;
-import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup1;
 import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup2;
-import org.BioLayoutExpress3D.Network.GraphmlLookUpmEPNTables.GraphmlShapesGroup3;
 import org.biopax.paxtools.converter.LevelUpgrader;
 import org.biopax.paxtools.io.BioPAXIOHandler;
 import org.biopax.paxtools.io.SimpleIOHandler;
-import org.biopax.paxtools.model.BioPAXElement;
 import org.biopax.paxtools.model.BioPAXLevel;
 import org.biopax.paxtools.model.Model;
+import org.biopax.paxtools.model.level3.BiochemicalReaction;
+import org.biopax.paxtools.model.level3.Catalysis;
 import org.biopax.paxtools.model.level3.Complex;
+import org.biopax.paxtools.model.level3.ComplexAssembly;
 import org.biopax.paxtools.model.level3.Control;
 import org.biopax.paxtools.model.level3.Conversion;
+import org.biopax.paxtools.model.level3.Degradation;
 import org.biopax.paxtools.model.level3.Dna;
 import org.biopax.paxtools.model.level3.DnaRegion;
 import org.biopax.paxtools.model.level3.Entity;
 import org.biopax.paxtools.model.level3.Gene;
 import org.biopax.paxtools.model.level3.GeneticInteraction;
 import org.biopax.paxtools.model.level3.Interaction;
+import org.biopax.paxtools.model.level3.Modulation;
 import org.biopax.paxtools.model.level3.MolecularInteraction;
 import org.biopax.paxtools.model.level3.NucleicAcid;
 import org.biopax.paxtools.model.level3.Pathway;
@@ -38,9 +39,11 @@ import org.biopax.paxtools.model.level3.PhysicalEntity;
 import org.biopax.paxtools.model.level3.Protein;
 import org.biopax.paxtools.model.level3.Rna;
 import org.biopax.paxtools.model.level3.RnaRegion;
-import org.biopax.paxtools.model.level3.SimplePhysicalEntity;
 import org.biopax.paxtools.model.level3.SmallMolecule;
 import org.biopax.paxtools.model.level3.TemplateReaction;
+import org.biopax.paxtools.model.level3.TemplateReactionRegulation;
+import org.biopax.paxtools.model.level3.Transport;
+import org.biopax.paxtools.model.level3.TransportWithBiochemicalReaction;
 
 /**
 * Parser for BioPAX Level 3 OWL encoded as RDF/XML. 
@@ -293,40 +296,76 @@ public final class BioPaxParser extends CoreParser
     
     /**
      * Looks up graph node shape according to Interaction type.
+     * Goes through each Interaction type from the bottom of the class hierarchy to the top and matches shape.
      * @param interaction
      * @return a graph node shape. If no mapping found, returns shape for Interaction.
      */
     private static Tuple7 lookupInteractionShape(Interaction interaction)
     {
         Tuple7 shape;
-        if(interaction instanceof TemplateReaction)
+        
+        //Interaction class hierarchy level 3
+        if(interaction instanceof TransportWithBiochemicalReaction)
          {
-             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TemplateReaction");                                        
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TransportWithBiochemicalReaction");                                        
          }
-         else if(interaction instanceof Control)
+        
+        //Interaction class hierarchy level 2
+        else if(interaction instanceof Catalysis)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Catalysis");                                        
+         }
+        else if(interaction instanceof Modulation)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Modulation");                                        
+         }
+        else if(interaction instanceof TemplateReactionRegulation)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TemplateReactionRegulation");                                        
+         }
+        else if(interaction instanceof BiochemicalReaction)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("BiochemicalReaction");                                        
+         }
+        else if(interaction instanceof ComplexAssembly)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("ComplexAssembly");                                        
+         }
+        else if(interaction instanceof Degradation)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Degradation");                                        
+         }
+        else if(interaction instanceof Transport)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Transport");                                        
+         }
+
+        //Interaction class hierarchy level 1
+        else if(interaction instanceof Control)
          {
              shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Control");                                        
-
          }
          else if(interaction instanceof Conversion)
          {
              shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Conversion");                                        
-
-         }
-         else if(interaction instanceof MolecularInteraction)
-         {
-             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("MolecularInteraction");                                        
-
          }
          else if(interaction instanceof GeneticInteraction)
          {
              shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("GeneticInteraction");                                        
-
          }
+         else if(interaction instanceof MolecularInteraction)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("MolecularInteraction");                                        
+         }
+        else if(interaction instanceof TemplateReaction)
+         {
+             shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("TemplateReaction");                                        
+         }
+
+        //Interaction class hierarchy level 0
          else
          {
              shape = GraphmlLookUpmEPNTables.BIOPAX_MEPN_INTERACTION_MAP.get("Interaction");                                        
-
          }
             
         return shape;

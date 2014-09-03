@@ -9,7 +9,7 @@
 
     <name>BioLayout Express 3D</name>
     <url>http://biolayout.org</url>
-
+ 
     <properties>
         <versionNumber>development</versionNumber>
         <jarName>BLE3D</jarName>
@@ -24,7 +24,8 @@
         <jogampVersion>2.1.5-01</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
-
+        <leapSDKVersion>2.1.1+21671</leapSDKVersion>
+        
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <generated.sources.dir>${project.build.directory}/generated-sources/java</generated.sources.dir>
@@ -139,20 +140,22 @@
             <artifactId>antlr4-maven-plugin</artifactId>
             <version>4.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.leapmotion</groupId>
+            <artifactId>LeapJava</artifactId>
+            <version>${leapSDKVersion}</version>
+        </dependency>       
+            
+        <dependency>
+            <groupId>org.odonoghuelab.molecularcontroltoolkit</groupId>
+            <artifactId>molecular-control</artifactId>
+            <version>toolkit</version>
+        </dependency>       
     </dependencies>
 
     <repositories>
         <!-- BioPAX release repository -->
-        <!--
-         <repository>
-            <id>biopax.releases</id>
-            <name>BioPAX Repository at Sourceforge</name>
-            <url>http://biopax.sourceforge.net/m2repo/releases/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        -->
         <repository>
                 <id>pathway-commons</id>
                 <name>Pathway Commons Repository at Google Code</name>

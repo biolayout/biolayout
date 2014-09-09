@@ -120,16 +120,18 @@ public final class Layout
 
         for (Object keyObject : keyList)
         {
-            String key = (String)keyObject;
+            String key = (String) keyObject;
             if (key.length() > longestKey)
+            {
                 longestKey = key.length();
+            }
         }
 
         String pathSeparator = System.getProperty("path.separator");
 
         for (Object keyObject : keyList)
         {
-            String key = (String)keyObject;
+            String key = (String) keyObject;
             int keyLength = key.length();
             int padding = 1 + longestKey - keyLength;
 
@@ -139,26 +141,35 @@ public final class Layout
             value = value.replace("\t", "\\t");
 
             output += key + ":";
-            for( int i = 0; i < padding; i++)
+            for (int i = 0; i < padding; i++)
+            {
                 output += " ";
+            }
 
             if (key.matches("(?i).*(path|dirs)$"))
             {
                 // Property is probably a list of paths, so split it up
                 String[] paths = value.split(pathSeparator);
-                output += paths[0] + "\n";
-
-                padding = 2 + longestKey;
-                for( int i = 1; i < paths.length; i++)
+                if (paths.length > 0)
                 {
-                    for( int j = 0; j < padding; j++)
-                        output += " ";
+                    output += paths[0] + "\n";
 
-                    output += paths[i] + "\n";
+                    padding = 2 + longestKey;
+                    for (int i = 1; i < paths.length; i++)
+                    {
+                        for (int j = 0; j < padding; j++)
+                        {
+                            output += " ";
+                        }
+
+                        output += paths[i] + "\n";
+                    }
                 }
             }
             else
+            {
                 output += value + "\n";
+            }
         }
 
         return output;

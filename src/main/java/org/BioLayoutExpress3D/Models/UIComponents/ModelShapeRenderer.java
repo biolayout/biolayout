@@ -7,10 +7,10 @@ import javax.swing.*;
 import static java.lang.Math.*;
 import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
-import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.common.nio.Buffers;
 import java.awt.Color;
+import java.util.logging.Logger;
 import static javax.media.opengl.GL2.*;
 import org.BioLayoutExpress3D.Graph.*;
 import org.BioLayoutExpress3D.Models.*;
@@ -35,6 +35,9 @@ import static org.BioLayoutExpress3D.StaticLibraries.EnumUtils.*;
 import static org.BioLayoutExpress3D.StaticLibraries.Random.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.odonoghuelab.molecularcontroltoolkit.ConnectorType;
+import org.odonoghuelab.molecularcontroltoolkit.MolecularControlListener;
+import org.odonoghuelab.molecularcontroltoolkit.MolecularControlToolkit;
 
 /**
 *
@@ -50,6 +53,7 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 
 public class ModelShapeRenderer extends GLCanvas implements GLEventListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, GraphCreateActionsInterface, GraphRendererThreadUpdaterInterface, GraphRendererThreadUpdaterAnimationInterface
 {
+    private static final Logger logger = Logger.getLogger(ModelShapeRenderer.class.getName());
 
     /**
     *  The rotation increment.
@@ -72,7 +76,7 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
     private static final int DEFAULT_FPS = 60;
 
     /**
-    *  The minimum tesselation value.
+    *  The minimum tessellation value.
     */
     private static final int MINIMUM_TESSELATION_VALUE = 2;
 
@@ -415,6 +419,121 @@ public class ModelShapeRenderer extends GLCanvas implements GLEventListener, Key
         modelSettings = new ModelSettings(true, true, modelRenderingState);
 
         createActions();
+                
+        //Leap Motion code goes here
+        /*
+        logger.info("About to init Molecular Control Toolkit");
+        final MolecularControlToolkit molecularControlToolkit = new MolecularControlToolkit();
+    	molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
+    	molecularControlToolkit.setListeners(new MolecularControlListener() 
+        {
+			
+            @Override
+            public void triggerZoom(int dz) 
+            {
+                logger.info("Trigger zoom: " + dz);
+                scaleValue += ( (scaleValue > 5.0f) ? ( dz  / 400.0f ) * (1.0f + scaleValue)
+                : ( dz  / 40.0f ) );
+            }
+
+            @Override
+            public void triggerRotate(int dx, int dy, int dz) 
+            {
+                System.out.println("Trigger rotate: " + dx +", " + dy + ", " + dz);
+                        mouseRotationX += dx;
+                        mouseRotationY += dy;
+                        //mouseRotationZ += dz;
+            }
+
+            @Override
+            public void triggerPan(int dx, int dy) 
+            {
+                System.out.println("Trigger pan: " + dx +", " + dy);
+                translateDX += dx;
+                translateDY += dy;
+            }
+
+            @Override
+            public void selectMouseCursor() 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void point(float arg0, float arg1) 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void zoomToSelection() 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void triggerSpeech(int arg0) 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void spin(boolean arg0) 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void selectAll() 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void select(String arg0) 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void search(char arg0) 
+            {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void reset() {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void paste() {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void copy() {
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void color(String arg0) 
+            {
+                    // TODO Auto-generated method stub
+            }
+        });
+    	
+        new Thread(new Runnable() 
+        {
+            @Override
+            public void run() 
+            {
+                System.out.println("Initializing Molecular Control Toolkit");
+                molecularControlToolkit.initialise();
+                System.out.println("Initialized Molecular Control Toolkit");
+            }
+        }).start();
+        */
     }
 
     /**

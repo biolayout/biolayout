@@ -458,7 +458,6 @@
                                     <excludes>*newt.*,*_mobile.*</excludes>
                                 </artifactItem>
 
-
                                 <!-- Note that the jocl libs aren't extracted directly into the resource tree as
                                      they must be renamed by a set of antrun tasks below -->
                                 <artifactItem>

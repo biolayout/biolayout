@@ -202,7 +202,6 @@ public final class Vertex implements Comparable<Vertex>
 
     public void setVertexSize(float vertexSize)
     {
-        vertexSize = org.BioLayoutExpress3D.StaticLibraries.Math.clamp(vertexSize, MIN_NODE_SIZE, MAX_NODE_SIZE);
         this.vertexSize = vertexSize;
     }
 

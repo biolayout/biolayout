@@ -2,13 +2,19 @@ package org.BioLayoutExpress3D.Files;
 
 import java.awt.event.*;
 import java.io.*;
+import java.lang.Math;
+import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 import org.BioLayoutExpress3D.CoreUI.*;
+import org.BioLayoutExpress3D.CoreUI.Dialogs.LayoutProgressBarDialog;
 import org.BioLayoutExpress3D.StaticLibraries.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Network.Edge;
+import org.BioLayoutExpress3D.Network.NetworkComponentContainer;
 import org.BioLayoutExpress3D.Network.NetworkRootContainer;
+import org.BioLayoutExpress3D.Network.Vertex;
 
 /**
  * The ExportD3 class is used to export to HTML files using D3.js
@@ -68,7 +74,7 @@ public final class ExportD3
     private void save()
     {
         int dialogReturnValue;
-        boolean doSaveFile = false;
+        boolean doSaveFile = true;
         File saveFile = null;
 
         if (fileChooser.showSaveDialog(layoutFrame) == JFileChooser.APPROVE_OPTION)
@@ -86,14 +92,7 @@ public final class ExportD3
                         "This File Already Exists.\nDo you want to Overwrite it?",
                         "This File Already Exists. Overwrite?", JOptionPane.YES_NO_CANCEL_OPTION);
 
-                if (dialogReturnValue == JOptionPane.YES_OPTION)
-                {
-                    doSaveFile = true;
-                }
-            }
-            else
-            {
-                doSaveFile = true;
+                doSaveFile = (dialogReturnValue == JOptionPane.YES_OPTION);
             }
         }
 
@@ -110,8 +109,90 @@ public final class ExportD3
     {
         try
         {
+            String fileName = saveFile.getCanonicalPath();
+            String baseSaveFileName = fileName.substring(0, fileName.lastIndexOf("."));
             nc = layoutFrame.getNetworkRootContainer();
+            nc.createNetworkComponentsContainer();
+            nc.sortNetworkComponentsContainerByLayoutSize();
+            int maxComponentIdDigits = (int)(Math.log10(nc.getComponentCollection().size()) + 1);
+            int componentId = 0;
 
+            LayoutProgressBarDialog layoutProgressBarDialog = layoutFrame.getLayoutProgressBar();
+            layoutProgressBarDialog.prepareProgressBar(0, "Writing " + fileName);
+            layoutProgressBarDialog.startProgressBar();
+            for (NetworkComponentContainer ncc : nc.getComponentCollection())
+            {
+                int vertexId = 0;
+                HashMap<Vertex, Integer> vertexNameMap = new HashMap<Vertex, Integer>();
+                StringBuilder json = new StringBuilder();
+                boolean first;
+                json.append("{\n\t\"nodes\":[\n");
+
+                first = true;
+                for (Vertex v : ncc.getVertices())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        json.append(",\n");
+                    }
+
+                    String name = v.getVertexName();
+                    int classId = v.getVertexClass().getClassID();
+                    if (name == null)
+                    {
+                        name = "";
+                    }
+
+                    json.append("\t\t{\"name\":\"");
+                    json.append(name);
+                    json.append("\",\"group\":");
+                    json.append(classId);
+                    json.append("}");
+                    vertexNameMap.put(v, vertexId++);
+                }
+
+                json.append("\n\t],\n\t\"links\":[\n");
+
+                first = true;
+                for (Edge e : ncc.getEdges())
+                {
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        json.append(",\n");
+                    }
+
+                    int firstVertexId = vertexNameMap.get(e.getFirstVertex());
+                    int secondVertexId = vertexNameMap.get(e.getSecondVertex());
+                    json.append("\t\t{\"source\":");
+                    json.append(firstVertexId);
+                    json.append(",\"target\":");
+                    json.append(secondVertexId);
+                    json.append(",\"value\":");
+                    json.append(e.getWeight());
+                    json.append("}");
+                }
+
+                json.append("\n\t]\n}");
+
+                String componentIdString = String.format("%0" + maxComponentIdDigits + "d", componentId);
+                componentId++;
+
+                String componentJsonFilename = baseSaveFileName + ".component." + componentIdString + ".json";
+                File componentJsonFile = new File(componentJsonFilename);
+                BufferedWriter bf = new BufferedWriter(new FileWriter(componentJsonFile));
+                bf.write(json.toString());
+                bf.close();
+            }
+            layoutProgressBarDialog.endProgressBar();
+            layoutProgressBarDialog.stopProgressBar();
         }
         catch (Exception e)
         {

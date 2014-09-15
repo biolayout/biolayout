@@ -21,6 +21,11 @@ import org.BioLayoutExpress3D.Utils.Point3D;
 public final class NetworkRootContainer extends NetworkContainer
 {
     private ArrayList<NetworkComponentContainer> componentCollection = null;
+    public List<NetworkComponentContainer> getComponentCollection()
+    {
+        return Collections.unmodifiableList(componentCollection);
+    }
+
     private TilingLevelsContainer tilingLevelsContainer = null;
 
     public NetworkRootContainer(LayoutClassSetsManager layoutClassSetsManager, LayoutFrame layoutFrame)
@@ -42,6 +47,11 @@ public final class NetworkRootContainer extends NetworkContainer
 
         // NOW REMOVE CONNECTED COMPONENTS SMALLER THAN A SPECIFIED SIZE BUT NOT SINGLETONS
         findOrRemovePolygons( MINIMUM_COMPONENT_SIZE.get() );
+    }
+
+    public void sortNetworkComponentsContainerByLayoutSize()
+    {
+        Collections.sort( componentCollection, new NetworkComponentSorter() );
     }
 
     private void findOrRemovePolygons(int size)
@@ -86,6 +96,7 @@ public final class NetworkRootContainer extends NetworkContainer
         renumberVertices();
 
         layoutProgressBarDialog.endProgressBar();
+        layoutProgressBarDialog.stopProgressBar();
     }
 
     private void removeSingletons()
@@ -416,7 +427,7 @@ public final class NetworkRootContainer extends NetworkContainer
 
             if (DEBUG_BUILD) println("Number of groups: " + componentCollection.size());
 
-            Collections.sort( componentCollection, new NetworkComponentSorter() );
+            sortNetworkComponentsContainerByLayoutSize();
 
             for (NetworkComponentContainer ncc : componentCollection)
             {

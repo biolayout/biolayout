@@ -57,6 +57,13 @@ public final class NetworkComponentContainer extends NetworkContainer
     public void addNetworkConnection(Vertex vertex)
     {
         verticesMap.put(vertex.getVertexName(), vertex);
+        for (Edge edge : vertex.getEdgeConnectionsMap().values())
+        {
+            if (!edges.contains(edge))
+            {
+                edges.add(edge);
+            }
+        }
     }
 
     @Override

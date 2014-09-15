@@ -1654,6 +1654,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         SPNSimulationDialog.getSignalingPetriNetSimulationDialogAction().setEnabled( nc.getIsPetriNet() );
         signalingPetriNetLoadSimulation.getSignalingPetriNetLoadSimulationAction().setEnabled( nc.getIsPetriNet() );
         exportSbgn.getExportSbgnAction().setEnabled( nc.getIsPetriNet() );
+        exportD3.getExportD3Action().setEnabled(true);
 
         layoutAnimationControlDialog.setIsExpressionProfileAnimationMode( DATA_TYPE.equals(DataTypes.EXPRESSION) );
         layoutAnimationControlDialog.getAnimationControlDialogAction().setEnabled( DATA_TYPE.equals(DataTypes.EXPRESSION) );

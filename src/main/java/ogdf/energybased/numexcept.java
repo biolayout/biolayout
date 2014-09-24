@@ -91,7 +91,7 @@ public class numexcept
                 new_point.setY(old_point.getY() + mindist * rand_y * epsilon);
                 new_point.setZ(old_point.getZ() + mindist * rand_z * epsilon);
             } while (old_point.equals(new_point) ||
-                    (old_point.minus(new_point).norm() >= mindist * epsilon));
+                    (old_point.minus(new_point).length() >= mindist * epsilon));
         }
         else if (mindist == 0) //old_point lies at the boundaries
         {//else1

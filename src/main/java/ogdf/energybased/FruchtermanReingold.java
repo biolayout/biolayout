@@ -92,7 +92,7 @@ class FruchtermanReingold
                 pos_u = numexcept.choose_distinct_random_point_in_radius_epsilon(pos_u);
             }//if2
             DPoint vector_v_minus_u = pos_v.minus(pos_u);
-            double norm_v_minus_u = vector_v_minus_u.norm();
+            double norm_v_minus_u = vector_v_minus_u.length();
             if (!numexcept.f_rep_near_machine_precision(norm_v_minus_u, f_rep_u_on_v))
             {
                 double scalar = f_rep_scalar(norm_v_minus_u) / norm_v_minus_u;

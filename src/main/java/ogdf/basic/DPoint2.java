@@ -34,7 +34,7 @@ public class DPoint2 implements DPoint
 
     //! Returns the norm of the point.
     @Override
-    public double norm()
+    public double length()
     {
         return java.lang.Math.sqrt(m_x * m_x + m_y * m_y);
     }
@@ -81,7 +81,7 @@ public class DPoint2 implements DPoint
     @Override
     public double angle(DPoint p)
     {
-        return Math.acos(this.dot(p) / (this.norm() * p.norm()));
+        return Math.acos(this.dot(p) / (this.length() * p.length()));
     }
 
     @Override

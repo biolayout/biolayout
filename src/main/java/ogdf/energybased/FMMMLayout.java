@@ -2175,7 +2175,7 @@ public class FMMMLayout
             u = e.source();
             v = e.target();
             vector_v_minus_u = A.get(v).get_position().minus(A.get(u).get_position());
-            norm_v_minus_u = vector_v_minus_u.norm();
+            norm_v_minus_u = vector_v_minus_u.length();
             if (vector_v_minus_u.equals(nullpoint))
             {
                 f_u = nullpoint;
@@ -2302,7 +2302,7 @@ public class FMMMLayout
             f = F_attr.get(v).scaled(act_spring_strength).plus(F_rep.get(v).scaled(act_rep_force_strength));
             f = f.scaled(average_ideal_edgelength * average_ideal_edgelength);
 
-            norm_f = f.norm();
+            norm_f = f.length();
             if (f == nullpoint)
             {
                 force = nullpoint;
@@ -2443,7 +2443,7 @@ public class FMMMLayout
         for (Iterator<node> i = G.nodesIterator(); i.hasNext();)
         {
             v = i.next();
-            lengthsum += F.get(v).norm();
+            lengthsum += F.get(v).length();
         }
         lengthsum /= G.numberOfNodes();
         return lengthsum;
@@ -2479,8 +2479,8 @@ public class FMMMLayout
                 v = i.next();
                 DPoint force_new = PointFactory.INSTANCE.newDPoint(F.get(v));
                 DPoint force_old = PointFactory.INSTANCE.newDPoint(last_node_movement.get(v));
-                norm_new = F.get(v).norm();
-                norm_old = last_node_movement.get(v).norm();
+                norm_new = F.get(v).length();
+                norm_old = last_node_movement.get(v).length();
                 if ((norm_new > 0) && (norm_old > 0))
                 {//if2
                     quot_old_new = norm_old / norm_new;
@@ -2576,7 +2576,7 @@ public class FMMMLayout
         {
             e = i.next();
             sum_ideal_edgelength += E.get(e).get_length();
-            sum_real_edgelength += (A.get(e.source()).get_position().minus(A.get(e.target()).get_position())).norm();
+            sum_real_edgelength += (A.get(e.source()).get_position().minus(A.get(e.target()).get_position())).length();
         }
 
         if (sum_real_edgelength == 0) //very very unlike case

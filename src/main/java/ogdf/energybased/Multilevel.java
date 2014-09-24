@@ -876,7 +876,7 @@ public class Multilevel
         double WAGGLEFACTOR = 0.05;
         DPoint inbetween_point = PointFactory.INSTANCE.newDPoint();
         inbetween_point = s.plus(t.minus(s).scaled(lambda));
-        double radius = WAGGLEFACTOR * (t.minus(s)).norm();
+        double radius = WAGGLEFACTOR * (t.minus(s)).length();
         double rnd = random.nextDouble();//rand number in (0,1)
         double rand_radius = radius * rnd;
         return create_random_pos(inbetween_point, rand_radius);
@@ -895,7 +895,7 @@ public class Multilevel
 
     DPoint calculate_position(DPoint P, DPoint Q, double dist_P, double dist_Q)
     {
-        double dist_PQ = (P.minus(Q)).norm();
+        double dist_PQ = (P.minus(Q)).length();
         double lambda = (dist_P + (dist_PQ - dist_P - dist_Q) / 2) / dist_PQ;
         return get_waggled_inbetween_position(P, Q, lambda);
     }

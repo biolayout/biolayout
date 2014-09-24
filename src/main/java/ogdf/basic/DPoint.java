@@ -3,7 +3,7 @@ package ogdf.basic;
 public interface DPoint
 {
     public boolean equals(DPoint p);
-    public double norm();
+    public double length();
     public double distance(DPoint p);
     public DPoint plus(DPoint p);
     public DPoint minus(DPoint p);

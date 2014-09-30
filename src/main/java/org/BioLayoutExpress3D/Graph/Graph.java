@@ -15,6 +15,7 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.awt.ImageUtil;
+import java.util.logging.Logger;
 import org.BioLayoutExpress3D.Utils.Path;
 import javax.media.opengl.awt.GLCanvas;
 import static javax.media.opengl.GL2.*;
@@ -37,6 +38,9 @@ import static org.BioLayoutExpress3D.Textures.DrawTextureSFXs.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.odonoghuelab.molecularcontroltoolkit.ConnectorType;
+import org.odonoghuelab.molecularcontroltoolkit.MolecularControlListener;
+import org.odonoghuelab.molecularcontroltoolkit.MolecularControlToolkit;
 
 /**
 *
@@ -178,6 +182,9 @@ public class Graph extends GLCanvas implements GraphInterface
     *  Variable to be used to re-initialize a renderer mode.
     */
     private boolean reInitializeRendererMode = false;
+    
+    private static final Logger logger = Logger.getLogger(Graph.class.getName());
+    private MolecularControlToolkit molecularControlToolkit;
 
     /**
     *  The Graph class constructor.
@@ -202,6 +209,8 @@ public class Graph extends GLCanvas implements GraphInterface
         graphRendererActions = new GraphRendererActions(this);
 
         createImageToFileChooser();
+        
+        molecularControlToolkit = new MolecularControlToolkit();
     }
 
     /**
@@ -1625,7 +1634,7 @@ public class Graph extends GLCanvas implements GraphInterface
     }
 
     /**
-    *  Adds all events to this Graph.
+    *  Adds all event listeners to this Graph.
     */
     @Override
     public void addAllEvents()
@@ -1635,6 +1644,156 @@ public class Graph extends GLCanvas implements GraphInterface
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
         this.addGLEventListener(this);
+
+        //Initialize Leap Motion      
+    	molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
+    	molecularControlToolkit.setListeners(new MolecularControlListener() 
+        {
+            /************** gesture commands *****************/
+			
+            /** 
+             * Zoom action has been performed
+             * @param zoom relative amount to zoom
+             */
+            @Override
+            public void triggerZoom(int dz) 
+            {
+                logger.info("Trigger zoom: " + dz);
+
+                if(dz == 0)
+                    return;
+                else if(dz > 0)                   
+                    currentGraphRenderer.createReScaleAction(ScaleTypes.SCALE_IN, null);
+                else
+                    currentGraphRenderer.createReScaleAction(ScaleTypes.SCALE_OUT, null);
+  
+                /*
+                if(dz == 0)
+                    return;
+                
+                ScaleTypes scaleTypes;
+                if(dz > 0)
+                    scaleTypes = ScaleTypes.SCALE_IN;
+                else
+                    scaleTypes = ScaleTypes.SCALE_OUT;
+                
+                dz = java.lang.Math.abs(dz); //remove sign of zoom factor
+                
+                //repeat rescale action by zoom factor
+                int i = 0;
+                while(i < dz)
+                {
+                    currentGraphRenderer.createReScaleAction(scaleTypes, null);
+                    i++;
+                }
+                */
+            }
+
+            @Override
+            public void triggerRotate(int dx, int dy, int dz) 
+            {
+                logger.info("Trigger rotate: " + dx +", " + dy + ", " + dz);
+                /*
+                        mouseRotationX += dx;
+                        mouseRotationY += dy;
+                        mouseRotationZ += dz;
+                */
+            }
+
+            @Override
+            public void triggerPan(int dx, int dy) 
+            {
+                logger.info("Trigger pan: " + dx +", " + dy);
+                /*
+                translateDX += dx;
+                translateDY += dy;
+                */
+            }
+
+            @Override
+            public void zoomToSelection() 
+            {
+                logger.info("Zoom to selection");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void reset() {
+                logger.info("Reset");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void selectMouseCursor() 
+            {
+                logger.info("Select mouse cursor");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void point(float arg0, float arg1) 
+            {
+                logger.info("Point" + arg0 +", " + arg1);
+                    // TODO Auto-generated method stub
+            }
+
+            /******** speech commands**************/
+            
+            @Override
+            public void triggerSpeech(int arg0) 
+            {
+                logger.info("Trigger speech");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void spin(boolean arg0) 
+            {
+                logger.info("Spin");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void selectAll() 
+            {
+                logger.info("Select all");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void select(String arg0) 
+            {
+                logger.info("Select");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void search(char arg0) 
+            {
+                logger.info("Search");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void paste() {
+                logger.info("Paste");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void copy() {
+                logger.info("Copy");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void color(String arg0) 
+            {
+                logger.info("Color");
+                    // TODO Auto-generated method stub
+            }
+        });
+        molecularControlToolkit.initialise();
 
         currentGraphRenderer.addAllEvents();
     }

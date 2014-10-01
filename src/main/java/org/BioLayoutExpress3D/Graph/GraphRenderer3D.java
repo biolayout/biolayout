@@ -2779,6 +2779,7 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
     /**
     *  Scales the current view.
+    * 				
     */
     private void scale(int startX, int startY, int x, int y)
     {
@@ -2786,6 +2787,17 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
                                             : ( ( (startX - x) - (startY - y) ) / 40.0f ) );
 
         isInMotion = true;
+    }
+    
+    /**
+     * Zoom graph in or out according to relative zoom value (e.g. from Leap Motion device).
+     * @param dz - relative zoom value (positive to zoom in, zero for no change, negative to zoom out)
+     */
+    public void scale(int dz)
+    {
+        scaleValue += ( (scaleValue > 5.0f) ? ( dz  / 400.0f ) * (1.0f + scaleValue)
+                            : ( dz  / 40.0f ) );
+        refreshDisplay();
     }
 
     /**

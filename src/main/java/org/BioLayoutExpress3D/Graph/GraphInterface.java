@@ -92,6 +92,12 @@ public interface GraphInterface extends GLEventListener, KeyListener, MouseListe
     *  The main take a screenshot process.
     */
     public void takeScreenShotProcess(boolean doHighResScreenShot);
+    
+    /**
+    * Scale graph in or out according to relative scaling value.
+    * @param dz - relative zoom value
+    */
+    public void scale(int dz);
 
 
 }

@@ -98,6 +98,19 @@ public interface GraphInterface extends GLEventListener, KeyListener, MouseListe
     * @param dz - relative zoom value
     */
     public void scale(int dz);
-
-
+    
+    /**
+     * Rotate graph.
+     * @param dx
+     * @param dy
+     * @param dz 
+     */
+    public void rotate(int dx, int dy, int dz);
+    
+    /**
+     * Reposition graph.
+     * @param dx
+     * @param dy 
+     */
+    public void translate(int dx, int dy);
 }

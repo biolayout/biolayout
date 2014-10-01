@@ -2945,8 +2945,30 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
         else if (dz < 0) 
             scaleValue -= DEFAULT_SCALE * (1.0f + scaleValue);
         if (!renderProfileMode || animationRender) refreshDisplay();
-    }    
+    }
     
+    //TODO
+    /**
+     * Rotate graph.
+     * @param dx
+     * @param dy
+     * @param dz 
+     */
+    public void rotate(int dx, int dy, int dz)
+    {
+    }
+    
+    //TODO
+    /**
+     * Reposition graph.
+     * @param dx
+     * @param dy 
+     */
+    public void translate(int dx, int dy)
+    {
+        
+    }
+
     /**
     *  MouseMoved mouseMotionEvent.
     */

@@ -1666,22 +1666,15 @@ public class Graph extends GLCanvas implements GraphInterface
             public void triggerRotate(int dx, int dy, int dz) 
             {
                 logger.info("Trigger rotate: " + dx +", " + dy + ", " + dz);
-                /*
-                        mouseRotationX += dx;
-                        mouseRotationY += dy;
-                        mouseRotationZ += dz;
-                */
+                rotate(dx, dy, dz);
             }
 
             @Override
             public void triggerPan(int dx, int dy) 
             {
                 logger.info("Trigger pan: " + dx +", " + dy);
-                /*
-                translateDX += dx;
-                translateDY += dy;
-                */
-            }
+                translate(dx, dy);
+        }
 
             @Override
             public void zoomToSelection() 
@@ -2100,4 +2093,24 @@ public class Graph extends GLCanvas implements GraphInterface
     {
         currentGraphRenderer.scale(dz);
     }
+    /**
+     * Rotate graph.
+     * @param dx
+     * @param dy
+     * @param dz 
+     */
+    public void rotate(int dx, int dy, int dz)
+    {
+        currentGraphRenderer.rotate(dx, dy, dz);
+    }    
+
+    /**
+     * Reposition graph.
+     * @param dx
+     * @param dy
+     */
+    public void translate(int dx, int dy)
+    {
+        currentGraphRenderer.translate(dx, dy);
+    }    
 }

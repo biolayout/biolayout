@@ -13,6 +13,7 @@ import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import static javax.media.opengl.GL2.*;
 import org.BioLayoutExpress3D.CoreUI.*;
@@ -116,6 +117,7 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     private ModelShape objModelLoaderShape = null;
     private Graph graph = null;
 
+    private static final Logger logger = Logger.getLogger(GraphRenderer3D.class.getName());
     /**
     *  The GraphRenderer3D class constructor.
     */
@@ -2777,9 +2779,17 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
         isInMotion = true;
     }
 
+    public void rotate(int dx, int dy, int dz)
+    {
+        xRotate += dx;
+        yRotate += dy;
+
+        isInMotion = true;
+        refreshDisplay();        
+    }
+
     /**
     *  Scales the current view.
-    * 				
     */
     private void scale(int startX, int startY, int x, int y)
     {
@@ -2797,9 +2807,10 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     {
         scaleValue += ( (scaleValue > 5.0f) ? ( dz  / 400.0f ) * (1.0f + scaleValue)
                             : ( dz  / 40.0f ) );
+        isInMotion = true;
         refreshDisplay();
     }
-
+    
     /**
     *  Translates the current view.
     */
@@ -2809,6 +2820,14 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
         translateDY += ( (startY - y) / FAR_DISTANCE ) * (1.0f + scaleValue);
 
         isInMotion = true;
+    }
+    
+    public void translate(int dx, int dy)
+    {
+        translateDX -= ( dx / FAR_DISTANCE ) * (1.0f + scaleValue);
+        translateDY -= ( dy / FAR_DISTANCE ) * (1.0f + scaleValue);
+        isInMotion = true;
+        refreshDisplay();
     }
 
     /**

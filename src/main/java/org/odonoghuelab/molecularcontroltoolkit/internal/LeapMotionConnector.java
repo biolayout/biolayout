@@ -20,6 +20,7 @@ import com.leapmotion.leap.Hand;
 import com.leapmotion.leap.Listener;
 import com.leapmotion.leap.Pointable;
 import com.leapmotion.leap.Vector;
+import java.util.logging.Logger;
 
 /**
  * The LeapMotionConnector accesses the Leap Motion Controller using the Leap Motion Java API.
@@ -33,6 +34,8 @@ public class LeapMotionConnector extends AbstractConnector {
 	
 	/** The custom leap motion listener for callbacks */
 	LeapMotionListener listener;
+        
+        private static final Logger logger = Logger.getLogger(LeapMotionConnector.class.getName());
 	
 	/**
 	 * Shutdown the interface
@@ -101,6 +104,7 @@ public class LeapMotionConnector extends AbstractConnector {
 	        System.out.println("Connected");
 	        controller.enableGesture(Gesture.Type.TYPE_SCREEN_TAP);
 	        controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
+                controller.enableGesture(Gesture.Type.TYPE_SWIPE);
 	    }
 
 	    /*
@@ -128,16 +132,19 @@ public class LeapMotionConnector extends AbstractConnector {
 	        // Get the most recent frame and report some basic information
 	        Frame frame = controller.frame();
 	        if (frame.hands().count() == 1 ) {
-	        	if (frame.fingers().count() > 3 && lastFrame != null) {
+                        int extended = frame.fingers().extended().count();
+                        logger.fine(extended + " extended fingers");
+	        	if (extended > 3 && lastFrame != null) { //4 or 5 fingers extended
 	        		// rotate
-    	        	lastY = -1;
-    	        	lastX = -1;
+                                lastY = -1;
+                                lastX = -1;
 
 	        		Hand hand = frame.hands().frontmost();
 //	        		float rotateProb = hand.rotationProbability(lastFrame);
 	        		Vector translation = hand.translation(lastFrame);
 	        		getGestureDispatcher().triggerPan((int) translation.getX(), -(int) translation.getY());
 	        		getGestureDispatcher().triggerZoom((int) -translation.getZ());
+                                
 //        			Matrix matrix = hand.rotationMatrix(lastFrame);
     				int ROTATION_SCALE = 500;
     				float xRotation = hand.rotationAngle(lastFrame, new Vector(1,0,0));
@@ -146,8 +153,7 @@ public class LeapMotionConnector extends AbstractConnector {
     				getGestureDispatcher().triggerRotate((int) -(ROTATION_SCALE * xRotation), -(int) (ROTATION_SCALE * yRotation) , -(int)(ROTATION_SCALE * zRotation));
 
 	        	}
-	        	else if (frame.fingers().count() > 0){
-	        		
+	        	else if (extended > 0){ // 1 to 3 fingers extended
 		        	try {
 			        	Pointable finger = frame.fingers().frontmost();
 			        	Vector hit = controller.locatedScreens().closestScreenHit(finger).intersect(finger,true);
@@ -174,26 +180,27 @@ public class LeapMotionConnector extends AbstractConnector {
 		        		e.printStackTrace();
 		        	}
 		        }
-	        	else {
+	        	else { //no fingers extended
 		        	lastY = -1;
 		        	lastX = -1;
-
 	        	}
 	
 		        GestureList gestures = frame.gestures();
+                        logger.fine(gestures.count() + " Gestures");
 		        for (int i = 0; i < gestures.count(); i++) {
 		            Gesture gesture = gestures.get(i);
 	
 		            switch (gesture.type()) {
 		                case TYPE_SWIPE:
+                                        logger.fine("Swipe Gesture");
 		                	getGestureDispatcher().reset();
 		                    break;
 		                case TYPE_SCREEN_TAP:
-	
+                                        logger.fine("Screen Tap Gesture");
 		                	getGestureDispatcher().selectMouseCursor();
 		                	Timer timer = new Timer();
 		                	// add a delay so the app can process the mouse clicks.
-							timer.schedule(new TimerTask() {
+					timer.schedule(new TimerTask() {
 								
 								@Override
 								public void run() {
@@ -202,6 +209,7 @@ public class LeapMotionConnector extends AbstractConnector {
 							}, 200);
 		                    break;
 		                case TYPE_KEY_TAP:
+                                        logger.fine("Key Tap Gesture");
 		                	getGestureDispatcher().zoomToSelection();
 		                    break;
 		                default:

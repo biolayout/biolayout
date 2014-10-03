@@ -118,6 +118,7 @@
             <artifactId>guava</artifactId>
             <version>14.0.1</version>
         </dependency>
+        
         <dependency>
             <groupId>com.miglayout</groupId>
             <artifactId>miglayout</artifactId>
@@ -129,6 +130,7 @@
             <artifactId>swing-layout</artifactId>
             <version>1.0.3</version>
         </dependency>
+        
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreechart</artifactId>
@@ -145,13 +147,7 @@
             <groupId>com.leapmotion</groupId>
             <artifactId>LeapJava</artifactId>
             <version>${leapSDKVersion}</version>
-        </dependency>       
-            
-        <dependency>
-            <groupId>org.odonoghuelab.molecularcontroltoolkit</groupId>
-            <artifactId>molecular-control</artifactId>
-            <version>toolkit</version>
-        </dependency>       
+        </dependency>                   
     </dependencies>
 
     <repositories>

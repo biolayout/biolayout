@@ -1655,51 +1655,54 @@ public class Graph extends GLCanvas implements GraphInterface
              * Zoom action has been performed
              * @param zoom relative amount to zoom
              */
+            
             @Override
             public void triggerZoom(int dz) 
             {
-                logger.info("Trigger zoom: " + dz);
-                scale(dz);
+                logger.fine("Trigger zoom: " + dz);
+                scale(dz, 3.3f); //adjust scaling to increase sensitivity
             }
 
             @Override
             public void triggerRotate(int dx, int dy, int dz) 
             {
-                logger.info("Trigger rotate: " + dx +", " + dy + ", " + dz);
-                rotate(dx, dy, dz);
+                logger.fine("Trigger rotate: " + dx +", " + dy + ", " + dz);               
+                //NB rotation axes and directions are different in hand movements and camera eye - need to swap x/y and reverse signs                
+                rotate(-dy, dx, -dz, 1.0f/8.0f);
             }
 
             @Override
             public void triggerPan(int dx, int dy) 
             {
-                logger.info("Trigger pan: " + dx +", " + dy);
-                translate(dx, dy);
-        }
+                logger.fine("Trigger pan: " + dx +", " + dy);
+                translate(dx, dy, 3.3f); //adjust scaling to increase sensitivity
+            }
 
+            
             @Override
             public void zoomToSelection() 
             {
-                logger.info("Zoom to selection");
+                logger.fine("Zoom to selection");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void reset() {
-                logger.info("Reset");
-                    // TODO Auto-generated method stub
+                logger.fine("Reset");
+                resetAllValues();
             }
 
             @Override
             public void selectMouseCursor() 
             {
-                logger.info("Select mouse cursor");
+                logger.fine("Select mouse cursor");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void point(float arg0, float arg1) 
             {
-                logger.info("Point" + arg0 +", " + arg1);
+                logger.fine("Point" + arg0 +", " + arg1);
                     // TODO Auto-generated method stub
             }
 
@@ -1708,54 +1711,54 @@ public class Graph extends GLCanvas implements GraphInterface
             @Override
             public void triggerSpeech(int arg0) 
             {
-                logger.info("Trigger speech");
+                logger.fine("Trigger speech");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void spin(boolean arg0) 
             {
-                logger.info("Spin");
+                logger.fine("Spin");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void selectAll() 
             {
-                logger.info("Select all");
+                logger.fine("Select all");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void select(String arg0) 
             {
-                logger.info("Select");
+                logger.fine("Select");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void search(char arg0) 
             {
-                logger.info("Search");
+                logger.fine("Search");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void paste() {
-                logger.info("Paste");
+                logger.fine("Paste");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void copy() {
-                logger.info("Copy");
+                logger.fine("Copy");
                     // TODO Auto-generated method stub
             }
 
             @Override
             public void color(String arg0) 
             {
-                logger.info("Color");
+                logger.fine("Color");
                     // TODO Auto-generated method stub
             }
         });
@@ -2089,19 +2092,20 @@ public class Graph extends GLCanvas implements GraphInterface
     }
     
     @Override
-    public void scale(int dz)
+    public void scale(int dz, float scaleMultiplier)
     {
-        currentGraphRenderer.scale(dz);
+        currentGraphRenderer.scale(dz, scaleMultiplier);
     }
     /**
      * Rotate graph.
      * @param dx
      * @param dy
      * @param dz 
+     * @param sensitivity
      */
-    public void rotate(int dx, int dy, int dz)
+    public void rotate(int dx, int dy, int dz, float sensitivity)
     {
-        currentGraphRenderer.rotate(dx, dy, dz);
+        currentGraphRenderer.rotate(dx, dy, dz, sensitivity);
     }    
 
     /**
@@ -2109,8 +2113,8 @@ public class Graph extends GLCanvas implements GraphInterface
      * @param dx
      * @param dy
      */
-    public void translate(int dx, int dy)
+    public void translate(int dx, int dy, float scaleAdjust)
     {
-        currentGraphRenderer.translate(dx, dy);
+        currentGraphRenderer.translate(dx, dy, scaleAdjust);
     }    
 }

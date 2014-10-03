@@ -115,7 +115,7 @@ public final class GraphRenderer3DFinalVariables
     static final float UNIT_SHAPE_SIZE = 0.008f;
     public static final float DEFAULT_TRANSLATION = 0.5f;
     public static final float DEFAULT_ROTATION = 20.0f;
-    static final float DEFAULT_SCALE = 18.0f;
+    public static final float DEFAULT_SCALE = 18.0f;
 
     static final int[] ALL_SHAPES_3D_DISPLAY_LISTS = new int[NUMBER_OF_3D_SHAPES];
     static final int[] ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS = new int[NUMBER_OF_3D_SHAPES];

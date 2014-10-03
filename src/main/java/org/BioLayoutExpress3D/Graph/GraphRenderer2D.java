@@ -2938,12 +2938,12 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
      * Zoom graph in or out according to relative zoom value (e.g. from Leap Motion device).
      * @param dz - relative zoom value (positive to zoom in, zero for no change, negative to zoom out)
      */
-    public void scale(int dz)
+    public void scale(int dz, float scaleMultiplier)
     {
         if (dz > 0)
-            scaleValue += DEFAULT_SCALE * (1.0f + scaleValue);
+            scaleValue += DEFAULT_SCALE * (1.0f + scaleValue * scaleMultiplier);
         else if (dz < 0) 
-            scaleValue -= DEFAULT_SCALE * (1.0f + scaleValue);
+            scaleValue -= DEFAULT_SCALE * (1.0f + scaleValue * scaleMultiplier);
         if (!renderProfileMode || animationRender) refreshDisplay();
     }
     
@@ -2954,7 +2954,7 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
      * @param dy
      * @param dz 
      */
-    public void rotate(int dx, int dy, int dz)
+    public void rotate(int dx, int dy, int dz, float sensitivity)
     {
     }
     
@@ -2964,7 +2964,7 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
      * @param dx
      * @param dy 
      */
-    public void translate(int dx, int dy)
+    public void translate(int dx, int dy, float scaleAdjust)
     {
         
     }

@@ -192,7 +192,7 @@ public class GraphCameraEye
         gl.glRotatef(zRotate, 0.0f, 0.0f, 1.0f);
         if (focusPoint != null) gl.glTranslatef(-focusPoint.x, -focusPoint.y, -focusPoint.z);
     }
-
+    
     /**
     *  Sets the position for this camera (gluLookAt() case).
     */

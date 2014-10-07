@@ -3,6 +3,10 @@ package org.BioLayoutExpress3D.Files;
 import java.awt.event.*;
 import java.io.*;
 import java.lang.Math;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.filechooser.*;
@@ -11,6 +15,7 @@ import org.BioLayoutExpress3D.CoreUI.Dialogs.LayoutProgressBarDialog;
 import org.BioLayoutExpress3D.StaticLibraries.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Environment.GlobalEnvironment;
 import org.BioLayoutExpress3D.Network.Edge;
 import org.BioLayoutExpress3D.Network.NetworkComponentContainer;
 import org.BioLayoutExpress3D.Network.NetworkRootContainer;
@@ -109,6 +114,10 @@ public final class ExportD3
     {
         try
         {
+            InputStream templateFileStream =
+                    GlobalEnvironment.class.getResourceAsStream("/Resources/Html/d3template.html");
+            String d3TemplateString = IOUtils.readInputStream(templateFileStream);
+
             String fileName = saveFile.getCanonicalPath();
             String baseSaveFileName = fileName.substring(0, fileName.lastIndexOf("."));
             nc = layoutFrame.getNetworkRootContainer();
@@ -124,9 +133,9 @@ public final class ExportD3
             {
                 int vertexId = 0;
                 HashMap<Vertex, Integer> vertexNameMap = new HashMap<Vertex, Integer>();
-                StringBuilder json = new StringBuilder();
+                StringBuilder jsonStringBuilder = new StringBuilder();
                 boolean first;
-                json.append("{\n\t\"nodes\":[\n");
+                jsonStringBuilder.append("{\n\t\"nodes\":[\n");
 
                 first = true;
                 for (Vertex v : ncc.getVertices())
@@ -137,7 +146,7 @@ public final class ExportD3
                     }
                     else
                     {
-                        json.append(",\n");
+                        jsonStringBuilder.append(",\n");
                     }
 
                     String name = v.getVertexName();
@@ -147,15 +156,15 @@ public final class ExportD3
                         name = "";
                     }
 
-                    json.append("\t\t{\"name\":\"");
-                    json.append(name);
-                    json.append("\",\"group\":");
-                    json.append(classId);
-                    json.append("}");
+                    jsonStringBuilder.append("\t\t{\"name\":\"");
+                    jsonStringBuilder.append(name);
+                    jsonStringBuilder.append("\",\"group\":");
+                    jsonStringBuilder.append(classId);
+                    jsonStringBuilder.append("}");
                     vertexNameMap.put(v, vertexId++);
                 }
 
-                json.append("\n\t],\n\t\"links\":[\n");
+                jsonStringBuilder.append("\n\t],\n\t\"links\":[\n");
 
                 first = true;
                 for (Edge e : ncc.getEdges())
@@ -166,29 +175,30 @@ public final class ExportD3
                     }
                     else
                     {
-                        json.append(",\n");
+                        jsonStringBuilder.append(",\n");
                     }
 
                     int firstVertexId = vertexNameMap.get(e.getFirstVertex());
                     int secondVertexId = vertexNameMap.get(e.getSecondVertex());
-                    json.append("\t\t{\"source\":");
-                    json.append(firstVertexId);
-                    json.append(",\"target\":");
-                    json.append(secondVertexId);
-                    json.append(",\"value\":");
-                    json.append(e.getWeight());
-                    json.append("}");
+                    jsonStringBuilder.append("\t\t{\"source\":");
+                    jsonStringBuilder.append(firstVertexId);
+                    jsonStringBuilder.append(",\"target\":");
+                    jsonStringBuilder.append(secondVertexId);
+                    jsonStringBuilder.append(",\"value\":");
+                    jsonStringBuilder.append(e.getWeight());
+                    jsonStringBuilder.append("}");
                 }
 
-                json.append("\n\t]\n}");
+                jsonStringBuilder.append("\n\t]\n}");
+                String d3HtmlString = d3TemplateString.replaceFirst("COMPONENT_DATA", jsonStringBuilder.toString());
 
                 String componentIdString = String.format("%0" + maxComponentIdDigits + "d", componentId);
                 componentId++;
 
-                String componentJsonFilename = baseSaveFileName + ".component." + componentIdString + ".json";
-                File componentJsonFile = new File(componentJsonFilename);
-                BufferedWriter bf = new BufferedWriter(new FileWriter(componentJsonFile));
-                bf.write(json.toString());
+                String componentHtmlFilename = baseSaveFileName + ".component." + componentIdString + ".html";
+                File componentHtmlFile = new File(componentHtmlFilename);
+                BufferedWriter bf = new BufferedWriter(new FileWriter(componentHtmlFile));
+                bf.write(d3HtmlString);
                 bf.close();
             }
             layoutProgressBarDialog.endProgressBar();

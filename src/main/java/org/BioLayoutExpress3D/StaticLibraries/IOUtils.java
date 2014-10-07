@@ -1,6 +1,7 @@
 package org.BioLayoutExpress3D.StaticLibraries;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.zip.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
@@ -262,6 +263,41 @@ public final class IOUtils
         }
 
         return sb.toString();
+    }
+
+    public static String readInputStream(InputStream is)
+    {
+        final char[] buffer = new char[4096];
+        final StringBuilder out = new StringBuilder();
+        try
+        {
+            final Reader in = new InputStreamReader(is, Charset.defaultCharset());
+            try
+            {
+                while (true)
+                {
+                    int rsz = in.read(buffer, 0, buffer.length);
+                    if (rsz < 0)
+                    {
+                        break;
+                    }
+                    out.append(buffer, 0, rsz);
+                }
+            }
+            finally
+            {
+                in.close();
+            }
+        }
+        catch (IOException ex)
+        {
+            if (DEBUG_BUILD)
+            {
+                println("IOException in readInputStream:\n" + ex.getMessage());
+            }
+        }
+
+        return out.toString();
     }
 
     /**

@@ -45,7 +45,7 @@ public final class ExportD3
 
     private void initComponents()
     {
-        fileNameExtensionFilterD3 = new FileNameExtensionFilter("Save as a D3.js HTML File", "html");
+        fileNameExtensionFilterD3 = new FileNameExtensionFilter("Save as a D3.js HTML File(s)", "html");
 
         String saveFilePath = FILE_CHOOSER_PATH.get().substring(
                 0, FILE_CHOOSER_PATH.get().lastIndexOf(System.getProperty("file.separator")) + 1);
@@ -53,12 +53,12 @@ public final class ExportD3
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setFileFilter(fileNameExtensionFilterD3);
 
-        exportD3Action = new AbstractAction("D3.js HTML File...")
+        exportD3Action = new AbstractAction("D3.js HTML File(s)...")
         {
             @Override
             public void actionPerformed(ActionEvent action)
             {
-                setFileChooser("Save D3.js HTML File");
+                setFileChooser("Save D3.js HTML File(s)");
                 save();
             }
         };

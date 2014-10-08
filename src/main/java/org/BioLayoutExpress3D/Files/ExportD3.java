@@ -122,7 +122,7 @@ public final class ExportD3
             String baseSaveFileName = fileName.substring(0, fileName.lastIndexOf("."));
             nc = layoutFrame.getNetworkRootContainer();
             nc.createNetworkComponentsContainer();
-            nc.sortNetworkComponentsContainerByLayoutSize();
+            nc.sortNetworkComponentsContainerByComponentSize();
             int maxComponentIdDigits = (int)(Math.log10(nc.getComponentCollection().size()) + 1);
             int componentId = 0;
 

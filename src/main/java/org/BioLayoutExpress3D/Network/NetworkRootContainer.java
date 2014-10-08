@@ -51,7 +51,12 @@ public final class NetworkRootContainer extends NetworkContainer
 
     public void sortNetworkComponentsContainerByLayoutSize()
     {
-        Collections.sort( componentCollection, new NetworkComponentSorter() );
+        Collections.sort( componentCollection, new NCLayoutSizeSorter() );
+    }
+
+    public void sortNetworkComponentsContainerByComponentSize()
+    {
+        Collections.sort(componentCollection, new NCComponentSizeSorter());
     }
 
     private void findOrRemovePolygons(int size)
@@ -242,7 +247,7 @@ public final class NetworkRootContainer extends NetworkContainer
                     ncc.calcBoundaries();
                 }
 
-                Collections.sort(componentCollection, new NetworkComponentSorter());
+                Collections.sort(componentCollection, new NCLayoutSizeSorter());
 
                 layoutProgressBarDialog.prepareProgressBar(componentCollection.size(), "Tiling Graph Components");
                 layoutProgressBarDialog.startProgressBar();
@@ -290,7 +295,7 @@ public final class NetworkRootContainer extends NetworkContainer
 
                     frLayout.clean();
 
-                    Collections.sort(componentCollection, new NetworkComponentSorter());
+                    Collections.sort(componentCollection, new NCLayoutSizeSorter());
 
                     layoutProgressBarDialog.prepareProgressBar(componentCollection.size(), "Tiling Graph Components");
                     layoutProgressBarDialog.startProgressBar();
@@ -473,22 +478,23 @@ public final class NetworkRootContainer extends NetworkContainer
         tilingLevelsContainer.clear();
     }
 
-    private static class NetworkComponentSorter implements Comparator<NetworkComponentContainer>, Serializable
+    private static class NCLayoutSizeSorter implements Comparator<NetworkComponentContainer>, Serializable
     {
-
-        /**
-        *  Serial version UID variable for the NetworkComponentSorter class.
-        */
-        public static final long serialVersionUID = 111222333444555624L;
 
         @Override
         public int compare(NetworkComponentContainer ncc1, NetworkComponentContainer ncc2)
         {
-            return ( ncc1.getWidth() < ncc2.getWidth() ) ? 1 : ( ncc1.getWidth() > ncc2.getWidth() ) ? -1 : 0;
+            return (ncc1.getWidth() < ncc2.getWidth()) ? 1 : (ncc1.getWidth() > ncc2.getWidth()) ? -1 : 0;
         }
-
-
     }
 
+    private static class NCComponentSizeSorter implements Comparator<NetworkComponentContainer>, Serializable
+    {
 
+        @Override
+        public int compare(NetworkComponentContainer ncc1, NetworkComponentContainer ncc2)
+        {
+            return ncc2.getNumberOfVertices() - ncc1.getNumberOfVertices();
+        }
+    }
 }

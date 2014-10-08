@@ -42,6 +42,7 @@ import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.Expression.ExpressionEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Files.Dialogs.ColumnDataConfigurationDialog;
 
 /**
 *
@@ -1261,9 +1262,19 @@ public final class LayoutFrame extends JFrame implements GraphListener
             parser = new WrapperGraphmlToLayoutParser( nc, this, new GraphmlParser(this), VALIDATE_XML_FILES.get() );
             DATA_TYPE = DataTypes.GRAPHML;
         }
+        // Column data
+        else if (fileExtension.equals(SupportedInputFileTypes.TXT.toString()))
+        {
+            ColumnDataConfigurationDialog expressionLoaderDialog = new ColumnDataConfigurationDialog(this, file);
+            expressionLoaderDialog.setVisible(true);
+
+            parser = new CoreParser(nc, this);
+            DATA_TYPE = DataTypes.LAYOUT;
+        }
         // Layed out data
-        else if (    fileExtension.equals( SupportedInputFileTypes.LAYOUT.toString() ) || fileExtension.equals( SupportedInputFileTypes.SIF.toString() )
-                  || fileExtension.equals( SupportedInputFileTypes.TGF.toString() )    || fileExtension.equals( SupportedInputFileTypes.TXT.toString() ) )
+        else if (fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString()) ||
+                fileExtension.equals(SupportedInputFileTypes.SIF.toString()) ||
+                fileExtension.equals(SupportedInputFileTypes.TGF.toString()))
         {
             // Regular file
             parser = new CoreParser(nc, this);

@@ -97,22 +97,20 @@ public interface GraphInterface extends GLEventListener, KeyListener, MouseListe
     * Scale graph in or out according to relative scaling value.
     * @param dz - relative zoom value
     */
-    public void scale(int dz, float scaleMultiplier);
+    public void scale(int dz);
     
     /**
      * Rotate graph.
      * @param dx
      * @param dy
      * @param dz 
-     * @param sensitivity
      */
-    public void rotate(int dx, int dy, int dz, float sensitivity);
+    public void rotate(int dx, int dy, int dz);
     
     /**
      * Reposition graph.
      * @param dx
      * @param dy 
-     * @param scalemultiplier
      */
-    public void translate(int dx, int dy, float scaleMultiplier);
+    public void translate(int dx, int dy);
 }

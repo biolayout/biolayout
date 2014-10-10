@@ -2,6 +2,7 @@ package org.BioLayoutExpress3D.Files.Dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -15,9 +16,9 @@ import java.util.EventObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
@@ -119,6 +120,7 @@ public class ColumnDataConfigurationDialog extends JDialog
     private void initComponents()
     {
         this.setSize(640, 480);
+        this.setMinimumSize(new Dimension(640, 240));
 
         previewTable = new JTable(rows.size(), numericColumns.length);
         TableColumnModel columnModel = previewTable.getColumnModel();
@@ -239,6 +241,7 @@ public class ColumnDataConfigurationDialog extends JDialog
         JScrollPane scrollPane = new JScrollPane(previewTable);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         JPanel buttonPanel = new JPanel();
 
@@ -256,6 +259,8 @@ public class ColumnDataConfigurationDialog extends JDialog
         buttonPanel.add(filterValueField);
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
+
+        getRootPane().setDefaultButton(okButton);
 
         this.add(scrollPane, BorderLayout.CENTER);
         this.add(buttonPanel, BorderLayout.SOUTH);

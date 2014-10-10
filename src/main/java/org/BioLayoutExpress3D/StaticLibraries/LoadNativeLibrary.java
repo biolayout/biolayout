@@ -2,8 +2,8 @@ package org.BioLayoutExpress3D.StaticLibraries;
 
 import java.io.*;
 import java.lang.reflect.*;
+import com.jogamp.gluegen.runtime.*;
 import java.util.Arrays;
-import java.util.logging.Logger;
 import org.BioLayoutExpress3D.Utils.Path;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
@@ -20,7 +20,6 @@ import org.BioLayoutExpress3D.Environment.DataFolder;
 
 public final class LoadNativeLibrary
 {
-    private static final Logger logger = Logger.getLogger(LoadNativeLibrary.class.getName());
 
     /**
     *  The file path of the library file to be copied from.
@@ -41,16 +40,6 @@ public final class LoadNativeLibrary
     *  The number version of MacOSX Lion.
     */
     private static final float MACOSX_LION_NUMBER_VERSION = 10.7f;
-    
-    /**
-     * File suffix for Mac .jnilib native libraries.
-     */
-    public static final String JNILIB = ".jnilib";
-
-    /**
-     * File suffix for Mac .dylib native libraries.
-     */
-    public static final String DYLIB = ".dylib";
 
     /**
     *  Unpacks the native library to a selected folder and loads it.
@@ -62,12 +51,8 @@ public final class LoadNativeLibrary
         try
         {
             String extractedLibraryPath = extractNativeLibrary(libraryName);
-            
-            //if 
-            
             if (extractedLibraryPath != null)
             {
-                logger.fine("Loading library: " + extractedLibraryPath);
                 System.load(extractedLibraryPath);
 
                 if (DEBUG_BUILD)
@@ -86,11 +71,10 @@ public final class LoadNativeLibrary
 
         return false;
     }
-    
+
     public static String extractNativeLibrary(String libraryName)
     {
         boolean[] OSSpecificType = checkRunningOSAndReturnOSSpecificType();
-        
         String OSSpecificLibraryName = checkRunningOSAndReturnOSSpecificLibraryName(libraryName);
 
         int OSSPecificPathIndex = 0;
@@ -107,14 +91,7 @@ public final class LoadNativeLibrary
         String resourceName = EXTRACT_FROM_LIBRARIES_FILE_PATH +
                  EXTRACT_FROM_LIBRARIES_OS_SPECIFIC_PATH[OSSPecificPathIndex] +
                  OSSpecificLibraryName;
-        
-        //check .jnilib resource exists, if null replace with .dylib
-        if(OSSpecificLibraryName.endsWith(JNILIB) && LoadNativeLibrary.class.getResourceAsStream(resourceName) == null)
-        {
-            resourceName.replace(JNILIB, DYLIB);
-        }
 
-        logger.fine("Extracting resource: " + EXTRACT_TO_LIBRARIES_FILE_PATH + resourceName);
         return extractResource(resourceName, EXTRACT_TO_LIBRARIES_FILE_PATH);
     }
 
@@ -228,8 +205,7 @@ public final class LoadNativeLibrary
                 if (DEBUG_BUILD) println("IllegalAccessException in setJavaLibraryPath():\n" + ex.getMessage());
             }
         }
-        
-        logger.fine("Setting java.library.path: " + findJavaLibraryPath());
+
         System.setProperty("java.library.path", findJavaLibraryPath());
     }
 
@@ -287,10 +263,8 @@ public final class LoadNativeLibrary
         return new boolean[] { (isWin || isXP || isVista || isWin7) && !is64, (isWin || isXP || isVista || isWin7) && is64, isLinux && !is64, isLinux && is64, isMac };
     }
 
-    
     /**
     *  Checks the running OS and returns the OS specific library name.
-    * @param libraryName - base name of library file
     */
     private static String checkRunningOSAndReturnOSSpecificLibraryName(String libraryName)
     {
@@ -309,7 +283,7 @@ public final class LoadNativeLibrary
         else if (isLinux)
             OSSpecificLibraryName = "lib" + libraryName + ".so";
         else if (isMac)
-            OSSpecificLibraryName = "lib" + libraryName + JNILIB;
+            OSSpecificLibraryName = "lib" + libraryName + ".jnilib";
 
         return OSSpecificLibraryName;
     }

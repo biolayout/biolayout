@@ -353,35 +353,6 @@ public final class Layout
 
         return true;
     }
-    
-    /**
-     * Initializes Leap Motion native libraries. 
-     * @return true if initialized successfully, otherwise false
-     */
-    private static boolean initLeapJavaNativeLibraries()
-    {
-        if ( !LoadNativeLibrary.loadNativeLibrary("LeapJava") )
-            return false;
-        
-        LoadNativeLibrary.setJavaLibraryPath();
-
-        return true;
-    }
-    
-    /**
-     * Initializes  Leap Motion native libraries. 
-     * @return true if initialized successfully, otherwise false
-     */
-    private static boolean initLeapNativeLibraries()
-    {
-        if ( !LoadNativeLibrary.loadNativeLibrary("Leap") )
-            return false;
-
-        LoadNativeLibrary.setJavaLibraryPath();
-
-        return true;
-    }
-    
 
     /**
     *  The void main entry point of the BioLayoutExpress3D framework.
@@ -521,26 +492,7 @@ public final class Layout
         }
         else
         {
-            if (DEBUG_BUILD) println("Error: JOCL library not installed or found!\n");
-        }
-
-        if(initLeapJavaNativeLibraries())
-        {
-            if (DEBUG_BUILD) println("\nLeap Motion Java library working!\n");
-        }
-        else
-        {
-            if (DEBUG_BUILD) println("Error: Leap Motion Java library not installed or found!\n");
-        }
-
-        
-        if(initLeapNativeLibraries())
-        {
-            if (DEBUG_BUILD) println("\nLeap Motion library working!\n");
-        }
-        else
-        {
-            if (DEBUG_BUILD) println("Error: Leap Motion library not installed or found!\n");
+            if (DEBUG_BUILD) println("Error: JOCL Library not installed or found!\n");
         }
 
         if (DEBUG_BUILD)

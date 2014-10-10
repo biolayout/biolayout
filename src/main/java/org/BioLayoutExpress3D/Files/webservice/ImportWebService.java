@@ -6,6 +6,8 @@ package org.BioLayoutExpress3D.Files.webservice;
 
 import com.google.common.base.Joiner;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.HashSet;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
@@ -96,4 +98,10 @@ public class ImportWebService {
             }
         };  
     }
+/*
+    public void setSearchString(String searchString) 
+    {
+        this.searchString = searchString;
+    }
+    */
 }

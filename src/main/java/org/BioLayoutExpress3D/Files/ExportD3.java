@@ -79,7 +79,7 @@ public final class ExportD3
     private void save()
     {
         int dialogReturnValue;
-        boolean doSaveFile = true;
+        boolean doSaveFile = false;
         File saveFile = null;
 
         if (fileChooser.showSaveDialog(layoutFrame) == JFileChooser.APPROVE_OPTION)
@@ -89,6 +89,7 @@ public final class ExportD3
             String fileName = fileChooser.getSelectedFile().getAbsolutePath();
             fileName = IOUtils.removeMultipleExtensions(fileName, fileExtension);
             saveFile = new File(fileName + "." + fileExtension);
+            doSaveFile = true;
 
             if (saveFile.exists())
             {

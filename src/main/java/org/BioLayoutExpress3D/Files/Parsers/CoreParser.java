@@ -68,13 +68,27 @@ public class CoreParser
     */
     private ArrayList<GraphmlComponentContainer> alGraphmllPathwayComponentContainersFor3D = null;
 
+    public ArrayList<Integer> nodeIdColumns;
+    public int edgeWeightColumn;
+    public int edgeTypeColumn;
+
     /**
     *  The constructor of the CoreParser class.
     */
-    public CoreParser(NetworkContainer nc, LayoutFrame layoutFrame)
+    public CoreParser(NetworkContainer nc, LayoutFrame layoutFrame,
+            java.util.List<Integer> nodeIdColumns, int edgeWeightColumn, int edgeTypeColumn)
     {
         this.nc = nc;
         this.layoutFrame = layoutFrame;
+        this.nodeIdColumns = new ArrayList<Integer>(nodeIdColumns);
+        this.edgeWeightColumn = edgeWeightColumn;
+        this.edgeTypeColumn = edgeTypeColumn;
+
+    }
+
+    public CoreParser(NetworkContainer nc, LayoutFrame layoutFrame)
+    {
+        this(nc, layoutFrame, Arrays.asList(0, 1), 2, 3);
     }
 
     public boolean init(File file, String fileExtension)
@@ -569,10 +583,10 @@ public class CoreParser
 
         if (!isSif)
         {
-            vertex1 = getNext();
-            vertex2 = getNext();
-            weightString = getNext();
-            edgeType = getNext();
+            vertex1 = getToken(nodeIdColumns.get(0));
+            vertex2 = getToken(nodeIdColumns.get(1));
+            weightString = getToken(edgeWeightColumn);
+            edgeType = getToken(edgeTypeColumn);
         }
         else
         {
@@ -663,5 +677,15 @@ public class CoreParser
         }
 
         return tokens.get(currentTokenIndex++);
+    }
+
+    protected String getToken(int index)
+    {
+        if (index >= numberOfTokens || index < 0)
+        {
+            return "";
+        }
+
+        return tokens.get(index);
     }
 }

@@ -1265,11 +1265,21 @@ public final class LayoutFrame extends JFrame implements GraphListener
         // Column data
         else if (fileExtension.equals(SupportedInputFileTypes.TXT.toString()))
         {
-            ColumnDataConfigurationDialog expressionLoaderDialog = new ColumnDataConfigurationDialog(this, file);
-            expressionLoaderDialog.setVisible(true);
+            ColumnDataConfigurationDialog columnDataConfigurationDialog = new ColumnDataConfigurationDialog(this, file);
 
-            parser = new CoreParser(nc, this);
-            DATA_TYPE = DataTypes.LAYOUT;
+            if (!columnDataConfigurationDialog.failed())
+            {
+                columnDataConfigurationDialog.setVisible(true);
+
+                if (columnDataConfigurationDialog.proceed())
+                {
+                    parser = new CoreParser(nc, this,
+                            columnDataConfigurationDialog.nodeIdColumns,
+                            columnDataConfigurationDialog.edgeWeightColumn,
+                            columnDataConfigurationDialog.edgeTypeColumn);
+                    DATA_TYPE = DataTypes.LAYOUT;
+                }
+            }
         }
         // Layed out data
         else if (fileExtension.equals(SupportedInputFileTypes.LAYOUT.toString()) ||

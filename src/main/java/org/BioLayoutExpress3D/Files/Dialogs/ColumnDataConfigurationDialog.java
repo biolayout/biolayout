@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,10 +17,12 @@ import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -39,6 +40,8 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.LayoutProgressBarDialog;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
+import org.BioLayoutExpress3D.Utils.FloatNumberField;
+import org.BioLayoutExpress3D.Utils.TextFieldFilter;
 
 /**
  *
@@ -52,6 +55,9 @@ public class ColumnDataConfigurationDialog extends JDialog
     private LayoutFrame layoutFrame;
     private File file;
     private JTable previewTable;
+
+    private FloatNumberField filterValueField;
+
     private JButton okButton;
     private JButton cancelButton;
     private AbstractAction okAction;
@@ -90,6 +96,26 @@ public class ColumnDataConfigurationDialog extends JDialog
         }
     }
 
+    private void columnSelectorChanged()
+    {
+        if (filterValueField != null)
+        {
+            filterValueField.setEnabled(false);
+            for (int i = 0; i < previewTable.getColumnCount(); i++)
+            {
+                EditableHeaderTableColumn tableColumn =
+                        (EditableHeaderTableColumn) previewTable.getColumnModel().getColumn(i);
+
+                String value = (String) tableColumn.getHeaderValue();
+
+                if (value.equals("Edge Weight"))
+                {
+                    filterValueField.setEnabled(true);
+                }
+            }
+        }
+    }
+
     private void initComponents()
     {
         this.setSize(640, 480);
@@ -112,7 +138,15 @@ public class ColumnDataConfigurationDialog extends JDialog
         {
             "Node ID", "Edge Type", "Ignore"
         };
-        JComboBox alphaComboBox = new JComboBox();
+        JComboBox<String> alphaComboBox = new JComboBox<String>();
+        alphaComboBox.addActionListener(new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                columnSelectorChanged();
+            }
+        });
         for (String alphaColumnValue : alphaColumnValues)
         {
             alphaComboBox.addItem(alphaColumnValue);
@@ -123,7 +157,15 @@ public class ColumnDataConfigurationDialog extends JDialog
         {
             "Edge Weight", "Node ID", "Edge Type", "Ignore"
         };
-        JComboBox numericComboBox = new JComboBox();
+        JComboBox<String> numericComboBox = new JComboBox<String>();
+        numericComboBox.addActionListener(new AbstractAction()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                columnSelectorChanged();
+            }
+        });
         for (String numericColumnValue : numericColumnValues)
         {
             numericComboBox.addItem(numericColumnValue);
@@ -199,8 +241,19 @@ public class ColumnDataConfigurationDialog extends JDialog
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         JPanel buttonPanel = new JPanel();
+
+        JLabel filterValueLabel = new JLabel("Filter Rows With Edge Weights Less Than");
+
+        filterValueField = new FloatNumberField(0, 5);
+        filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
+        filterValueField.setValue(0.0f);
+        columnSelectorChanged();
+
         okButton = new JButton(okAction);
         cancelButton = new JButton(cancelAction);
+
+        buttonPanel.add(filterValueLabel);
+        buttonPanel.add(filterValueField);
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
 
@@ -211,6 +264,10 @@ public class ColumnDataConfigurationDialog extends JDialog
     public ArrayList<Integer> nodeIdColumns;
     public int edgeWeightColumn;
     public int edgeTypeColumn;
+    public float filterValue()
+    {
+        return filterValueField.getValue();
+    }
 
     private boolean configure()
     {
@@ -440,7 +497,7 @@ public class ColumnDataConfigurationDialog extends JDialog
         return true;
     }
 
-    class ComboRenderer extends JComboBox implements TableCellRenderer
+    class ComboRenderer extends JComboBox<String> implements TableCellRenderer
     {
 
         ComboRenderer(String[] items)

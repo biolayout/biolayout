@@ -68,27 +68,29 @@ public class CoreParser
     */
     private ArrayList<GraphmlComponentContainer> alGraphmllPathwayComponentContainersFor3D = null;
 
-    public ArrayList<Integer> nodeIdColumns;
-    public int edgeWeightColumn;
-    public int edgeTypeColumn;
+    private ArrayList<Integer> nodeIdColumns;
+    private int edgeWeightColumn;
+    private int edgeTypeColumn;
+    private float filterWeight;
 
     /**
     *  The constructor of the CoreParser class.
     */
     public CoreParser(NetworkContainer nc, LayoutFrame layoutFrame,
-            java.util.List<Integer> nodeIdColumns, int edgeWeightColumn, int edgeTypeColumn)
+            java.util.List<Integer> nodeIdColumns, int edgeWeightColumn,
+            int edgeTypeColumn, float filterWeight)
     {
         this.nc = nc;
         this.layoutFrame = layoutFrame;
         this.nodeIdColumns = new ArrayList<Integer>(nodeIdColumns);
         this.edgeWeightColumn = edgeWeightColumn;
         this.edgeTypeColumn = edgeTypeColumn;
-
+        this.filterWeight = filterWeight;
     }
 
     public CoreParser(NetworkContainer nc, LayoutFrame layoutFrame)
     {
-        this(nc, layoutFrame, Arrays.asList(0, 1), 2, 3);
+        this(nc, layoutFrame, Arrays.asList(0, 1), 2, 3, 0.0f);
     }
 
     public boolean init(File file, String fileExtension)
@@ -626,22 +628,25 @@ public class CoreParser
         {
             if (weight > 0.0f)
             {
-                if ( !edgeType.isEmpty() )
+                if (weight > filterWeight)
                 {
-                    nc.addNetworkConnection(vertex1, edgeType + lines, weight / 2.0f);
-                    nc.addNetworkConnection(edgeType + lines, vertex2, weight / 2.0f);
+                    if (!edgeType.isEmpty())
+                    {
+                        nc.addNetworkConnection(vertex1, edgeType + lines, weight / 2.0f);
+                        nc.addNetworkConnection(edgeType + lines, vertex2, weight / 2.0f);
 
-                    Vertex vertex = nc.getVerticesMap().get(edgeType + lines);
-                    vertex.setVertexSize(vertex.getVertexSize() / 2);
-                    vertex.setPseudoVertex();
+                        Vertex vertex = nc.getVerticesMap().get(edgeType + lines);
+                        vertex.setVertexSize(vertex.getVertexSize() / 2);
+                        vertex.setPseudoVertex();
 
-                    LayoutClasses lc = nc.getLayoutClassSetsManager().getClassSet(0);
-                    VertexClass vc = lc.createClass(edgeType);
-                    lc.setClass(nc.getVerticesMap().get(edgeType + lines), vc);
-                }
-                else
-                {
-                    nc.addNetworkConnection(vertex1, vertex2, weight);
+                        LayoutClasses lc = nc.getLayoutClassSetsManager().getClassSet(0);
+                        VertexClass vc = lc.createClass(edgeType);
+                        lc.setClass(nc.getVerticesMap().get(edgeType + lines), vc);
+                    }
+                    else
+                    {
+                        nc.addNetworkConnection(vertex1, vertex2, weight);
+                    }
                 }
 
                 WEIGHTED_EDGES = true;

@@ -1276,7 +1276,8 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     parser = new CoreParser(nc, this,
                             columnDataConfigurationDialog.nodeIdColumns,
                             columnDataConfigurationDialog.edgeWeightColumn,
-                            columnDataConfigurationDialog.edgeTypeColumn);
+                            columnDataConfigurationDialog.edgeTypeColumn,
+                            columnDataConfigurationDialog.filterValue());
                     DATA_TYPE = DataTypes.LAYOUT;
                 }
             }

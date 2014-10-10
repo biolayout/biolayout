@@ -2935,19 +2935,6 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
     }
 
     /**
-     * Zoom graph in or out according to relative zoom value (e.g. from Leap Motion device).
-     * @param dz - relative zoom value (positive to zoom in, zero for no change, negative to zoom out)
-     */
-    public void scale(int dz)
-    {
-        if (dz > 0)
-            scaleValue += DEFAULT_SCALE * (1.0f + scaleValue);
-        else if (dz < 0) 
-            scaleValue -= DEFAULT_SCALE * (1.0f + scaleValue);
-        if (!renderProfileMode || animationRender) refreshDisplay();
-    }    
-    
-    /**
     *  MouseMoved mouseMotionEvent.
     */
     @Override

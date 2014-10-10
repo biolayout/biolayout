@@ -1659,7 +1659,34 @@ public class Graph extends GLCanvas implements GraphInterface
             public void triggerZoom(int dz) 
             {
                 logger.info("Trigger zoom: " + dz);
-                scale(dz);
+
+                if(dz == 0)
+                    return;
+                else if(dz > 0)                   
+                    currentGraphRenderer.createReScaleAction(ScaleTypes.SCALE_IN, null);
+                else
+                    currentGraphRenderer.createReScaleAction(ScaleTypes.SCALE_OUT, null);
+  
+                /*
+                if(dz == 0)
+                    return;
+                
+                ScaleTypes scaleTypes;
+                if(dz > 0)
+                    scaleTypes = ScaleTypes.SCALE_IN;
+                else
+                    scaleTypes = ScaleTypes.SCALE_OUT;
+                
+                dz = java.lang.Math.abs(dz); //remove sign of zoom factor
+                
+                //repeat rescale action by zoom factor
+                int i = 0;
+                while(i < dz)
+                {
+                    currentGraphRenderer.createReScaleAction(scaleTypes, null);
+                    i++;
+                }
+                */
             }
 
             @Override
@@ -2093,11 +2120,5 @@ public class Graph extends GLCanvas implements GraphInterface
     {
       //FIXME this was added during the move to JOGL 2
       //TODO check if resources need to be freed here
-    }
-    
-    @Override
-    public void scale(int dz)
-    {
-        currentGraphRenderer.scale(dz);
     }
 }

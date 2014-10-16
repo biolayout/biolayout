@@ -293,7 +293,7 @@ public class ColumnDataConfigurationDialog extends JDialog
             {
                 String value = (String) tableColumn.getHeaderValue();
 
-                if (!value.equals("Ignore"))
+                if (value.equals("Edge Weight"))
                 {
                     edgeWeightColumn = i;
                     edgeWeightColumnCount++;

@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.regex.Matcher;
@@ -27,11 +28,15 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.plaf.basic.BasicTableHeaderUI;
 import javax.swing.table.JTableHeader;
@@ -57,6 +62,7 @@ public class ColumnDataConfigurationDialog extends JDialog
     private File file;
     private JTable previewTable;
 
+    private JSlider filterSlider;
     private FloatNumberField filterValueField;
 
     private JButton okButton;
@@ -97,11 +103,17 @@ public class ColumnDataConfigurationDialog extends JDialog
         }
     }
 
+    float[] sortedEdgeWeightColumn;
+
     private void columnSelectorChanged()
     {
-        if (filterValueField != null)
+        if (filterSlider != null && filterValueField != null)
         {
+            filterSlider.setEnabled(false);
             filterValueField.setEnabled(false);
+            int edgeWeightColumnCount = 0;
+            int edgeWeightColumnIndex = -1;
+
             for (int i = 0; i < previewTable.getColumnCount(); i++)
             {
                 EditableHeaderTableColumn tableColumn =
@@ -111,16 +123,101 @@ public class ColumnDataConfigurationDialog extends JDialog
 
                 if (value.equals("Edge Weight"))
                 {
-                    filterValueField.setEnabled(true);
+                    if(edgeWeightColumnCount > 0)
+                    {
+                        edgeWeightColumnIndex = -1;
+                    }
+                    else
+                    {
+                        edgeWeightColumnIndex = i;
+                    }
+
+                    edgeWeightColumnCount++;
                 }
             }
+
+            if (edgeWeightColumnIndex >= 0)
+            {
+                filterSlider.setEnabled(true);
+                filterValueField.setEnabled(true);
+                sortedEdgeWeightColumn = new float[rows.size() + 1];
+                float largestValue = Float.MIN_VALUE;
+
+                for (int j = 0; j < rows.size(); j++)
+                {
+                    sortedEdgeWeightColumn[j] = Float.parseFloat(rows.get(j)[edgeWeightColumnIndex].replace(',', '.'));
+
+                    if (sortedEdgeWeightColumn[j] > largestValue)
+                    {
+                        largestValue = sortedEdgeWeightColumn[j];
+                    }
+                }
+
+                // Add a final value that filters 100% of the rows
+                sortedEdgeWeightColumn[sortedEdgeWeightColumn.length - 1] = largestValue + 1.0f;
+                Arrays.sort(sortedEdgeWeightColumn);
+
+                filterChanged(filterSlider);
+            }
+        }
+    }
+
+    boolean filterChanging = false;
+
+    private void syncTextFieldToSlider()
+    {
+        int lastIndex = sortedEdgeWeightColumn.length - 1;
+        int index = lastIndex * filterSlider.getValue() / filterSlider.getMaximum();
+        float value = sortedEdgeWeightColumn[index];
+
+        filterValueField.setValue(value);
+    }
+
+    private void syncSliderToTextField()
+    {
+        int lastIndex = sortedEdgeWeightColumn.length - 1;
+        float value = filterValueField.getValue();
+        int index = lastIndex;
+        while (index > 0 && sortedEdgeWeightColumn[index] > value)
+        {
+            index--;
+        }
+
+        // We may have runs of the same value, so reduce our index to the first
+        while (index > 0 && sortedEdgeWeightColumn[index - 1] == value)
+        {
+            index--;
+        }
+
+        int filterValue = index * filterSlider.getMaximum() / lastIndex;
+        filterSlider.setValue(filterValue);
+    }
+
+    private void filterChanged(JComponent component)
+    {
+        if (!filterChanging)
+        {
+            filterChanging = true;
+
+            int numEdgeWeights = sortedEdgeWeightColumn.length - 1;
+
+            if (component == filterSlider)
+            {
+                syncTextFieldToSlider();
+            }
+            else if (component == filterValueField)
+            {
+                syncSliderToTextField();
+            }
+
+            filterChanging = false;
         }
     }
 
     private void initComponents()
     {
-        this.setSize(640, 480);
-        this.setMinimumSize(new Dimension(640, 240));
+        this.setSize(900, 500);
+        this.setMinimumSize(new Dimension(900, 500));
 
         previewTable = new JTable(rows.size(), numericColumns.length);
         TableColumnModel columnModel = previewTable.getColumnModel();
@@ -246,10 +343,29 @@ public class ColumnDataConfigurationDialog extends JDialog
         JPanel buttonPanel = new JPanel();
 
         JLabel filterValueLabel = new JLabel("Filter Rows With Edge Weights Less Than");
-
         filterValueField = new FloatNumberField(0, 5);
+        filterValueField.addCaretListener(new CaretListener()
+        {
+            @Override
+            public void caretUpdate(CaretEvent e)
+            {
+                filterChanged(filterValueField);
+            }
+        });
         filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
         filterValueField.setValue(0.0f);
+
+        JLabel filterSliderLabel = new JLabel("Filter Percentage of Edges");
+        filterSlider = new JSlider(0, 100, 0);
+        filterSlider.addChangeListener(new ChangeListener()
+        {
+            @Override
+            public void stateChanged(ChangeEvent e)
+            {
+                filterChanged(filterSlider);
+            }
+        });
+
         columnSelectorChanged();
 
         okButton = new JButton(okAction);
@@ -257,6 +373,8 @@ public class ColumnDataConfigurationDialog extends JDialog
 
         buttonPanel.add(filterValueLabel);
         buttonPanel.add(filterValueField);
+        buttonPanel.add(filterSliderLabel);
+        buttonPanel.add(filterSlider);
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
 
@@ -403,6 +521,7 @@ public class ColumnDataConfigurationDialog extends JDialog
 
     ArrayList<String[]> rows;
     boolean[] numericColumns;
+
     int totalAlphaColumns;
     int totalNumericColumns;
 

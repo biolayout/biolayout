@@ -31,6 +31,7 @@ public final class FloatNumberField extends JTextField
 
         numberFormatter = NumberFormat.getInstance();
         numberFormatter.setParseIntegerOnly(false);
+        numberFormatter.setGroupingUsed(false);
         numberFormatter.setMaximumFractionDigits(2);
 
         setValue(value);
@@ -50,7 +51,9 @@ public final class FloatNumberField extends JTextField
     {
         try
         {
-            return numberFormatter.parse( getText() ).floatValue();
+            String text = getText();
+            Number number = numberFormatter.parse(text);
+            return number.floatValue();
         }
         catch (ParseException parseExc)
         {
@@ -67,7 +70,8 @@ public final class FloatNumberField extends JTextField
 
     public void setValue(float value)
     {
-        setText( numberFormatter.format(value) );
+        String s = numberFormatter.format(value);
+        setText(s);
     }
 
     @Override

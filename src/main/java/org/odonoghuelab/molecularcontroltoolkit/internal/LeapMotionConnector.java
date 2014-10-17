@@ -7,6 +7,7 @@ package org.odonoghuelab.molecularcontroltoolkit.internal;
 * between Leap Motion and you, your company or other organization.             *
 \******************************************************************************/
 
+import com.leapmotion.leap.Config;
 import java.awt.IllegalComponentStateException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,13 +20,14 @@ import com.leapmotion.leap.GestureList;
 import com.leapmotion.leap.Hand;
 import com.leapmotion.leap.Listener;
 import com.leapmotion.leap.Pointable;
+import com.leapmotion.leap.ScreenTapGesture;
 import com.leapmotion.leap.Vector;
+import java.awt.MouseInfo;
 import java.util.logging.Logger;
 
 /**
  * The LeapMotionConnector accesses the Leap Motion Controller using the Leap Motion Java API.
  * @author KennySabir
- *
  */
 public class LeapMotionConnector extends AbstractConnector {
 
@@ -105,6 +107,12 @@ public class LeapMotionConnector extends AbstractConnector {
 	        controller.enableGesture(Gesture.Type.TYPE_SCREEN_TAP);
 	        controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
                 controller.enableGesture(Gesture.Type.TYPE_SWIPE);
+                
+                Config config = controller.config();
+                config.setFloat("Gesture.ScreenTap.MinForwardVelocity", 30.0f);
+                config.setFloat("Gesture.ScreenTap.HistorySeconds", 0.5f);
+                config.setFloat("Gesture.ScreenTap.MinDistance", 1.0f);
+                config.save();
 	    }
 
 	    /*
@@ -129,6 +137,7 @@ public class LeapMotionConnector extends AbstractConnector {
 	     * @see com.leapmotion.leap.Listener#onFrame(com.leapmotion.leap.Controller)
 	     */
 	    public void onFrame(Controller controller) {
+                
 	        // Get the most recent frame and report some basic information
 	        Frame frame = controller.frame();
 	        if (frame.hands().count() == 1 ) {
@@ -164,15 +173,20 @@ public class LeapMotionConnector extends AbstractConnector {
 			    		
 //			        	Pointable lastFinger = lastFrame.fingers().frontmost();
 //			        	Vector lastHit = controller.locatedScreens().closestScreenHit(lastFinger).intersect(lastFinger,true);
-//			        	System.out.println(finger + ": hit, last hit, xy: " + hit.getX() + ", " + hit.getY() );
+//			        	logger.info(finger + ": hit, last hit, xy: " + hit.getX() + ", " + hit.getY() );
+                                        
+    
+                                        
+                                        
 			        	if (absZVel > 50 && lastY != -1) {
-			        		float scale = (float) 2500 / (absZVel*absZVel);
+			        		float scale = (float) 2500 / (absZVel * absZVel);
 				        	x = (hit.getX() - lastX) * scale + lastX;
 				        	y = (hit.getY() - lastY) * scale + lastY;
 			        	}
 			        	lastY = y;
 			        	lastX = x;
 			        	if (!Float.isNaN(x) && !Float.isNaN(y)) {
+                                                logger.info("Scaled xy: " + x + " '" + y );
 				        	getGestureDispatcher().point(x, y);
 			        	}
 		        	}
@@ -186,17 +200,27 @@ public class LeapMotionConnector extends AbstractConnector {
 	        	}
 	
 		        GestureList gestures = frame.gestures();
-                        logger.fine(gestures.count() + " Gestures");
+                        if(gestures.count() > 0)
+                        {
+                            logger.info(gestures.count() + " Gestures");
+                        }
 		        for (int i = 0; i < gestures.count(); i++) {
 		            Gesture gesture = gestures.get(i);
 	
 		            switch (gesture.type()) {
 		                case TYPE_SWIPE:
-                                        logger.fine("Swipe Gesture");
+                                        logger.info("Swipe Gesture");
 		                	getGestureDispatcher().reset();
 		                    break;
 		                case TYPE_SCREEN_TAP:
-                                        logger.fine("Screen Tap Gesture");
+                                        logger.info("Screen Tap Gesture");
+                                        ScreenTapGesture stg = new ScreenTapGesture(gesture);
+                                        logger.info("ID: " + stg.id());
+                                        logger.info("Position: " + stg.position());
+                                        logger.info("State: " + stg.state());
+                                        logger.info("Direction: " + stg.direction());
+                                        
+                                        
 		                	getGestureDispatcher().selectMouseCursor();
 		                	Timer timer = new Timer();
 		                	// add a delay so the app can process the mouse clicks.
@@ -209,11 +233,11 @@ public class LeapMotionConnector extends AbstractConnector {
 							}, 200);
 		                    break;
 		                case TYPE_KEY_TAP:
-                                        logger.fine("Key Tap Gesture");
+                                        logger.info("Key Tap Gesture");
 		                	getGestureDispatcher().zoomToSelection();
 		                    break;
 		                default:
-		                    System.out.println("Unknown gesture type.");
+		                    logger.warning("Unknown gesture type.");
 		                    break;
 		            }
 		        }

@@ -1703,7 +1703,22 @@ public class Graph extends GLCanvas implements GraphInterface
             public void point(float arg0, float arg1) 
             {
                 logger.fine("Point" + arg0 +", " + arg1);
-                    // TODO Auto-generated method stub
+                
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                double width = screenSize.getWidth();
+                double height = screenSize.getHeight();
+                
+                int xPoint = (int)java.lang.Math.round(width * arg0);
+                int yPoint = (int)java.lang.Math.round(height * (1.0f - arg1));
+                
+                try {
+                    // Move the cursor
+                    Robot robot = new Robot();                    
+                    robot.mouseMove(xPoint, yPoint);
+                    logger.info("Moved mouse to xy: " + xPoint + " ," + yPoint);
+                } catch (AWTException e) {
+                    logger.warning("Robot can't move mouse");
+                }
             }
 
             /******** speech commands**************/

@@ -18,6 +18,7 @@ import com.leapmotion.leap.Frame;
 import com.leapmotion.leap.Gesture;
 import com.leapmotion.leap.GestureList;
 import com.leapmotion.leap.Hand;
+import com.leapmotion.leap.InteractionBox;
 import com.leapmotion.leap.Listener;
 import com.leapmotion.leap.Pointable;
 import com.leapmotion.leap.ScreenTapGesture;
@@ -165,29 +166,35 @@ public class LeapMotionConnector extends AbstractConnector {
 	        	else if (extended > 0){ // 1 to 3 fingers extended
 		        	try {
 			        	Pointable finger = frame.fingers().frontmost();
-			        	Vector hit = controller.locatedScreens().closestScreenHit(finger).intersect(finger,true);
 			        	float zVel = finger.tipVelocity().getZ();
 			    		int absZVel = (int) Math.abs(zVel);
-			    		float x = hit.getX();
-			    		float y = hit.getY();
-			    		
+
 //			        	Pointable lastFinger = lastFrame.fingers().frontmost();
 //			        	Vector lastHit = controller.locatedScreens().closestScreenHit(lastFinger).intersect(lastFinger,true);
 //			        	logger.info(finger + ": hit, last hit, xy: " + hit.getX() + ", " + hit.getY() );
                                         
-    
+                                        Vector stabilizedPosition = finger.stabilizedTipPosition();
+                                        InteractionBox iBox = frame.interactionBox();
+                                        Vector normalizedPosition = iBox.normalizePoint(stabilizedPosition);
+                                        logger.finer("normalizedPosition: " + normalizedPosition);
+                                        float x = normalizedPosition.getX();
+                                        float y = normalizedPosition.getY();
                                         
-                                        
-			        	if (absZVel > 50 && lastY != -1) {
+                                        /* The action of poking the screen
+                                        was found to be difficult to master as it was hard to maintain the
+                                        same X and Y position of the tip of the finger while moving in the
+                                        Z-axis alone. 
+                                        Scale down the X and Y translation when the Z velocity is over a given threshold */
+                                        if (absZVel > 50 && lastY != -1) {
 			        		float scale = (float) 2500 / (absZVel * absZVel);
-				        	x = (hit.getX() - lastX) * scale + lastX;
-				        	y = (hit.getY() - lastY) * scale + lastY;
+				        	x = (x - lastX) * scale + lastX;
+				        	y = (y - lastY) * scale + lastY;
 			        	}
-			        	lastY = y;
+
+                                        lastY = y;
 			        	lastX = x;
 			        	if (!Float.isNaN(x) && !Float.isNaN(y)) {
-                                                logger.info("Scaled xy: " + x + " '" + y );
-				        	getGestureDispatcher().point(x, y);
+				        	getGestureDispatcher().point(x, y); //move the mouse cursor
 			        	}
 		        	}
 		        	catch (IllegalComponentStateException e) {
@@ -195,8 +202,8 @@ public class LeapMotionConnector extends AbstractConnector {
 		        	}
 		        }
 	        	else { //no fingers extended
-		        	lastY = -1;
-		        	lastX = -1;
+                            lastY = -1;
+                            lastX = -1;
 	        	}
 	
 		        GestureList gestures = frame.gestures();
@@ -222,19 +229,21 @@ public class LeapMotionConnector extends AbstractConnector {
                                         
                                         
 		                	getGestureDispatcher().selectMouseCursor();
+                                        /*
 		                	Timer timer = new Timer();
 		                	// add a delay so the app can process the mouse clicks.
 					timer.schedule(new TimerTask() {
 								
 								@Override
 								public void run() {
-				                	getGestureDispatcher().zoomToSelection();
+                                                                    getGestureDispatcher().zoomToSelection();
 								}
 							}, 200);
+                                        */
 		                    break;
 		                case TYPE_KEY_TAP:
                                         logger.info("Key Tap Gesture");
-		                	getGestureDispatcher().zoomToSelection();
+		                	getGestureDispatcher().zoomToSelection(); //previously zoomToSelection()
 		                    break;
 		                default:
 		                    logger.warning("Unknown gesture type.");

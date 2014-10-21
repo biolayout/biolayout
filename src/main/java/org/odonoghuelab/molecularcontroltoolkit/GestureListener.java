@@ -48,8 +48,14 @@ public interface GestureListener {
 	public abstract void point(float x, float y);
 
 	/**
-	 * Simulate a mouse click at the curent mouse cursor
+	 * Simulate a mouse click at the current mouse cursor
 	 */
 	public abstract void selectMouseCursor();
+        
+        /**
+         * Perform a touch of the virtual touchscreen.
+         * @param touching - true to touch, false to hover
+         */
+        public abstract void touch(boolean touching);
 
 }

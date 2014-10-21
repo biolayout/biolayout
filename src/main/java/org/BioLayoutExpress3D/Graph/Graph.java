@@ -1647,8 +1647,20 @@ public class Graph extends GLCanvas implements GraphInterface
 
         //Initialize Leap Motion      
     	molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
-    	molecularControlToolkit.setListeners(new MolecularControlListener() 
-        {
+    	molecularControlToolkit.setListeners(new MolecularControlListener() {
+            private Robot robot;
+
+            //initialisation block
+            {
+                try
+                {
+                    robot = new Robot();
+                }               
+                catch (AWTException e) {
+                    logger.warning("Can't create Robot");
+                }
+            }
+            
             /************** gesture commands *****************/
 			
             /** 
@@ -1696,14 +1708,17 @@ public class Graph extends GLCanvas implements GraphInterface
             public void selectMouseCursor() 
             {
                 logger.fine("Select mouse cursor");
-                try {
-                    // Move the cursor
-                    Robot robot = new Robot();                    
+                
+                //çlick the mouse at the cursor
+                if(robot != null)
+                {
                     robot.mousePress(InputEvent.BUTTON1_MASK);
                     robot.mouseRelease(InputEvent.BUTTON1_MASK);
                     logger.finer("Mouse clicked by Robot");
-                } catch (AWTException e) {
-                    logger.warning("Robot can't click mouse");
+                }
+                else
+                {
+                    logger.warning("Robot is null - can't click mouse");
                 }
 
             }
@@ -1720,13 +1735,40 @@ public class Graph extends GLCanvas implements GraphInterface
                 int xPoint = (int)java.lang.Math.round(windowWidth * arg0);
                 int yPoint = (int)java.lang.Math.round(windowHeight - (windowHeight * arg1));
                 
-                try {
-                    // Move the cursor
-                    Robot robot = new Robot();                    
+                // Move the cursor
+                if(robot != null)
+                {
                     robot.mouseMove(xPoint, yPoint);
                     logger.finer("Moved mouse to xy: " + xPoint + " ," + yPoint);
-                } catch (AWTException e) {
-                    logger.warning("Robot can't move mouse");
+                }
+                else
+                {
+                    logger.warning("Robot is null - can't point mouse");
+                }
+            }
+            
+            @Override
+            public void touch(boolean touching)
+            {
+                //Simulate shift-click
+                if(robot != null)
+                {
+                    if(touching)
+                    {
+                        robot.keyPress(KeyEvent.VK_SHIFT);
+                        robot.mousePress(KeyEvent.BUTTON1_MASK);
+                        logger.info("Touch performed");
+                    }       
+                    else
+                    {
+                        robot.mouseRelease(KeyEvent.BUTTON1_MASK);
+                        robot.keyRelease(KeyEvent.VK_SHIFT);
+                        logger.info("Touch released");
+                    }
+                }
+                else
+                {
+                    logger.warning("Robot is null - can't point mouse");
                 }
             }
 

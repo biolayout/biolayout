@@ -13,7 +13,7 @@ public class EnabledGestureDispatcher implements GestureListener, Enabler{
 	/** is gestures enabled */
 	boolean handsEnabled = true;
 
-	/** the decorated listener */
+        /** the decorated listener */
 	GestureListener listener;
 	
 	/**
@@ -80,15 +80,21 @@ public class EnabledGestureDispatcher implements GestureListener, Enabler{
 		if (handsEnabled)  {
 			listener.point(x,y);
 		}
-		
 	}
-
+        
 	@Override
 	public void selectMouseCursor() {
 		if (handsEnabled) {
 			listener.selectMouseCursor();
 		}
 	}
+
+        @Override
+        public void touch(boolean touching) {
+		if (handsEnabled) {
+			listener.touch(touching);
+		}
+        }
 
 
 }

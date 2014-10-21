@@ -7,6 +7,7 @@ package org.odonoghuelab.molecularcontroltoolkit.internal;
 * between Leap Motion and you, your company or other organization.             *
 \******************************************************************************/
 
+import com.leapmotion.leap.CircleGesture;
 import com.leapmotion.leap.Config;
 import java.awt.IllegalComponentStateException;
 import java.util.Timer;
@@ -81,15 +82,20 @@ public class LeapMotionConnector extends AbstractConnector {
 		
 		/** Store the lastY for custom pointing algorithm */
 		float lastY = -1;
+                
+                /**
+                 * Stores the last value of the virtual touchscreen.
+                 */
+                Pointable.Zone lastTouchZone = Pointable.Zone.ZONE_NONE;
 		
 		/** constant for scaling pointing in the x axis */
-		float X_SCALE = 150;
+		public static final float X_SCALE = 150;
 
 		/** constant for scaling pointing in the y axis */
-		float Y_SCALE = -400;
+		public static final float Y_SCALE = -400;
 		
 		/** constant for offsetting pointing in the y axis */
-		float Y_OFFSET = 400;
+		public static final float Y_OFFSET = 400;
 
 		/*
 		 * (non-Javadoc)
@@ -108,6 +114,7 @@ public class LeapMotionConnector extends AbstractConnector {
 	        controller.enableGesture(Gesture.Type.TYPE_SCREEN_TAP);
 	        controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
                 controller.enableGesture(Gesture.Type.TYPE_SWIPE);
+                controller.enableGesture(Gesture.Type.TYPE_CIRCLE);
                 
                 Config config = controller.config();
                 config.setFloat("Gesture.ScreenTap.MinForwardVelocity", 30.0f);
@@ -180,6 +187,23 @@ public class LeapMotionConnector extends AbstractConnector {
                                         float x = normalizedPosition.getX();
                                         float y = normalizedPosition.getY();
                                         
+                                        
+                                        /* Virtual touchscreen */
+                                        Pointable.Zone touchZone = finger.touchZone();
+                                        logger.finer("Touch Zone: " + touchZone);
+                                        
+                                        //finger has moved from virtual touchscreen hover zone to touching zone
+                                        if(touchZone == Pointable.Zone.ZONE_TOUCHING && lastTouchZone != Pointable.Zone.ZONE_TOUCHING)
+                                        {
+                                            getGestureDispatcher().touch(true);
+                                        }
+                                        //finger has moved away from virtual touchscreen touch zone
+                                        else if(touchZone == Pointable.Zone.ZONE_HOVERING && lastTouchZone == Pointable.Zone.ZONE_TOUCHING)
+                                        {
+                                            getGestureDispatcher().touch(false);
+                                        }
+                                        lastTouchZone = touchZone;
+
                                         /* The action of poking the screen
                                         was found to be difficult to master as it was hard to maintain the
                                         same X and Y position of the tip of the finger while moving in the
@@ -245,6 +269,12 @@ public class LeapMotionConnector extends AbstractConnector {
                                         logger.info("Key Tap Gesture");
 		                	getGestureDispatcher().zoomToSelection(); //previously zoomToSelection()
 		                    break;
+                                case TYPE_CIRCLE:
+                                    logger.info("Circle Gesture");
+                                    CircleGesture cg = new CircleGesture(gesture);
+                                    logger.info(cg.toString());
+                                    logger.info("Radius: " + cg.radius());
+                                    break;
 		                default:
 		                    logger.warning("Unknown gesture type.");
 		                    break;

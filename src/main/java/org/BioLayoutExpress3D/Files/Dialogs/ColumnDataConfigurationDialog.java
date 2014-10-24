@@ -430,30 +430,22 @@ public class ColumnDataConfigurationDialog extends JDialog
             EditableHeaderTableColumn tableColumn =
                     (EditableHeaderTableColumn) previewTable.getColumnModel().getColumn(i);
 
-            if (numericColumns[i])
-            {
-                String value = (String) tableColumn.getHeaderValue();
+            String value = (String) tableColumn.getHeaderValue();
 
-                if (value.equals("Edge Weight"))
-                {
-                    edgeWeightColumn = i;
-                    edgeWeightColumnCount++;
-                }
+            if (value.equals("Node ID"))
+            {
+                nodeIdColumns.add(i);
+                nodeIdColumnCount++;
             }
-            else
+            else if (value.equals("Edge Weight"))
             {
-                String value = (String) tableColumn.getHeaderValue();
-
-                if (value.equals("Node ID"))
-                {
-                    nodeIdColumns.add(i);
-                    nodeIdColumnCount++;
-                }
-                else if (value.equals("Edge Type"))
-                {
-                    edgeTypeColumn = i;
-                    edgeTypeColumnCount++;
-                }
+                edgeWeightColumn = i;
+                edgeWeightColumnCount++;
+            }
+            else if (value.equals("Edge Type"))
+            {
+                edgeTypeColumn = i;
+                edgeTypeColumnCount++;
             }
         }
 

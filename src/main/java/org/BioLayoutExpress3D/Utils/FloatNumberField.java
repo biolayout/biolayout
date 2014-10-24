@@ -42,6 +42,11 @@ public final class FloatNumberField extends JTextField
         numberFormatter.setParseIntegerOnly(flag);
     }
 
+    public void setMaximumFractionDigits(int n)
+    {
+        numberFormatter.setMaximumFractionDigits(n);
+    }
+
     public boolean isEmpty()
     {
         return getText().isEmpty();

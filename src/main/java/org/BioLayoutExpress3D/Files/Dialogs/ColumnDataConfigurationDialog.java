@@ -352,6 +352,7 @@ public class ColumnDataConfigurationDialog extends JDialog
         JPanel filterValuePanel = new JPanel();
         JLabel filterValueLabel = new JLabel("Filter Rows With Edge Weights Less Than");
         filterValueField = new FloatNumberField(0, 5);
+        filterValueField.setMaximumFractionDigits(6);
         filterValueField.addCaretListener(new CaretListener()
         {
             @Override
@@ -360,7 +361,7 @@ public class ColumnDataConfigurationDialog extends JDialog
                 filterChanged(filterValueField);
             }
         });
-        filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
+        filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT, true));
         filterValueField.setValue(0.0f);
         filterValuePanel.add(filterValueLabel);
         filterValuePanel.add(filterValueField);

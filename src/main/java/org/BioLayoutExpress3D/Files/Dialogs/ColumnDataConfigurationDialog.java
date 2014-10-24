@@ -3,6 +3,9 @@ package org.BioLayoutExpress3D.Files.Dialogs;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -62,6 +65,7 @@ public class ColumnDataConfigurationDialog extends JDialog
     private File file;
     private JTable previewTable;
 
+    private JLabel filterSliderLabel;
     private JSlider filterSlider;
     private FloatNumberField filterValueField;
 
@@ -216,8 +220,8 @@ public class ColumnDataConfigurationDialog extends JDialog
 
     private void initComponents()
     {
-        this.setSize(900, 500);
-        this.setMinimumSize(new Dimension(900, 500));
+        this.setSize(800, 500);
+        this.setMinimumSize(new Dimension(800, 500));
 
         previewTable = new JTable(rows.size(), numericColumns.length);
         TableColumnModel columnModel = previewTable.getColumnModel();
@@ -340,8 +344,12 @@ public class ColumnDataConfigurationDialog extends JDialog
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        JPanel buttonPanel = new JPanel();
+        JPanel controlsPanel = new JPanel();
+        GridBagLayout controlsLayout = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();
+        controlsPanel.setLayout(controlsLayout);
 
+        JPanel filterValuePanel = new JPanel();
         JLabel filterValueLabel = new JLabel("Filter Rows With Edge Weights Less Than");
         filterValueField = new FloatNumberField(0, 5);
         filterValueField.addCaretListener(new CaretListener()
@@ -354,34 +362,49 @@ public class ColumnDataConfigurationDialog extends JDialog
         });
         filterValueField.setDocument(new TextFieldFilter(TextFieldFilter.FLOAT));
         filterValueField.setValue(0.0f);
+        filterValuePanel.add(filterValueLabel);
+        filterValuePanel.add(filterValueField);
 
-        JLabel filterSliderLabel = new JLabel("Filter Percentage of Edges");
         filterSlider = new JSlider(0, 100, 0);
         filterSlider.addChangeListener(new ChangeListener()
         {
             @Override
             public void stateChanged(ChangeEvent e)
             {
+                filterSliderLabel.setText("Filter " + filterSlider.getValue() + "% of Edges");
                 filterChanged(filterSlider);
             }
         });
+        filterSliderLabel = new JLabel("Filter 0% of Edges");
+        filterValuePanel.add(filterSlider);
+        filterValuePanel.add(filterSliderLabel);
 
         columnSelectorChanged();
 
+        JPanel buttonsPanel = new JPanel();
+        FlowLayout buttonsPanelLayout = new FlowLayout(FlowLayout.RIGHT);
+        buttonsPanel.setLayout(buttonsPanelLayout);
         okButton = new JButton(okAction);
         cancelButton = new JButton(cancelAction);
+        buttonsPanel.add(okButton);
+        buttonsPanel.add(cancelButton);
 
-        buttonPanel.add(filterValueLabel);
-        buttonPanel.add(filterValueField);
-        buttonPanel.add(filterSliderLabel);
-        buttonPanel.add(filterSlider);
-        buttonPanel.add(okButton);
-        buttonPanel.add(cancelButton);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        controlsPanel.add(filterValuePanel, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 2;
+        c.weightx = 1.0f;
+        c.anchor = GridBagConstraints.SOUTHEAST;
+        controlsPanel.add(buttonsPanel, c);
 
         getRootPane().setDefaultButton(okButton);
 
         this.add(scrollPane, BorderLayout.CENTER);
-        this.add(buttonPanel, BorderLayout.SOUTH);
+        this.add(controlsPanel, BorderLayout.SOUTH);
     }
 
     public ArrayList<Integer> nodeIdColumns;

@@ -571,7 +571,28 @@ public class ColumnDataConfigurationDialog extends JDialog
                     if (numColumns > 0 && tokens.size() != numColumns)
                     {
                         // Malformed input; inconsistent number of columns
-                        return false;
+                        int result = JOptionPane.showConfirmDialog(this,
+                                "Unexpected number of columns encountered on line number " +
+                                (rowNumber + 1) + ". Expecting " + numColumns + ", found " + tokens.size() + ". " +
+                                "Ignore this error and proceed?",
+                                "Error", JOptionPane.OK_CANCEL_OPTION);
+
+                        if (result == JOptionPane.CANCEL_OPTION)
+                        {
+                            return false;
+                        }
+
+                        while(tokens.size() < numColumns)
+                        {
+                            // Add empty token
+                            tokens.add("");
+                        }
+
+                        while(tokens.size() > numColumns)
+                        {
+                            // Remove trailing token
+                            tokens.remove(tokens.size() - 1);
+                        }
                     }
 
                     numColumns = tokens.size();
@@ -601,7 +622,7 @@ public class ColumnDataConfigurationDialog extends JDialog
             {
                 for (int i = 0; i < numColumns; i++)
                 {
-                    if (!isNumeric(row[i]))
+                    if (!row[i].isEmpty() && !isNumeric(row[i]))
                     {
                         numericColumns[i] = false;
                     }
@@ -627,6 +648,9 @@ public class ColumnDataConfigurationDialog extends JDialog
         }
         catch (IOException e)
         {
+            JOptionPane.showMessageDialog(this,
+                                "An error occur while loading the file: " + e.getMessage(),
+                                "Error", JOptionPane.OK_OPTION);
             return false;
         }
         finally

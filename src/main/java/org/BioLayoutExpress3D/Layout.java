@@ -523,24 +523,27 @@ public final class Layout
         {
             if (DEBUG_BUILD) println("Error: JOCL library not installed or found!\n");
         }
-
-        if(initLeapJavaNativeLibraries())
-        {
-            if (DEBUG_BUILD) println("\nLeap Motion Java library working!\n");
-        }
-        else
-        {
-            if (DEBUG_BUILD) println("Error: Leap Motion Java library not installed or found!\n");
-        }
-
         
         if(initLeapNativeLibraries())
         {
-            if (DEBUG_BUILD) println("\nLeap Motion library working!\n");
+            if (DEBUG_BUILD) 
+                println("\nLeap Motion library working!\n");
         }
         else
         {
-            if (DEBUG_BUILD) println("Error: Leap Motion library not installed or found!\n");
+            if (DEBUG_BUILD) 
+                println("Error: Leap Motion library not installed or found!\n");
+        }
+
+        if(initLeapJavaNativeLibraries())
+        {
+            if (DEBUG_BUILD) 
+                println("\nLeap Motion Java library working!\n");
+        }
+        else
+        {
+            if (DEBUG_BUILD) 
+                println("Error: Leap Motion Java library not installed or found!\n");
         }
 
         if (DEBUG_BUILD)

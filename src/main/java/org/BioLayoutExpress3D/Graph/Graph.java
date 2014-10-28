@@ -1712,6 +1712,11 @@ public class Graph extends GLCanvas implements GraphInterface
                 //çlick the mouse at the cursor
                 if(robot != null)
                 {
+                    //ensure that point touch has been released prior to clicking
+                    robot.mouseRelease(KeyEvent.BUTTON1_MASK);
+                    robot.keyRelease(KeyEvent.VK_SHIFT);
+
+                    //click mouse
                     robot.mousePress(InputEvent.BUTTON1_MASK);
                     robot.mouseRelease(InputEvent.BUTTON1_MASK);
                     logger.finer("Mouse clicked by Robot");
@@ -1757,13 +1762,13 @@ public class Graph extends GLCanvas implements GraphInterface
                     {
                         robot.keyPress(KeyEvent.VK_SHIFT);
                         robot.mousePress(KeyEvent.BUTTON1_MASK);
-                        logger.info("Touch performed");
+                        logger.fine("Touch performed");
                     }       
                     else
                     {
                         robot.mouseRelease(KeyEvent.BUTTON1_MASK);
                         robot.keyRelease(KeyEvent.VK_SHIFT);
-                        logger.info("Touch released");
+                        logger.fine("Touch released");
                     }
                 }
                 else

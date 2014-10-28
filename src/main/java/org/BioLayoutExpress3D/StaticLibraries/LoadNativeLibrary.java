@@ -63,8 +63,6 @@ public final class LoadNativeLibrary
         {
             String extractedLibraryPath = extractNativeLibrary(libraryName);
             
-            //if 
-            
             if (extractedLibraryPath != null)
             {
                 logger.fine("Loading library: " + extractedLibraryPath);
@@ -90,8 +88,11 @@ public final class LoadNativeLibrary
     public static String extractNativeLibrary(String libraryName)
     {
         boolean[] OSSpecificType = checkRunningOSAndReturnOSSpecificType();
-        
-        String OSSpecificLibraryName = checkRunningOSAndReturnOSSpecificLibraryName(libraryName);
+        String OSSpecificLibraryName;
+        if(libraryName.contains("Leap")) //special case for Leap Motion libraries - use .dylib instead of .jnilib
+             OSSpecificLibraryName= checkRunningOSAndReturnOSSpecificLibraryName(libraryName, true);
+        else
+             OSSpecificLibraryName= checkRunningOSAndReturnOSSpecificLibraryName(libraryName, false);
 
         int OSSPecificPathIndex = 0;
         for (boolean position : OSSpecificType)
@@ -107,14 +108,7 @@ public final class LoadNativeLibrary
         String resourceName = EXTRACT_FROM_LIBRARIES_FILE_PATH +
                  EXTRACT_FROM_LIBRARIES_OS_SPECIFIC_PATH[OSSPecificPathIndex] +
                  OSSpecificLibraryName;
-        
-        //check .jnilib resource exists, if null replace with .dylib
-        if(OSSpecificLibraryName.endsWith(JNILIB) && LoadNativeLibrary.class.getResourceAsStream(resourceName) == null)
-        {
-            resourceName.replace(JNILIB, DYLIB);
-        }
-
-        logger.fine("Extracting resource: " + EXTRACT_TO_LIBRARIES_FILE_PATH + resourceName);
+        logger.info("Extracting resource: " + EXTRACT_TO_LIBRARIES_FILE_PATH + resourceName);
         return extractResource(resourceName, EXTRACT_TO_LIBRARIES_FILE_PATH);
     }
 
@@ -138,29 +132,51 @@ public final class LoadNativeLibrary
 
             File outFile = new File(outFileName);
 
+            //if outfile is DYLIB, delete any similarly-named JNILIB file hanging around from old builds to ensure it isn't loaded 
+            if(outFileName.endsWith(DYLIB))
+            {
+                String jnilibFileName = outFileName.replace(DYLIB, JNILIB);
+                File jnilibFile = new File(jnilibFileName);
+                if(jnilibFile.exists())
+                {
+                    jnilibFile.delete();
+                }
+            }
+            
             if (outFile.exists())
             {
-                byte[] inHash = Utils.hashStream(new BufferedInputStream(
-                        LoadNativeLibrary.class.getResourceAsStream(resourceName)));
-                FileInputStream fis = new FileInputStream(outFile);
-                byte[] outHash = Utils.hashStream(fis);
-
-                if (!Arrays.equals(inHash, outHash))
+                if(outFile.length() == 0) //clean up zero length files
                 {
                     if (DEBUG_BUILD)
                     {
-                        println(outFileName + " exists but has incorrect hash, deleting");
+                        println(outFileName + " exists but has zero length, deleting");
                     }
-                    fis.close();
                     outFile.delete();
                 }
                 else
                 {
-                    if (DEBUG_BUILD)
+                    byte[] inHash = Utils.hashStream(new BufferedInputStream(
+                            LoadNativeLibrary.class.getResourceAsStream(resourceName)));
+                    FileInputStream fis = new FileInputStream(outFile);
+                    byte[] outHash = Utils.hashStream(fis);
+
+                    if (!Arrays.equals(inHash, outHash))
                     {
-                        println(outFileName + " exists with correct hash");
+                        if (DEBUG_BUILD)
+                        {
+                            println(outFileName + " exists but has incorrect hash, deleting");
+                        }
+                        fis.close();
+                        outFile.delete();
                     }
-                }
+                    else
+                    {
+                        if (DEBUG_BUILD)
+                        {
+                            println(outFileName + " exists with correct hash");
+                        }
+                    }
+                }               
             }
 
             if (!outFile.exists())
@@ -229,7 +245,6 @@ public final class LoadNativeLibrary
             }
         }
         
-        logger.fine("Setting java.library.path: " + findJavaLibraryPath());
         System.setProperty("java.library.path", findJavaLibraryPath());
     }
 
@@ -291,8 +306,9 @@ public final class LoadNativeLibrary
     /**
     *  Checks the running OS and returns the OS specific library name.
     * @param libraryName - base name of library file
+    * @param dylib - use .dylib extension instead of .jnilib on Mac
     */
-    private static String checkRunningOSAndReturnOSSpecificLibraryName(String libraryName)
+    private static String checkRunningOSAndReturnOSSpecificLibraryName(String libraryName, boolean dylib)
     {
         String osName = System.getProperty("os.name");
         String OSSpecificLibraryName = "";
@@ -309,8 +325,12 @@ public final class LoadNativeLibrary
         else if (isLinux)
             OSSpecificLibraryName = "lib" + libraryName + ".so";
         else if (isMac)
-            OSSpecificLibraryName = "lib" + libraryName + JNILIB;
-
+        {
+            if(dylib)
+                OSSpecificLibraryName = "lib" + libraryName + DYLIB;
+            else
+                OSSpecificLibraryName = "lib" + libraryName + JNILIB;
+        }
         return OSSpecificLibraryName;
     }
 

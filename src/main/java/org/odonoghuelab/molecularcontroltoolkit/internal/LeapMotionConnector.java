@@ -88,15 +88,6 @@ public class LeapMotionConnector extends AbstractConnector {
                  */
                 Pointable.Zone lastTouchZone = Pointable.Zone.ZONE_NONE;
 		
-		/** constant for scaling pointing in the x axis */
-		public static final float X_SCALE = 150;
-
-		/** constant for scaling pointing in the y axis */
-		public static final float Y_SCALE = -400;
-		
-		/** constant for offsetting pointing in the y axis */
-		public static final float Y_OFFSET = 400;
-
 		/*
 		 * (non-Javadoc)
 		 * @see com.leapmotion.leap.Listener#onInit(com.leapmotion.leap.Controller)
@@ -112,7 +103,7 @@ public class LeapMotionConnector extends AbstractConnector {
 	    public void onConnect(Controller controller) {
 	        System.out.println("Connected");
 	        controller.enableGesture(Gesture.Type.TYPE_SCREEN_TAP);
-	        controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
+	        //controller.enableGesture(Gesture.Type.TYPE_KEY_TAP);
                 controller.enableGesture(Gesture.Type.TYPE_SWIPE);
                 controller.enableGesture(Gesture.Type.TYPE_CIRCLE);
                 
@@ -214,7 +205,7 @@ public class LeapMotionConnector extends AbstractConnector {
 				        	x = (x - lastX) * scale + lastX;
 				        	y = (y - lastY) * scale + lastY;
 			        	}
-
+                                        
                                         lastY = y;
 			        	lastX = x;
 			        	if (!Float.isNaN(x) && !Float.isNaN(y)) {
@@ -233,47 +224,35 @@ public class LeapMotionConnector extends AbstractConnector {
 		        GestureList gestures = frame.gestures();
                         if(gestures.count() > 0)
                         {
-                            logger.info(gestures.count() + " Gestures");
+                            logger.fine(gestures.count() + " Gestures");
                         }
 		        for (int i = 0; i < gestures.count(); i++) {
 		            Gesture gesture = gestures.get(i);
 	
 		            switch (gesture.type()) {
 		                case TYPE_SWIPE:
-                                        logger.info("Swipe Gesture");
+                                        logger.fine("Swipe Gesture");
 		                	getGestureDispatcher().reset();
 		                    break;
 		                case TYPE_SCREEN_TAP:
-                                        logger.info("Screen Tap Gesture");
+                                        logger.fine("Screen Tap Gesture");
                                         ScreenTapGesture stg = new ScreenTapGesture(gesture);
-                                        logger.info("ID: " + stg.id());
-                                        logger.info("Position: " + stg.position());
-                                        logger.info("State: " + stg.state());
-                                        logger.info("Direction: " + stg.direction());
-                                        
-                                        
+                                        logger.finer("ID: " + stg.id());
+                                        logger.finer("Position: " + stg.position());
+                                        logger.finer("State: " + stg.state());
+                                        logger.finer("Direction: " + stg.direction());
 		                	getGestureDispatcher().selectMouseCursor();
-                                        /*
-		                	Timer timer = new Timer();
-		                	// add a delay so the app can process the mouse clicks.
-					timer.schedule(new TimerTask() {
-								
-								@Override
-								public void run() {
-                                                                    getGestureDispatcher().zoomToSelection();
-								}
-							}, 200);
-                                        */
 		                    break;
 		                case TYPE_KEY_TAP:
-                                        logger.info("Key Tap Gesture");
-		                	getGestureDispatcher().zoomToSelection(); //previously zoomToSelection()
+                                        logger.fine("Key Tap Gesture");
+		                	//getGestureDispatcher().zoomToSelection(); //previously zoomToSelection()
 		                    break;
                                 case TYPE_CIRCLE:
-                                    logger.info("Circle Gesture");
+                                    logger.fine("Circle Gesture");
                                     CircleGesture cg = new CircleGesture(gesture);
-                                    logger.info(cg.toString());
-                                    logger.info("Radius: " + cg.radius());
+                                    logger.finer(cg.toString());
+                                    logger.finer("Radius: " + cg.radius());
+                                    getGestureDispatcher().reset();
                                     break;
 		                default:
 		                    logger.warning("Unknown gesture type.");

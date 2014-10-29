@@ -253,6 +253,21 @@ public abstract class NetworkContainer
         layoutProgressBarDialog.incrementProgress();
     }
 
+    public void updateEdges()
+    {
+        for (Vertex vertex : verticesMap.values())
+        {
+            for (Edge edge : vertex.getEdgeConnectionsMap().values())
+            {
+                edges.add(edge);
+            }
+        }
+
+        // Quick and dirty filter out non-unique edges
+        Set<Edge> edgesSet = new HashSet<Edge>(edges);
+        edges = new ArrayList<Edge>(edgesSet);
+    }
+
     public void clear()
     {
         verticesMap.clear();

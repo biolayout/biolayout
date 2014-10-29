@@ -98,6 +98,11 @@ public final class NetworkRootContainer extends NetworkContainer
             allVerticesCopy.removeAll(vertexDone);
         }
 
+        for (NetworkContainer nc : componentCollection)
+        {
+            nc.updateEdges();
+        }
+
         renumberVertices();
 
         layoutProgressBarDialog.endProgressBar();

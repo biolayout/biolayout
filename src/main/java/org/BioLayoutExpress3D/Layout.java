@@ -524,27 +524,36 @@ public final class Layout
             if (DEBUG_BUILD) println("Error: JOCL library not installed or found!\n");
         }
         
-        if(initLeapNativeLibraries())
+        try
         {
-            if (DEBUG_BUILD) 
-                println("\nLeap Motion library working!\n");
-        }
-        else
-        {
-            if (DEBUG_BUILD) 
-                println("Error: Leap Motion library not installed or found!\n");
-        }
+            if(initLeapNativeLibraries())
+            {
+                if (DEBUG_BUILD) 
+                    println("\nLeap Motion library working!\n");
 
-        if(initLeapJavaNativeLibraries())
-        {
-            if (DEBUG_BUILD) 
-                println("\nLeap Motion Java library working!\n");
+                if(initLeapJavaNativeLibraries())
+                {
+                    if (DEBUG_BUILD) 
+                        println("\nLeap Motion Java library working!\n");
+                }
+                else
+                {
+                    if (DEBUG_BUILD) 
+                        println("Error: Leap Motion Java library not installed or found!\n");
+                }
+            }
+            else
+            {
+                if (DEBUG_BUILD) 
+                    println("Error: Leap Motion library not installed or found!\n");
+            }
         }
-        else
-        {
-            if (DEBUG_BUILD) 
-                println("Error: Leap Motion Java library not installed or found!\n");
-        }
+       catch(UnsatisfiedLinkError e) //DLLs can't find system libraries - need to install from https://www.leapmotion.com/setup
+       {
+                if (DEBUG_BUILD) 
+                    println(e.getMessage());           
+       }
+
 
         if (DEBUG_BUILD)
         {

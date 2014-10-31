@@ -108,7 +108,7 @@ public final class LoadNativeLibrary
         String resourceName = EXTRACT_FROM_LIBRARIES_FILE_PATH +
                  EXTRACT_FROM_LIBRARIES_OS_SPECIFIC_PATH[OSSPecificPathIndex] +
                  OSSpecificLibraryName;
-        logger.info("Extracting resource: " + EXTRACT_TO_LIBRARIES_FILE_PATH + resourceName);
+        logger.fine("Extracting resource: " + EXTRACT_TO_LIBRARIES_FILE_PATH + resourceName);
         return extractResource(resourceName, EXTRACT_TO_LIBRARIES_FILE_PATH);
     }
 

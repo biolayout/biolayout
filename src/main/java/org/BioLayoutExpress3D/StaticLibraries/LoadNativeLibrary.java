@@ -80,6 +80,9 @@ public final class LoadNativeLibrary
         catch (UnsatisfiedLinkError ex)
         {
             if (DEBUG_BUILD) println("Problem with loading the native library:\n" + ex.getMessage());
+            
+            logger.warning("Problem with loading the native library: " + libraryName);
+            logger.warning(ex.getMessage());
         }
 
         return false;

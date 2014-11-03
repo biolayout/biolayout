@@ -45,7 +45,7 @@ public class LeapMotionConnector extends AbstractConnector {
 	 * Shutdown the interface
 	 */
 	public void shutdown() {
-        controller.removeListener(listener);
+            controller.removeListener(listener);
 	}
 	
 	/**
@@ -58,13 +58,13 @@ public class LeapMotionConnector extends AbstractConnector {
 			shutdown();
 		}
 		else {
-	        controller = new Controller();
+                    controller = new Controller();
 		}
 
 		listener = new LeapMotionListener();
 
-        // Have the sample listener receive events from the controller
-        controller.addListener(listener);
+                // Have the sample listener receive events from the controller
+                controller.addListener(listener);
 	}
 
 	/**

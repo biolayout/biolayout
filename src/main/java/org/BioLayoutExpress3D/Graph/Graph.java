@@ -1645,8 +1645,11 @@ public class Graph extends GLCanvas implements GraphInterface
         this.addMouseWheelListener(this);
         this.addGLEventListener(this);
 
-        //Initialize Leap Motion      
-    	molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
+        //Initialize Leap Motion but don't add LeapMotion Connector if native libraries not loaded
+        if(LEAP_NATIVE_LIBRARY_LOADED && LEAP_JAVA_NATIVE_LIBRARY_LOADED)
+        {
+            molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
+        }
     	molecularControlToolkit.setListeners(new MolecularControlListener() {
             private Robot robot;
 

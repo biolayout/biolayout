@@ -96,8 +96,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
     //search database
     private JButton searchDatabaseButton = null;
-    //private AbstractAction searchDatabaseAction = null;
-
+    
     // entropy table
     private ClassViewerTable entropyTable = null;
     private ClassViewerTableModelAnalysis entropyTableModel = null;
@@ -701,13 +700,11 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
         chooseColumnsToHideButton.setEnabled(false);
         chooseColumnsToHideButton.setToolTipText("Choose Columns To Hide");
 
-        /* want to add the same Action as the Import Network menu but if try
-        to add here causes NullPointerException as LayoutFrame not fully set up yet
-        so add Action later when button is enabled */
+        /* want to add the same Action as the Import Network menu but if we try
+        to add here causes NullPointerException as LayoutFrame is not fully set up yet
+        so add the Action later when button is enabled */
         searchDatabaseButton = new JButton();
-        searchDatabaseButton.setEnabled(false);
-        searchDatabaseButton.setText("Search Database");
-        searchDatabaseButton.setToolTipText("Search Online Database");
+        setUpSearchDatabaseButton(false); //set texts and disable
 
         // topPanel, north
         generalTopPanel.add( new JLabel("Class Set:") );
@@ -946,9 +943,7 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
                 //reuse the Action from the Import Network menu option
                 searchDatabaseButton.setAction(layoutFrame.getImportWebService().getImportWebServiceAction());
-                searchDatabaseButton.setText("Search Database"); //don't want to use same text as Action here
-                searchDatabaseButton.setToolTipText("Search Online Database");
-                searchDatabaseButton.setEnabled(enableHideColumnsAndExportButtons);
+                setUpSearchDatabaseButton(enableHideColumnsAndExportButtons); //set texts and enable
 
                 boolean enableDetailsForAllButton = (entropyTable.getRowCount() > 0);
                 detailsForAllButton.setEnabled(enableDetailsForAllButton);
@@ -1370,6 +1365,17 @@ public final class ClassViewerFrame extends JFrame implements ActionListener, Li
 
             populateClassViewer(false, true);
         }
+    }
+    
+    /**
+     * Sets text, tooltip text and enabled/disabled state of searchDatabaseButton
+     * @param enabled - true to enable, false to disable
+     */
+    private void setUpSearchDatabaseButton(boolean enabled)
+    {
+        searchDatabaseButton.setText("Search Pathway Commons");
+        searchDatabaseButton.setToolTipText("Search Pathway Commons for selected node names");
+        searchDatabaseButton.setEnabled(enabled);
     }
 
     public static class EntropyTableCellRenderer extends DefaultTableCellRenderer

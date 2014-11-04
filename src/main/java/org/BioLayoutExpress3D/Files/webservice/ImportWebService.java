@@ -46,7 +46,7 @@ public class ImportWebService {
  
     private void initComponents()
     {
-        importWebServiceAction = new AbstractAction("Network from Public Database...") //submenu item text
+        importWebServiceAction = new AbstractAction("Search Pathway Commons...") //submenu item text
         {
             @Override
             public void actionPerformed(ActionEvent action)

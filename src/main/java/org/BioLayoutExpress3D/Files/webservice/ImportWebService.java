@@ -53,7 +53,6 @@ public class ImportWebService {
             {
                 try
                 {
-                    logger.info("action performed: " + importWebServiceAction.toString());
                     if(importWebServiceDialog == null || !importWebServiceDialog.isVisible())
                     {
                         importWebServiceDialog = new ImportWebServiceDialog(layoutFrame, "Import Network", false);

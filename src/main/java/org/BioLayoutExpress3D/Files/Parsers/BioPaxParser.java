@@ -132,14 +132,20 @@ public final class BioPaxParser extends CoreParser
             int setIndex = 0; //loop counter
             for (Entity entity : modelEntitySet)
             {
-                logger.finer("Entity RDFId: " + entity.getRDFId());
-                logger.finer("Entity displayName: " + entity.getDisplayName());
-
-                String xrefs = Arrays.toString(entity.getXref().toArray());
-                logger.finer("Entity Xrefs: " + xrefs);
-
                 Vertex vertex;
-                String vertexName = "" + entity.getDisplayName(); //"null" if no displayName //TODO use XRefs?
+                
+                //Use BioPAX display name as vertex name. Alternatively use xrefs if null
+                String displayName = entity.getDisplayName();
+                String vertexName;
+                if(displayName != null && !displayName.isEmpty()) 
+                {
+                    vertexName = "" + entity.getDisplayName();
+                }
+                else //use xrefs converted to String
+                {
+                    vertexName = Arrays.toString(entity.getXref().toArray());
+                }
+                
                 vertex = new Vertex(vertexName, nc);
                 if (entity instanceof Interaction)
                 {
@@ -240,9 +246,6 @@ public final class BioPaxParser extends CoreParser
                 //TODO EntityReference?
 
                 Set<Interaction> interactionSet = entity.getParticipantOf();
-
-                //TEST
-                logger.fine("Entity " + entity.getRDFId() + " participates in " + interactionSet.size() + " Interactions");
                 if (interactionSet.size() > 0)
                 {
                     hasInteractionCount++;
@@ -255,7 +258,6 @@ public final class BioPaxParser extends CoreParser
             }
 
             //TODO check for entities with no edges - add self edge?
-
             logger.fine(hasInteractionCount + " Entities have Interactions");
 
             layoutProgressBarDialog.incrementProgress(++progressCounter);

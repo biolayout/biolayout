@@ -2789,14 +2789,14 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
      * @param dz - degrees of rotation around z vector
      * @param sensitivity - multiplier to increase or reduce angle of rotation (1.0f for default)
      */
-    public void rotate(int dx, int dy, int dz, float sensititivity)
+    @Override
+    public void rotate(int dx, int dy, int dz, float sensitivity)
     {
-        xRotate += dx * sensititivity;
-        yRotate += dy * sensititivity;
-        zRotate += dz * sensititivity;
+        xRotate += dx * sensitivity;
+        yRotate += dy * sensitivity;
+        zRotate += dz * sensitivity;
 
         isInMotion = true;
-        refreshDisplay();        
     }
 
     /**
@@ -2814,12 +2814,12 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
      * Zoom graph in or out according to relative zoom value (e.g. from Leap Motion device).
      * @param dz - relative zoom value (positive to zoom in, zero for no change, negative to zoom out)
      */
+    @Override
     public void scale(int dz, float scaleMultiplier)
     {
-        scaleValue += ( (scaleValue > 5.0f) ? ( dz  / 400.0f ) * (1.0f + scaleValue * scaleMultiplier)
-                            : ( dz  / 40.0f ) );
+        scaleValue += ( (scaleValue > 5.0f) ? ( dz  / 400.0f ) * (1.0f + scaleValue * scaleMultiplier) //normal zooming
+                            : ( dz  / 40.0f ) );                                                       //fine control at high zoom levels
         isInMotion = true;
-        refreshDisplay();
     }
     
  
@@ -2830,7 +2830,6 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     {
         translateDX += ( (startX - x) / FAR_DISTANCE ) * (1.0f + scaleValue);
         translateDY += ( (startY - y) / FAR_DISTANCE ) * (1.0f + scaleValue);
-
         isInMotion = true;
     }
     
@@ -2840,12 +2839,12 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
      * @param dy
      * @param scaleMultiplier - multiplier to increase or decrease default scale value
      */
+    @Override
     public void translate(int dx, int dy, float scaleMultiplier)
     {
         translateDX -= ( dx / FAR_DISTANCE ) * (1.0f + scaleValue * scaleMultiplier);
         translateDY -= ( dy / FAR_DISTANCE ) * (1.0f + scaleValue * scaleMultiplier);
         isInMotion = true;
-        refreshDisplay();
     }
 
     /**

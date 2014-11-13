@@ -142,6 +142,7 @@ public class LeapMotionConnector extends AbstractConnector {
 	        if (frame.hands().count() == 1 ) {
                         int extended = frame.fingers().extended().count();
                         logger.fine(extended + " extended fingers");
+
 	        	if (extended > 3 && lastFrame != null) { //4 or 5 fingers extended
 	        		// rotate
                                 lastY = -1;
@@ -159,7 +160,6 @@ public class LeapMotionConnector extends AbstractConnector {
     				float yRotation = hand.rotationAngle(lastFrame, new Vector(0,1,0));
     				float zRotation = hand.rotationAngle(lastFrame, new Vector(0,0,1));
     				getGestureDispatcher().triggerRotate((int) -(ROTATION_SCALE * xRotation), -(int) (ROTATION_SCALE * yRotation) , -(int)(ROTATION_SCALE * zRotation));
-
 	        	}
 	        	else if (extended > 0){ // 1 to 3 fingers extended
 		        	try {
@@ -220,39 +220,29 @@ public class LeapMotionConnector extends AbstractConnector {
                             lastY = -1;
                             lastX = -1;
 	        	}
-	
-		        GestureList gestures = frame.gestures();
-                        if(gestures.count() > 0)
-                        {
-                            logger.fine(gestures.count() + " Gestures");
-                        }
+
+                        GestureList gestures = frame.gestures();
 		        for (int i = 0; i < gestures.count(); i++) {
 		            Gesture gesture = gestures.get(i);
-	
-		            switch (gesture.type()) {
+		            switch (gesture.type()) 
+                            {
 		                case TYPE_SWIPE:
-                                        logger.fine("Swipe Gesture");
-		                	getGestureDispatcher().reset();
+                                    logger.fine("Swipe Gesture"); //not using this gesture at present - using Circle for reset instead
 		                    break;
 		                case TYPE_SCREEN_TAP:
-                                        logger.fine("Screen Tap Gesture");
-                                        ScreenTapGesture stg = new ScreenTapGesture(gesture);
-                                        logger.finer("ID: " + stg.id());
-                                        logger.finer("Position: " + stg.position());
-                                        logger.finer("State: " + stg.state());
-                                        logger.finer("Direction: " + stg.direction());
-		                	getGestureDispatcher().selectMouseCursor();
+                                    if(extended == 1)
+                                    {
+                                        getGestureDispatcher().selectMouseCursor();
+                                    }
 		                    break;
 		                case TYPE_KEY_TAP:
-                                        logger.fine("Key Tap Gesture");
-		                	//getGestureDispatcher().zoomToSelection(); //previously zoomToSelection()
+                                    logger.fine("Key Tap Gesture"); //not using this gesture at present
 		                    break;
                                 case TYPE_CIRCLE:
-                                    logger.fine("Circle Gesture");
-                                    CircleGesture cg = new CircleGesture(gesture);
-                                    logger.finer(cg.toString());
-                                    logger.finer("Radius: " + cg.radius());
-                                    getGestureDispatcher().reset();
+                                    if(extended < 4)
+                                    {
+                                        getGestureDispatcher().reset();
+                                    }
                                     break;
 		                default:
 		                    logger.warning("Unknown gesture type.");

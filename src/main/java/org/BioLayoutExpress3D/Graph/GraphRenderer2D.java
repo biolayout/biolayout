@@ -12,10 +12,10 @@ import javax.media.opengl.*;
 import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.GLPixelBuffer.GLPixelAttributes;
 import com.jogamp.opengl.util.texture.*;
-import com.jogamp.opengl.util.awt.ImageUtil;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 import static java.lang.Math.*;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import static javax.media.opengl.GL2.*;
 import org.BioLayoutExpress3D.CoreUI.*;
@@ -332,6 +332,13 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
     */
     private Graph graph = null;
 
+    /**
+     * Multiplier to adjust sensitivity of gesture control for the 2D interface.
+     */
+    public static final float SENSITIVITY_ADJUSTMENT = 0.5f;
+    
+    private static final Logger logger = Logger.getLogger(GraphRenderer2D.class.getName());
+    
     /**
     *  The GraphRenderer2D class constructor.
     */
@@ -2938,35 +2945,39 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
      * Zoom graph in or out according to relative zoom value (e.g. from Leap Motion device).
      * @param dz - relative zoom value (positive to zoom in, zero for no change, negative to zoom out)
      */
+    @Override
     public void scale(int dz, float scaleMultiplier)
     {
-        if (dz > 0)
-            scaleValue += DEFAULT_SCALE * (1.0f + scaleValue * scaleMultiplier);
-        else if (dz < 0) 
-            scaleValue -= DEFAULT_SCALE * (1.0f + scaleValue * scaleMultiplier);
-        if (!renderProfileMode || animationRender) refreshDisplay();
+        //dividing zoom value by higher values than in 3D interface to reduce zooming
+        //NB less zoom means a reduced scale value in 2D - other way round from 3D! Values much lower than 3D so taking 0.5f as cutoff for fine control
+        
+        scaleValue -= ( (scaleValue < 0.5f) ? ( dz  / 400.0f ) * (1.0f + scaleValue * scaleMultiplier * SENSITIVITY_ADJUSTMENT) //less zooming at higher scales for fine control
+                            : ( dz  / 40.0f ) );
     }
     
-    //TODO
     /**
-     * Rotate graph.
-     * @param dx
-     * @param dy
-     * @param dz 
+     * Rotate graph. Rotates graph left or right when hand pronated or supinated.
+     * Rotates graph using movement around Z axis only. Ignores X and Y values.
+     * @param dx - degrees of rotation around x vector
+     * @param dy - degrees of rotation around y vector
+     * @param dz - degrees of rotation around z vector
      */
+    @Override
     public void rotate(int dx, int dy, int dz, float sensitivity)
     {
+        rotateValue += dz * sensitivity * SENSITIVITY_ADJUSTMENT;
     }
     
-    //TODO
     /**
      * Reposition graph.
      * @param dx
      * @param dy 
      */
-    public void translate(int dx, int dy, float scaleAdjust)
+    @Override
+    public void translate(int dx, int dy, float sensitivity)
     {
-        
+        translateXValue += dx / (1.0f + scaleValue * sensitivity);
+        translateYValue += dy / (1.0f + scaleValue * sensitivity);
     }
 
     /**
@@ -3493,17 +3504,23 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
         float factor = scaleType.equals(ScaleTypes.SCALE_IN) ? SCALE_FACTOR : 1.0f / SCALE_FACTOR;
         if (factor > 1.0f)
         {
-            if (scaleValue == 0.0f) scaleValue = 0.002f;
+            if (scaleValue == 0.0f) 
+                scaleValue = 0.002f;
+            
             factor *= MORE_RESCALE_FACTOR;
         }
         else
         {
-            if (scaleValue == 0.0f) scaleValue = -0.002f;
+            if (scaleValue == 0.0f) 
+                scaleValue = -0.002f;
+            
             factor /= MORE_RESCALE_FACTOR;
         }
 
         scaleValue = (scaleValue > 0.0f) ? (scaleValue * factor) : (scaleValue / factor);
-        if (scaleValue >= -0.002f && scaleValue <= 0.002f) scaleValue = 0.0f;
+        
+        if (scaleValue >= -0.002f && scaleValue <= 0.002f) 
+            scaleValue = 0.0f;
 
         refreshDisplay();
 

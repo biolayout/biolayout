@@ -1649,6 +1649,7 @@ public class Graph extends GLCanvas implements GraphInterface
         if(LEAP_NATIVE_LIBRARY_LOADED && LEAP_JAVA_NATIVE_LIBRARY_LOADED)
         {
             molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
+            //TODO add Kinect Connector
         }
     	molecularControlToolkit.setListeners(new MolecularControlListener() {
             private Robot robot;
@@ -1674,23 +1675,26 @@ public class Graph extends GLCanvas implements GraphInterface
             @Override
             public void triggerZoom(int dz) 
             {
-                logger.fine("Trigger zoom: " + dz);
-                scale(dz, 3.3f); //adjust scaling to increase sensitivity
+                logger.finer("Trigger zoom: " + dz);
+                scale(dz, 1.25f); //adjust scaling to increase sensitivity
+                refreshDisplay();
             }
 
             @Override
             public void triggerRotate(int dx, int dy, int dz) 
             {
-                logger.fine("Trigger rotate: " + dx +", " + dy + ", " + dz);               
+                logger.finer("Trigger rotate: " + dx +", " + dy + ", " + dz);               
                 //NB rotation axes and directions are different in hand movements and camera eye - need to swap x/y and reverse signs                
                 rotate(-dy, dx, -dz, 1.0f/8.0f);
+                refreshDisplay();
             }
 
             @Override
             public void triggerPan(int dx, int dy) 
             {
-                logger.fine("Trigger pan: " + dx +", " + dy);
-                translate(dx, dy, 3.3f); //adjust scaling to increase sensitivity
+                logger.finer("Trigger pan: " + dx +", " + dy);
+                translate(dx, dy, 1.0f); //adjust scaling to increase sensitivity
+                refreshDisplay();
             }
 
             
@@ -1698,11 +1702,12 @@ public class Graph extends GLCanvas implements GraphInterface
             public void zoomToSelection() 
             {
                 logger.fine("Zoom to selection");
-                    // TODO Auto-generated method stub
+                    // Not implemented
             }
 
             @Override
-            public void reset() {
+            public void reset() 
+            {
                 logger.fine("Reset");
                 resetAllValues();
             }
@@ -1710,7 +1715,7 @@ public class Graph extends GLCanvas implements GraphInterface
             @Override
             public void selectMouseCursor() 
             {
-                logger.fine("Select mouse cursor");
+                logger.finer("Select mouse cursor");
                 
                 //çlick the mouse at the cursor
                 if(robot != null)
@@ -1722,7 +1727,6 @@ public class Graph extends GLCanvas implements GraphInterface
                     //click mouse
                     robot.mousePress(InputEvent.BUTTON1_MASK);
                     robot.mouseRelease(InputEvent.BUTTON1_MASK);
-                    logger.finer("Mouse clicked by Robot");
                 }
                 else
                 {
@@ -1734,8 +1738,6 @@ public class Graph extends GLCanvas implements GraphInterface
             @Override
             public void point(float arg0, float arg1) 
             {
-                logger.fine("Point" + arg0 +", " + arg1);
-                
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 double windowWidth = screenSize.getWidth();
                 double windowHeight = screenSize.getHeight();
@@ -1747,7 +1749,6 @@ public class Graph extends GLCanvas implements GraphInterface
                 if(robot != null)
                 {
                     robot.mouseMove(xPoint, yPoint);
-                    logger.finer("Moved mouse to xy: " + xPoint + " ," + yPoint);
                 }
                 else
                 {

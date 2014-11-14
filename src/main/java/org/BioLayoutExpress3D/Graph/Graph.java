@@ -8,15 +8,14 @@ import java.io.*;
 import java.net.*;
 import java.nio.*;
 import java.util.*;
-import java.util.concurrent.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 import javax.media.opengl.*;
-import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.awt.TextRenderer;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.awt.ImageUtil;
+import java.util.logging.Logger;
 import org.BioLayoutExpress3D.Utils.Path;
 import javax.media.opengl.awt.GLCanvas;
 import static javax.media.opengl.GL2.*;
@@ -39,6 +38,9 @@ import static org.BioLayoutExpress3D.Textures.DrawTextureSFXs.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.odonoghuelab.molecularcontroltoolkit.ConnectorType;
+import org.odonoghuelab.molecularcontroltoolkit.MolecularControlListener;
+import org.odonoghuelab.molecularcontroltoolkit.MolecularControlToolkit;
 
 /**
 *
@@ -181,6 +183,9 @@ public class Graph extends GLCanvas implements GraphInterface
     */
     private boolean reInitializeRendererMode = false;
 
+    private static final Logger logger = Logger.getLogger(Graph.class.getName());
+    private MolecularControlToolkit molecularControlToolkit;
+ 
     /**
     *  The Graph class constructor.
     */
@@ -204,6 +209,8 @@ public class Graph extends GLCanvas implements GraphInterface
         graphRendererActions = new GraphRendererActions(this);
 
         createImageToFileChooser();
+        
+        molecularControlToolkit = new MolecularControlToolkit();
     }
 
     /**
@@ -1627,7 +1634,7 @@ public class Graph extends GLCanvas implements GraphInterface
     }
 
     /**
-    *  Adds all events to this Graph.
+    *  Adds all event listeners to this Graph. 
     */
     @Override
     public void addAllEvents()
@@ -1637,6 +1644,200 @@ public class Graph extends GLCanvas implements GraphInterface
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
         this.addGLEventListener(this);
+
+        //Initialize Leap Motion but don't add LeapMotion Connector if native libraries not loaded
+        if(LEAP_NATIVE_LIBRARY_LOADED && LEAP_JAVA_NATIVE_LIBRARY_LOADED)
+        {
+            molecularControlToolkit.addConnector(ConnectorType.LeapMotion);
+            //TODO add Kinect Connector
+        }
+    	molecularControlToolkit.setListeners(new MolecularControlListener() {
+            private Robot robot;
+
+            //initialisation block
+            {
+                try
+                {
+                    robot = new Robot();
+                }               
+                catch (AWTException e) {
+                    logger.warning("Can't create Robot");
+                }
+            }
+            
+            /************** gesture commands *****************/
+			
+            /** 
+             * Zoom action has been performed
+             * @param zoom relative amount to zoom
+             */
+            
+            @Override
+            public void triggerZoom(int dz) 
+            {
+                logger.finer("Trigger zoom: " + dz);
+                scale(dz, 1.25f); //adjust scaling to increase sensitivity
+                refreshDisplay();
+            }
+
+            @Override
+            public void triggerRotate(int dx, int dy, int dz) 
+            {
+                logger.finer("Trigger rotate: " + dx +", " + dy + ", " + dz);               
+                //NB rotation axes and directions are different in hand movements and camera eye - need to swap x/y and reverse signs                
+                rotate(-dy, dx, -dz, 1.0f/8.0f);
+                refreshDisplay();
+            }
+
+            @Override
+            public void triggerPan(int dx, int dy) 
+            {
+                logger.finer("Trigger pan: " + dx +", " + dy);
+                translate(dx, dy, 1.0f); //adjust scaling to increase sensitivity
+                refreshDisplay();
+            }
+
+            
+            @Override
+            public void zoomToSelection() 
+            {
+                logger.fine("Zoom to selection");
+                    // Not implemented
+            }
+
+            @Override
+            public void reset() 
+            {
+                logger.fine("Reset");
+                resetAllValues();
+            }
+
+            @Override
+            public void selectMouseCursor() 
+            {
+                logger.finer("Select mouse cursor");
+                
+                //çlick the mouse at the cursor
+                if(robot != null)
+                {
+                    //ensure that point touch has been released prior to clicking
+                    robot.mouseRelease(KeyEvent.BUTTON1_MASK);
+                    robot.keyRelease(KeyEvent.VK_SHIFT);
+
+                    //click mouse
+                    robot.mousePress(InputEvent.BUTTON1_MASK);
+                    robot.mouseRelease(InputEvent.BUTTON1_MASK);
+                }
+                else
+                {
+                    logger.warning("Robot is null - can't click mouse");
+                }
+
+            }
+
+            @Override
+            public void point(float arg0, float arg1) 
+            {
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                double windowWidth = screenSize.getWidth();
+                double windowHeight = screenSize.getHeight();
+                
+                int xPoint = (int)java.lang.Math.round(windowWidth * arg0);
+                int yPoint = (int)java.lang.Math.round(windowHeight - (windowHeight * arg1));
+                
+                // Move the cursor
+                if(robot != null)
+                {
+                    robot.mouseMove(xPoint, yPoint);
+                }
+                else
+                {
+                    logger.warning("Robot is null - can't point mouse");
+                }
+            }
+            
+            @Override
+            public void touch(boolean touching)
+            {
+                //Simulate shift-click
+                if(robot != null)
+                {
+                    if(touching)
+                    {
+                        robot.keyPress(KeyEvent.VK_SHIFT);
+                        robot.mousePress(KeyEvent.BUTTON1_MASK);
+                        logger.fine("Touch performed");
+                    }       
+                    else
+                    {
+                        robot.mouseRelease(KeyEvent.BUTTON1_MASK);
+                        robot.keyRelease(KeyEvent.VK_SHIFT);
+                        logger.fine("Touch released");
+                    }
+                }
+                else
+                {
+                    logger.warning("Robot is null - can't point mouse");
+                }
+            }
+
+            /******** speech commands**************/
+            
+            @Override
+            public void triggerSpeech(int arg0) 
+            {
+                logger.fine("Trigger speech");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void spin(boolean arg0) 
+            {
+                logger.fine("Spin");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void selectAll() 
+            {
+                logger.fine("Select all");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void select(String arg0) 
+            {
+                logger.fine("Select");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void search(char arg0) 
+            {
+                logger.fine("Search");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void paste() {
+                logger.fine("Paste");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void copy() {
+                logger.fine("Copy");
+                    // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void color(String arg0) 
+            {
+                logger.fine("Color");
+                    // TODO Auto-generated method stub
+            }
+        });
+        molecularControlToolkit.initialise();
 
         currentGraphRenderer.addAllEvents();
     }
@@ -1964,4 +2165,31 @@ public class Graph extends GLCanvas implements GraphInterface
       //FIXME this was added during the move to JOGL 2
       //TODO check if resources need to be freed here
     }
+    
+    @Override
+    public void scale(int dz, float scaleMultiplier)
+    {
+        currentGraphRenderer.scale(dz, scaleMultiplier);
+    }
+    /**
+     * Rotate graph.
+     * @param dx
+     * @param dy
+     * @param dz 
+     * @param sensitivity
+     */
+    public void rotate(int dx, int dy, int dz, float sensitivity)
+    {
+        currentGraphRenderer.rotate(dx, dy, dz, sensitivity);
+    }    
+
+    /**
+     * Reposition graph.
+     * @param dx
+     * @param dy
+     */
+    public void translate(int dx, int dy, float scaleAdjust)
+    {
+        currentGraphRenderer.translate(dx, dy, scaleAdjust);
+    }    
 }

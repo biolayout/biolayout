@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import javax.swing.*;
 import java.text.SimpleDateFormat;
+import java.util.logging.Logger;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.DebugConsole.*;
 import org.BioLayoutExpress3D.StaticLibraries.*;
@@ -45,6 +46,7 @@ import org.BioLayoutExpress3D.Utils.ThreadExceptionHandler;
 
 public final class Layout
 {
+    private static final Logger logger = Logger.getLogger(Layout.class.getName());
 
     /**
     *  Constructor of the Layout class.
@@ -353,7 +355,43 @@ public final class Layout
 
         return true;
     }
+    
+    /**
+     * Initializes Leap Motion native libraries. 
+     * @return true if initialized successfully, otherwise false
+     */
+    private static boolean initLeapJavaNativeLibraries()
+    {
+        if ( !LoadNativeLibrary.loadNativeLibrary("LeapJava") )
+        {
+            logger.warning("Error: Leap Motion Java library not installed or found!");
+            return false;
+        }
+        
+        logger.fine("Leap Motion Java library working!");
+        LoadNativeLibrary.setJavaLibraryPath();
+        LEAP_JAVA_NATIVE_LIBRARY_LOADED = true;
+        return true;
+    }
+    
+    /**
+     * Initializes  Leap Motion native libraries. 
+     * @return true if initialized successfully, otherwise false
+     */
+    private static boolean initLeapNativeLibraries()
+    {
+        if ( !LoadNativeLibrary.loadNativeLibrary("Leap") )
+        {
+            logger.warning("Error: Leap Motion library not installed or found!");
+            return false;
+        }
 
+        logger.fine("Leap Motion library working!");        
+        LoadNativeLibrary.setJavaLibraryPath();
+        LEAP_NATIVE_LIBRARY_LOADED = true;
+        return true;
+    }
+    
     /**
     *  The void main entry point of the BioLayoutExpress3D framework.
     */
@@ -492,8 +530,40 @@ public final class Layout
         }
         else
         {
-            if (DEBUG_BUILD) println("Error: JOCL Library not installed or found!\n");
+            if (DEBUG_BUILD) println("Error: JOCL library not installed or found!\n");
         }
+        
+        try
+        {
+            if(initLeapNativeLibraries())
+            {
+                if (DEBUG_BUILD) 
+                    println("\nLeap Motion library working!\n");                
+
+                if(initLeapJavaNativeLibraries())
+                {
+                    if (DEBUG_BUILD) 
+                        println("\nLeap Motion Java library working!\n");
+                }
+                else
+                {
+                    if (DEBUG_BUILD) 
+                        println("Error: Leap Motion Java library not installed or found!\n");
+                }
+            }
+            else
+            {
+                if (DEBUG_BUILD) 
+                    println("Error: Leap Motion library not installed or found!\n");
+                
+            }
+        }
+       catch(UnsatisfiedLinkError e) //DLLs can't find system libraries - need to install from https://www.leapmotion.com/setup
+       {
+            if (DEBUG_BUILD) 
+                println(e.getMessage());           
+       }
+
 
         if (DEBUG_BUILD)
         {

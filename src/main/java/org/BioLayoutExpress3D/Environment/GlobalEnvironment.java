@@ -497,6 +497,9 @@ public final class GlobalEnvironment
                                                        "Cancer research needs your help."
                                                    };
 
+    public static boolean LEAP_NATIVE_LIBRARY_LOADED = false;
+    public static boolean LEAP_JAVA_NATIVE_LIBRARY_LOADED = false;
+    
     static
     {
         ShaderLightingSFXs.ShaderTypes[] allShaderTypes = ShaderLightingSFXs.ShaderTypes.values();

@@ -24,7 +24,8 @@
         <jogampVersion>2.1.5-01</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
         <sbgnVersion>milestone2</sbgnVersion>
-
+        <leapSDKVersion>2.1.1+21671</leapSDKVersion>
+        
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <generated.sources.dir>${project.build.directory}/generated-sources/java</generated.sources.dir>
@@ -139,6 +140,12 @@
             <artifactId>antlr4-maven-plugin</artifactId>
             <version>4.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.leapmotion</groupId>
+            <artifactId>LeapJava</artifactId>
+            <version>${leapSDKVersion}</version>
+        </dependency>                   
     </dependencies>
 
     <repositories>

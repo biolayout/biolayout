@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.*;
 import java.awt.image.*;
-import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 import static java.lang.Math.*;
@@ -13,9 +12,8 @@ import javax.media.opengl.*;
 import com.jogamp.opengl.util.*;
 import com.jogamp.opengl.util.texture.*;
 import com.jogamp.common.nio.Buffers;
-import com.jogamp.opengl.util.gl2.GLUT;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
-import com.jogamp.opengl.util.awt.ImageUtil;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import static javax.media.opengl.GL2.*;
 import org.BioLayoutExpress3D.CoreUI.*;
@@ -42,7 +40,6 @@ import static org.BioLayoutExpress3D.Models.Lathe3D.Lathe3DShapeAngleIncrements.
 import static org.BioLayoutExpress3D.Models.ModelRenderingStates.*;
 import static org.BioLayoutExpress3D.Network.GraphmlNetworkmEPN3DShapesDefinitions.*;
 import static org.BioLayoutExpress3D.StaticLibraries.EnumUtils.*;
-import static org.BioLayoutExpress3D.StaticLibraries.ImageProducer.*;
 import static org.BioLayoutExpress3D.Environment.AnimationEnvironment.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.Shapes3D.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
@@ -81,6 +78,8 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     // Rotation / Depth related variables
     private float xRotate = 0.0f;
     private float yRotate = 0.0f;
+    private float zRotate = 0.0f;
+
     private float scaleValue = DEFAULT_SCALE;
     private float translateDX = 0.0f;
     private float translateDY = 0.0f;
@@ -119,6 +118,8 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     private ModelShape geneShape = null;
     private ModelShape objModelLoaderShape = null;
     private Graph graph = null;
+
+    private static final Logger logger = Logger.getLogger(GraphRenderer3D.class.getName());
 
     /**
     *  The GraphRenderer3D class constructor.
@@ -376,7 +377,8 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
         FOCUS_POSITION_3D.setLocation(0.0f, 0.0f, 0.0f);
         xRotate = 0.0f;
         yRotate = 0.0f;
-    }
+        zRotate = 0.0f;
+}
 
     /**
     *  Prepares the lighting.
@@ -2782,6 +2784,23 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     }
 
     /**
+     * Rotate around the x, y and z vectors
+     * @param dx - degrees of rotation around x vector
+     * @param dy - degrees of rotation around y vector
+     * @param dz - degrees of rotation around z vector
+     * @param sensitivity - multiplier to increase or reduce angle of rotation (1.0f for default)
+     */
+    @Override
+    public void rotate(int dx, int dy, int dz, float sensitivity)
+    {
+        xRotate += dx * sensitivity;
+        yRotate += dy * sensitivity;
+        zRotate += dz * sensitivity;
+
+        isInMotion = true;
+    }
+
+    /**
     *  Scales the current view.
     */
     private void scale(int startX, int startY, int x, int y)
@@ -2791,7 +2810,19 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
         isInMotion = true;
     }
-
+    
+    /**
+     * Zoom graph in or out according to relative zoom value (e.g. from Leap Motion device).
+     * @param dz - relative zoom value (positive to zoom in, zero for no change, negative to zoom out)
+     */
+    @Override
+    public void scale(int dz, float scaleMultiplier)
+    {
+        scaleValue += ( (scaleValue > 5.0f) ? ( dz  / 400.0f ) * (1.0f + scaleValue * scaleMultiplier) //normal zooming
+                            : ( dz  / 40.0f ) );                                                       //fine control at high zoom levels
+        isInMotion = true;
+    }
+    
     /**
     *  Translates the current view.
     */
@@ -2799,7 +2830,20 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
     {
         translateDX += ( (startX - x) / FAR_DISTANCE ) * (1.0f + scaleValue);
         translateDY += ( (startY - y) / FAR_DISTANCE ) * (1.0f + scaleValue);
-
+        isInMotion = true;
+    }
+    
+    /**
+     * 
+     * @param dx
+     * @param dy
+     * @param scaleMultiplier - multiplier to increase or decrease default scale value
+     */
+    @Override
+    public void translate(int dx, int dy, float scaleMultiplier)
+    {
+        translateDX -= ( dx / FAR_DISTANCE ) * (1.0f + scaleValue * scaleMultiplier);
+        translateDY -= ( dy / FAR_DISTANCE ) * (1.0f + scaleValue * scaleMultiplier);
         isInMotion = true;
     }
 
@@ -3447,7 +3491,7 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
         CENTER_VIEW_CAMERA.setCamera(gl, translateDX, translateDY, scaleValue,
-                xRotate, yRotate, 0.0f, FOCUS_POSITION_3D, true);
+                xRotate, yRotate, zRotate, FOCUS_POSITION_3D, true);
     }
 
     /**
@@ -3671,41 +3715,8 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
         {
             if (DEBUG_BUILD) println("GraphRenderer3D draw: delete all display lists & destroy all textures");
 
-            /*
-            if (USE_SHADERS_PROCESS)
-            {
-                // don't destroy them, keep it for faster renderer mode switching
-                shaderLightingSFXsNodes.destructor(gl);
-                if (USE_GL_ARB_GEOMETRY_SHADER4)
-                {
-                    shaderLightingSFXsSelectedNodes.destructor(gl);
-                    shaderLightingSFXsSelectedNodesNormalsGeometry.destructor(gl);
-                }
-                if (USE_400_SHADERS_PROCESS)
-                {
-                    shaderLODSFXsNodes.destructor(gl);
-                    if (USE_GL_ARB_GEOMETRY_SHADER4)
-                    {
-                        shaderLODSFXsSelectedNodes.destructor(gl);
-                        shaderLODSFXsSelectedNodesNormalsGeometry.destructor(gl);
-                    }
-                }
-                if (USE_400_SHADERS_PROCESS)
-                   shaderLinesSFXs.destructor(gl);
-            }
-            */
             deleteAllDisplayLists(gl);
             disposeAllTextures(gl);
-
-            /*
-            if (USE_VERTEX_ARRAYS_FOR_OPENGL_RENDERER)
-            {
-                // de-initialize OpenGL Vertex Arrays support
-                gl.glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-                gl.glDisableClientState(GL_NORMAL_ARRAY);
-                gl.glDisableClientState(GL_VERTEX_ARRAY);
-            }
-            */
 
             pickOneNode = false;
             animationFrameCount = 0;
@@ -3727,20 +3738,20 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
             if ( !ANAGLYPH_STEREOSCOPIC_3D_VIEW.get() )
             {
-                CENTER_VIEW_CAMERA.setCamera(gl, translateDX, translateDY, scaleValue, xRotate, yRotate, 0.0f, FOCUS_POSITION_3D, true);
+                CENTER_VIEW_CAMERA.setCamera(gl, translateDX, translateDY, scaleValue, xRotate, yRotate, zRotate, FOCUS_POSITION_3D, true);
                 renderScene3D(gl, true);
             }
             else
             {
                 graph.chooseAnaglyphGlassesColorMask(gl, true);
-                LEFT_EYE_CAMERA.setProjectionAndCamera(gl, translateDX, translateDY, scaleValue, xRotate, yRotate, 0.0f, FOCUS_POSITION_3D, true);
+                LEFT_EYE_CAMERA.setProjectionAndCamera(gl, translateDX, translateDY, scaleValue, xRotate, yRotate, zRotate, FOCUS_POSITION_3D, true);
                 renderScene3D(gl, true);
 
                 // reset the left eye transformations to continue with the right eye
                 gl.glLoadIdentity();
 
                 graph.chooseAnaglyphGlassesColorMask(gl, false);
-                RIGHT_EYE_CAMERA.setProjectionAndCamera(gl, translateDX, translateDY, scaleValue, xRotate, yRotate, 0.0f, FOCUS_POSITION_3D, true);
+                RIGHT_EYE_CAMERA.setProjectionAndCamera(gl, translateDX, translateDY, scaleValue, xRotate, yRotate, zRotate, FOCUS_POSITION_3D, true);
                 renderScene3D(gl, true);
 
                 gl.glColorMask(true, true, true, true); // reset color mask so as to clear screen properly

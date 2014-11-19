@@ -688,7 +688,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             interactionsHTML = "<b>Interactions: </b>";
             if(interactionCount != null)
             {
-                logger.info("Interaction count found: " + interactionCount);
+                logger.fine("Interaction count found: " + interactionCount);
                 interactionsHTML += interactionCount;
             }
             else //interactions have not been previously counted - do traverse searchQuery
@@ -774,7 +774,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
 
         for (TraverseEntry traverseEntry : traverseEntryList) 
         {
-            logger.info(traverseEntry.getUri());
             List<String> traverseEntryValues = traverseEntry.getValue();
             uniqueUriSet.addAll(traverseEntryValues);
         }
@@ -1161,7 +1160,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
 
             //create file and save web service data
             File importFile = new File(importDir, fName);
-            logger.info("Writing to file " + importFile);
+            logger.fine("Writing to file " + importFile);
             FileUtils.writeStringToFile(importFile, responseString); //throws IOException
             statusLabel.setText("Success! Downloaded file: " + fName);      
             return importFile;
@@ -1183,7 +1182,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                 File importFile = get(); //perform Pathway Commons GET in the background
 
                 //parse and display file
-                logger.info("Opening file: " + importFile);
+                logger.fine("Opening file: " + importFile);
                 frame.requestFocus();
                 frame.toFront();                        
                 frame.loadDataSet(importFile);
@@ -1249,7 +1248,11 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     {
         stopButton.setEnabled(false);
         
-        if(table.getSelectedRow() != -1) //a row is selected
+        if(table.getSelectedRow() == -1) //a row is selected
+        {
+            openButton.setEnabled(false);
+        }
+        else
         {
             openButton.setEnabled(true);
         }
@@ -1642,7 +1645,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                     }
                     stopButton.setEnabled(false);
                     advancedStopButton.setEnabled(false);
-                    logger.info("search SwingWorker cancel returned " + cancelled);
+                    logger.fine("search SwingWorker cancel returned " + cancelled);
                 }
                 catch(CancellationException exception)
                 {
@@ -1667,7 +1670,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                     }
                     stopButton.setEnabled(false);
                     advancedStopButton.setEnabled(false);
-                    logger.info("Download SwingWorker cancel returned " + cancelled);
+                    logger.fine("Download SwingWorker cancel returned " + cancelled);
                 }
                 catch(CancellationException exception)
                 {
@@ -1682,14 +1685,14 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             if(searchWorker != null && !searchWorker.isDone()) //stop search process before closing
             {
                 boolean cancelled = searchWorker.cancel(true);
-                logger.info("search SwingWorker cancel returned " + cancelled);
+                logger.fine("search SwingWorker cancel returned " + cancelled);
             }
             
             //stop GET threads
             if(getWorker != null && !getWorker.isDone())
             {
                 boolean cancelled = getWorker.cancel(true);
-                logger.info("GET SwingWorker cancel returned " + cancelled);
+                logger.fine("GET SwingWorker cancel returned " + cancelled);
             }
             
             this.dispose(); //destroy the dialog to free up resources
@@ -1811,13 +1814,13 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
          
         //set comma-separated String of organism IDs as search parameter
         String eFetchQuery = commaJoiner.join(this.organismIdNameMap.keySet());
-        logger.info("eFetchQuery: " + eFetchQuery);
+        logger.fine("eFetchQuery: " + eFetchQuery);
         requ.setId(eFetchQuery);
         
         try
         {
             EFetchResult resp = serviceSoap.runEFetch(requ);
-            logger.info("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
+            logger.fine("EFetchResult: " + resp.getTaxaSet().getTaxon().size() + " Taxa");
             List<TaxonType> taxon = resp.getTaxaSet().getTaxon();
             for(TaxonType taxonType : taxon)
             {

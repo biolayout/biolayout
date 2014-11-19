@@ -71,6 +71,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -104,7 +105,7 @@ import org.springframework.web.client.HttpClientErrorException;
  * Dialogue for searchQuerying remote databases via web service
  * @author Derek Wright
  */
-public class ImportWebServiceDialog extends JDialog implements ActionListener{
+public class ImportWebServiceDialog extends JFrame implements ActionListener{
     private static final Logger logger = Logger.getLogger(ImportWebServiceDialog.class.getName());
 
     //web service command parameters
@@ -122,44 +123,50 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public static final String COMMAND_SEARCH = "search";
     public static final String COMMAND_GET = "get";
     
-    //timeouts for web service operations in seconds
+    /**
+     * Timeout for web service search operation in seconds
+     */
     public static final int TIMEOUT_SEARCH = 30;
+
+    /**
+     * Timeout for web service get operation in seconds
+     */
     public static final int TIMEOUT_GET = 60;
     
     /**
      * Preferred width in pixels.
      */
-    public static final int WIDTH = 888;
+    public static final int DIALOG_WIDTH = 888;
     
     public static final String BIOPAX_FILE_EXTENSION = ".owl";
     
-    private JButton searchButton, cancelButton,nextButton, previousButton, stopButton, openButton;
-    private JButton advancedExecuteButton, advancedStopButton, advancedCancelButton, advancedRemoveButton, advancedClearButton;
-    private JTextField searchField, organismField;
-    private JComboBox<String> networkTypeCombo;
-    private LayoutFrame frame;
+    private JButton nextButton, previousButton;
+    private final JButton searchButton, cancelButton, stopButton, openButton;
+    private final JButton advancedExecuteButton, advancedStopButton, advancedCancelButton, advancedRemoveButton, advancedClearButton;
+    private final JTextField searchField, organismField;
+    private final JComboBox<String> networkTypeCombo;
+    private final LayoutFrame frame;
     private JLabel numHitsLabel, retrievedLabel, pagesLabel, statusLabel;
-    private JCheckBox anyOrganismCheckBox, allDatasourceCheckBox, nameCheckBox;
-    private Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
-    private Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
+    private final JCheckBox anyOrganismCheckBox, allDatasourceCheckBox, nameCheckBox;
+    private final Cursor waitCursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
+    private final Cursor defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     
-    private JEditorPane editorPane;
-    //private JEditorPane advancedEditorPane;
+    private final JEditorPane editorPane;
     private JTable table; //search results table
     private JTable advancedTable;
-    private DefaultTableModel model; 
+    private final DefaultTableModel model; 
     private DefaultTableModel advancedModel; 
-    private JTabbedPane tabbedPane;
+    private final JTabbedPane tabbedPane;
     
     private JRadioButton getRadio = new JRadioButton("Get", true); //default option
     private JRadioButton nearestNeighborhoodRadio = new JRadioButton("Nearest Neighborhood");
     private JRadioButton commonStreamRadio = new JRadioButton("Common Stream");
     private JRadioButton pathsBetweenRadio = new JRadioButton("Paths Between");
-    private JRadioButton pathsFromToRadio = new JRadioButton("Paths From To");
+    private final JRadioButton pathsFromToRadio = new JRadioButton("Paths From To");
         
-    private JRadioButton downstreamRadio  = new JRadioButton("Downstream");
-    private JRadioButton upstreamRadio = new JRadioButton("Upstream");
-    private JRadioButton bothRadio = new JRadioButton("Both");
+    private final JRadioButton downstreamRadio  = new JRadioButton("Downstream");
+    private final JRadioButton upstreamRadio = new JRadioButton("Upstream");
+    private final JRadioButton bothRadio = new JRadioButton("Both");
   
     ButtonGroup queryTypeGroup = new ButtonGroup();
     ButtonGroup directionGroup = new ButtonGroup();
@@ -171,8 +178,8 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     private int currentPage;
     private int maxHitsPerPage;
     private int totalHits; //total number of search searchQuery matches
-    private LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
-    private Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
+    private final LinkedHashMap<JCheckBox, String> datasourceDisplayCommands, organismDisplayCommands;  
+    private final Map <SearchHit, Integer> hitInteractionCountMap; //map of search hitd to the number of interactions
     
     //search form values entered by user
     private String networkType = ""; //stores selected value of networkTypeCombo when search is run
@@ -218,18 +225,16 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
     public static final String DIRECTORY = "import";   
     
     /**
-     * Constructor.
+     * Constructor for search dialog.
      * @param frame
      * @param myMessage
-     * @param modal 
+     * @param alwaysOnTop 
      */
-    public ImportWebServiceDialog(LayoutFrame frame, String myMessage, boolean modal) 
+    public ImportWebServiceDialog(LayoutFrame frame, String myMessage, boolean alwaysOnTop) 
     {        
-        //construct search dialog
-        super(); //do not attach the dialog to a parent frame so it does not stay on top
-        setModal(modal);
+        super();
         
-        setAlwaysOnTop(false);
+        setAlwaysOnTop(alwaysOnTop);
 
         hitInteractionCountMap = new HashMap<SearchHit, Integer>();
         
@@ -248,7 +253,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedCancelButton = this.createJButton("Close", "Close dialog", true); //cancel button
         advancedStopButton = this.createJButton("Stop", "Stop query", false); //stop button
         advancedRemoveButton = this.createJButton("Remove", "Remove search hit", false);
-        advancedClearButton = this.createJButton("Clear", "Remove all search hits", modal);
+        advancedClearButton = this.createJButton("Clear", "Remove all search hits", false);
 
         searchField = new JTextField(70);
         organismField = new JTextField(35); //organism text field
@@ -378,7 +383,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         advancedTable = new ZebraJTable(advancedModel, colHeadings);
 
         advancedTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        advancedTable.getColumn(colHeadings[0]).setPreferredWidth(WIDTH - 275);
+        advancedTable.getColumn(colHeadings[0]).setPreferredWidth(DIALOG_WIDTH - 275);
         advancedTable.getColumn(colHeadings[1]).setPreferredWidth(75);
         advancedTable.getColumn(colHeadings[2]).setPreferredWidth(125);
         
@@ -605,7 +610,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         fieldPanel.add(openButton, "tag right, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag right, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(WIDTH, 205));
+        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 205));
         return fieldPanel;
     }
     
@@ -647,7 +652,7 @@ public class ImportWebServiceDialog extends JDialog implements ActionListener{
         hitsPanel.add(retrievedLabel, "w 33%, sizegroup hits");
         hitsPanel.add(pagesLabel, "w 33%, sizegroup hits");        
         
-        hitsPanel.setPreferredSize(new Dimension(WIDTH, 88));
+        hitsPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 88));
         return hitsPanel;
     }
     

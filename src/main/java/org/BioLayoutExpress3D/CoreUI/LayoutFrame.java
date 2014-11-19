@@ -43,6 +43,7 @@ import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.Expression.ExpressionEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 import org.BioLayoutExpress3D.Files.Dialogs.ColumnDataConfigurationDialog;
+import org.biopax.paxtools.util.IllegalBioPAXArgumentException;
 
 /**
 *
@@ -1020,9 +1021,19 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     layoutProgressBarDialog.endProgressBar();
                     layoutProgressBarDialog.stopProgressBar();
                     blockAllAction.actionPerformed(unblockEvent);
-                    resetAllRelevantLoadingValues();
+                    resetAllRelevantLoadingValues(true);
 
                     throwableErrorMessageDialogReport(layoutFrame, memErr, "Out of Memory Error", file.getName());
+                }
+                catch(IllegalArgumentException exc) //thrown by PaxTools when OWL file is not valid
+                {
+                    if (DEBUG_BUILD) println("IllegalArgumentException with parsing the file in runLightWeightThread():\n" + exc.getMessage());
+                    layoutProgressBarDialog.endProgressBar();
+                    layoutProgressBarDialog.stopProgressBar();
+
+                    resetAllRelevantLoadingValues(false);
+                    
+                    throwableErrorMessageDialogReport(layoutFrame, exc, "Parse Error", file.getName());
                 }
                 catch (Exception exc)
                 {
@@ -1031,7 +1042,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     layoutProgressBarDialog.endProgressBar();
                     layoutProgressBarDialog.stopProgressBar();
                     blockAllAction.actionPerformed(unblockEvent);
-                    resetAllRelevantLoadingValues();
+                    resetAllRelevantLoadingValues(true);
 
                     throwableErrorMessageDialogReport(layoutFrame, exc, "File Load Error", file.getName());
                 }
@@ -1040,8 +1051,6 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     loadingFile = false;
                 }
             }
-
-
         }, "runParseProcess" );
 
         runLightWeightThread.setPriority(threadPriority);
@@ -1087,6 +1096,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
         DataTypes prevDataType = DATA_TYPE;
         String prevExpressionFile = EXPRESSION_FILE;
         String prevExpressionFilePath = EXPRESSION_FILE_PATH;
+        
         DATA_TYPE = DataTypes.NONE;
         EXPRESSION_FILE = "";
         EXPRESSION_FILE_PATH = "";
@@ -1234,17 +1244,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
                     // make sure previous network is deleted from the renderers if expression parsing is skipped,
                     // as the calls to clear() has cleaned it from network component memory
                     graph.rebuildGraph();
-
-                    DATA_TYPE = DataTypes.NONE;
-                    EXPRESSION_FILE = "";
-                    EXPRESSION_FILE_PATH = "";
-                    fileNameLoaded = "";
-                    fileNameAbsolutePath = "";
-                    setTitle(VERSION);
-                    INSTALL_DIR_FOR_SCREENSHOTS_HAS_CHANGED = false;
-
-                    disableAllActions();
-
+                    resetAllRelevantLoadingValues(true);
                     reasonForExpressionLoadFailure = expressionLoader.reasonForFailure;
                 }
             }
@@ -1527,7 +1527,11 @@ public final class LayoutFrame extends JFrame implements GraphListener
         }
     }
 
-    private void resetAllRelevantLoadingValues()
+    /**
+     * Reset variables that have been populated when loading a file.
+     * @param disableAllActions - disable user interface components
+     */
+    private void resetAllRelevantLoadingValues(boolean disableAllActions)
     {
         DATA_TYPE = DataTypes.NONE;
         EXPRESSION_FILE = "";
@@ -1537,7 +1541,10 @@ public final class LayoutFrame extends JFrame implements GraphListener
         setTitle(VERSION);
         INSTALL_DIR_FOR_SCREENSHOTS_HAS_CHANGED = false;
 
-        disableAllActions();
+        if(disableAllActions)
+        {
+            disableAllActions();
+        }
     }
 
     private void enableAllActions()

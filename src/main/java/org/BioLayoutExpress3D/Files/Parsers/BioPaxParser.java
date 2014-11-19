@@ -47,7 +47,6 @@ import org.biopax.paxtools.model.level3.TransportWithBiochemicalReaction;
 
 /**
  * Parser for BioPAX Level 3 OWL encoded as RDF/XML. Uses PaxTools library.
- *
  * @author Derek Wright
  */
 public final class BioPaxParser extends CoreParser

@@ -261,12 +261,17 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         //disable search button if search field has no text
         searchField.getDocument().addDocumentListener(new DocumentListener() 
         {
+            @Override
             public void changedUpdate(DocumentEvent e) {
               searchFieldChanged();
             }
+            
+            @Override
             public void removeUpdate(DocumentEvent e) {
               searchFieldChanged();
             }
+            
+            @Override
             public void insertUpdate(DocumentEvent e) {
               searchFieldChanged();
             }
@@ -340,6 +345,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.addMouseListener(new MouseAdapter() //double click adds search hit to Advanced
         { 
+            @Override
             public void mouseClicked(MouseEvent e) 
             {
                 if (e.getClickCount() == 2) //open network
@@ -392,6 +398,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         //listener to disable radio buttons in advanced table if no data
         advancedModel.addTableModelListener(new TableModelListener() 
         {
+            @Override
             public void tableChanged(TableModelEvent e) {
                 if (e.getType() == TableModelEvent.INSERT) 
                 {
@@ -719,12 +726,13 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     
     private ExcerptPane createEditorPane()
     {
-        ExcerptPane editorPane = new ExcerptPane();
-        editorPane.setText("<b>Excerpt:</b>");
+        ExcerptPane excerptPane = new ExcerptPane();
+        excerptPane.setText("<b>Excerpt:</b>");
         
         //open system web browser on hyperlink click
-        editorPane.addHyperlinkListener(new HyperlinkListener() 
+        excerptPane.addHyperlinkListener(new HyperlinkListener() 
         {
+            @Override
             public void hyperlinkUpdate(HyperlinkEvent e) 
             {
                 if(e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) 
@@ -745,7 +753,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             }
         });
         
-        return editorPane;
+        return excerptPane;
         
     }
     
@@ -812,6 +820,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
      */
     private class AdvancedHitListSelectionListener implements ListSelectionListener
     {
+        @Override
         public void valueChanged(ListSelectionEvent e)
         {
             if (e.getValueIsAdjusting()) return; //Ignore extra messages.
@@ -946,9 +955,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             }
             i++;
         }
-        
-        //logger.info(Arrays.toString(from.toArray()));
-        //logger.info(Arrays.toString(to.toArray()));
         
         String fileName = "Advanced" + BIOPAX_FILE_EXTENSION; //default name of .owl file to be created
 
@@ -1877,12 +1883,15 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
      * will be just wide enough to show the column head and the widest cell in the column.
      * margin pixels are added to the left and right
      * (resulting in an additional width of 2*margin pixels).
+     * @param table - the JTable containing the column to be packed
+     * @param vColIndex - the index of the column to be packed
+     * @param margin - size of margin in pixels
      */ 
     public static void packColumn(JTable table, int vColIndex, int margin) 
     {
         DefaultTableColumnModel colModel = (DefaultTableColumnModel)table.getColumnModel();
         TableColumn col = colModel.getColumn(vColIndex);
-        int width = 0;
+        int width;
 
         // Get width of column header
         TableCellRenderer renderer = col.getHeaderRenderer();
@@ -1902,7 +1911,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         }
 
         // Add margin
-        width += 2*margin;
+        width += 2 * margin;
 
         // Set the width
         col.setPreferredWidth(width);

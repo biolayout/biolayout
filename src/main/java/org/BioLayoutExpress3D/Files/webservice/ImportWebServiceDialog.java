@@ -225,6 +225,11 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     public static final String DIRECTORY = "import";   
     
     /**
+     * Title of Top Pathways combo box item for display.
+     */
+    public static final String TOP_PATHWAYS = "Top Pathways"; 
+    
+    /**
      * Constructor for search dialog.
      * @param frame
      * @param myMessage
@@ -306,7 +311,39 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         //Network Type Drop Down
         networkTypeCombo = new JComboBox<String>();
-        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "PhysicalEntity", "EntityReference", "Top Pathways" }));
+        networkTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Pathway", "Interaction", "PhysicalEntity", "EntityReference", TOP_PATHWAYS }));
+        networkTypeCombo.addItemListener(new ItemListener()
+        {
+            @Override
+            /**
+             * Disable search field and name checkbox, enable search button when Top Pathways is selected.
+             * Re-enable search field and name checkbox, disable search button when Top Pathways is deselected.
+             * The Top Pathways query does not take a search term.
+             */
+            public void itemStateChanged(ItemEvent event) 
+            {
+                JComboBox localCombo = (JComboBox)event.getSource();
+                String itemString = localCombo.getSelectedItem().toString();  
+                if (event.getStateChange() == ItemEvent.SELECTED) 
+                {
+                   if(itemString.equals(TOP_PATHWAYS))
+                   {
+                     searchField.setText("");
+                     searchField.setEnabled(false);
+                     nameCheckBox.setEnabled(false);
+                     nameCheckBox.setSelected(false);
+                     searchButton.setEnabled(true);
+                   }
+                   else
+                   {
+                     searchField.setEnabled(true);                   
+                     nameCheckBox.setSelected(true);
+                     nameCheckBox.setEnabled(true);
+                     searchButton.setEnabled(false);
+                   }
+                }
+            }       
+        });
 
         nameCheckBox = new JCheckBox("Name", true);
         nameCheckBox.setToolTipText("Restrict search to name field only");
@@ -356,7 +393,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                     if(advancedSearchHits.add(hit))
                     {
                         advancedModel.addRow(new Object[]{hit.getName(), joinDatabases(hit), hit.getBiopaxClass(), hit.getPathway().size()});  
-                        int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);                        
+                        //int lastRow = advancedTable.convertRowIndexToView(advancedModel.getRowCount() - 1);                        
                         statusLabel.setText("Added " + hit.getName() + " to Advanced");                        
                     }
                     else //unable to add because search hit already in Set
@@ -904,7 +941,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         CPathClient client = CPathClient.newInstance();
         String[] uriArray = {uriString};
         
-        if(networkType.equals("Pathway") || networkType.equals("Top Pathways")) //just get the pathway itself
+        if(networkType.equals("Pathway") || networkType.equals(TOP_PATHWAYS)) //just get the pathway itself
         {
             cPathQuery = client.createGetQuery().sources(uriArray);
         }
@@ -1514,7 +1551,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     {
         if(searchButton == e.getSource() || nextButton == e.getSource() || previousButton == e.getSource()) 
         {
-            if(searchButton == e.getSource())
+            if(searchButton == e.getSource() && !networkType.equals(TOP_PATHWAYS)) //don't need search params for Top Pathways query
             {
                 currentPage = 0;
                 searchTerm = searchField.getText();
@@ -1561,7 +1598,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                 CPathClient client = future.get(10, TimeUnit.SECONDS); 
               
                 //CPathClient client = CPathClient.newInstance(); 
-                if(networkType.equals("Top Pathways") && searchButton == e.getSource())
+                if(networkType.equals(TOP_PATHWAYS) && searchButton == e.getSource())
                 {
                     searchQuery = client.createTopPathwaysQuery();
                     search(true, false); //perform search but do not clear advanced table
@@ -1735,8 +1772,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     {
         searchWorker = new SearchWorker(newSearch, clearAdvanced); //concurrent threading for search process
         searchWorker.execute();
-    }
-    
+    }    
 
     /**
      * Adds organism NCBI IDs as key to organismIdNameMap so that values may be populated later from NCBI Taxonomy SOAP service

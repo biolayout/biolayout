@@ -319,6 +319,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
              * Disable search field and name checkbox, enable search button when Top Pathways is selected.
              * Re-enable search field and name checkbox, disable search button when Top Pathways is deselected.
              * The Top Pathways query does not take a search term.
+             * @param event - the state change event
              */
             public void itemStateChanged(ItemEvent event) 
             {

@@ -1,6 +1,5 @@
 package org.BioLayoutExpress3D.Network;
 
-import java.awt.*;
 import java.util.*;
 import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.CoreUI.Dialogs.*;

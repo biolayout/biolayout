@@ -1,5 +1,8 @@
 package org.BioLayoutExpress3D.ClassViewerUI.Tables.TableModels;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ObjectArrays;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.table.*;
@@ -8,6 +11,8 @@ import org.BioLayoutExpress3D.CoreUI.*;
 import org.BioLayoutExpress3D.Graph.GraphElements.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.BioLayoutExpress3D.Network.Vertex;
+import org.biopax.paxtools.model.level3.Entity;
 
 /**
 *
@@ -27,6 +32,7 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
 
     private int originalNumberOfColumns = ORIGINAL_COLUMN_NAMES.length;
     private String[] columnNames = ORIGINAL_COLUMN_NAMES;
+
     private Object[][] data = null;
 
     private LayoutFrame layoutFrame = null;
@@ -264,12 +270,20 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
         }
 
         columnNames = newColumnNames;
+        numberOfColumns += 1; // +1 column for hidden GraphNode object to be stored        
+        
+        if(DATA_TYPE == DataTypes.OWL)
+        {            
+            numberOfColumns += 2; //add additional columns for BioPAX fields               
+            String[] BioPaxColumnNames = new String[]{"DataSource", "XRefs"};          
+            columnNames = ObjectArrays.concat(columnNames, BioPaxColumnNames, String.class);
+        }
+        
+        data = new Object[selectedSize][numberOfColumns];
+
         if (DEBUG_BUILD)
             for (String columnName : columnNames)
                 println(columnIndex + ": " + columnName);
-
-        numberOfColumns += 1; // +1 column for hidden GraphNode object to be stored
-        data = new Object[selectedSize][numberOfColumns];
 
         columnIndex = 0;
         int rowIndex = 0;
@@ -296,7 +310,7 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
                 columnsPruned++;
             }
 
-            // Class
+            // Class name
             columnIndex = 3;
             if (allClasses)
             {
@@ -320,7 +334,31 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
 
                 columnIndex++;
             }
+            
+            //put BioPAX data in additional columns
+            if(DATA_TYPE == DataTypes.OWL)
+            {
+                BiMap<Entity, Vertex> entityVertexMap = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().getEntityVertexMap();                
+                if(entityVertexMap != null)
+                {
+                    BiMap<Vertex, Entity> vertexEntityMap = entityVertexMap.inverse(); //Map with keys and values swapped round
+                    Entity entity = vertexEntityMap.get(node.getVertex());
 
+                    Joiner joiner = Joiner.on(", ").skipNulls();
+    
+                    //data source
+                    String dataSourceString = joiner.join(entity.getDataSource());
+                    data[rowIndex][columnIndex - columnsPruned] = dataSourceString;
+                    columnIndex++;
+
+                    //xrefs
+                    String xrefString = joiner.join(entity.getXref());
+                    data[rowIndex][columnIndex - columnsPruned] = xrefString;
+                    columnIndex++;
+                }
+            }
+                    
+            //put GraphNode in the last column
             data[rowIndex][columnIndex - columnsPruned] = node;
             rowIndex++;
         }
@@ -339,6 +377,4 @@ public final class ClassViewerTableModelGeneral extends AbstractTableModel
     {
         return columnNames;
     }
-
-
 }

@@ -1,5 +1,7 @@
 package org.BioLayoutExpress3D.Files.Parsers;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.BiMap;
 import java.awt.Color;
 import java.io.*;
 import java.util.*;
@@ -63,7 +65,7 @@ public final class BioPaxParser extends CoreParser
      */
     public static final String CLASS_SET = "BioPAX";
     private BioPAXIOHandler handler;
-    private HashMap<Entity, Vertex> entityVertexMap = null; //created during parsing
+    private BiMap<Entity, Vertex> entityVertexMap = null; //created during parsing
 
     public BioPaxParser(NetworkContainer nc, LayoutFrame layoutFrame)
     {
@@ -123,12 +125,18 @@ public final class BioPaxParser extends CoreParser
             }
 
             Set<Entity> modelEntitySet = model.getObjects(Entity.class); //get all Entities in the model
-
-            //create a graph node for each entity
             logger.fine(modelEntitySet.size() + " Entities parsed from " + file.getName());
 
-            entityVertexMap = new HashMap<Entity, Vertex>(modelEntitySet.size());
+            LayoutClassSetsManager layoutClassSetsManager = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager();
+            
+            //create class set and switch the class viewer to it
+            layoutClassSetsManager.createNewClassSet(CLASS_SET);
+            layoutClassSetsManager.switchClassSet(CLASS_SET);
+
+            //create a graph node for each entity
+            entityVertexMap = layoutClassSetsManager.createEntityVertexMap(modelEntitySet);
             int setIndex = 0; //loop counter
+            Joiner joiner = Joiner.on(", ").skipNulls(); //String formatter for using Xref array as Vertex name
             for (Entity entity : modelEntitySet)
             {
                 Vertex vertex;
@@ -142,7 +150,7 @@ public final class BioPaxParser extends CoreParser
                 }
                 else //use xrefs converted to String
                 {
-                    vertexName = Arrays.toString(entity.getXref().toArray());
+                    vertexName = joiner.join(entity.getXref());
                 }
                 
                 vertex = new Vertex(vertexName, nc);
@@ -170,10 +178,6 @@ public final class BioPaxParser extends CoreParser
 
                 entityVertexMap.put(entity, vertex);
 
-                //create class set
-                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().createNewClassSet(CLASS_SET);
-                layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().switchClassSet(CLASS_SET);
-
                 //convert PaxTools Java class name to something human readable and use as class viewer class name
                 String className = entity.getClass().getSimpleName();
                 className = className.replace("Impl", ""); //trim Impl from the concrete class name
@@ -183,6 +187,7 @@ public final class BioPaxParser extends CoreParser
                 LayoutClasses layoutClasses = layoutFrame.getNetworkRootContainer().getLayoutClassSetsManager().getCurrentClassSetAllClasses();
                 VertexClass vertexClass = layoutClasses.createClass(className);
                 layoutClasses.setClass(vertex, vertexClass);
+                
 
                 setIndex++;
             }
@@ -260,7 +265,6 @@ public final class BioPaxParser extends CoreParser
             logger.fine(hasInteractionCount + " Entities have Interactions");
 
             layoutProgressBarDialog.incrementProgress(++progressCounter);
-
             isSuccessful = true;
         }
         catch (FileNotFoundException e)
@@ -482,11 +486,6 @@ public final class BioPaxParser extends CoreParser
             color = DEFAULT_NODE_COLOR;
         }
         vertex.setVertexColor(color);
-    }
-
-    public HashMap<Entity, Vertex> getEntityVertexMap()
-    {
-        return entityVertexMap;
     }
 
     /**

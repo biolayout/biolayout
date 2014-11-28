@@ -12,6 +12,7 @@ import org.BioLayoutExpress3D.Graph.ActiveRendering.*;
 import org.BioLayoutExpress3D.Graph.GraphElements.*;
 import org.BioLayoutExpress3D.Graph.Selection.*;
 import org.BioLayoutExpress3D.Network.*;
+import org.biopax.paxtools.model.level3.Entity;
 
 /**
 *
@@ -342,7 +343,7 @@ final class GraphRendererCommonVariables // package access
     *  GraphListener listener to be used as a callback for the switchRenderer process.
     */
     static GraphListener listener = null;
-
+    
     /**
     *  Static initializer.
     */
@@ -353,6 +354,4 @@ final class GraphRendererCommonVariables // package access
         visibleNodes = new HashSet<GraphNode>();
         visibleEdges = new HashSet<GraphEdge>();
     }
-
-
 }

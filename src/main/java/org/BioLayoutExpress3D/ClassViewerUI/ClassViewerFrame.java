@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.text.*;
 import java.util.*;
+import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.filechooser.*;
@@ -35,6 +36,7 @@ import org.BioLayoutExpress3D.Simulation.Panels.SimulationResultsPanel;
 
 public final class ClassViewerFrame extends JFrame implements ActionListener, ListSelectionListener, ChangeListener, ItemListener
 {
+    private static final Logger logger = Logger.getLogger(ClassViewerFrame.class.getName());
     /**
     *  Serial version UID variable for the ClassViewerFrame class.
     */

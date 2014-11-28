@@ -1,14 +1,19 @@
 package org.BioLayoutExpress3D.CoreUI;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import java.util.*;
 import org.BioLayoutExpress3D.Network.*;
 import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.*;
 import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
+import org.biopax.paxtools.model.level3.Entity;
 
 /**
 *
-* @author Anton Enright, full refactoring by Thanos Theo, 2008-2009
-* @version 3.0.0.0
+* @author Anton Enright, 
+* @author full refactoring by Thanos Theo, 2008-2009
+* @author Derek Wright 2014
+* @version 3.3
 *
 */
 
@@ -21,6 +26,13 @@ public final class LayoutClassSetsManager
     private String currentClassSetName = "";
     private int currentClassSetID = 0;
     private int totalclassSetNames = 0;
+    
+    /**
+     * Bidirectional Map of BioPAX entities to graph vertices. Populated when parsing BioPAX OWL data.
+     * Used to display BioPAX fields associated with a node in the Class Viewer.
+     * Null until create method called.
+     */
+    private HashBiMap<Entity, Vertex> entityVertexMap = null;
 
     public LayoutClassSetsManager()
     {
@@ -122,10 +134,25 @@ public final class LayoutClassSetsManager
 
         classSetNames.clear();
         classSetNamesMap.clear();
-        classSetNameIDsMap.clear();
+        classSetNameIDsMap.clear();        
+        entityVertexMap = null; //may never have been initialized
 
         createNewClassSet("Default Classes");
     }
 
+    public BiMap<Entity, Vertex> getEntityVertexMap() 
+    {
+        return entityVertexMap;
+    }
 
+    /**
+     * Creates a new empty BioPAX Entity to Vertex Map with capacity initialized according to the number of BioPAX entities
+     * @param entitySet - a set of BioPAX Entity
+     * @return the new HashMap
+     */
+    public BiMap<Entity, Vertex> createEntityVertexMap(Set<Entity> entitySet)
+    {
+        entityVertexMap = HashBiMap.create(entitySet.size());        
+        return entityVertexMap;
+    }
 }

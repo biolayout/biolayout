@@ -487,7 +487,7 @@ public final class SelectionManager
         };
         showSelectedNodeNamesAction.setEnabled(false);
 
-        showAllEdgeNamesAction = new AbstractAction("Show All Edge Names")
+        showAllEdgeNamesAction = new AbstractAction("Show All Edge Weights")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -510,7 +510,7 @@ public final class SelectionManager
         };
         showAllEdgeNamesAction.setEnabled(false);
 
-        showSelectedNodesEdgeNamesAction = new AbstractAction("Show Selected Nodes Edge Names")
+        showSelectedNodesEdgeNamesAction = new AbstractAction("Show Selected Nodes Edge Weights")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -575,7 +575,7 @@ public final class SelectionManager
         };
         hideSelectedNodeNamesAction.setEnabled(false);
 
-        hideAllEdgeNamesAction = new AbstractAction("Hide All Edge Names")
+        hideAllEdgeNamesAction = new AbstractAction("Hide All Edge Weights")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.
@@ -593,7 +593,7 @@ public final class SelectionManager
         };
         hideAllEdgeNamesAction.setEnabled(false);
 
-        hideSelectedNodesEdgeNamesAction = new AbstractAction("Hide Selected Nodes Edge Names")
+        hideSelectedNodesEdgeNamesAction = new AbstractAction("Hide Selected Nodes Edge Weights")
         {
             /**
             *  Serial version UID variable for the AbstractAction class.

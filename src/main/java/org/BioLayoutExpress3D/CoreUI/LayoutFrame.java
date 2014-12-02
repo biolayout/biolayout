@@ -1111,7 +1111,7 @@ public final class LayoutFrame extends JFrame implements GraphListener
             parser = new BlastParser(nc,  this);
             DATA_TYPE = DataTypes.BLAST;
         }
-        // Reactome OWL Data
+        // BioPAX OWL Data
         else if ( fileExtension.equals( SupportedInputFileTypes.OWL.toString() ) )
         {
             parser = new BioPaxParser(nc, this);

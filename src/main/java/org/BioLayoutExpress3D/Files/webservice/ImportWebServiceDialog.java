@@ -33,6 +33,7 @@ import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -69,7 +70,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -112,12 +112,21 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     public static final String FORMAT_SIF = "BINARY_SIF";
     public static final String FORMAT_BIOPAX = "BIOPAX";
 
-    public static final String DATASOURCE_REACTOME = "reactome";
-    public static final String DATASOURCE_PID = "pid";
-    public static final String DATASOURCE_PHOSPHOSITEPLUS = "phosphosite"; 
-    public static final String DATASOURCE_HUMANCYC = "humancyc";
-    public static final String DATASOURCE_HPRD = "HPRD";
-    public static final String DATASOURCE_PANTHER = "panther";
+    //datasources command parameters - some renamed for Pathway Commons v5
+    public static final String DATASOURCE_REACTOME = "reactome_human";      //Reactome
+    public static final String DATASOURCE_PID = "pid";                      //NCI Nature
+    public static final String DATASOURCE_PHOSPHOSITEPLUS = "psp";          //PhosphoSitePlus
+    public static final String DATASOURCE_HUMANCYC = "humancyc";            //HumanCyc
+    public static final String DATASOURCE_HPRD = "hprd";                    //HPRD
+    public static final String DATASOURCE_PANTHER = "panther_human";        //PANTHER Pathway
+    
+    //new datasources for Pathway Commons v5
+    public static final String DATASOURCE_DIP = "dip_human";                        //Database of Interacting Proteins
+    public static final String DATASOURCE_BIOGRID = "biogrid_human";                //BioGRID
+    public static final String DATASOURCE_INTACT = "intact_human";                  //IntAct
+    public static final String DATASOURCE_INTACT_COMPLEX = "intact_complex_human";  //IntAct Complex
+    public static final String DATASOURCE_BIND = "bind_human";                      //BIND
+    public static final String DATASOURCE_CORUM = "corum_human";                     //CORUM
     
     public static final String COMMAND_TOP_PATHWAYS = "top_pathways";
     public static final String COMMAND_SEARCH = "search";
@@ -191,12 +200,19 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
      * Maps search hit URI of database to display name. Map contents are immutable.
      */
     public static final Map<String, String> DATABASE_URI_DISPLAY = ImmutableMap.<String, String>builder()
-        .put("reactome", "Reactome")
-        .put("pid", "NCI Nature")
-        .put("psp", "PhosphoSitePlus")
-        .put("humancyc", "HumanCyc")
-        .put("hprd", "HPRD")
-        .put("panther", "PANTHER")
+        .put(DATASOURCE_REACTOME, "Reactome")
+        .put(DATASOURCE_PID, "NCI Nature")
+        .put(DATASOURCE_PHOSPHOSITEPLUS, "PhosphoSitePlus")
+        .put(DATASOURCE_HUMANCYC, "HumanCyc")
+        .put(DATASOURCE_HPRD , "HPRD")
+        .put(DATASOURCE_PANTHER, "PANTHER")
+        
+        .put(DATASOURCE_DIP, "DIP")
+        .put(DATASOURCE_BIOGRID, "BioGRID")
+        .put(DATASOURCE_INTACT, "IntAct")    
+        .put(DATASOURCE_INTACT_COMPLEX, "IntAct Complex")
+        .put(DATASOURCE_BIND, "BIND")
+        .put(DATASOURCE_CORUM, "CORUM")
         .build();
 
     /**
@@ -297,12 +313,12 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         //Map checkboxes to web service commands
         datasourceDisplayCommands = new LinkedHashMap<JCheckBox, String>();
-        datasourceDisplayCommands.put(new JCheckBox("Reactome"), "reactome");
-        datasourceDisplayCommands.put(new JCheckBox("NCI Nature"), "pid");
-        datasourceDisplayCommands.put(new JCheckBox("PhosphoSitePlus"), "phosphosite");
-        datasourceDisplayCommands.put(new JCheckBox("HumanCyc"), "humancyc");
-        datasourceDisplayCommands.put(new JCheckBox("HPRD"), "hprd");
-        datasourceDisplayCommands.put(new JCheckBox("PANTHER"), "panther");        
+        for (Map.Entry<String, String> entry : DATABASE_URI_DISPLAY.entrySet()) 
+        {
+            String commandString = entry.getKey();
+            String displayString = entry.getValue();
+            datasourceDisplayCommands.put(new JCheckBox(displayString), commandString);
+        }
         
         allDatasourceCheckBox = new JCheckBox("All");
         allDatasourceCheckBox.setSelected(true);
@@ -638,11 +654,13 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         //datasource checkboxes
         fieldPanel.add(datasourceLabel);
         JPanel datasourcePanel = new JPanel();
-        datasourcePanel.setLayout(new BoxLayout(datasourcePanel, BoxLayout.LINE_AXIS));
+        datasourcePanel.setLayout(new GridLayout(3, 5));
         for(JCheckBox checkBox: datasourceDisplayCommands.keySet())
         {
            datasourcePanel.add(checkBox);
         }
+        datasourcePanel.add(new JLabel(""));
+        datasourcePanel.add(new JLabel(""));
         datasourcePanel.add(allDatasourceCheckBox);
         fieldPanel.add(datasourcePanel, "wrap");
 
@@ -655,7 +673,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         fieldPanel.add(openButton, "tag right, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag right, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 205));
+        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 250));
         return fieldPanel;
     }
     

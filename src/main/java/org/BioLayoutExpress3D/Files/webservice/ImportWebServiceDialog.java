@@ -41,7 +41,11 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.SocketException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,6 +103,10 @@ import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
 import org.apache.commons.io.FileUtils;
+import org.biopax.paxtools.io.BioPAXIOHandler;
+import org.biopax.paxtools.io.SimpleIOHandler;
+import org.biopax.paxtools.model.Model;
+import org.biopax.paxtools.model.level3.BioSource;
 import org.springframework.web.client.HttpClientErrorException;
 
 /**
@@ -725,13 +733,35 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         //construct HTML snippet of organism scientific names
         List<String> organismIdList = hit.getOrganism();
         String organismHTML = "<b>Organism:</b>";
+        
+        //TODO store organism URL and display name in map
+        
         for(String organismString : organismIdList)
         {
-            String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-            String scientificName = organismIdNameMap.get(ncbiId);
-            organismHTML = organismHTML 
-                    + "<br />" 
-                    + "<a href='" + organismString + "'>" + scientificName + "</a>";
+            //String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
+            //String scientificName = organismIdNameMap.get(ncbiId);
+            String scientificName = "BioSource";
+            try
+            {
+                InputStream input = new URL(organismString).openStream();
+                BioPAXIOHandler handler = new SimpleIOHandler();
+                Model model = handler.convertFromOWL(input); //construct object model from OWL from Pathway Commons
+                Set<BioSource> bioSourceSet = model.getObjects(BioSource.class); 
+                for (BioSource bioSource : bioSourceSet)
+                {
+                    scientificName = bioSource.getDisplayName();
+                    organismHTML = organismHTML 
+                            + "<br />" 
+                            + "<a href='" + organismString + "'>" + scientificName + "</a>";
+                }
+            }
+            catch(IOException e)
+            {
+                organismHTML = organismHTML 
+                        + "<br />" 
+                        + "<a href='" + organismString + "'>" + scientificName + "</a>";
+                
+            }
         }
 
         //count number of interactions for a pathway
@@ -1463,7 +1493,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
 
                     if(organismIdNameMap.size() > 0)
                     {
-                        fetchScientificNames(); //populate organismIdNameMap from NCBI SOAP web service
+                        //(); //populate organismIdNameMap from NCBI SOAP web service
                     }
                 }
                 else

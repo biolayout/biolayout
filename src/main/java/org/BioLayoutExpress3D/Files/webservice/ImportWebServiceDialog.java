@@ -41,7 +41,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
@@ -226,6 +225,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     /**
      * Map of NCBI organism ID to species name. Not immutable so we can add new species from NCBI web service. 
      * Common species hard coded to avoid unnecessary web service calls. Map is final but contents are not!
+     * NB this was used with previous version of Pathway Commons which stored species as a link to identifiers.org
      */
     private static final Map<String, String> organismIdNameMap = new HashMap<String, String>();
     static
@@ -235,6 +235,13 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         organismIdNameMap.put("10090", "Mus musculus");
         organismIdNameMap.put("10116", "Rattus norvegicus");
     }
+
+    /**
+     * Map of Pathway Commons organism URI to species name. 
+     * The URI is a link to a BioPAX document containing BioSource on Pathway Commons.
+     * Species name is derived from BioSource and stored in the map to avoid repeated lookups.
+     */
+    private static final Map<String, String> organismUriNameMap = new HashMap<String, String>();
 
     private SearchWorker searchWorker = null; //search operation concurrent task runner
     private GetWorker getWorker = null; //GET operation concurrent task runner
@@ -727,45 +734,72 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         return hitsPanel;
     }
     
+    /**
+     * Look up organism scientific name on Pathway Commons.
+     * Checks if URI has already been looked up.
+     * If no, performs lookup.
+     * If yes, returns cached display name.
+     * @param organismUri - Pathway Commons URI
+     * @return the BioSource display name
+     * @throws IOException if URL lookup on Pathway Commons fails
+     */
+    private String lookUpOrganismDisplayName(String organismUri) throws IOException
+    {
+        String displayName = "BioSource";
+        if(organismUriNameMap.containsKey(organismUri)) //organism has been cached previously
+        {
+            displayName = organismUriNameMap.get(organismUri);
+        }
+        else //look up organism on Pathway Commons
+        {
+            InputStream input = new URL(organismUri).openStream();
+            BioPAXIOHandler handler = new SimpleIOHandler();
+            Model bioSourceModel = handler.convertFromOWL(input); //construct object model from OWL from Pathway Commons
+            Set<BioSource> bioSourceSet; 
+            bioSourceSet = bioSourceModel.getObjects(BioSource.class);                    
+            if(!bioSourceSet.isEmpty())
+            {
+                BioSource bioSource = bioSourceSet.iterator().next();
+                displayName = bioSource.getDisplayName();
+                organismUriNameMap.put(organismUri, displayName);
+            }
+        }
+        return displayName;
+    }
     
+    /**
+     * Generate HTML String for SearchHit excerpt.
+     * Looks up organism name.
+     * Counts interactions.
+     * @param hit - the SearchHit to generate HTML for
+     * @return the HTML String
+     */
     private String generateExcerptHTML(SearchHit hit)
     {
         //construct HTML snippet of organism scientific names
         List<String> organismIdList = hit.getOrganism();
         String organismHTML = "<b>Organism:</b>";
         
-        //TODO store organism URL and display name in map
-        
-        for(String organismString : organismIdList)
+        for(String organismUri : organismIdList)
         {
-            //String ncbiId = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length());
-            //String scientificName = organismIdNameMap.get(ncbiId);
-            String scientificName = "BioSource";
             try
             {
-                InputStream input = new URL(organismString).openStream();
-                BioPAXIOHandler handler = new SimpleIOHandler();
-                Model model = handler.convertFromOWL(input); //construct object model from OWL from Pathway Commons
-                Set<BioSource> bioSourceSet = model.getObjects(BioSource.class); 
-                for (BioSource bioSource : bioSourceSet)
-                {
-                    scientificName = bioSource.getDisplayName();
-                    organismHTML = organismHTML 
-                            + "<br />" 
-                            + "<a href='" + organismString + "'>" + scientificName + "</a>";
-                }
+                String displayName = lookUpOrganismDisplayName(organismUri);
+                organismHTML = organismHTML 
+                        + "<br /><a href='" + organismUri + "'>" + displayName + "</a>";
             }
             catch(IOException e)
             {
                 organismHTML = organismHTML 
-                        + "<br />" 
-                        + "<a href='" + organismString + "'>" + scientificName + "</a>";
-                
+                    + "<p>Unknown Organism</p>";
+                logger.warning(e.getMessage());
             }
         }
 
         //count number of interactions for a pathway
-        String interactionsHTML = "";                   
+        String interactionsHTML = "";    
+        
+        /*
         if(networkType.equals("Pathway"))
         {
             //check if interaction count has been previously cached
@@ -794,13 +828,17 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             }
             interactionsHTML += "<br />";
         }
-
+        */
+        
         //display excerpt
         String uri = hit.getUri();
         String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
 
-        String excerptHTML = "<b>Excerpt:</b><br />" 
-                + hit.getExcerpt() 
+        String excerptHTML = 
+                "<b>Name:</b><br />" 
+                + hit.getName()
+                + "<br /><b>Excerpt:</b><br />" 
+                + hit.getExcerpt()
                 + "<br />" 
                 + "<b>URI: </b>"
                 + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
@@ -845,25 +883,31 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     
     private int traverseInteractions(SearchHit hit) throws CPathException
     {
+        
         int pathwayCount = hit.getPathway().size() + 1; //getPathway returns sub-pathways - does not include the top level pathway
         ArrayList<String> uriList = new ArrayList<String>(pathwayCount);
         uriList.add(hit.getUri());
         uriList.addAll(hit.getPathway());
 
-        //traverse all interactions for all pathways //TODO threading? //TODO what happens with GO term URI? //TODO what to count for interactions?
+        //traverse all interactions for all pathways 
         CPathClient client = CPathClient.newInstance();
         CPathTraverseQuery traverseQuery = client.createTraverseQuery().sources(uriList).propertyPath("Pathway/pathwayComponent*:Interaction");
         HashSet<String> uniqueUriSet = new HashSet<String>(); //set of unique interaction URIs
 
         TraverseResponse traverseResponse = traverseQuery.result(); //run traverse query
-        List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
-
-        for (TraverseEntry traverseEntry : traverseEntryList) 
+        if(traverseResponse == null)
+            return 0;
+        else
         {
-            List<String> traverseEntryValues = traverseEntry.getValue();
-            uniqueUriSet.addAll(traverseEntryValues);
+            List<TraverseEntry> traverseEntryList = traverseResponse.getTraverseEntry();
+
+            for (TraverseEntry traverseEntry : traverseEntryList) 
+            {
+                List<String> traverseEntryValues = traverseEntry.getValue();
+                uniqueUriSet.addAll(traverseEntryValues);
+            }
+            return uniqueUriSet.size();       
         }
-        return uniqueUriSet.size();       
     }
     
     private static DefaultTableModel createHitsModel(String[] colHeadings)
@@ -1826,6 +1870,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     /**
      * Adds organism NCBI IDs as key to organismIdNameMap so that values may be populated later from NCBI Taxonomy SOAP service
      */
+    /*
     private void mapOrganisms(SearchHit hit)
     {
         List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
@@ -1843,6 +1888,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             }
         }
     }
+    */
     
     private void displaySearchResults(boolean clearAdvanced)
     {
@@ -1855,7 +1901,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         for(SearchHit hit : searchHits)
         {
-            this.mapOrganisms(hit);
+            //this.mapOrganisms(hit);
             String joinedDatabases = joinDatabases(hit); //comma-separated string of datasources for display
             model.addRow(new Object[]{hit.getName(), joinedDatabases, hit.getBiopaxClass(), hit.getPathway().size()});  
         }//end for

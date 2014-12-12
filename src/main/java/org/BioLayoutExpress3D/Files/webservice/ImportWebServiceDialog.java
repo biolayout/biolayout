@@ -67,7 +67,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -100,6 +99,7 @@ import javax.swing.table.TableColumn;
 import net.miginfocom.swing.MigLayout;
 import org.BioLayoutExpress3D.CoreUI.LayoutFrame;
 import org.BioLayoutExpress3D.Environment.DataFolder;
+import static org.BioLayoutExpress3D.Environment.GlobalEnvironment.BIOLAYOUT_ICON_IMAGE;
 import org.apache.commons.io.FileUtils;
 import org.biopax.paxtools.io.BioPAXIOHandler;
 import org.biopax.paxtools.io.SimpleIOHandler;
@@ -169,7 +169,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     
     private final JEditorPane editorPane;
     private JTable table; //search results table
-    private JTable advancedTable;
+    private final JTable advancedTable;
     private final DefaultTableModel model; 
     private DefaultTableModel advancedModel; 
     private final JTabbedPane tabbedPane;
@@ -200,7 +200,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     //search form values entered by user
     private String networkType = ""; //stores selected value of networkTypeCombo when search is run
     private String searchTerm = "";
-    public static final String HOMO_SAPIENS = "9606";
+    public static final String HOMO_SAPIENS = "9606"; //species ID for human
     private Set<String> organismSet;
     private Set<String> datasourceSet;
     
@@ -232,7 +232,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     private static final Map<String, String> organismIdNameMap = new HashMap<String, String>();
     static
     {
-        organismIdNameMap.put("9606", "Homo sapiens");
+        organismIdNameMap.put(HOMO_SAPIENS, "Homo sapiens");
         organismIdNameMap.put("11676", "Human immunodeficiency virus 1");
         organismIdNameMap.put("10090", "Mus musculus");
         organismIdNameMap.put("10116", "Rattus norvegicus");
@@ -278,7 +278,8 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         this.frame = frame;
         this.setTitle(myMessage);
-        
+        this.setIconImage(BIOLAYOUT_ICON_IMAGE);
+
         //search panel buttons
         searchButton = this.createJButton("Search", "Search Pathway Commons", false);
         cancelButton = this.createJButton("Close", "Close dialog", true); //cancel button
@@ -294,7 +295,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         advancedClearButton = this.createJButton("Clear", "Remove all search hits", false);
 
         searchField = new JTextField(70);
-        //organismField = new JTextField(35); //organism text field
         
         //disable search button if search field has no text
         searchField.getDocument().addDocumentListener(new DocumentListener() 
@@ -314,20 +314,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
               searchFieldChanged();
             }
           });        
-                /*
-        organismDisplayCommands = new LinkedHashMap<JCheckBox, String>();
-        organismDisplayCommands.put(new JCheckBox("Human"), "9606");
-        organismDisplayCommands.put(new JCheckBox("Mouse"), "10090");
-        organismDisplayCommands.put(new JCheckBox("Fruit Fly"), "7227");
-        organismDisplayCommands.put(new JCheckBox("Rat"), "10116");
-        organismDisplayCommands.put(new JCheckBox("C. elegans"), "6239");
-        organismDisplayCommands.put(new JCheckBox("S. cervisiae"), "4932");
-        
-        anyOrganismCheckBox = new JCheckBox("Any");
-        anyOrganismCheckBox.setSelected(true);
-        anyOrganismCheckBox.addActionListener(this);
-        enableDisableOrganism(true);
-        */
         
         //Map checkboxes to web service commands
         datasourceDisplayCommands = new LinkedHashMap<JCheckBox, String>();
@@ -514,7 +500,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         pack();
         splitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
-        //advancedSplitPane.setDividerLocation(0.75); //needs to be after pack() or split is reset to 50% 
         setLocationRelativeTo(frame);
         setVisible(true);
     }
@@ -640,10 +625,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         JLabel searchLabel = new JLabel("Keywords", JLabel.TRAILING);    
         searchLabel.setLabelFor(searchField);  
 
-        /*
-        JLabel organismLabel = new JLabel("Organism", JLabel.TRAILING);
-        organismLabel.setLabelFor(organismField);  
-        */
         JLabel datasourceLabel = new JLabel("Data Source", JLabel.TRAILING);
 
         JLabel networkTypeLabel = new JLabel("Type", JLabel.TRAILING);    
@@ -656,22 +637,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         fieldPanel.add(nameCheckBox, "wrap");
 
-//        fieldPanel.add(organismLabel, "align label");
-        //organism checkboxes
-        /*
-        JPanel organismPanel = new JPanel();
-        organismPanel.setLayout(new BoxLayout(organismPanel, BoxLayout.LINE_AXIS));
-        for(JCheckBox checkBox: organismDisplayCommands.keySet())
-        {
-            organismPanel.add(checkBox);
-        }        
-        organismPanel.add(anyOrganismCheckBox);        
-        fieldPanel.add(organismPanel, "wrap");
-        */
-        /*
-        fieldPanel.add(new JLabel(), "align label"); //dummy label for empty cell
-        fieldPanel.add(organismField, "wrap, span");                
-        */
         //datasource checkboxes
         fieldPanel.add(datasourceLabel);
         JPanel datasourcePanel = new JPanel();
@@ -694,7 +659,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         fieldPanel.add(openButton, "tag right, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag right, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 250));
+        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 200));
         return fieldPanel;
     }
     
@@ -777,38 +742,19 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     /**
      * Generate HTML String for SearchHit excerpt.
      * Looks up HOMO_SAPIENS name.
- Counts interactions.
+     * Counts interactions.
      * @param hit - the SearchHit to generate HTML for
      * @return the HTML String
      */
     private String generateExcerptHTML(SearchHit hit)
     {
+        
         //construct HTML snippet of HOMO_SAPIENS scientific names
-        //REMOVED - all human data now
-        /*
-        List<String> organismIdList = hit.getOrganism();
-        String organismHTML = "<b>Organism:</b>";
-        
-        for(String organismUri : organismIdList)
-        {
-            try
-            {
-                String displayName = lookUpOrganismDisplayName(organismUri);
-                organismHTML = organismHTML 
-                        + "<br /><a href='" + organismUri + "'>" + displayName + "</a>";
-            }
-            catch(IOException e)
-            {
-                organismHTML = organismHTML 
-                    + "<p>Unknown Organism</p>";
-                logger.warning(e.getMessage());
-            }
-        }
-        */
-        
+        //organism rem - all human data now
         //count number of interactions for a pathway
         
         //removed interaction count as hitting 5 query limit on Pathway Commons - new search hit count coming in PC v6
+        //TODO get interaction count from search hit in PC v6
         /*
         String interactionsHTML = "";    
         if(networkType.equals("Pathway"))
@@ -862,7 +808,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                 /*
                 + "<br />" 
                 + interactionsHTML
-                + organismHTML
                 */
                 );
         return excerptHTML;        
@@ -897,10 +842,16 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             }
         });
         
-        return excerptPane;
-        
+        return excerptPane;       
     }
     
+    /**
+     * Perform a traverse query to count the number of interactions in a search hit.
+     * NB Pathway Commons v6 has a search hit size measure to be used instead.
+     * @param hit - search hit
+     * @return number of interactions
+     * @throws CPathException 
+     */
     private int traverseInteractions(SearchHit hit) throws CPathException
     {
         
@@ -1014,6 +965,10 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         }
     }
     
+    /**
+     * Clear search hits JTable.
+     * @param clearAdvanced - also clear advanced search results JTable
+     */
     private void clearSearchResults(boolean clearAdvanced)
     {
         model.setRowCount(0); //clear previous search results
@@ -1547,7 +1502,8 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                     searchHits = searchResponse.getSearchHit();            
                     maxHitsPerPage = searchResponse.getMaxHitsPerPage(); //maximum number of search hits per page
                     totalHits = searchResponse.getNumHits();
-                    currentPage = searchResponse.getPageNo();
+                    //currentPage = searchResponse.getPageNo();
+                    //TODO throwing NullPointerException - see if new cpath client fixes
 
                     statusLabel.setText("Search complete: success!");
                                         
@@ -1670,7 +1626,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             {
                 currentPage = 0;
                 searchTerm = searchField.getText();
-               // HOMO_SAPIENS = organismField.getText();
 
                 //restrict search to name
                 if(nameCheckBox.isSelected())
@@ -1692,8 +1647,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                 organismSet = null;
                 //organismSet = createFilterSet(organismDisplayCommands);
                 organismSet = new HashSet<String>();   
-                organismSet.add(HOMO_SAPIENS); 
-                
+                organismSet.add(HOMO_SAPIENS);                
             }
 
             //CPathClient.newInstance() will block execution if Pathway Commons is down - set a timeout
@@ -1850,12 +1804,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         {
             openNetwork();
         }
-        /*
-        else if(anyOrganismCheckBox == e.getSource()) //"Any" HOMO_SAPIENS checkbox has been checked or unchecked
-        {
-            enableDisableOrganism(anyOrganismCheckBox.isSelected()); //enable/disable HOMO_SAPIENS checkboxes and text field
-        }
-        */
         else if(allDatasourceCheckBox == e.getSource())
         {
             enableDisableDatasource(allDatasourceCheckBox.isSelected()); //enable/disable datasource checkboxes and text field
@@ -1888,29 +1836,6 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         searchWorker.execute();
     }    
 
-    /**
-     * Adds HOMO_SAPIENS NCBI IDs as key to HOMO_SAPIENSIdNameMap so that values may be populated later from NCBI Taxonomy SOAP service
-     */
-    /*
-    private void mapOrganisms(SearchHit hit)
-    {
-        List<String> organismList = hit.getOrganism(); //URIs of organisms at identifiers.org
-
-        //extract HOMO_SAPIENS ID for each HOMO_SAPIENS URI
-        String[] organismArray = organismList.toArray(new String[0]);
-        for (int i = 0; i < organismArray.length; i++)
-        {
-            String organismString = organismArray[i];
-            organismArray[i] = organismString.substring(organismString.lastIndexOf("/")+1, organismString.length()); //extract ID from URI
-            //add to NCBI ID/name map for later web service lookup if not already added
-            if(!organismIdNameMap.containsKey(organismArray[i]))
-            {
-                organismIdNameMap.put(organismArray[i], organismArray[i]); //value also has NCBI ID as placeholder - to be replaced with name from web service
-            }
-        }
-    }
-    */
-    
     private void displaySearchResults(boolean clearAdvanced)
     {
         //update statistics
@@ -1956,7 +1881,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     
     /**
     * Populate organism scientific names from NCBI web service
- NB - no longer used - organism stored as BioSource on Pathway Commons
+    * NB - no longer used - organism stored as BioSource on Pathway Commons
     */
     private boolean fetchScientificNames()
     {
@@ -1965,7 +1890,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         ObjectFactory objectFactory = new ObjectFactory();
         EFetchRequest requ = objectFactory.createEFetchRequest();
          
-        //set comma-separated String of HOMO_SAPIENS IDs as search parameter
+        //set comma-separated String of NCBI species IDs as search parameter
         String eFetchQuery = commaJoiner.join(this.organismIdNameMap.keySet());
         logger.fine("eFetchQuery: " + eFetchQuery);
         requ.setId(eFetchQuery);
@@ -1987,36 +1912,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
             return false;
         }
     }
-    /*
-    private void enableDisableOrganism(boolean anySelected)
-    {
-        //enable/disable HOMO_SAPIENS checkboxes
-        for(JCheckBox checkBox: organismDisplayCommands.keySet())
-        {
-            if(anySelected)
-            {
-                checkBox.setSelected(true);
-                checkBox.setEnabled(false);
-            }
-            else
-            {
-                checkBox.setSelected(false);
-                checkBox.setEnabled(true);
-            }
-        }
-
-        //enable/disable HOMO_SAPIENS text field
-        if(anySelected)
-        {
-            organismField.setText("");
-            organismField.setEnabled(false);
-        }
-        else
-        {
-            organismField.setEnabled(true);
-        }
-    }
-    */
+    
     private void enableDisableDatasource(boolean allSelected)
     {
         for(JCheckBox checkBox: datasourceDisplayCommands.keySet())

@@ -149,7 +149,6 @@
     </dependencies>
 
     <repositories>
-        <!-- BioPAX release repository -->
         <repository>
                 <id>pathway-commons</id>
                 <name>Pathway Commons Repository at Google Code</name>
@@ -158,6 +157,7 @@
                     <enabled>true</enabled>
                 </snapshots>
         </repository>
+        <!-- BioPAX release repository -->
         <repository>
                 <id>biopax.releases</id>
                 <name>BioPAX Repository</name>

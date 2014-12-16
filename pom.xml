@@ -110,7 +110,7 @@
         <dependency>
             <groupId>pathwaycommons.cpath</groupId>
             <artifactId>cpath-client</artifactId>
-            <version>4.2.0-SNAPSHOT</version>
+            <version>6.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -171,7 +171,16 @@
                 <name>BioPAX Snapshots Repository</name>
                 <url>http://www.biopax.org/m2repo/snapshots/</url>
                 <snapshots>
-                    <enabled>false</enabled>
+                    <enabled>true</enabled>
+                </snapshots>
+        </repository>
+
+        <repository>
+                <id>biopax.snapshots.trove</id>
+                <name>BioPAX Snapshots Repository</name>
+                <url>http://www.biopax.org/m2repo/snapshots/org/biopax/paxtools/paxtools-trove/</url>
+                <snapshots>
+                    <enabled>true</enabled>
                 </snapshots>
         </repository>
 

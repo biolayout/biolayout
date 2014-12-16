@@ -750,43 +750,17 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     {
         
         //construct HTML snippet of HOMO_SAPIENS scientific names
-        //organism rem - all human data now
-        //count number of interactions for a pathway
+        //organism rem - all human data nowi
         
-        //removed interaction count as hitting 5 query limit on Pathway Commons - new search hit count coming in PC v6
-        //TODO get interaction count from search hit in PC v6
-        /*
+        
         String interactionsHTML = "";    
         if(networkType.equals("Pathway"))
         {
-            //check if interaction count has been previously cached
-            Integer interactionCount = hitInteractionCountMap.get(hit);
+            Integer interactionCount = hit.getSize();
 
-            interactionsHTML = "<b>Interactions: </b>";
-            if(interactionCount != null)
-            {
-                logger.fine("Interaction count found: " + interactionCount);
-                interactionsHTML += interactionCount;
-            }
-            else //interactions have not been previously counted - do traverse searchQuery
-            {
-                try
-                {
-                    interactionCount = traverseInteractions(hit); //calculate interaction count using TRAVERSE query, autobox int to Integer
-
-                    hitInteractionCountMap.put(hit, interactionCount);
-                    interactionsHTML += interactionCount;
-                }
-                catch(CPathException exception)
-                {
-                    logger.warning(exception.getMessage());
-                    exception.printStackTrace();
-                    interactionsHTML += "unknown";
-                }
-            }
-            interactionsHTML += "<br />";
-        }
-        */
+            interactionsHTML = "<b>Size: </b>";
+            interactionsHTML += interactionCount;
+        }       
         
         //display excerpt
         String uri = hit.getUri();

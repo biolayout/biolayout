@@ -659,7 +659,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         fieldPanel.add(openButton, "tag right, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag right, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 200));
+        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 163));
         return fieldPanel;
     }
     
@@ -754,14 +754,14 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         
         
         String interactionsHTML = "";    
-        if(networkType.equals("Pathway"))
-        {
-            Integer interactionCount = hit.getSize();
 
+        Integer interactionCount = hit.getSize();
+        if(hit.getSize() != null)
+        {
             interactionsHTML = "<b>Size: </b>";
             interactionsHTML += interactionCount;
-        }       
-        
+        }
+
         //display excerpt
         String uri = hit.getUri();
         String abbreviatedUri = uri.substring(0, Math.min(uri.length(), 22)) + "..."; 
@@ -778,12 +778,10 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                 
         excerptHTML += ("<br />" 
          + "<b>URI: </b><br />"
-         + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"
-                /*
+         + "<a href='" + hit.getUri() + "'>" + abbreviatedUri + "</a>"             
                 + "<br />" 
-                + interactionsHTML
-                */
-                );
+                + interactionsHTML               
+        );
         return excerptHTML;        
     }
     
@@ -1476,9 +1474,12 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
                     searchHits = searchResponse.getSearchHit();            
                     maxHitsPerPage = searchResponse.getMaxHitsPerPage(); //maximum number of search hits per page
                     totalHits = searchResponse.getNumHits();
-                    //currentPage = searchResponse.getPageNo();
-                    //TODO throwing NullPointerException - see if new cpath client fixes
-
+                    Integer currentPageInteger = searchResponse.getPageNo();
+                    if(currentPageInteger != null) //safeguard against NullPointerException when autoboxing
+                    {
+                        currentPage = currentPageInteger;
+                    }
+ 
                     statusLabel.setText("Search complete: success!");
                                         
                     cacheSearchHits(); //store search hits in allSearchHits List

@@ -16,10 +16,10 @@
         <outFilename>${jarName}-${versionNumber}</outFilename>
         <mainClass>org.BioLayoutExpress3D.Layout</mainClass>
         <manifestVersion>1.0.0.0</manifestVersion>
-        <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2014</copyright>
+        <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2015</copyright>
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
-        <minJavaVersion>1.6</minJavaVersion>
+        <minJavaVersion>1.7</minJavaVersion>
         <!-- The -01 is because apparently the 2.1.5 release was screwed up and is missing all its class files -->
         <jogampVersion>2.1.5-01</jogampVersion>
         <joclVersion>0.1.7</joclVersion>
@@ -32,7 +32,8 @@
         <buildconfig.template.file>src/main/java/org/BioLayoutExpress3D/BuildConfig.template</buildconfig.template.file>
         <buildconfig.file>${generated.sources.dir}/org/BioLayoutExpress3D/BuildConfig.java</buildconfig.file>
 
-        <osx.app.dir>${project.build.directory}/dmg/${project.name}.app</osx.app.dir>
+<!--        <osx.app.dir>${project.build.directory}/dmg/${project.name}.app</osx.app.dir> -->
+        <osx.app.dir>${project.build.directory}/dmg</osx.app.dir>
 
         <debug.build>true</debug.build>
         
@@ -146,6 +147,12 @@
             <artifactId>LeapJava</artifactId>
             <version>${leapSDKVersion}</version>
         </dependency>                   
+
+        <dependency>
+          <groupId>com.oracle.appbundler</groupId>
+          <artifactId>appbundler</artifactId>
+          <version>1.0</version>
+        </dependency>						
     </dependencies>
 
     <repositories>
@@ -499,6 +506,7 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    <!--
                     <execution>
                         <id>osxAppCopy</id>
                         <phase>package</phase>
@@ -529,6 +537,33 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
+                    -->
+                    <!--
+                    <execution>
+                        <id>osxAppCopy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <taskdef name="bundleapp" 
+                                            classname="com.oracle.appbundler.AppBundlerTask"   
+                                            classpathref="${project.basedir}/jars/com/oracle/appbundler/appbundler/1.0/appbundler-1.0.jar" />
+                                <bundleapp outputdirectory="${osx.app.dir}"
+                                        name="${project.name}"
+                                        displayname="${project.name}"
+                                        icon="${basedir}/src/main/osx/Contents/Resources/Icon.icns"
+                                        identifier="${project.groupId}"
+                                        shortversion="${project.version}"
+                                        copyright="${project.copyright}"
+                                        mainclassname="${mainClass}">
+                                    <classpath file="${project.build.directory}/${outFilename}.jar" />
+                                </bundleapp>
+                            </target>									
+                        </configuration>
+                    </execution>   
+                    -->                                        
                 </executions>
             </plugin>
 

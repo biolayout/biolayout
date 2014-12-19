@@ -659,7 +659,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
         fieldPanel.add(openButton, "tag right, sizegroup bttn");
         fieldPanel.add(cancelButton, "tag right, sizegroup bttn");
         
-        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 163));
+        fieldPanel.setPreferredSize(new Dimension(DIALOG_WIDTH, 190));
         return fieldPanel;
     }
     

@@ -17,7 +17,6 @@ import static org.BioLayoutExpress3D.DebugConsole.ConsoleOutput.*;
 * @version 3.0.0.0
 *
 */
-
 public final class SelectionManager
 {
     private GraphUndoDelete graphUndoDelete = null;

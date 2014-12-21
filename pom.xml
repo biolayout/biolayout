@@ -32,8 +32,8 @@
         <buildconfig.template.file>src/main/java/org/BioLayoutExpress3D/BuildConfig.template</buildconfig.template.file>
         <buildconfig.file>${generated.sources.dir}/org/BioLayoutExpress3D/BuildConfig.java</buildconfig.file>
 
-<!--        <osx.app.dir>${project.build.directory}/dmg/${project.name}.app</osx.app.dir> -->
         <osx.app.dir>${project.build.directory}/dmg</osx.app.dir>
+        <osx.appbundler.path>${project.basedir}/appbundler/appbundler-1.0.jar</osx.appbundler.path>
 
         <debug.build>true</debug.build>
         
@@ -147,13 +147,7 @@
             <artifactId>LeapJava</artifactId>
             <version>${leapSDKVersion}</version>
         </dependency>                   
-
-        <dependency>
-          <groupId>com.oracle.appbundler</groupId>
-          <artifactId>appbundler</artifactId>
-          <version>1.0</version>
-        </dependency>						
-    </dependencies>
+   </dependencies>
 
     <repositories>
         <repository>
@@ -538,7 +532,7 @@
                         </goals>
                     </execution>
                     -->
-                    <!--
+                    
                     <execution>
                         <id>osxAppCopy</id>
                         <phase>package</phase>
@@ -547,9 +541,12 @@
                         </goals>
                         <configuration>
                             <target>
+                                <path id="path.appbundler">
+                                    <pathelement path="${osx.appbundler.path}"></pathelement>
+                                </path>                               
                                 <taskdef name="bundleapp" 
-                                            classname="com.oracle.appbundler.AppBundlerTask"   
-                                            classpathref="${project.basedir}/jars/com/oracle/appbundler/appbundler/1.0/appbundler-1.0.jar" />
+                                            classname="com.oracle.appbundler.AppBundlerTask"                                               
+                                            classpathref="path.appbundler" />
                                 <bundleapp outputdirectory="${osx.app.dir}"
                                         name="${project.name}"
                                         displayname="${project.name}"
@@ -563,7 +560,7 @@
                             </target>									
                         </configuration>
                     </execution>   
-                    -->                                        
+                                                            
                 </executions>
             </plugin>
 

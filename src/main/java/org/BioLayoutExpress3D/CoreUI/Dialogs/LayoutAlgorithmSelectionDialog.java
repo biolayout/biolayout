@@ -56,7 +56,7 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
         layoutAlgorithmGroup.add(circleRadioButton);
         algorithmPanel.add(circleRadioButton);
 
-        frRadioButton.setSelected(true);
+        fmmmRadioButton.setSelected(true);
 
         this.setLayout(new BorderLayout());
         this.add(algorithmPanel, BorderLayout.CENTER);

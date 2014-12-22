@@ -14,6 +14,7 @@ import org.BioLayoutExpress3D.Utils.*;
 import org.BioLayoutExpress3D.StaticLibraries.*;
 import org.BioLayoutExpress3D.Textures.*;
 import static java.lang.Math.*;
+import java.util.logging.Logger;
 import org.BioLayoutExpress3D.BuildConfig;
 import static org.BioLayoutExpress3D.StaticLibraries.ImageProducer.*;
 
@@ -26,6 +27,8 @@ import static org.BioLayoutExpress3D.StaticLibraries.ImageProducer.*;
 
 public final class GlobalEnvironment
 {
+    private static final Logger logger = Logger.getLogger(GlobalEnvironment.class.getName());
+    
     public static final String TITLE = BuildConfig.NAME;
     public static final String TITLE_VERSION = " Version ";
     public static final String TITLE_VERSION_NUMBER = BuildConfig.VERSION;
@@ -207,7 +210,7 @@ public final class GlobalEnvironment
 
     public static enum GraphLayoutAlgorithm { FRUCHTERMAN_REINGOLD, FMMM, CIRCLE, ALWAYS_ASK }
     public static final PrefEnum<GraphLayoutAlgorithm> GRAPH_LAYOUT_ALGORITHM = new PrefEnum<GraphLayoutAlgorithm>(
-            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FRUCHTERMAN_REINGOLD, "graph_layout_algorithm", true);
+            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FMMM, "graph_layout_algorithm", true);
 
     public static final boolean RANDOM_INITIAL_LAYOUT_COORDS = true;
     public static final double REFERENCE_K_VALUE = 30.0;
@@ -225,10 +228,11 @@ public final class GlobalEnvironment
         VERY_HIGH_QUALITY_VERY_LOW_SPEED,
         HIGH_QUALITY_LOW_SPEED,
         MEDIUM_QUALITY_MEDIUM_SPEED,
-        LOW_QUALITY_HIGH_SPEED
+        LOW_QUALITY_HIGH_SPEED,
     }
     public static final PrefEnum<FmmmQualityVsSpeed> FMMM_QUALITY_VS_SPEED = new PrefEnum<FmmmQualityVsSpeed>(
-            FmmmQualityVsSpeed.class, FmmmQualityVsSpeed.MEDIUM_QUALITY_MEDIUM_SPEED, "fmmm_quality_vs_speed", true);
+            FmmmQualityVsSpeed.class, FmmmQualityVsSpeed.LOW_QUALITY_HIGH_SPEED, "fmmm_quality_vs_speed", true);    
+    
     public static enum FmmmForceModel { EADES, FRUCHTERMAN_REINGOLD }
     public static final PrefEnum<FmmmForceModel> FMMM_FORCE_MODEL = new PrefEnum<FmmmForceModel>(
             FmmmForceModel.class, FmmmForceModel.FRUCHTERMAN_REINGOLD, "fmmm_force_model", true);

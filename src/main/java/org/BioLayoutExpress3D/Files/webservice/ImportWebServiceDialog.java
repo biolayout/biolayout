@@ -118,7 +118,7 @@ public class ImportWebServiceDialog extends JFrame implements ActionListener{
     public static final String FORMAT_SIF = "BINARY_SIF";
     public static final String FORMAT_BIOPAX = "BIOPAX";
 
-    //datasources command parameters - some renamed for Pathway Commons v5
+    //datasources command parameters - some renamed for Pathway Commons version 6
     public static final String DATASOURCE_REACTOME = "reactome_human";      //Reactome
     public static final String DATASOURCE_PID = "pid";                      //NCI Nature
     public static final String DATASOURCE_PHOSPHOSITEPLUS = "psp";          //PhosphoSitePlus

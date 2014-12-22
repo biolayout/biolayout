@@ -3,6 +3,7 @@ package org.BioLayoutExpress3D.CoreUI.Dialogs;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
@@ -40,6 +41,8 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
     */
     public static final long serialVersionUID = 111222333444555699L;
 
+    private static final Logger logger = Logger.getLogger(LayoutGraphPropertiesDialog.class.getName());
+    
     public static enum LayoutGraphPropertiesTabTypes { GENERAL, LAYOUT, RENDERING, MCL, SIMULATION, PARALLELISM, SEARCH, NODES, EDGES, CLASSES }
     private static final int NUMBER_OF_TOTAL_TABS = LayoutGraphPropertiesTabTypes.values().length;
     private static final int NUMBER_OF_SHADER_CHECKBOXES_PER_COLUMN = 3;
@@ -1202,9 +1205,10 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         fmmmQualityVsSpeed = new JComboBox<String>();
         for (FmmmQualityVsSpeed qvs : FmmmQualityVsSpeed.values())
         {
-            String s = Utils.titleCaseOf(qvs.toString());
-            fmmmQualityVsSpeed.addItem(s);
+            String fmmmQualityVsSpeedString = Utils.titleCaseOf(qvs.toString());
+            fmmmQualityVsSpeed.addItem(fmmmQualityVsSpeedString);
         }
+        //fmmmQualityVsSpeed.setSelectedItem(fmmmQualityVsSpeedString); //set to the lowest setting - the last one in the enum
         fmmmQualityVsSpeed.addActionListener(this);
         fmmmQualityVsSpeed.setActionCommand(CHANGE_ACTION_COMMAND);
         fmmmQualityVsSpeed.setToolTipText("Quality vs. Speed");
@@ -3060,7 +3064,7 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
         askRadioButton.setSelected(gla == GraphLayoutAlgorithm.ALWAYS_ASK);
         fmmmDesiredEdgeLength.setValue(FMMM_DESIRED_EDGE_LENGTH.get());
         fmmmForceModel.setSelectedIndex(FMMM_FORCE_MODEL.getIndex());
-        fmmmQualityVsSpeed.setSelectedIndex(FMMM_QUALITY_VS_SPEED.getIndex());
+        fmmmQualityVsSpeed.setSelectedIndex(FMMM_QUALITY_VS_SPEED.getIndex());        
         fmmmStopCriterion.setSelectedIndex(FMMM_STOP_CRITERION.getIndex());
         fmmmIterationLevelFactor.setValue(FMMM_ITERATION_LEVEL_FACTOR.get());
 
@@ -3252,8 +3256,6 @@ public class LayoutGraphPropertiesDialog extends JDialog implements LayoutClasse
                 }
             }
         }
-
-
     }
 
     private void applyChanges()

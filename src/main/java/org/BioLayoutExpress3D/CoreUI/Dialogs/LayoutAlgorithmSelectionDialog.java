@@ -41,8 +41,8 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
 
         ButtonGroup layoutAlgorithmGroup = new ButtonGroup();
 
-        frRadioButton = new JRadioButton("Fruchterman-Rheingold");
-        frRadioButton.setToolTipText("Fruchterman-Rheingold");
+        frRadioButton = new JRadioButton("Fruchterman-Reingold");
+        frRadioButton.setToolTipText("Fruchterman-Reingold");
         layoutAlgorithmGroup.add(frRadioButton);
         algorithmPanel.add(frRadioButton);
 
@@ -93,7 +93,7 @@ public final class LayoutAlgorithmSelectionDialog extends JDialog implements Act
         }
         else // default if (frRadioButton.isSelected())
         {
-            return GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD;
+            return GraphLayoutAlgorithm.FRUCHTERMAN_REINGOLD;
         }
     }
 }

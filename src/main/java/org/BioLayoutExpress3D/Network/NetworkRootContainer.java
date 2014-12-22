@@ -216,7 +216,7 @@ public final class NetworkRootContainer extends NetworkContainer
                     case EADES:
                         fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcExact);
                         break;
-                    case FRUCHTERMAN_RHEINGOLD:
+                    case FRUCHTERMAN_REINGOLD:
                         fmmm.repulsiveForcesCalculation(FMMMLayout.RepulsiveForcesMethod.rfcGridApproximation);
                         break;
                     /*case NMM:
@@ -269,7 +269,7 @@ public final class NetworkRootContainer extends NetworkContainer
                 break;
 
             default:
-            case FRUCHTERMAN_RHEINGOLD:
+            case FRUCHTERMAN_REINGOLD:
                 if (WEIGHTED_EDGES)
                 {
                     normaliseWeights();

@@ -205,9 +205,9 @@ public final class GlobalEnvironment
     public static final PrefBool COLLAPSE_NODES_BY_VOLUME = new PrefBool(false, "collapse_nodes_by_volume", true);
     public static final PrefBool CONFIRM_PREFERENCES_SAVE  = new PrefBool(true, "confirm_preferences_save", true);
 
-    public static enum GraphLayoutAlgorithm { FRUCHTERMAN_RHEINGOLD, FMMM, CIRCLE, ALWAYS_ASK }
+    public static enum GraphLayoutAlgorithm { FRUCHTERMAN_REINGOLD, FMMM, CIRCLE, ALWAYS_ASK }
     public static final PrefEnum<GraphLayoutAlgorithm> GRAPH_LAYOUT_ALGORITHM = new PrefEnum<GraphLayoutAlgorithm>(
-            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD, "graph_layout_algorithm", true);
+            GraphLayoutAlgorithm.class, GraphLayoutAlgorithm.FRUCHTERMAN_REINGOLD, "graph_layout_algorithm", true);
 
     public static final boolean RANDOM_INITIAL_LAYOUT_COORDS = true;
     public static final double REFERENCE_K_VALUE = 30.0;
@@ -229,9 +229,9 @@ public final class GlobalEnvironment
     }
     public static final PrefEnum<FmmmQualityVsSpeed> FMMM_QUALITY_VS_SPEED = new PrefEnum<FmmmQualityVsSpeed>(
             FmmmQualityVsSpeed.class, FmmmQualityVsSpeed.MEDIUM_QUALITY_MEDIUM_SPEED, "fmmm_quality_vs_speed", true);
-    public static enum FmmmForceModel { EADES, FRUCHTERMAN_RHEINGOLD/*, NMM*/ }
+    public static enum FmmmForceModel { EADES, FRUCHTERMAN_REINGOLD }
     public static final PrefEnum<FmmmForceModel> FMMM_FORCE_MODEL = new PrefEnum<FmmmForceModel>(
-            FmmmForceModel.class, FmmmForceModel.FRUCHTERMAN_RHEINGOLD, "fmmm_force_model", true);
+            FmmmForceModel.class, FmmmForceModel.FRUCHTERMAN_REINGOLD, "fmmm_force_model", true);
     public static enum FmmmStopCriterion { FORCE_THRESHOLD_AND_FIXED_ITERATIONS, FIXED_ITERATIONS, FORCE_THRESHOLD }
     public static final PrefEnum<FmmmStopCriterion> FMMM_STOP_CRITERION = new PrefEnum<FmmmStopCriterion>(
             FmmmStopCriterion.class, FmmmStopCriterion.FORCE_THRESHOLD_AND_FIXED_ITERATIONS, "fmmm_stop_criterion", true);

@@ -942,11 +942,11 @@ public class Graph extends GLCanvas implements GraphInterface
 
     private void performBurstIterations()
     {
-        if (GRAPH_LAYOUT_ALGORITHM.get() != GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD)
+        if (GRAPH_LAYOUT_ALGORITHM.get() != GraphLayoutAlgorithm.FRUCHTERMAN_REINGOLD)
         {
             if (JOptionPane.showConfirmDialog(layoutFrame,
                     "Burst Layout Iterations can only be performed using the " +
-                    "Fruchterman-Rheingold algorithm. Do you wish to proceed?",
+                    "Fruchterman-Reingold algorithm. Do you wish to proceed?",
                     "Are You Sure?", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION)
             {
                 return;
@@ -978,7 +978,7 @@ public class Graph extends GLCanvas implements GraphInterface
                 TILED_LAYOUT.set(false);
             }
 
-            nc.relayout(GraphLayoutAlgorithm.FRUCHTERMAN_RHEINGOLD);
+            nc.relayout(GraphLayoutAlgorithm.FRUCHTERMAN_REINGOLD);
             burstUpdate();
 
             if (SHOW_LAYOUT_ITERATIONS.get())

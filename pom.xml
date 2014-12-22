@@ -7,7 +7,7 @@
     <version>1.0</version>
     <packaging>jar</packaging>
 
-    <name>BioLayout Express 3D</name>
+    <name>BioLayout Express3D</name>
     <url>http://biolayout.org</url>
 
     <properties>
@@ -16,7 +16,7 @@
         <outFilename>${jarName}-${versionNumber}</outFilename>
         <mainClass>org.BioLayoutExpress3D.Layout</mainClass>
         <manifestVersion>1.0.0.0</manifestVersion>
-        <copyright>© The University of Edinburgh, European Molecular Biology Laoratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2015</copyright>
+        <copyright>© The University of Edinburgh, European Molecular Biology Laboratory, Wellcome Trust Sanger Institue, Genome Research Ltd. 2006-2015</copyright>
         <icon>src/main/resources/Resources/Images/BioLayoutExpress3DIcon.ico</icon>
 
         <minJavaVersion>1.7</minJavaVersion>
@@ -345,7 +345,6 @@
                                     <excludes>*newt.*,*_mobile.*</excludes>
                                 </artifactItem>
 
-
                                 <!-- jogl-all native windows-amd64 -->
                                 <artifactItem>
                                     <groupId>org.jogamp.jogl</groupId>
@@ -500,39 +499,6 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    <!--
-                    <execution>
-                        <id>osxAppCopy</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <target>
-                                <mkdir dir="${osx.app.dir}/Contents/Resources/Java/"/>
-                                <mkdir dir="${osx.app.dir}/Contents/MacOS/"/>
-
-                                <copy file="${basedir}/src/main/osx/Contents/Info.plist"
-                                    tofile="${osx.app.dir}/Contents/Info.plist">
-                                    <filterset>
-                                        <filter token="name" value="${project.name}"/>
-                                        <filter token="version" value="${versionNumber}"/>
-                                        <filter token="mainClass" value="${mainClass}"/>
-                                        <filter token="jarFilename" value="${outFilename}.jar"/>
-                                    </filterset>
-                                </copy>
-                                <copy file="${basedir}/src/main/osx/Contents/Resources/Icon.icns"
-                                    tofile="${osx.app.dir}/Contents/Resources/Icon.icns" />
-                                <copy file="${project.build.directory}/${outFilename}.jar"
-                                    tofile="${osx.app.dir}/Contents/Resources/Java/${outFilename}.jar" />
-                                <symlink failonerror="false" overwrite="true"
-                                    link="${osx.app.dir}/Contents/MacOS/JavaApplicationStub"
-                                    resource="/System/Library/Frameworks/JavaVM.framework/Versions/Current/Resources/MacOS/JavaApplicationStub"/>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    -->
-                    
                     <execution>
                         <id>osxAppCopy</id>
                         <phase>package</phase>
@@ -544,23 +510,24 @@
                                 <path id="path.appbundler">
                                     <pathelement path="${osx.appbundler.path}"></pathelement>
                                 </path>                               
+                                <mkdir dir="${osx.app.dir}" />
                                 <taskdef name="bundleapp" 
-                                            classname="com.oracle.appbundler.AppBundlerTask"                                               
-                                            classpathref="path.appbundler" />
+                                        classname="com.oracle.appbundler.AppBundlerTask"                                               
+                                        classpathref="path.appbundler" />
                                 <bundleapp outputdirectory="${osx.app.dir}"
                                         name="${project.name}"
                                         displayname="${project.name}"
                                         icon="${basedir}/src/main/osx/Contents/Resources/Icon.icns"
                                         identifier="${project.groupId}"
                                         shortversion="${project.version}"
-                                        copyright="${project.copyright}"
-                                        mainclassname="${mainClass}">
+                                        copyright="${copyright}"
+                                        mainclassname="${mainClass}" >
                                     <classpath file="${project.build.directory}/${outFilename}.jar" />
+                                    <option value="-Xmx32000m"/>
                                 </bundleapp>
                             </target>									
                         </configuration>
-                    </execution>   
-                                                            
+                    </execution>                                                               
                 </executions>
             </plugin>
 

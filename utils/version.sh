@@ -5,7 +5,9 @@ BRANCH=`git rev-parse --abbrev-ref HEAD`
 
 if [ "${BRANCH}" == "master" ];
 then
-    echo ${TAG}
+    #echo ${TAG}
 else
-    echo ${TAG}-${BRANCH}
+    #echo ${TAG}-${BRANCH}
 fi
+
+echo 3.3

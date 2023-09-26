@@ -446,31 +446,52 @@ public final class WrapperGraphmlToLayoutParser extends CoreParser implements Gr
         int shapeIndex = 0;
         for (int i = 0; i < numberOfShapes; i++)
         {
-            if ( nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].first ) )
+            if ( !nodeShape.equals( (String)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].first ) )
+                continue;
+
+            currentGraphmlShape = (GraphmlShapesGroup3)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].second;
+
+            // Node names containing ~ are never generic entities
+            if ( currentGraphmlShape.equals(GraphmlShapesGroup3.GENERIC_ENTITY) && nodeName.contains("~"))
+                continue;
+
+            // Node names containing : are never protein peptides
+            if ( currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_PEPTIDE) && nodeName.contains(":") )
+                continue;
+
+            // Mild hack: require generic entities to be the correct colour
+            if ( currentGraphmlShape.equals(GraphmlShapesGroup3.GENERIC_ENTITY) && !nodeColor1.equals( (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].third ))
+                return Tuples.tuple(GraphmlShapesGroup3.NONE, Color.BLACK, 0.0f, CIRCLE, SPHERE, false);
+
+            switch(currentGraphmlShape)
             {
-                currentGraphmlShape = (GraphmlShapesGroup3)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].second;
-
-                // Mild hack: require generic entities to be the correct colour
-                if ( currentGraphmlShape.equals(GraphmlShapesGroup3.GENERIC_ENTITY) && !nodeColor1.equals( (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[i].third ) )
-                    return Tuples.tuple(GraphmlShapesGroup3.NONE, Color.BLACK, 0.0f, CIRCLE, SPHERE, false);
-
-                if ( currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_COMPLEX) && !nodeName.contains(":") )
-                    currentGraphmlShape = GraphmlShapesGroup3.PROTEIN_PEPTIDE;
-
-                if ( currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_COMPLEX)    || currentGraphmlShape.equals(GraphmlShapesGroup3.PROTEIN_PEPTIDE) ||
-                     currentGraphmlShape.equals(GraphmlShapesGroup3.GENE)               || currentGraphmlShape.equals(GraphmlShapesGroup3.DNA_SEQUENCE)    ||
-                     currentGraphmlShape.equals(GraphmlShapesGroup3.SIMPLE_BIOCHEMICAL) || currentGraphmlShape.equals(GraphmlShapesGroup3.GENERIC_ENTITY)  ||
-                     currentGraphmlShape.equals(GraphmlShapesGroup3.DRUG)               || currentGraphmlShape.equals(GraphmlShapesGroup3.ION_SIMPLE_MOLECULE) )
+                case PROTEIN_COMPLEX:
+                case PROTEIN_PEPTIDE:
+                case GENE:
+                case DNA_SEQUENCE:
+                case SIMPLE_BIOCHEMICAL:
+                case GENERIC_ENTITY:
+                case DRUG:
+                case ION_SIMPLE_MOLECULE:
+                case CELL:
+                case BACTERIA:
+                case VIRUS:
+                case PRIMARY_INPUT:
+                case TERMINAL_OUTPUT:
                     ismEPNComponent = true;
+                    break;
 
-                shapeIndex = currentGraphmlShape.ordinal();
-                return Tuples.tuple(currentGraphmlShape,                                             // return type of graphml shape
-                                       (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].third,  // return graphml color
-                                       (Float)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].fourth, // return graphml shape size
-                                    (Shapes2D)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].fifth,  // return graphml 2D shape
-                                    (Shapes3D)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].sixth,  // return graphml 3D shape
-                                    ismEPNComponent);                                                // return mEPN Component
+                default:
+                    break;
             }
+
+            shapeIndex = currentGraphmlShape.ordinal();
+            return Tuples.tuple(currentGraphmlShape,                                             // return type of graphml shape
+                                   (Color)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].third,  // return graphml color
+                                   (Float)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].fourth, // return graphml shape size
+                                (Shapes2D)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].fifth,  // return graphml 2D shape
+                                (Shapes3D)GRAPHML_MEPN_SHAPES_LOOKUP_TABLE_3[shapeIndex].sixth,  // return graphml 3D shape
+                                ismEPNComponent);                                                // return mEPN Component
         }
 
         return Tuples.tuple(GraphmlShapesGroup3.NONE, Color.BLACK, 0.0f, CIRCLE, SPHERE, false);

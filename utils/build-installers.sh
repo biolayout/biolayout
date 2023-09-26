@@ -24,7 +24,7 @@ echo SCRIPT_DIR=${SCRIPT_DIR}
 echo SRC_DIR=${SRC_DIR}
 
 cd ${SRC_DIR}
-VERSION="3.4"
+VERSION="3.5"
 
 GIT_REV=`git rev-parse HEAD`
 BUILDS_DIR="${SCRIPT_DIR}/builds"
@@ -34,7 +34,7 @@ echo VERSION=${VERSION}
 echo GIT_REV=${GIT_REV}
 echo BUILD_DIR=${BUILD_DIR}
 
-rm -r ${BUILD_DIR}
+rm -rf ${BUILD_DIR}
 mkdir -p ${BUILD_DIR}
 
 if hash makensis 2>/dev/null;

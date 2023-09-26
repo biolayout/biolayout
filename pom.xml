@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.biolayout</groupId>
@@ -12,7 +12,7 @@
 
     <properties>
         <productName>BioLayout</productName>
-        <versionNumber>3.4</versionNumber>
+        <versionNumber>3.5</versionNumber>
         <jarName>${productName}</jarName>
         <outFilename>${jarName}-${versionNumber}</outFilename>
         <mainClass>org.biolayout.Layout</mainClass>
@@ -20,10 +20,9 @@
         <copyright>© University of Edinburgh 2020</copyright>
         <icon>src/main/resources/Resources/Images/Icon.ico</icon>
 
-        <minJavaVersion>1.8</minJavaVersion>
+        <maven.compiler.release>8</maven.compiler.release>
 
-        <jogampVersion>2.3.2</jogampVersion>
-        <sbgnVersion>milestone2</sbgnVersion>
+        <jogampVersion>2.4.0</jogampVersion>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -41,7 +40,6 @@
         <jarsigner.alias>selfsigned</jarsigner.alias>
         <jarsigner.storepass>password</jarsigner.storepass>
         <jarsigner.keypass>password</jarsigner.keypass>
-        <jarsigner.tsa>http://tsa.starfieldtech.com/</jarsigner.tsa>
     </properties>
 
     <profiles>
@@ -71,7 +69,7 @@
                 <plugin>
                     <groupId>com.akathist.maven.plugins.launch4j</groupId>
                     <artifactId>launch4j-maven-plugin</artifactId>
-                    <version>1.7.4</version>
+                    <version>2.4.1</version>
                     <executions>
                         <execution>
                             <id>l4j</id>
@@ -87,7 +85,8 @@
                                 <icon>${icon}</icon>
                                 <errTitle>${productName}</errTitle>
                                 <jre>
-                                    <minVersion>${minJavaVersion}.0</minVersion>
+                                    <path>${JAVA_HOME};${PATH}</path>
+                                    <minVersion>1.${maven.compiler.release}.0</minVersion>
                                 </jre>
                                 <versionInfo>
                                     <fileVersion>${manifestVersion}</fileVersion>
@@ -110,7 +109,7 @@
     </profiles>
 
     <dependencies>
-        
+
         <!-- Java 6 = JAX-B Version 2.0   -->
         <!-- Java 7 = JAX-B Version 2.2.3 -->
         <!-- Java 8 = JAX-B Version 2.2.8 -->
@@ -150,9 +149,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.sbgn</groupId>
-            <artifactId>sbgn</artifactId>
-            <version>${sbgnVersion}</version>
+            <groupId>com.github.sbgn</groupId>
+            <artifactId>libsbgn</artifactId>
+            <version>milestone2</version>
         </dependency>
 
         <dependency>
@@ -220,12 +219,6 @@
         </dependency>
 
         <dependency>
-          <groupId>com.oracle.appbundler</groupId>
-          <artifactId>appbundler</artifactId>
-          <version>1.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.9.1</version>
@@ -236,13 +229,26 @@
             <artifactId>scijava-common</artifactId>
             <version>2.66.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>javax.jws</groupId>
+            <artifactId>javax.jws-api</artifactId>
+            <version>1.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.xml.ws</groupId>
+            <artifactId>jaxws-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
     </dependencies>
 
     <repositories>
         <repository>
                 <id>pathway-commons</id>
                 <name>Pathway Commons Repository at Google Code</name>
-                <url>http://repo.pathway-commons.googlecode.com/hg/</url>
+                <url>https://repo.pathway-commons.googlecode.com/hg/</url>
                 <snapshots>
                     <enabled>true</enabled>
                 </snapshots>
@@ -252,7 +258,7 @@
         <repository>
                 <id>biopax.releases</id>
                 <name>BioPAX Repository</name>
-                <url>http://www.biopax.org/m2repo/releases/</url>
+                <url>https://www.biopax.org/m2repo/releases/</url>
                 <snapshots>
                     <enabled>false</enabled>
                 </snapshots>
@@ -261,7 +267,7 @@
         <repository>
                 <id>biopax.snapshots</id>
                 <name>BioPAX Snapshots Repository</name>
-                <url>http://www.biopax.org/m2repo/snapshots/</url>
+                <url>https://www.biopax.org/m2repo/snapshots/</url>
                 <snapshots>
                     <enabled>true</enabled>
                 </snapshots>
@@ -270,13 +276,23 @@
         <repository>
                 <id>biopax.snapshots.trove</id>
                 <name>BioPAX Snapshots Repository</name>
-                <url>http://www.biopax.org/m2repo/snapshots/org/biopax/paxtools/paxtools-trove/</url>
+                <url>https://www.biopax.org/m2repo/snapshots/org/biopax/paxtools/paxtools-trove/</url>
                 <snapshots>
                     <enabled>true</enabled>
                 </snapshots>
         </repository>
 
-        <!-- This allows us to treat local jars (e.g. libsbgn) as
+        <repository>
+	        <id>jitpack.io</id>
+	        <url>https://jitpack.io</url>
+        </repository>
+
+        <repository>
+	        <id>jogamp.org</id>
+	        <url>https://jogamp.org/deployment/maven</url>
+        </repository>
+
+        <!-- This allows us to treat local jars as
              normal dependencies -->
         <repository>
             <id>jars</id>
@@ -356,7 +372,6 @@
                     <alias>${jarsigner.alias}</alias>
                     <storepass>${jarsigner.storepass}</storepass>
                     <keypass>${jarsigner.keypass}</keypass>
-                    <tsa>${jarsigner.tsa}</tsa>
                     <arguments>
                         <argument>-sigalg</argument>
                         <argument>SHA1withRSA</argument>
@@ -420,32 +435,6 @@
                         <configuration>
                             <artifactItems>
 
-                                <!-- jogl-all native windows-i586 -->
-                                <artifactItem>
-                                    <groupId>org.jogamp.jogl</groupId>
-                                    <artifactId>jogl-all</artifactId>
-                                    <version>${jogampVersion}</version>
-                                    <classifier>natives-windows-i586</classifier>
-                                    <type>jar</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
-                                    <includes>**\/*.dll</includes>
-                                    <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
-                                </artifactItem>
-
-                                <!-- gluegen-rt native windows-i586 -->
-                                <artifactItem>
-                                    <groupId>org.jogamp.gluegen</groupId>
-                                    <artifactId>gluegen-rt</artifactId>
-                                    <version>${jogampVersion}</version>
-                                    <classifier>natives-windows-i586</classifier>
-                                    <type>jar</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
-                                    <includes>**\/*.dll</includes>
-                                    <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
-                                </artifactItem>
-
                                 <!-- jogl-all native windows-amd64 -->
                                 <artifactItem>
                                     <groupId>org.jogamp.jogl</groupId>
@@ -453,7 +442,7 @@
                                     <version>${jogampVersion}</version>
                                     <classifier>natives-windows-amd64</classifier>
                                     <type>jar</type>
-                                    <overWrite>false</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
                                     <includes>**\/*.dll</includes>
                                     <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
@@ -466,36 +455,9 @@
                                     <version>${jogampVersion}</version>
                                     <classifier>natives-windows-amd64</classifier>
                                     <type>jar</type>
-                                    <overWrite>false</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
                                     <includes>**\/*.dll</includes>
-                                    <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
-                                </artifactItem>
-
-
-                                <!-- jogl-all native linux-i586 -->
-                                <artifactItem>
-                                    <groupId>org.jogamp.jogl</groupId>
-                                    <artifactId>jogl-all</artifactId>
-                                    <version>${jogampVersion}</version>
-                                    <classifier>natives-linux-i586</classifier>
-                                    <type>jar</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
-                                    <includes>**\/*.so</includes>
-                                    <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
-                                </artifactItem>
-
-                                <!-- gluegen-rt native linux-i586 -->
-                                <artifactItem>
-                                    <groupId>org.jogamp.gluegen</groupId>
-                                    <artifactId>gluegen-rt</artifactId>
-                                    <version>${jogampVersion}</version>
-                                    <classifier>natives-linux-i586</classifier>
-                                    <type>jar</type>
-                                    <overWrite>false</overWrite>
-                                    <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
-                                    <includes>**\/*.so</includes>
                                     <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
                                 </artifactItem>
 
@@ -507,7 +469,7 @@
                                     <version>${jogampVersion}</version>
                                     <classifier>natives-linux-amd64</classifier>
                                     <type>jar</type>
-                                    <overWrite>false</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
                                     <includes>**\/*.so</includes>
                                     <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
@@ -520,7 +482,7 @@
                                     <version>${jogampVersion}</version>
                                     <classifier>natives-linux-amd64</classifier>
                                     <type>jar</type>
-                                    <overWrite>false</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
                                     <includes>**\/*.so</includes>
                                     <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
@@ -534,9 +496,9 @@
                                     <version>${jogampVersion}</version>
                                     <classifier>natives-macosx-universal</classifier>
                                     <type>jar</type>
-                                    <overWrite>false</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
-                                    <includes>**\/*.jnilib</includes>
+                                    <includes>**\/*.dylib</includes>
                                     <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
                                 </artifactItem>
 
@@ -547,9 +509,9 @@
                                     <version>${jogampVersion}</version>
                                     <classifier>natives-macosx-universal</classifier>
                                     <type>jar</type>
-                                    <overWrite>false</overWrite>
+                                    <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/classes/Resources/Libraries</outputDirectory>
-                                    <includes>**\/*.jnilib</includes>
+                                    <includes>**\/*.dylib</includes>
                                     <excludes>**\/*newt.*,**\/*_mobile.*</excludes>
                                 </artifactItem>
 
@@ -621,20 +583,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <source>${minJavaVersion}</source>
-                    <target>${minJavaVersion}</target>
-                    <compilerArguments>
-                        <Xlint:unchecked />
-                        <Xlint:deprecation />
-                    </compilerArguments>
-                </configuration>
             </plugin>
 
             <plugin>

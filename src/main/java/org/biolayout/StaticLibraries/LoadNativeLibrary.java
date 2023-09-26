@@ -36,9 +36,7 @@ public final class LoadNativeLibrary
     */
     private static final String[] EXTRACT_FROM_LIBRARIES_OS_SPECIFIC_PATH =
     {
-      "natives/windows-i586/",
       "natives/windows-amd64/",
-      "natives/linux-i586/",
       "natives/linux-amd64/",
       "natives/macosx-universal/"
     };
@@ -265,9 +263,8 @@ public final class LoadNativeLibrary
         boolean isWin7 = isWin && osName.contains("7");
         boolean isLinux = osName.startsWith("Linux");
         boolean isMac = !isWin && ( osName.startsWith("Mac") || osName.startsWith("Darwin") );
-        boolean is64 = is64bit();
 
-        return new boolean[] { (isWin || isXP || isVista || isWin7) && !is64, (isWin || isXP || isVista || isWin7) && is64, isLinux && !is64, isLinux && is64, isMac };
+        return new boolean[] { (isWin || isXP || isVista || isWin7), isLinux, isMac };
     }
 
     /**
@@ -290,7 +287,7 @@ public final class LoadNativeLibrary
         else if (isLinux)
             OSSpecificLibraryName = "lib" + libraryName + ".so";
         else if (isMac)
-            OSSpecificLibraryName = "lib" + libraryName + ".jnilib";
+            OSSpecificLibraryName = "lib" + libraryName + ".dylib";
 
         return OSSpecificLibraryName;
     }

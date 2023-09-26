@@ -110,6 +110,26 @@ public final class GraphmlNetworkmEPN3DShapesDefinitions
     public static final float LATHE3D_MEPN_3D_SHAPE_OR_ROTATE_Y = 0.0f;
     public static final float LATHE3D_MEPN_3D_SHAPE_OR_ROTATE_Z = 0.0f;
 
+    public static final String LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_NAME = "TERMINAL_OUTPUT";
+    private static final Lathe3DShapes LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_PRESET_SHAPE = SAUCER;
+    public static final Lathe3DSettings LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS = Lathe3DShapesProducer.createLathe3DSettings( LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_PRESET_SHAPE, NODE_TESSELATION.get() );
+    public static final float LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_X = -0.3f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_Y = -0.3f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_Z = -0.3f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_X = 90.0f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_Y = 0.0f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_Z = 0.0f;
+
+    public static final String LATHE3D_MEPN_3D_SHAPE_VIRUS_NAME = "VIRUS";
+    private static final Lathe3DShapes LATHE3D_MEPN_3D_SHAPE_VIRUS_PRESET_SHAPE = SAUCER;
+    public static final Lathe3DSettings LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS = Lathe3DShapesProducer.createLathe3DSettings( LATHE3D_MEPN_3D_SHAPE_VIRUS_PRESET_SHAPE, NODE_TESSELATION.get() );
+    public static final float LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_X = -0.3f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_Y = -0.3f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_Z = -0.3f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_X = 90.0f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_Y = 0.0f;
+    public static final float LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_Z = 0.0f;
+
     static
     {
         // Complex mEPN 3D shape
@@ -172,6 +192,20 @@ public final class GraphmlNetworkmEPN3DShapesDefinitions
         LATHE3D_MEPN_3D_SHAPE_OR_SETTINGS.ysIn = new float[]{ 0.0f,   0.667f,  1.359f, 0.0256f, 0.0256f };
         LATHE3D_MEPN_3D_SHAPE_OR_SETTINGS.splineStep = 10;
         LATHE3D_MEPN_3D_SHAPE_OR_SETTINGS.lathe3DShapeType = RHODONEA_4_PETALS;
+
+        // TERMINAL_OUTPUT mEPN 3D shape
+        LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.k = 2.0f;
+        LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.xsIn = new float[]{ 0.667f, 2.025f,  0.641f, 0.6667f, 0.667f };
+        LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.ysIn = new float[]{ 0.0f,   0.667f,  1.359f, 0.0256f, 0.0256f };
+        LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.splineStep = 10;
+        LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.lathe3DShapeType = RHODONEA_9_PETALS;
+
+        // VIRUS mEPN 3D shape
+        LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.k = 2.0f;
+        LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.xsIn = new float[]{ 0.667f, 2.025f,  0.641f, 0.6667f, 0.667f };
+        LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.ysIn = new float[]{ 0.0f,   0.667f,  1.359f, 0.0256f, 0.0256f };
+        LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.splineStep = 10;
+        LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.lathe3DShapeType = RHODONEA_12_PETALS;
     }
 
 }

@@ -6,7 +6,7 @@
 !addplugindir "."
 
 !define LONG_NAME "BioLayout"
-!define VERSION "3.4"
+!define VERSION "3.5"
 !define BASE_NAME "BioLayout"
 !define OUTPUT_NAME "BioLayout"
 !define BASE_DIR ".."

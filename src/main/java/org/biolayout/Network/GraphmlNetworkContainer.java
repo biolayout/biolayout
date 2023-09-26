@@ -210,12 +210,11 @@ public class GraphmlNetworkContainer
     {
         LayoutClasses lc = layoutClassSetsManager.getClassSet(MEPN_NOTATION_CLASS_SET_NAME);
         layoutClassSetsManager.switchClassSet(MEPN_NOTATION_CLASS_SET_NAME);
-        VertexClass vc = null;
-        Tuple4<GraphmlShapesGroup1, GraphmlShapesGroup2, GraphmlShapesGroup3, Color> nodemEPNShapeGroupsTuple4 = null;
-        String className = "";
         for ( Vertex vertex : allNodesmEPNShapeGroupTuplesMap.keySet() )
         {
-            nodemEPNShapeGroupsTuple4 = allNodesmEPNShapeGroupTuplesMap.get(vertex);
+            VertexClass vc = null;
+            Tuple4<GraphmlShapesGroup1, GraphmlShapesGroup2, GraphmlShapesGroup3, Color> nodemEPNShapeGroupsTuple4 = allNodesmEPNShapeGroupTuplesMap.get(vertex);
+            String className = "";
             if ( !nodemEPNShapeGroupsTuple4.first.equals(GraphmlShapesGroup1.NONE) && nodemEPNShapeGroupsTuple4.second.equals(GraphmlShapesGroup2.NONE) && nodemEPNShapeGroupsTuple4.third.equals(GraphmlShapesGroup3.NONE) )
             {
                 className = provideClassNameFromEnumeration( nodemEPNShapeGroupsTuple4.first.toString() );

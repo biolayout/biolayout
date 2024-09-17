@@ -992,6 +992,62 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
 
                 lathe3DShape.disposeAllModelShapeResources(gl);
             }
+            else if ( shape3D.equals(SAUCER_9_PETALS) && (changeAllShapes || changeTesselationRelatedShapes || changeSphericalCoordsRelatedShapes) )
+            {
+                shapeIndex = SAUCER_9_PETALS.ordinal();
+                modelSettings.centerModel = true; // Lathe3D Shape will be centered
+                LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.splineStep = (tesselation < 3) ? 1 : tesselation / 3;
+                ModelShape lathe3DShape = Lathe3DShapesProducer.createLathe3DShape(gl, LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS, graph.getLathe3DShapeAngleIncrement(tesselation), modelSettings);
+
+                gl.glDeleteLists(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], 1);
+                gl.glNewList(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
+
+                if ( MATERIAL_SPHERICAL_MAPPING.get() ) enableGenerateSphericalTextureCoordinates(gl);
+
+                gl.glPushMatrix();
+                gl.glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+                gl.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                gl.glScalef(1.0f + LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_X, 1.0f + LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_Y, 1.0f + LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_Z);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_X, 1.0f, 0.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_Y, 0.0f, 1.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_Z, 0.0f, 0.0f, 1.0f);
+                lathe3DShape.drawModelShape(gl);
+                gl.glPopMatrix();
+
+                if ( MATERIAL_SPHERICAL_MAPPING.get() ) disableGenerateSphericalTextureCoordinates(gl);
+
+                gl.glEndList();
+
+                lathe3DShape.disposeAllModelShapeResources(gl);
+            }
+            else if ( shape3D.equals(SAUCER_12_PETALS) && (changeAllShapes || changeTesselationRelatedShapes || changeSphericalCoordsRelatedShapes) )
+            {
+                shapeIndex = SAUCER_12_PETALS.ordinal();
+                modelSettings.centerModel = true; // Lathe3D Shape will be centered
+                LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.splineStep = (tesselation < 3) ? 1 : tesselation / 3;
+                ModelShape lathe3DShape = Lathe3DShapesProducer.createLathe3DShape(gl, LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS, graph.getLathe3DShapeAngleIncrement(tesselation), modelSettings);
+
+                gl.glDeleteLists(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], 1);
+                gl.glNewList(ALL_SHAPES_3D_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
+
+                if ( MATERIAL_SPHERICAL_MAPPING.get() ) enableGenerateSphericalTextureCoordinates(gl);
+
+                gl.glPushMatrix();
+                gl.glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+                gl.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                gl.glScalef(1.0f + LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_X, 1.0f + LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_Y, 1.0f + LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_Z);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_X, 1.0f, 0.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_Y, 0.0f, 1.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_Z, 0.0f, 0.0f, 1.0f);
+                lathe3DShape.drawModelShape(gl);
+                gl.glPopMatrix();
+
+                if ( MATERIAL_SPHERICAL_MAPPING.get() ) disableGenerateSphericalTextureCoordinates(gl);
+
+                gl.glEndList();
+
+                lathe3DShape.disposeAllModelShapeResources(gl);
+            }
             else if ( shape3D.equals(GENE_MODEL) && (changeAllShapes || changeSphericalCoordsRelatedShapes) )
             {
                 // no need to reload the model for calculating spherical coords if it does not have textures as materials
@@ -1552,6 +1608,54 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
                 gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_OR_ROTATE_X, 1.0f, 0.0f, 0.0f);
                 gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_OR_ROTATE_Y, 0.0f, 1.0f, 0.0f);
                 gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_OR_ROTATE_Z, 0.0f, 0.0f, 1.0f);
+                lathe3DShape.drawModelShape(gl);
+                gl.glPopMatrix();
+
+                gl.glEndList();
+
+                lathe3DShape.disposeAllModelShapeResources(gl);
+            }
+            else if ( shape3D.equals(SAUCER_9_PETALS) )
+            {
+                shapeIndex = SAUCER_9_PETALS.ordinal();
+                modelSettings.centerModel = true; // Lathe3D Shape will be centered
+                LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS.splineStep = FAST_SELECTION_MODE_NODE_TESSELATION;
+                ModelShape lathe3DShape = Lathe3DShapesProducer.createLathe3DShape(gl, LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SETTINGS, _90, modelSettings);
+
+                gl.glDeleteLists(ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS[shapeIndex], 1);
+                gl.glNewList(ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
+
+                gl.glPushMatrix();
+                gl.glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+                gl.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                gl.glScalef(1.0f + LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_X, 1.0f + LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_Y, 1.0f + LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_SCALE_Z);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_X, 1.0f, 0.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_Y, 0.0f, 1.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_TERMINAL_OUTPUT_ROTATE_Z, 0.0f, 0.0f, 1.0f);
+                lathe3DShape.drawModelShape(gl);
+                gl.glPopMatrix();
+
+                gl.glEndList();
+
+                lathe3DShape.disposeAllModelShapeResources(gl);
+            }
+            else if ( shape3D.equals(SAUCER_12_PETALS) )
+            {
+                shapeIndex = SAUCER_12_PETALS.ordinal();
+                modelSettings.centerModel = true; // Lathe3D Shape will be centered
+                LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS.splineStep = FAST_SELECTION_MODE_NODE_TESSELATION;
+                ModelShape lathe3DShape = Lathe3DShapesProducer.createLathe3DShape(gl, LATHE3D_MEPN_3D_SHAPE_VIRUS_SETTINGS, _90, modelSettings);
+
+                gl.glDeleteLists(ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS[shapeIndex], 1);
+                gl.glNewList(ALL_SHAPES_3D_FAST_SELECTION_DISPLAY_LISTS[shapeIndex], GL_COMPILE);
+
+                gl.glPushMatrix();
+                gl.glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+                gl.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                gl.glScalef(1.0f + LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_X, 1.0f + LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_Y, 1.0f + LATHE3D_MEPN_3D_SHAPE_VIRUS_SCALE_Z);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_X, 1.0f, 0.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_Y, 0.0f, 1.0f, 0.0f);
+                gl.glRotatef(LATHE3D_MEPN_3D_SHAPE_VIRUS_ROTATE_Z, 0.0f, 0.0f, 1.0f);
                 lathe3DShape.drawModelShape(gl);
                 gl.glPopMatrix();
 
@@ -2541,6 +2645,19 @@ final class GraphRenderer3D implements GraphInterface, TileRendererBase.TileRend
                 draw3DShape(gl, coordX, coordY, coordZ, SAUCER_4_PETALS, size / 1.5f, 1.0f, isFastSelectionNode);
 
                 break;
+
+            case SAUCER_9_PETALS:
+
+                draw3DShape(gl, coordX, coordY, coordZ, SAUCER_9_PETALS, size / 1.5f, 1.0f, isFastSelectionNode);
+
+                break;
+
+            case SAUCER_12_PETALS:
+
+                draw3DShape(gl, coordX, coordY, coordZ, SAUCER_12_PETALS, size / 1.5f, 1.0f, isFastSelectionNode);
+
+                break;
+
 
             case GENE_MODEL:
 

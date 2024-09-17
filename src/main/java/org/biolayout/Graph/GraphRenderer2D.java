@@ -2348,6 +2348,16 @@ final class GraphRenderer2D implements GraphInterface, TileRendererBase.TileRend
                 return "SimpleTransitionVerticalNode46x256";
             case RECTANGLE_HORIZONTAL:
                 return "SimpleTransitionHorizontalNode256x46";
+            case STAR5:
+                return "SimpleStar5Node256x256";
+            case STAR6:
+                return "SimpleStar6Node256x256";
+            case STAR8:
+                return "SimpleStar8Node256x256";
+            case FATARROW:
+                return "SimpleFatArrowNode256x128";
+            case ELLIPSE:
+                return "SimpleEllipseNode256x192";
             default:
                 return "SimpleCircleNode256x256";
         }

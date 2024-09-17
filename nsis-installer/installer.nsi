@@ -6,7 +6,7 @@
 !addplugindir "."
 
 !define LONG_NAME "BioLayout"
-!define VERSION "3.4"
+!define VERSION "3.5"
 !define BASE_NAME "BioLayout"
 !define OUTPUT_NAME "BioLayout"
 !define BASE_DIR ".."
@@ -27,7 +27,7 @@ VIProductVersion "1.0.0.0"
 
 VIAddVersionKey ProductName "${LONG_NAME}"
 VIAddVersionKey Comments "${LONG_NAME}"
-VIAddVersionKey LegalCopyright "� University of Edinburgh 2020"
+VIAddVersionKey LegalCopyright "� University of Edinburgh 2020-2024"
 VIAddVersionKey FileDescription "${LONG_NAME}"
 VIAddVersionKey FileVersion "1.0.0.0"
 VIAddVersionKey ProductVersion "1.0.0.0"
@@ -77,7 +77,7 @@ Var STARTMENU_FOLDER
 
 ;Launch function
 Function Launch
-    ShellExecAsUser::ShellExecAsUser "" "$INSTDIR\${OUTPUT_EXE_NAME}"
+    ExecShell "open" "$INSTDIR\${OUTPUT_EXE_NAME}"
 FunctionEnd
 
 ;Languages

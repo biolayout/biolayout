@@ -104,7 +104,7 @@ public final class LayoutAboutDialog extends JDialog implements ActionListener, 
 
         JLabel textLine1 = new JLabel(PRODUCT_NAME + " is a tool for the visualisation and analysis of networks.");
         textLine1.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JLabel textLine2 = new JLabel("© University of Edinburgh 2020");
+        JLabel textLine2 = new JLabel("© University of Edinburgh 2020-2024");
         textLine2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         panel.add(textLine1);

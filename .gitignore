@@ -11,3 +11,4 @@ codesign.jks
 osx-installer/Miru.app
 osx-installer/Miru.dmg
 /nbproject/
+.vscode

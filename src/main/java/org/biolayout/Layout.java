@@ -310,7 +310,7 @@ public final class Layout
         // falling back on loading extracted versions which we create from our jar
         System.setProperty("jogamp.gluegen.UseTempJarCache", "false");
 
-        if( LoadNativeLibrary.extractNativeLibrary("gluegen-rt") == null )
+        if( LoadNativeLibrary.extractNativeLibrary("gluegen_rt") == null )
             return false;
 
         if( LoadNativeLibrary.extractNativeLibrary("jogl_desktop") == null )
@@ -476,43 +476,21 @@ public final class Layout
             return;
         }
 
-        if (!JVM_WARNING.get())
-        {
-            JPanel panel = new JPanel();
-            panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
 
-            JLabel text = new JLabel("<html><p style=\"width:300px\">" +
-                    "The installed Java Virtual Machine only " +
-                    "allows for 32-bit operation. It is strongly advised that a " +
-                    "64-bit JVM is installed for optimum performance." +
-                    "</p></html>");
-            panel.add(text);
+        JLabel text = new JLabel("<html><p style=\"width:300px\">" +
+                "The installed Java Virtual Machine only " +
+                "allows for 32-bit operation. Please update your JVM." +
+                "</p></html>");
+        panel.add(text);
 
-            panel.add(Box.createRigidArea(new Dimension(0,5)));
+        Object[] options = {"Exit"};
+        JOptionPane.showOptionDialog(null, panel, "Warning",
+                JOptionPane.CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+                null, options, options[0]);
 
-            JCheckBox checkbox = new JCheckBox("Don't show this message again");
-            checkbox.addActionListener(new AbstractAction()
-            {
-                @Override
-                public void actionPerformed(ActionEvent e)
-                {
-                    JVM_WARNING.set(checkbox.isSelected());
-                }
-            });
-            panel.add(checkbox);
-
-            Object[] options = {"Continue", "Exit"};
-            int result = JOptionPane.showOptionDialog(null, panel, "Warning",
-                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
-                    null, options, options[1]);
-
-            LayoutPreferences.getLayoutPreferencesSingleton().savePreferences();
-
-            if(result == 1 || result == JOptionPane.CLOSED_OPTION)
-            {
-                System.exit(0);
-            }
-        }
+        System.exit(0);
     }
 
     /**
@@ -656,15 +634,18 @@ public final class Layout
             setLoggingParameters(consoleOutput, fileOutput);
         setLookAndFeel(nimbusLAF);
 
-        if ( initJOGLNativeLibraries() )
+        if (jar != null)
         {
-            if (DEBUG_BUILD) println("\nJOGL Libraries working!\n");
-        }
-        else
-        {
-            if (DEBUG_BUILD) println("Error: JOGL Libraries not installed or found!\n");
-            JOptionPane.showMessageDialog(null, "Error: JOGL Libraries not installed or found!", "JOGL error", JOptionPane.ERROR_MESSAGE);
-            System.exit(1);
+            if ( initJOGLNativeLibraries() )
+            {
+                if (DEBUG_BUILD) println("\nJOGL Libraries working!\n");
+            }
+            else
+            {
+                if (DEBUG_BUILD) println("Error: JOGL Libraries not installed or found!\n");
+                JOptionPane.showMessageDialog(null, "Error: JOGL Libraries not installed or found!", "JOGL error", JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
         }
 
         if (DEBUG_BUILD)

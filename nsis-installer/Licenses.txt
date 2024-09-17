@@ -1,6 +1,6 @@
 A tool for the visualisation and analysis of networks
 
-Copyright: University of Edinburgh 2020
+Copyright: University of Edinburgh 2020-2024
 Website: https://biolayout.org/
 
 Distributed under Version 3 of the GNU General Public License (GNU GPLv3) or

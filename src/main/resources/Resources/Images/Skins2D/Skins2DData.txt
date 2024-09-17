@@ -13,3 +13,8 @@ SimpleTrapezoid1Node256x256.png
 SimpleTrapezoid2Node256x256.png
 SimpleTransitionVerticalNode46x256.png
 SimpleTransitionHorizontalNode256x46.png
+SimpleStar5Node256x256.png
+SimpleStar6Node256x256.png
+SimpleStar8Node256x256.png
+SimpleFatArrowNode256x128.png
+SimpleEllipseNode256x192.png

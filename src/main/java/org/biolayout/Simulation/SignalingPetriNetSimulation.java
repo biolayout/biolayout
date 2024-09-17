@@ -634,7 +634,7 @@ public class SignalingPetriNetSimulation
             {
                 i = partialInhibitorIDs.length;
                 while (--i >= 0)
-                    if ( (hasPartialInhibitorParents = (places[partialInhibitorIDs[i]] > 0.0f) ) )
+                    if ( (hasPartialInhibitorParents = hasPartialInhibitorParents || (places[partialInhibitorIDs[i]] > 0.0f) ) )
                         partialInihibitorTokens += places[partialInhibitorIDs[i]];
             }
 
